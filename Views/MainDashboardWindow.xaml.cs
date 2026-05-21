@@ -35,7 +35,6 @@
 //   HELPERS  (GetActiveList, ResolveProfile, FlagDeploy) ......... ~1475
 // ─────────────────────────────────────────────────────────────────
 
-using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
