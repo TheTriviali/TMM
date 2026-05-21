@@ -82,7 +82,7 @@ namespace TGTAMM
                 // ── Background ───────────────────────────────────────────────
                 // When Mica is enabled, make the main bg semi-transparent so the
                 // DWM backdrop (Mica/Acrylic) bleeds through the window border.
-                byte bgAlpha = mica ? (byte)Math.Round(255 * (0.55 - micaAmt * 0.40)) : (byte)255;
+                byte bgAlpha = mica ? (byte)Math.Round(255 * Math.Max(0.45, 0.75 - micaAmt * 0.25)) : (byte)255;
                 Application.Current.Resources["BgBrush"] =
                     new SolidColorBrush(Color.FromArgb(bgAlpha, bg.R, bg.G, bg.B));
 
@@ -91,15 +91,15 @@ namespace TGTAMM
                 {
                     if (mica)
                     {
-                        // Mica: translucent with subtle accent tint
-                        byte pa = (byte)Math.Round(255 * Math.Max(0.25, 0.60 - micaAmt * 0.35));
+                        // Mica: more opaque for better visibility of backdrop effect
+                        byte pa = (byte)Math.Round(255 * Math.Max(0.55, 0.80 - micaAmt * 0.20));
                         byte pr = (byte)Math.Round(bg.R * 0.95 + accent.R * 0.05);
                         byte pg = (byte)Math.Round(bg.G * 0.95 + accent.G * 0.05);
                         byte pb = (byte)Math.Round(bg.B * 0.95 + accent.B * 0.05);
                         Application.Current.Resources["PanelBrush"] =
                             new SolidColorBrush(Color.FromArgb(pa, pr, pg, pb));
 
-                        byte ha = (byte)Math.Round(255 * Math.Max(0.20, 0.55 - micaAmt * 0.35));
+                        byte ha = (byte)Math.Round(255 * Math.Max(0.50, 0.80 - micaAmt * 0.20));
                         Application.Current.Resources["HeaderBrush"] =
                             new SolidColorBrush(Color.FromArgb(ha,
                                 (byte)Math.Min(255, bg.R + 12),

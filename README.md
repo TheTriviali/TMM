@@ -24,15 +24,17 @@ TGTAMM is currently in **Alpha**. Expect bugs, unpolished edge cases, and missin
 * **Consistent icon theming** — all filled-background buttons (Deploy + Play) use the same `AccentTextBrush` foreground so icon contrast is always correct regardless of the active accent color.
 
 ### Look & Feel
-* **Modular UI Themes:** Windows 7 Aero, Windows 8/10, Windows 9x Classic, macOS Dark, macOS Light, Vanilla, Compact.
+* **Modular UI Themes:** Windows 7 Aero (with refined button styling), Windows 8/10, Windows 9x Classic (dark/light modes), macOS Dark, macOS Light, Vanilla, Compact.
 * **HSV Color Pickers:** Two-pane 2D spectrum pickers (accent + background) with hex input, live preview, and drag support.
 * **Theme Presets (.mmtheme):** 11 built-in presets. Import/export `.mmtheme` JSON files for sharing.
-* **Live Backdrop Effects:** Mica/Acrylic via DWM API (Win11 native; panel transparency approximation on Win10).
+* **Enhanced Mica/Acrylic Backdrop:** DWM API for Win11 native Mica with user-adjustable intensity. More opaque panels ensure the backdrop effect remains visible across all color schemes.
+* **Refined UI Polish:** Consistent corner rounding (10px main window, 5px buttons), improved theme compatibility, and adaptive Mica calculations.
 * **Font Choices:** 8 system fonts — Bahnschrift, Segoe UI variants, Calibri, Consolas, and more.
 * **Intelligent Text Contrast:** Three algorithms (WCAG, YIQ, Invert Snap) for automatic foreground color selection.
 
-### Diagnostics
+### Diagnostics & Status
 * **Diagnostics Console:** MD5 check (with mod-override detection), Steam protocol controls, error log, cache wipe — accessible from Settings.
+* **Status Indicators:** Info icon (ℹ) at the bottom of the sidebar displays when one or more games are unmapped; accent-colored for consistency with overall theme.
 * **Right-click Folder Access:** Open mod folder, base game folder, or virtual folder directly from the mod list context menu.
 
 ---

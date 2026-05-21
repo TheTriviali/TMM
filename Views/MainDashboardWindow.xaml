@@ -250,7 +250,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderBrush="#30FFFFFF" BorderThickness="1,0,1,1">
+                                BorderBrush="#30FFFFFF" BorderThickness="1,0,1,1" CornerRadius="2">
                             <TextBlock Text="{TemplateBinding Content}" FontFamily="Marlett" FontSize="12"
                                        Foreground="{DynamicResource TextBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -299,7 +299,7 @@
     </Window.Resources>
 
     <!-- Master border for 12px window rounding -->
-    <Border x:Name="MainWindowBorder" Background="{DynamicResource BgBrush}" CornerRadius="12"
+    <Border x:Name="MainWindowBorder" Background="{DynamicResource BgBrush}" CornerRadius="10"
             BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
             MouseLeftButtonDown="TitleBar_MouseDown">
 
@@ -308,7 +308,7 @@
             <Border.OpacityMask>
                 <VisualBrush>
                     <VisualBrush.Visual>
-                        <Border Background="White" CornerRadius="11"
+                        <Border Background="White" CornerRadius="9"
                                 Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Border}}"
                                 Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Border}}"/>
                     </VisualBrush.Visual>
@@ -324,7 +324,7 @@
                 <!-- ====================================================== -->
                 <!-- Custom modular title bar                               -->
                 <!-- ====================================================== -->
-                <Border x:Name="TitleBarBorder" Grid.Row="0" Height="30" CornerRadius="12,12,0,0" ClipToBounds="True">
+                <Border x:Name="TitleBarBorder" Grid.Row="0" Height="30" CornerRadius="10,10,0,0" ClipToBounds="True">
                     <Grid x:Name="TitleBarGrid">
                         <TextBlock Text="Triviali's GTA Mod Manager (BETA)"
                                    Foreground="{DynamicResource TextBrush}"
