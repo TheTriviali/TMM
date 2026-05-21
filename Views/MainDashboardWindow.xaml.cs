@@ -1,3 +1,40 @@
+// TABLE OF CONTENTS
+// ─────────────────────────────────────────────────────────────────
+//   STATE  (_core, _activeProfile, drag state, flags) ............ ~23
+//   INIT  (constructor, Window_Loaded) ........................... ~42
+//   UI REFRESH  (RefreshUIAsync) ................................. ~76
+//   TITLEBAR THEMING
+//     ApplyTitlebarStyle() ........................................ ~134
+//     UpdateControlLayout() (static helper) ...................... ~236
+//   INSTALLATION & DOWNLOADS
+//     ProcessDownloadsBatchAsync() ................................ ~270
+//     ProcessExeInstallation() .................................... ~315
+//     ProcessModInstallationAsync() ............................... ~351
+//     ProcessDxvkArchiveAsync() ................................... ~464
+//     CleanModloaderFolder() (static) ............................ ~545
+//   JSON PERSISTENCE
+//     LoadModsFromJson() .......................................... ~582
+//     SaveMods() .................................................. ~604
+//     SyncModInfoToFolder() (static) ............................. ~621
+//     ShowExtractionDebug() ....................................... ~633
+//   DRAG & DROP / REORDERING
+//     List_Drop() ................................................. ~662
+//     List_PreviewMouseLeftButtonDown() / List_MouseMove() ........ ~745
+//     List_DragOver() / List_DragLeave() ......................... ~765
+//     GetDropLine() / HideDropLine() ............................. ~783
+//     GetInsertionLineY() / GetInsertionIndex() .................. ~797
+//   INSTALL / DEPLOY HANDLERS
+//     BtnInstallMod_Click() ....................................... ~831
+//     Web auto-installers (Modloader/DXVK/Widescreen/...) ......... ~872
+//     BtnRefresh_Click() / BtnDeploy_Click() ..................... ~973
+//   SIMPLE BUTTON HANDLERS  (Help, Labels, About, Settings, ...) . ~1103
+//     ApplyToolbarLabels() ........................................ ~1147
+//     BtnToggleOverride_Click() ................................... ~1158
+//   CONTEXT MENU  (Rename/Toggle/Delete/MoveUp/MoveDown/...) ...... ~1218
+//   STANDARD BINDINGS  (ModCheckBox, Search, Sort, Keys) ......... ~1409
+//   HELPERS  (GetActiveList, ResolveProfile, FlagDeploy) ......... ~1475
+// ─────────────────────────────────────────────────────────────────
+
 using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
@@ -1142,7 +1179,8 @@ namespace TGTAMM
         private static readonly string[] _toolbarLabelNames =
             { "lblSidebar", "lblToggleLabels",
               "lblInstallMod", "lblSettings", "lblTheme", "lblRefresh", "lblAppData", "lblDxvk",
-              "lblDeploy", "lblHelp", "lblAbout" };
+              "lblDeploy", "lblPlayIII", "lblPlayVC", "lblPlaySA",
+              "lblHelp", "lblAbout" };
 
         private void ApplyToolbarLabels()
         {
@@ -1153,6 +1191,28 @@ namespace TGTAMM
             // Highlight the T button when labels are on
             if (FindName("btnToggleLabels") is Button btn)
                 btn.Opacity = _core.Settings.ToolbarShowLabels ? 1.0 : 0.5;
+        }
+
+        private async void MenuToggleOverride_Click(object s, RoutedEventArgs e)
+        {
+            if (s is not MenuItem mi || mi.Tag is not string key) return;
+            var profile = GameProfile.ByKey(key);
+            if (profile == null) return;
+
+            bool isNowOn = _core.ToggleDeployOverride(profile);
+
+            string state = isNowOn ? "ENABLED" : "DISABLED";
+            string msg = isNowOn
+                ? $"Force Deploy Override ENABLED for GTA {key}.\n\n" +
+                  "Mods will deploy even though the exe is Vanilla/Steam.\n" +
+                  "Right-click the play button again to turn this off."
+                : $"Force Deploy Override DISABLED for GTA {key}.\n\n" +
+                  "A downgraded 1.0 exe is now required to deploy mods.";
+
+            MessageBox.Show(msg, $"Override {state}", MessageBoxButton.OK,
+                isNowOn ? MessageBoxImage.Warning : MessageBoxImage.Information);
+
+            await RefreshUIAsync();
         }
 
         private void BtnAbout_Click(object s, RoutedEventArgs e)

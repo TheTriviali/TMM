@@ -1,3 +1,13 @@
+// TABLE OF CONTENTS
+// ─────────────────────────────────────────────────────────────────
+//   GameProfile RECORD
+//     Known 1.0 MD5 hashes ........................................ ~18
+//     Static profiles (III, VC, SA) + All list ................... ~23
+//     ByKey() lookup .............................................. ~53
+//     IsValidMd5() / AllValidMd5s ................................ ~57
+//     Folder name helpers (RawFolderName, ModdedFolderName) ....... ~71
+// ─────────────────────────────────────────────────────────────────
+
 using System.Collections.Generic;
 using System.Linq;
 

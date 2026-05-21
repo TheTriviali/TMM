@@ -1,3 +1,15 @@
+// TABLE OF CONTENTS
+// ─────────────────────────────────────────────────────────────────
+//   ExeStatus ENUM  (Unknown | Vanilla | Downgraded) ............. ~15
+//   GameDetectionState RECORD
+//     IsReady, ButtonColor, StatusLabel .......................... ~22
+//   GameStateManager CLASS  (singleton)
+//     States dictionary + StateChanged event ..................... ~52
+//     ScanAll() / ScanGame() / For() ............................ ~59
+//     Detect() / ComputeMd5() (private) .......................... ~81
+//   GameState STATIC  (back-compat shim for BackendCore) ......... ~120
+// ─────────────────────────────────────────────────────────────────
+
 using System;
 using System.Collections.Generic;
 using System.IO;

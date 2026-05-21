@@ -525,7 +525,14 @@
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnPlayIII" Click="BtnLaunchModded_Click" Tag="III"
                                             Width="42" Height="42" Cursor="Hand" BorderThickness="0"
-                                            ToolTip="Play GTA III" Background="{DynamicResource AccentBrush}">
+                                            ToolTip="Play GTA III (right-click for override options)"
+                                            Background="{DynamicResource AccentBrush}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem x:Name="menuOverrideIII" Header="⚡ Force Deploy Override (Ignore Vanilla EXE)"
+                                                          Click="MenuToggleOverride_Click" Tag="III"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5">
@@ -538,20 +545,30 @@
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
-                                        <TextBlock Text="III" Foreground="{DynamicResource TextBrush}"
+                                        <TextBlock Text="III" Foreground="{DynamicResource AccentTextBrush}"
                                                    FontSize="16" FontWeight="Bold" FontFamily="Times New Roman">
                                             <TextBlock.Effect>
                                                 <DropShadowEffect BlurRadius="3" ShadowDepth="0" Opacity="0.5" Color="Black"/>
                                             </TextBlock.Effect>
                                         </TextBlock>
                                     </Button>
+                                    <TextBlock x:Name="lblPlayIII" Text="Play III" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
                                 </StackPanel>
 
                                 <!-- Play VC -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnPlayVC" Click="BtnLaunchModded_Click" Tag="VC"
                                             Width="42" Height="42" Cursor="Hand" BorderThickness="0"
-                                            ToolTip="Play GTA Vice City" Background="{DynamicResource AccentBrush}">
+                                            ToolTip="Play GTA Vice City (right-click for override options)"
+                                            Background="{DynamicResource AccentBrush}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem x:Name="menuOverrideVC" Header="⚡ Force Deploy Override (Ignore Vanilla EXE)"
+                                                          Click="MenuToggleOverride_Click" Tag="VC"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5">
@@ -564,20 +581,30 @@
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
-                                        <TextBlock Text="VC" Foreground="{DynamicResource TextBrush}"
+                                        <TextBlock Text="VC" Foreground="{DynamicResource AccentTextBrush}"
                                                    FontSize="17" FontWeight="Bold" FontFamily="Arial">
                                             <TextBlock.Effect>
                                                 <DropShadowEffect BlurRadius="3" ShadowDepth="0" Opacity="0.5" Color="Black"/>
                                             </TextBlock.Effect>
                                         </TextBlock>
                                     </Button>
+                                    <TextBlock x:Name="lblPlayVC" Text="Play VC" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
                                 </StackPanel>
 
                                 <!-- Play SA -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnPlaySA" Click="BtnLaunchModded_Click" Tag="SA"
                                             Width="42" Height="42" Cursor="Hand" BorderThickness="0"
-                                            ToolTip="Play GTA San Andreas" Background="{DynamicResource AccentBrush}">
+                                            ToolTip="Play GTA San Andreas (right-click for override options)"
+                                            Background="{DynamicResource AccentBrush}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem x:Name="menuOverrideSA" Header="⚡ Force Deploy Override (Ignore Vanilla EXE)"
+                                                          Click="MenuToggleOverride_Click" Tag="SA"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5">
@@ -590,13 +617,16 @@
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
-                                        <TextBlock Text="SA" Foreground="{DynamicResource TextBrush}"
+                                        <TextBlock Text="SA" Foreground="{DynamicResource AccentTextBrush}"
                                                    FontSize="17" FontWeight="Bold" FontFamily="Old English Text MT, Impact">
                                             <TextBlock.Effect>
                                                 <DropShadowEffect BlurRadius="3" ShadowDepth="0" Opacity="0.5" Color="Black"/>
                                             </TextBlock.Effect>
                                         </TextBlock>
                                     </Button>
+                                    <TextBlock x:Name="lblPlaySA" Text="Play SA" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
                                 </StackPanel>
 
                             </StackPanel>

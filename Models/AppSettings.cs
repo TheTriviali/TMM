@@ -1,4 +1,18 @@
-﻿using System.Collections.Generic;
+﻿// TABLE OF CONTENTS
+// ─────────────────────────────────────────────────────────────────
+//   AppSettings CLASS
+//     Game paths (per-key) ........................................ ~7
+//     Launch & debug flags ........................................ ~12
+//     Colors (accent, background, mode, text-contrast) ........... ~15
+//     Titlebar (theme, alignment, personalize, opacity) ........... ~21
+//     Typography .................................................. ~27
+//     Mica / backdrop ............................................. ~30
+//     Toolbar (labels toggle) ..................................... ~34
+//     Deploy overrides (per-game force-deploy flags) .............. ~38
+//     Theme preset state .......................................... ~43
+// ─────────────────────────────────────────────────────────────────
+
+using System.Collections.Generic;
 
 namespace TGTAMM
 {
@@ -34,6 +48,14 @@ namespace TGTAMM
         // ── Theme state ──────────────────────────────────────────────────────
         // -- Toolbar
         public bool ToolbarShowLabels { get; set; } = true;
+
+        // ── Per-game deploy overrides ─────────────────────────────────────────
+        // When true for a game, deployment proceeds even if the exe is Vanilla
+        // (Steam build). Toggled via right-click on the play buttons in the toolbar.
+        public Dictionary<string, bool> DeployOverrides { get; set; } = new()
+        {
+            { "III", false }, { "VC", false }, { "SA", false }
+        };
 
         public string LastPresetName { get; set; } = "macOS Dark";
     }

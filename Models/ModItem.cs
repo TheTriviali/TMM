@@ -1,3 +1,13 @@
+// TABLE OF CONTENTS
+// ─────────────────────────────────────────────────────────────────
+//   ModItem CLASS  (INotifyPropertyChanged)
+//     Name — notifying string property ........................... ~12
+//     IsEnabled — notifying bool property ........................ ~19
+//     LoadOrder — notifying int property ......................... ~26
+//     RawFolderPath, PackedFilePath — plain string props ......... ~33
+//     PropertyChanged event + OnPropertyChanged helper ........... ~36
+// ─────────────────────────────────────────────────────────────────
+
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 

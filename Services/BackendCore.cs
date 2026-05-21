@@ -1,3 +1,40 @@
+// TABLE OF CONTENTS
+// ─────────────────────────────────────────────────────────────────
+//   STATE & FIELDS  (AppDataPath, Settings, Mods, HttpClient) .... ~26
+//   INIT  (BackendCore constructor) .............................. ~41
+//   LOGGING  (Log) ............................................... ~70
+//   SETTINGS  (LoadSettings, SaveSettings, FactoryReset) ......... ~86
+//   GAME PATH ACCESS  (GetVanillaPath, SetVanillaPath, IsGameReady) ~146
+//   GAME DETECTION
+//     QuickScan() ................................................. ~162
+//     DeepScanDrives() ............................................ ~198
+//     ScanForExe() ................................................ ~226
+//   GAME STATUS & EXE VERIFICATION
+//     VerifyGameStatusAsync() ..................................... ~263
+//     HasExeModOverride() ......................................... ~296
+//     FindExeInMod() .............................................. ~306
+//     SmartSteamLaunch() .......................................... ~330
+//     GetFileMD5Async() / GetEffectiveMd5Async() ................. ~352
+//     GetMd5DiagnosticsAsync() .................................... ~389
+//   MOD LIST LOAD/SAVE
+//     RefreshAllModListsAsync() / RefreshModListForGame() ......... ~431
+//   STAGING / TEMP
+//     TempStagingPath / WipeTempStaging() ........................ ~490
+//     GetDriveSpaceInfo() / FormatBytes() ......................... ~501
+//   DEPLOYMENT  (fully async, parallel I/O)
+//     CloneToVirtualAsync() ....................................... ~538
+//     DeployModsAsync() ........................................... ~562
+//     CopyDirectoryParallelAsync() ................................ ~612
+//     ForceDeleteDirectory() ...................................... ~666
+//     CopyDirectory() (sync fallback) ............................ ~690
+//   ARCHIVE EXTRACTION
+//     ExtractArchiveSafeAsync() / ExtractArchiveSafe() ........... ~720
+//     ExtractEntriesWithStream() .................................. ~749
+//   DOWNLOADING
+//     DownloadFileAsync() ......................................... ~781
+//     DownloadLatestGithubReleaseAsync() .......................... ~795
+// ─────────────────────────────────────────────────────────────────
+
 using SevenZipExtractor;
 using System;
 using System.Collections.Generic;
@@ -290,13 +327,26 @@ namespace TGTAMM
 
         /// <summary>
         /// Returns true if the game can be deployed even if the vanilla path is
-        /// a Steam install — as long as an enabled exe mod is in the modlist
-        /// (the exe mod provides the 1.0 binary that bypasses Steam DRM).
+        /// a Steam install. True when either:
+        ///   (a) an enabled exe mod is in the modlist (provides the 1.0 binary), or
+        ///   (b) the user has explicitly toggled the per-game DeployOverride flag.
         /// </summary>
         public bool HasExeModOverride(GameProfile profile)
         {
+            if (Settings.DeployOverrides.TryGetValue(profile.Key, out bool forced) && forced)
+                return true;
+
             var list = Mods[profile.Key];
             return list.Any(m => m.IsEnabled && FindExeInMod(m.RawFolderPath, profile.ExeName) != null);
+        }
+
+        /// <summary>Toggles the per-game force-deploy override and persists settings.</summary>
+        public bool ToggleDeployOverride(GameProfile profile)
+        {
+            Settings.DeployOverrides.TryAdd(profile.Key, false);
+            Settings.DeployOverrides[profile.Key] = !Settings.DeployOverrides[profile.Key];
+            SaveSettings();
+            return Settings.DeployOverrides[profile.Key];
         }
 
         /// <summary>

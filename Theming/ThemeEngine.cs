@@ -1,3 +1,26 @@
+// TABLE OF CONTENTS
+// ─────────────────────────────────────────────────────────────────
+//   DWM P/INVOKE  (DwmSetWindowAttribute) ........................ ~13
+//   PUBLIC ENTRY POINTS
+//     ApplyTheme()  — updates all dynamic brushes ................ ~18
+//       · Accent + AccentTextBrush + AccentLabelBrush ............. ~30
+//       · TextBrush + SubTextBrush ................................ ~39
+//       · BgBrush (with Mica alpha) ............................... ~60
+//       · PanelBrush + HeaderBrush + ControlBgBrush ............... ~64
+//       · Titlebar brushes (Win8, macOS, Aero7, Win9x) ........... ~137
+//     ApplyFont() ................................................. ~189
+//     TryApplyMica()  — DWM Mica/Acrylic backdrop ............... ~199
+//   COMPLEMENTARY COLOUR GENERATION
+//     GetComplementPalette()  (Complementary/Triadic/...) ........ ~241
+//     SuggestAccentForBg()  — WCAG-optimised hue sweep ........... ~272
+//   CONTRAST COLOUR ALGORITHMS
+//     GetContrastColor()  (WCAG | YIQ | Invert) ................. ~312
+//   HSV HELPERS  (public — shared with ThemeManagerWindow)
+//     HsvToRgb() / RgbToHsv() ................................... ~337
+//   INTERNAL HELPERS
+//     RelativeLuminance() / BlendColors() ........................ ~368
+// ─────────────────────────────────────────────────────────────────
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
