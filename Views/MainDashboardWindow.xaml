@@ -13,6 +13,13 @@
         <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#2D2D30"/>
         <SolidColorBrush x:Key="{x:Static SystemColors.ControlLightBrushKey}" Color="#3E3E42"/>
 
+        <!-- Window border gradient (updated by ThemeEngine at startup) -->
+        <LinearGradientBrush x:Key="WindowBorderGradientBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#4EC9B0" Offset="0"/>
+            <GradientStop Color="#2A8B80" Offset="0.5"/>
+            <GradientStop Color="#4EC9B0" Offset="1"/>
+        </LinearGradientBrush>
+
         <!-- ========================================================== -->
         <!-- General styles & templates                                 -->
         <!-- ========================================================== -->
@@ -303,9 +310,9 @@
         </Style>
     </Window.Resources>
 
-    <!-- Master border for 12px window rounding -->
+    <!-- Master border with gradient accent — updated by ThemeEngine -->
     <Border x:Name="MainWindowBorder" Background="{DynamicResource BgBrush}" CornerRadius="10"
-            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="4"
+            BorderBrush="{DynamicResource WindowBorderGradientBrush}" BorderThickness="4"
             MouseLeftButtonDown="TitleBar_MouseDown">
 
         <!-- Opacity-mask trick to clip children to the rounded corners -->
