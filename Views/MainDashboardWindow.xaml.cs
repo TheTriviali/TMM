@@ -97,6 +97,18 @@ namespace TGTAMM
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
 
+            // Restore window position and size
+            if (_core.Settings.WindowLeft > 0 && _core.Settings.WindowTop > 0)
+            {
+                Left = _core.Settings.WindowLeft;
+                Top = _core.Settings.WindowTop;
+            }
+            if (_core.Settings.WindowWidth > 800 && _core.Settings.WindowHeight > 600)
+            {
+                Width = _core.Settings.WindowWidth;
+                Height = _core.Settings.WindowHeight;
+            }
+
             if (_core.Settings.FirstLaunch)
             {
                 var setupWin = new InitialSetupWindow(_core) { Owner = this };
@@ -1625,6 +1637,15 @@ namespace TGTAMM
                 // Save user preference if they toggled "don't ask again"
                 if (dlg.DontAskAgain)
                     _core.Settings.SkipExitConfirmation = true;
+            }
+
+            // Save window position and size (only if not maximized/minimized)
+            if (WindowState == WindowState.Normal)
+            {
+                _core.Settings.WindowLeft = Left;
+                _core.Settings.WindowTop = Top;
+                _core.Settings.WindowWidth = Width;
+                _core.Settings.WindowHeight = Height;
             }
 
             base.OnClosing(e);
