@@ -48,7 +48,7 @@ TGTAMM is currently in **Alpha**. Expect bugs, unpolished edge cases, and missin
 ---
 
 ## 🛑 Current Known Issues
-* **Application Load Error 5 (Steam DRM):** The virtual folder requires a 1.0 downgraded executable to actually run the game. The **Force Deploy Override** allows mods to be installed without a downgrade, but the game will still fail to launch unless you:
+* **Application Load Error 5:0000065434 (Steam DRM):** The virtual folder requires a 1.0 downgraded executable to actually run the game. The **Force Deploy Override** allows mods to be installed without a downgrade, but the game will still fail to launch unless you:
   1. Install a 1.0 downgraded exe as a mod (➕ button → select `.exe`), OR
   2. Manually replace your vanilla exe with a 1.0 version
   * When deploying with the override enabled but a Steam exe still in place, TGTAMM will warn you which games can't yet be played and direct you to the fix.

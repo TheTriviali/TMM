@@ -1122,7 +1122,7 @@ namespace TGTAMM
                 if (overriddenGames.Count > 0)
                     summary += $"\n⚠️ Override Warning — {string.Join(", ", overriddenGames)}:\n" +
                                "Mods were deployed, but the game exe is still a Steam/Vanilla build.\n" +
-                               "The game will likely fail to launch (Application Load Error 5).\n" +
+                               "The game will likely fail to launch (Application Load Error 5:0000065434).\n" +
                                "Install a 1.0 downgraded exe as a mod to fix this.";
                 if (!string.IsNullOrEmpty(summary.Trim()))
                     MessageBox.Show(summary.Trim(), "Deployment Complete");

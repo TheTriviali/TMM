@@ -36,7 +36,7 @@
 
             <!-- Content -->
             <StackPanel Grid.Row="1" Margin="20,16,20,0">
-                <TextBlock Text="Application Load Error 5" Foreground="#FF5555"
+                <TextBlock Text="Application Load Error 5:0000065434" Foreground="#FF5555"
                            FontWeight="Bold" FontSize="13" Margin="0,0,0,5"/>
                 <TextBlock Text="Original Steam executables contain DRM that prevents them from running in Virtual Mode. You must use a 1.0 Downgraded executable."
                            Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,14"/>
