@@ -8,10 +8,6 @@ namespace TGTAMM
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
-            // Initialize notification window (toast system)
-            var notificationWindow = new NotificationWindow();
-            notificationWindow.Show();
         }
     }
 }

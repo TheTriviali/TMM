@@ -1584,6 +1584,23 @@ namespace TGTAMM
             if (e.ChangedButton == MouseButton.Left) DragMove();
         }
 
+        private void Toast_Close(object sender, MouseButtonEventArgs e)
+        {
+            if (e.OriginalSource is FrameworkElement elem && elem.DataContext is NotificationItem notif)
+            {
+                NotificationService.Queue.Remove(notif);
+            }
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is NotificationItem notif)
+            {
+                NotificationService.Queue.Remove(notif);
+            }
+            e.Handled = true;
+        }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.Key == Key.F2) MenuRename_Click(null, null);
