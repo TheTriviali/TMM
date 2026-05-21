@@ -129,20 +129,26 @@ namespace TGTAMM
 
             foreach (var profile in GameProfile.All)
             {
-                bool isReady = _core.IsGameReady(profile);
-                var status = await _core.VerifyGameStatusAsync(profile);
-                if (status == ExeStatus.Vanilla) needsDowngradeHelp = true;
+                bool isReady    = _core.IsGameReady(profile);
+                var  status     = await _core.VerifyGameStatusAsync(profile);
+                bool hasOverride = _core.HasExeModOverride(profile);
+
+                // Only flag as needing help if vanilla AND no override active
+                if (status == ExeStatus.Vanilla && !hasOverride) needsDowngradeHelp = true;
 
                 if (FindName($"OverlayCol{profile.Key}") is Button col)
                     col.Visibility = isReady ? Visibility.Collapsed : Visibility.Visible;
 
                 if (FindName($"btnPlay{profile.Key}") is Button playBtn)
                 {
-                    // Default: AccentBrush (bound in XAML) — only override for warning states.
                     if (!isReady)
                         playBtn.Background = new SolidColorBrush(Color.FromRgb(70, 70, 70));
-                    else if (status == ExeStatus.Vanilla)
+                    else if (status == ExeStatus.Vanilla && !hasOverride)
+                        // Red = vanilla, no override — can't deploy or play
                         playBtn.Background = new SolidColorBrush(Color.FromRgb(180, 45, 45));
+                    else if (status == ExeStatus.Vanilla && hasOverride)
+                        // Orange = vanilla but override enabled — can deploy, game launch will still need 1.0 exe
+                        playBtn.Background = new SolidColorBrush(Color.FromRgb(200, 110, 20));
                     else
                         playBtn.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "AccentBrush");
                 }
@@ -151,7 +157,6 @@ namespace TGTAMM
             _needsDowngradeHelp = needsDowngradeHelp;
             HelpNotificationDot.Visibility = needsDowngradeHelp ? Visibility.Visible : Visibility.Collapsed;
 
-            // Deploy button: always enabled so click can route to HelpWindow when needed.
             bool anyReady = GameProfile.All.Any(_core.IsGameReady);
             _deployReady = anyReady && _hasPendingChanges;
             if (_deployReady)
@@ -1097,11 +1102,30 @@ namespace TGTAMM
                 }
 
                 if (deployed.Count > 0) _hasPendingChanges = false;
+
+                // Check which deployed games still have a Steam/Vanilla exe (override was used)
+                var overriddenGames = new List<string>();
+                foreach (var key in deployed)
+                {
+                    var prof = GameProfile.ByKey(key);
+                    if (prof != null)
+                    {
+                        var exeStatus = await _core.VerifyGameStatusAsync(prof);
+                        if (exeStatus == ExeStatus.Vanilla)
+                            overriddenGames.Add(key);
+                    }
+                }
+
                 string summary = "";
-                if (deployed.Count > 0) summary += $"✅ Successfully deployed: {string.Join(", ", deployed)}\n";
-                if (skipped.Count > 0) summary += $"⚠️ Skipped (Vanilla/Steam): {string.Join(", ", skipped)}";
-                if (!string.IsNullOrEmpty(summary))
-                    MessageBox.Show(summary, "Deployment Complete");
+                if (deployed.Count > 0) summary += $"✅ Deployed: {string.Join(", ", deployed)}\n";
+                if (skipped.Count > 0)  summary += $"⚠️ Skipped (Vanilla, no override): {string.Join(", ", skipped)}\n";
+                if (overriddenGames.Count > 0)
+                    summary += $"\n⚠️ Override Warning — {string.Join(", ", overriddenGames)}:\n" +
+                               "Mods were deployed, but the game exe is still a Steam/Vanilla build.\n" +
+                               "The game will likely fail to launch (Application Load Error 5).\n" +
+                               "Install a 1.0 downgraded exe as a mod to fix this.";
+                if (!string.IsNullOrEmpty(summary.Trim()))
+                    MessageBox.Show(summary.Trim(), "Deployment Complete");
             }
             catch (Exception ex)
             {
@@ -1178,7 +1202,7 @@ namespace TGTAMM
 
         private static readonly string[] _toolbarLabelNames =
             { "lblSidebar", "lblToggleLabels",
-              "lblInstallMod", "lblSettings", "lblTheme", "lblRefresh", "lblAppData", "lblDxvk",
+              "lblInstallMod", "lblSettings", "lblTheme", "lblRollTheme", "lblRefresh", "lblAppData", "lblDxvk",
               "lblDeploy", "lblPlayIII", "lblPlayVC", "lblPlaySA",
               "lblHelp", "lblAbout" };
 
@@ -1215,6 +1239,49 @@ namespace TGTAMM
             await RefreshUIAsync();
         }
 
+        private void BtnRollTheme_Click(object s, RoutedEventArgs e)
+        {
+            var presets = ThemeManagerWindow.BuiltInPresets;
+            if (presets.Count == 0) return;
+            var rnd    = new Random();
+            var preset = presets[rnd.Next(presets.Count)];
+
+            _core.Settings.AccentColor         = preset.AccentColor;
+            _core.Settings.BgColor             = preset.BgColor;
+            _core.Settings.ColorMode           = preset.ColorMode;
+            _core.Settings.TitlebarTheme       = preset.TitlebarTheme;
+            _core.Settings.TitlebarAlignment   = preset.TitlebarAlignment;
+            _core.Settings.TitlebarPersonalize = preset.TitlebarPersonalize;
+            _core.Settings.TitlebarOpacity     = preset.TitlebarOpacity;
+            _core.Settings.FontFamily          = preset.FontFamily;
+            _core.Settings.TextColorMode       = preset.TextColorMode;
+            _core.Settings.MicaEnabled         = preset.MicaEnabled;
+            _core.Settings.MicaIntensity       = preset.MicaIntensity;
+            _core.Settings.LastPresetName      = preset.Name;
+            _core.SaveSettings();
+
+            ThemeEngine.ApplyTheme(_core.Settings);
+            ThemeEngine.ApplyFont(this, _core.Settings);
+            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            ApplyTitlebarStyle();
+        }
+
+        private async void MenuToggleOverrideList_Click(object s, RoutedEventArgs e)
+        {
+            var profile = ResolveProfileFromContextMenu(e);
+            bool isNowOn = _core.ToggleDeployOverride(profile);
+            string state = isNowOn ? "ENABLED" : "DISABLED";
+            string msg = isNowOn
+                ? $"Force Deploy Override ENABLED for GTA {profile.Key}.\n\n" +
+                  "Mods will deploy even though the exe is Vanilla/Steam.\n" +
+                  "Note: the game will still fail to launch without a 1.0 downgraded exe."
+                : $"Force Deploy Override DISABLED for GTA {profile.Key}.\n\n" +
+                  "A downgraded 1.0 exe is now required to deploy mods.";
+            MessageBox.Show(msg, $"Override {state}", MessageBoxButton.OK,
+                isNowOn ? MessageBoxImage.Warning : MessageBoxImage.Information);
+            await RefreshUIAsync();
+        }
+
         private void BtnAbout_Click(object s, RoutedEventArgs e)
             => new AboutWindow(_core) { Owner = this }.ShowDialog();
 
@@ -1222,9 +1289,9 @@ namespace TGTAMM
         {
             bool maximized = WindowState == WindowState.Maximized;
             bool isWin9x   = _core.Settings.TitlebarTheme == "Win9x";
-            var corners = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(12);
+            var corners = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(10);
             MainWindowBorder.CornerRadius   = corners;
-            TitleBarBorder.CornerRadius     = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(12, 12, 0, 0);
+            TitleBarBorder.CornerRadius     = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(10, 10, 0, 0);
             if (MainWindowBorder.Child is Border inner)
             {
                 var vb = inner.OpacityMask as System.Windows.Media.VisualBrush;

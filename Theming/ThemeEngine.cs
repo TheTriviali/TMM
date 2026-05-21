@@ -205,6 +205,13 @@ namespace TGTAMM
                 Application.Current.Resources["MacLightTitleBrush"] =
                     new SolidColorBrush(Color.FromArgb(255, 236, 236, 238));
 
+                // ── Window border ─────────────────────────────────────────────────
+                Application.Current.Resources["WindowBorderBrush"] = settings.AccentBorderEnabled
+                    ? new SolidColorBrush(accent)
+                    : new SolidColorBrush(isDark
+                        ? Color.FromArgb(60, 255, 255, 255)
+                        : Color.FromArgb(80, 0, 0, 0));
+
                 // Win9x: classic gradient, adapted to dark/light mode
                 if (isDark)
                 {

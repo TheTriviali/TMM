@@ -45,9 +45,12 @@ namespace TGTAMM
         public bool   MicaEnabled   { get; set; } = false;
         public double MicaIntensity { get; set; } = 0.55;
 
-        // ── Theme state ──────────────────────────────────────────────────────
-        // -- Toolbar
+        // ── Toolbar ──────────────────────────────────────────────────────────
         public bool ToolbarShowLabels { get; set; } = true;
+
+        // ── Accent border ────────────────────────────────────────────────────
+        // When true, the window outer border uses AccentBrush instead of HeaderBrush.
+        public bool AccentBorderEnabled { get; set; } = false;
 
         // ── Per-game deploy overrides ─────────────────────────────────────────
         // When true for a game, deployment proceeds even if the exe is Vanilla

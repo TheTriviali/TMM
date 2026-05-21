@@ -55,6 +55,8 @@
             <MenuItem Header="Move Up (Ctrl+Up)" Click="MenuMoveUp_Click"/>
             <MenuItem Header="Move Down (Ctrl+Down)" Click="MenuMoveDown_Click"/>
             <Separator/>
+            <MenuItem Header="⚡ Toggle Force Deploy Override" Click="MenuToggleOverrideList_Click"/>
+            <Separator/>
             <MenuItem Header="Properties..." Click="MenuProperties_Click" Foreground="{DynamicResource AccentBrush}"/>
             <MenuItem Header="Delete Mod(s) (Del)" Click="MenuDelete_Click" Foreground="#FF5555"/>
         </ContextMenu>
@@ -66,6 +68,8 @@
             <MenuItem Header="🎮 Open Game Folder"      Click="MenuOpenBaseFolder_Click"/>
             <MenuItem Header="🚀 Open Virtual Folder"   Click="MenuOpenVirtualFolder_Click"/>
             <MenuItem Header="📂 Open Mods Folder"      Click="MenuOpenModsFolder_Click"/>
+            <Separator/>
+            <MenuItem Header="⚡ Toggle Force Deploy Override" Click="MenuToggleOverrideList_Click"/>
         </ContextMenu>
 
         <!-- ========================================================== -->
@@ -300,7 +304,7 @@
 
     <!-- Master border for 12px window rounding -->
     <Border x:Name="MainWindowBorder" Background="{DynamicResource BgBrush}" CornerRadius="10"
-            BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1"
             MouseLeftButtonDown="TitleBar_MouseDown">
 
         <!-- Opacity-mask trick to clip children to the rounded corners -->
@@ -675,8 +679,8 @@
 
                                 <!-- Help -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
-                                    <Grid Width="42" Height="42" ToolTip="Help &amp; Troubleshooting">
-                                        <Button Click="BtnHelp_Click" Width="42" Height="42" Cursor="Hand"
+                                    <Grid Width="38" Height="38" ToolTip="Help &amp; Troubleshooting">
+                                        <Button Click="BtnHelp_Click" Width="38" Height="38" Cursor="Hand"
                                                 BorderThickness="0">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
@@ -713,8 +717,8 @@
                                 <!-- About -->
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,4,0">
                                     <Button Content="&#xE946;" Click="BtnAbout_Click" ToolTip="About TGTAMM"
-                                            Style="{StaticResource IconButtonStyle}" Width="42" Height="42"
-                                            FontSize="20" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                                            Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
+                                            FontSize="18" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblAbout" Text="About" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
                                                Margin="0,2,0,0" Visibility="Visible"/>
@@ -728,7 +732,7 @@
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnInstallMod" Content="&#xE710;" Click="BtnInstallMod_Click"
                                             ToolTip="Install Mod" Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblInstallMod" Text="Install" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
@@ -736,10 +740,10 @@
                                 </StackPanel>
                                 <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="4,6,4,6" Opacity="0.3"/>
                                 <!-- Settings -->
-                                <StackPanel Margin="4,0,4,0" VerticalAlignment="Center">
+                                <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button Content="&#xE713;" Click="BtnSettings_Click"
                                             ToolTip="Settings" Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblSettings" Text="Settings" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
@@ -749,9 +753,20 @@
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button Content="&#xE790;" Click="BtnTheme_Click" ToolTip="Look &amp; Feel"
                                             Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblTheme" Text="Themes" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                </StackPanel>
+                                <!-- Random Theme -->
+                                <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <Button x:Name="btnRollTheme" Click="BtnRollTheme_Click" ToolTip="Random Theme"
+                                            Style="{StaticResource IconButtonStyle}"
+                                            Width="38" Height="38">
+                                        <TextBlock Text="🎲" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <TextBlock x:Name="lblRollTheme" Text="Random" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
                                                Margin="0,2,0,0" Visibility="Visible"/>
                                 </StackPanel>
@@ -759,7 +774,7 @@
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button Content="&#xE72C;" Click="BtnRefresh_Click" ToolTip="Refresh Mod List"
                                             Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblRefresh" Text="Refresh" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
@@ -769,7 +784,7 @@
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button Content="&#xE8B7;" Click="BtnOpenAppData_Click" ToolTip="Open Mod Directory"
                                             Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblAppData" Text="Files" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
@@ -779,7 +794,7 @@
                                 <StackPanel VerticalAlignment="Center">
                                     <Button Content="&#xE7AC;" Click="BtnDxvk_Click" ToolTip="DXVK Config"
                                             Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblDxvk" Text="DXVK" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
