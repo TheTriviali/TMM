@@ -762,9 +762,25 @@
                                 <!-- Random Theme -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnRollTheme" Click="BtnRollTheme_Click" ToolTip="Random Theme"
-                                            Style="{StaticResource IconButtonStyle}"
-                                            Width="38" Height="38">
-                                        <TextBlock Text="🎲" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            Width="38" Height="38" Cursor="Hand" BorderThickness="0">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{DynamicResource ControlBgBrush}" CornerRadius="5"
+                                                        Padding="6">
+                                                    <TextBlock Text="🎲" FontSize="16" FontWeight="Bold"
+                                                               Foreground="{DynamicResource AccentLabelBrush}"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
                                     </Button>
                                     <TextBlock x:Name="lblRollTheme" Text="Random" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"

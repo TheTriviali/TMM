@@ -1264,6 +1264,8 @@ namespace TGTAMM
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
             ApplyTitlebarStyle();
+
+            NotificationService.ShowSuccess($"🎲 {preset.Name}");
         }
 
         private async void MenuToggleOverrideList_Click(object s, RoutedEventArgs e)

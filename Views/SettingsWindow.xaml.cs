@@ -66,14 +66,12 @@ namespace TGTAMM
                 if (Directory.Exists(_core.TempStagingPath))
                     Directory.Delete(_core.TempStagingPath, true);
                 Directory.CreateDirectory(_core.TempStagingPath);
-                MessageBox.Show("Temporary Cache wiped successfully.", "Success",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowSuccess("Temporary cache wiped successfully");
             }
             catch (Exception ex)
             {
                 _core.Log($"Cache wipe failed: {ex.Message}");
-                MessageBox.Show("Files are currently in use. Close any open mod folders and try again.",
-                    "Cache Wipe Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Cache wipe failed — close any open mod folders and try again");
             }
         }
 
