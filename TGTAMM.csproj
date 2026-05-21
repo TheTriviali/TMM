@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="SevenZipExtractor" Version="1.0.19" />
-    <PackageReference Include="SharpCompress" Version="0.47.4" />
+    <PackageReference Include="SharpCompress" Version="0.34.2" />
   </ItemGroup>
 
 </Project>

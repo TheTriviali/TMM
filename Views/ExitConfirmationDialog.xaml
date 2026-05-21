@@ -23,13 +23,29 @@
                 <Button Content="Cancel" Width="100" Height="32" Margin="0,0,8,0"
                         Foreground="{DynamicResource TextBrush}"
                         Background="{DynamicResource ControlBgBrush}"
-                        BorderThickness="0" CornerRadius="5" Cursor="Hand"
-                        Click="BtnCancel_Click"/>
+                        BorderThickness="0" Cursor="Hand"
+                        Click="BtnCancel_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
                 <Button Content="Exit" Width="100" Height="32"
                         Foreground="{DynamicResource AccentTextBrush}"
                         Background="{DynamicResource AccentBrush}"
-                        BorderThickness="0" CornerRadius="5" Cursor="Hand"
-                        Click="BtnExit_Click"/>
+                        BorderThickness="0" Cursor="Hand"
+                        Click="BtnExit_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
             </StackPanel>
         </StackPanel>
     </Border>
