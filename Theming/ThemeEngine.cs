@@ -253,13 +253,33 @@ namespace TGTAMM
                     Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(220, 230, 245);
                 }
 
-                // Windows 3.1: classic teal title bar
-                Application.Current.Resources["Win31TitleBrush"] =
-                    new SolidColorBrush(Color.FromRgb(0, 128, 128));
+                // Windows 3.1: teal base, accent can influence hue
+                if (settings.TitlebarPersonalize)
+                {
+                    // Blend accent with classic teal
+                    byte r = (byte)(0 * 0.7 + accent.R * 0.3);
+                    byte g = (byte)(128 * 0.7 + accent.G * 0.3);
+                    byte b = (byte)(128 * 0.7 + accent.B * 0.3);
+                    Application.Current.Resources["Win31TitleBrush"] = new SolidColorBrush(Color.FromRgb(r, g, b));
+                }
+                else
+                {
+                    Application.Current.Resources["Win31TitleBrush"] = new SolidColorBrush(Color.FromRgb(0, 128, 128));
+                }
 
-                // Classic Mac OS 9: light gray title bar with black text
-                Application.Current.Resources["MacOS9TitleBrush"] =
-                    new SolidColorBrush(Color.FromRgb(192, 192, 192));
+                // Classic Mac OS 9: gray base, accent can influence tone
+                if (settings.TitlebarPersonalize)
+                {
+                    // Blend accent with classic gray
+                    byte r = (byte)(192 * 0.7 + accent.R * 0.3);
+                    byte g = (byte)(192 * 0.7 + accent.G * 0.3);
+                    byte b = (byte)(192 * 0.7 + accent.B * 0.3);
+                    Application.Current.Resources["MacOS9TitleBrush"] = new SolidColorBrush(Color.FromRgb(r, g, b));
+                }
+                else
+                {
+                    Application.Current.Resources["MacOS9TitleBrush"] = new SolidColorBrush(Color.FromRgb(192, 192, 192));
+                }
             }
             catch { /* invalid hex — keep previous theme */ }
         }

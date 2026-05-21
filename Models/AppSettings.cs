@@ -56,6 +56,15 @@ namespace TGTAMM
         // When true, skip the "Are you sure?" dialog on app close.
         public bool SkipExitConfirmation { get; set; } = false;
 
+        // ── Window state ──────────────────────────────────────────────────────
+        public double WindowLeft { get; set; } = -1;
+        public double WindowTop { get; set; } = -1;
+        public double WindowWidth { get; set; } = 1280;
+        public double WindowHeight { get; set; } = 672;
+
+        // ── Recent themes ────────────────────────────────────────────────────
+        public List<string> RecentThemes { get; set; } = new();
+
         // ── Per-game deploy overrides ─────────────────────────────────────────
         // When true for a game, deployment proceeds even if the exe is Vanilla
         // (Steam build). Toggled via right-click on the play buttons in the toolbar.
