@@ -890,8 +890,8 @@
                             <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
                                 <!-- Reworded: only shown when one or more games still need a path. -->
                                 <TextBlock x:Name="txtInstallWarning"
-                                           Text="⚠ One or more games are unmapped. Open Settings to locate them."
-                                           Foreground="#E7FF2F" FontSize="11" FontWeight="SemiBold"
+                                           Text="ℹ One or more games are unmapped. Open Settings to locate them."
+                                           Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="SemiBold"
                                            TextWrapping="Wrap" TextAlignment="Center"
                                            Visibility="Collapsed" Margin="0,0,0,10"/>
 

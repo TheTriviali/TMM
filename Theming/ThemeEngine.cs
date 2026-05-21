@@ -6,19 +6,20 @@
 //       · Accent + AccentTextBrush + AccentLabelBrush ............. ~30
 //       · TextBrush + SubTextBrush ................................ ~39
 //       · BgBrush (with Mica alpha) ............................... ~60
-//       · PanelBrush + HeaderBrush + ControlBgBrush ............... ~64
-//       · Titlebar brushes (Win8, macOS, Aero7, Win9x) ........... ~137
-//     ApplyFont() ................................................. ~189
-//     TryApplyMica()  — DWM Mica/Acrylic backdrop ............... ~199
+//       · PanelBrush + HeaderBrush (simplified, consistent) ....... ~64
+//       · ControlBgBrush + CheckeredRowBrush ...................... ~95
+//       · Titlebar brushes (Win8, macOS, Aero7, Win9x dark/light) ~120
+//     ApplyFont() ................................................. ~210
+//     TryApplyMica()  — DWM Mica/Acrylic backdrop ............... ~220
 //   COMPLEMENTARY COLOUR GENERATION
-//     GetComplementPalette()  (Complementary/Triadic/...) ........ ~241
-//     SuggestAccentForBg()  — WCAG-optimised hue sweep ........... ~272
+//     GetComplementPalette()  (Complementary/Triadic/...) ........ ~260
+//     SuggestAccentForBg()  — WCAG-optimised hue sweep ........... ~290
 //   CONTRAST COLOUR ALGORITHMS
-//     GetContrastColor()  (WCAG | YIQ | Invert) ................. ~312
+//     GetContrastColor()  (WCAG | YIQ | Invert) ................. ~330
 //   HSV HELPERS  (public — shared with ThemeManagerWindow)
-//     HsvToRgb() / RgbToHsv() ................................... ~337
+//     HsvToRgb() / RgbToHsv() ................................... ~355
 //   INTERNAL HELPERS
-//     RelativeLuminance() / BlendColors() ........................ ~368
+//     RelativeLuminance() / BlendColors() ........................ ~385
 // ─────────────────────────────────────────────────────────────────
 
 using System;
@@ -48,7 +49,7 @@ namespace TGTAMM
                 var bg     = (Color)ColorConverter.ConvertFromString(settings.BgColor);
                 bool isDark    = settings.ColorMode == "Dark";
                 bool mica      = settings.MicaEnabled;
-                double micaAmt = 0.42; // fixed moderate intensity — not user-adjustable
+                double micaAmt = settings.MicaIntensity; // user-adjustable Mica intensity
 
                 // ── Accent ────────────────────────────────────────────────────
                 Application.Current.Resources["AccentBrush"] = new SolidColorBrush(accent);
@@ -90,42 +91,44 @@ namespace TGTAMM
                 {
                     if (mica)
                     {
-                        // Strong Mica: highly translucent panels, subtle accent tint
-                        // micaAmt drives opacity — higher = more see-through
-                        byte pa = (byte)Math.Round(255 * (0.50 - micaAmt * 0.42));
-                        byte pr = (byte)Math.Round(bg.R * 0.92 + accent.R * 0.08);
-                        byte pg = (byte)Math.Round(bg.G * 0.92 + accent.G * 0.08);
-                        byte pb = (byte)Math.Round(bg.B * 0.92 + accent.B * 0.08);
+                        // Mica: translucent with subtle accent tint
+                        byte pa = (byte)Math.Round(255 * Math.Max(0.25, 0.60 - micaAmt * 0.35));
+                        byte pr = (byte)Math.Round(bg.R * 0.95 + accent.R * 0.05);
+                        byte pg = (byte)Math.Round(bg.G * 0.95 + accent.G * 0.05);
+                        byte pb = (byte)Math.Round(bg.B * 0.95 + accent.B * 0.05);
                         Application.Current.Resources["PanelBrush"] =
                             new SolidColorBrush(Color.FromArgb(pa, pr, pg, pb));
 
-                        byte ha = (byte)Math.Round(255 * (0.45 - micaAmt * 0.38));
-                        byte hr = (byte)Math.Round(28 + accent.R * 0.06);
-                        byte hg = (byte)Math.Round(29 + accent.G * 0.06);
-                        byte hb = (byte)Math.Round(33 + accent.B * 0.06);
+                        byte ha = (byte)Math.Round(255 * Math.Max(0.20, 0.55 - micaAmt * 0.35));
                         Application.Current.Resources["HeaderBrush"] =
                             new SolidColorBrush(Color.FromArgb(ha,
-                                Math.Min(hr, (byte)255), Math.Min(hg, (byte)255), Math.Min(hb, (byte)255)));
+                                (byte)Math.Min(255, bg.R + 12),
+                                (byte)Math.Min(255, bg.G + 12),
+                                (byte)Math.Min(255, bg.B + 12)));
                     }
                     else
                     {
-                        // Crisp dark panels with subtle elevation via alpha
-                        byte elev = (byte)Math.Round(Math.Min(255.0, bg.R + 14));
+                        // Crisp dark panels: lighten bg by consistent amount
+                        int lift = 16;
                         Application.Current.Resources["PanelBrush"] =
-                            new SolidColorBrush(Color.FromArgb(230, elev, elev,
-                                (byte)Math.Round(Math.Min(255.0, bg.B + 16))));
+                            new SolidColorBrush(Color.FromArgb(230,
+                                (byte)Math.Min(255, bg.R + lift),
+                                (byte)Math.Min(255, bg.G + lift),
+                                (byte)Math.Min(255, bg.B + lift)));
                         Application.Current.Resources["HeaderBrush"] =
                             new SolidColorBrush(Color.FromArgb(255,
-                                (byte)Math.Round(Math.Min(255.0, bg.R + 20)),
-                                (byte)Math.Round(Math.Min(255.0, bg.G + 20)),
-                                (byte)Math.Round(Math.Min(255.0, bg.B + 24))));
+                                (byte)Math.Min(255, bg.R + lift + 8),
+                                (byte)Math.Min(255, bg.G + lift + 8),
+                                (byte)Math.Min(255, bg.B + lift + 8)));
                     }
 
+                    // ControlBg: even lighter for interactive elements
+                    int controlLift = mica ? 20 : 28;
                     Application.Current.Resources["ControlBgBrush"] =
                         new SolidColorBrush(Color.FromArgb(mica ? (byte)160 : (byte)255,
-                            (byte)Math.Round(Math.Min(255.0, bg.R + 28)),
-                            (byte)Math.Round(Math.Min(255.0, bg.G + 28)),
-                            (byte)Math.Round(Math.Min(255.0, bg.B + 32))));
+                            (byte)Math.Min(255, bg.R + controlLift),
+                            (byte)Math.Min(255, bg.G + controlLift),
+                            (byte)Math.Min(255, bg.B + controlLift)));
                     Application.Current.Resources["CheckeredRowBrush"] =
                         new SolidColorBrush(Color.FromArgb(18, 255, 255, 255));
                 }
@@ -202,9 +205,19 @@ namespace TGTAMM
                 Application.Current.Resources["MacLightTitleBrush"] =
                     new SolidColorBrush(Color.FromArgb(255, 236, 236, 238));
 
-                // Win9x
-                Application.Current.Resources["Win9xTitleStartColor"] = Color.FromRgb(10, 36, 106);
-                Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(166, 202, 240);
+                // Win9x: classic gradient, adapted to dark/light mode
+                if (isDark)
+                {
+                    // Dark mode: deep blue gradient
+                    Application.Current.Resources["Win9xTitleStartColor"] = Color.FromRgb(10, 36, 106);
+                    Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(166, 202, 240);
+                }
+                else
+                {
+                    // Light mode: lighter blue gradient for visibility
+                    Application.Current.Resources["Win9xTitleStartColor"] = Color.FromRgb(50, 100, 180);
+                    Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(220, 230, 245);
+                }
             }
             catch { /* invalid hex — keep previous theme */ }
         }
