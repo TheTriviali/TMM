@@ -308,6 +308,37 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Windows 3.1 classic button style -->
+        <Style x:Key="Win31ButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="35"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="#C0C0C0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="outer31" Background="#C0C0C0" BorderThickness="2">
+                            <Border x:Name="top31" BorderBrush="White" BorderThickness="1,1,0,0">
+                                <Border x:Name="bottom31" BorderBrush="#808080" BorderThickness="0,0,1,1">
+                                    <TextBlock Text="{TemplateBinding Content}" FontFamily="MS Sans Serif" FontSize="11"
+                                               Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Border>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="outer31" Property="Background" Value="#DFDFDF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="top31" Property="BorderBrush" Value="#808080"/>
+                                <Setter TargetName="bottom31" Property="BorderBrush" Value="White"/>
+                                <Setter TargetName="outer31" Property="Background" Value="#A8A8A8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <!-- Master border with gradient accent — updated by ThemeEngine -->

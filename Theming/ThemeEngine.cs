@@ -252,6 +252,14 @@ namespace TGTAMM
                     Application.Current.Resources["Win9xTitleStartColor"] = Color.FromRgb(50, 100, 180);
                     Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(220, 230, 245);
                 }
+
+                // Windows 3.1: classic teal title bar
+                Application.Current.Resources["Win31TitleBrush"] =
+                    new SolidColorBrush(Color.FromRgb(0, 128, 128));
+
+                // Classic Mac OS 9: light gray title bar with black text
+                Application.Current.Resources["MacOS9TitleBrush"] =
+                    new SolidColorBrush(Color.FromRgb(192, 192, 192));
             }
             catch { /* invalid hex — keep previous theme */ }
         }

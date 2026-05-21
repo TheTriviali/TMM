@@ -245,6 +245,13 @@ namespace TGTAMM
             new() { Name = "Light Forest",           AccentColor = "#228B22", BgColor = "#F5FFF5",
                     ColorMode = "Light", TitlebarTheme = "Win8",      FontFamily = "Segoe UI",
                     TitlebarPersonalize = true },
+            // ─ Special retro OS themes ────────────────────────────────────────
+            new() { Name = "★ Windows 3.1",          AccentColor = "#000080", BgColor = "#C0C0C0",
+                    ColorMode = "Dark",  TitlebarTheme = "Win31",     FontFamily = "MS Sans Serif",
+                    TitlebarPersonalize = false },
+            new() { Name = "★ Classic Mac (9.0)",    AccentColor = "#000000", BgColor = "#F0F0F0",
+                    ColorMode = "Light", TitlebarTheme = "MacOS9",    FontFamily = "Chicago",
+                    TitlebarPersonalize = false },
         };
 
         // ── Constructor ───────────────────────────────────────────────────────

@@ -184,9 +184,9 @@ namespace TGTAMM
             TitleBarBorder.Visibility = Visibility.Visible;
             TitleBarBorder.Background = Brushes.Transparent;
 
-            // Win9x and maximized both use square corners.
-            bool isWin9x    = _core.Settings.TitlebarTheme == "Win9x";
-            bool squarify   = isWin9x || WindowState == WindowState.Maximized;
+            // Win9x, Win31, and maximized both use square corners.
+            bool isSquare   = _core.Settings.TitlebarTheme == "Win9x" || _core.Settings.TitlebarTheme == "Win31";
+            bool squarify   = isSquare || WindowState == WindowState.Maximized;
             MainWindowBorder.CornerRadius = squarify ? new CornerRadius(0) : new CornerRadius(12);
             TitleBarBorder.CornerRadius   = squarify ? new CornerRadius(0) : new CornerRadius(12, 12, 0, 0);
             if (MainWindowBorder.Child is Border innerBorder)
@@ -264,6 +264,20 @@ namespace TGTAMM
                         (Color)Application.Current.Resources["Win9xTitleEndColor"], 1));
                     TitleBarBorder.Background = win9xBrush;
                     TitleBarBorder.Opacity = 1.0;  // Classic Win9x has no transparency
+                    break;
+
+                case "Win31":
+                    VanillaControls.Visibility = Visibility.Visible;
+                    TitleBarBorder.Background = (Brush)Application.Current.Resources["Win31TitleBrush"];
+                    TitleBarBorder.Opacity = 1.0;
+                    MainWindowBorder.CornerRadius = new CornerRadius(0);
+                    TitleBarBorder.CornerRadius = new CornerRadius(0);
+                    break;
+
+                case "MacOS9":
+                    MacLightControls.Visibility = Visibility.Visible;
+                    TitleBarBorder.Background = (Brush)Application.Current.Resources["MacOS9TitleBrush"];
+                    TitleBarBorder.Opacity = 1.0;
                     break;
 
                 case "Compact":
