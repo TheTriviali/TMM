@@ -305,7 +305,7 @@
 
     <!-- Master border for 12px window rounding -->
     <Border x:Name="MainWindowBorder" Background="{DynamicResource BgBrush}" CornerRadius="10"
-            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="4"
             MouseLeftButtonDown="TitleBar_MouseDown">
 
         <!-- Opacity-mask trick to clip children to the rounded corners -->
@@ -313,7 +313,7 @@
             <Border.OpacityMask>
                 <VisualBrush>
                     <VisualBrush.Visual>
-                        <Border Background="White" CornerRadius="9"
+                        <Border Background="White" CornerRadius="6"
                                 Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Border}}"
                                 Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Border}}"/>
                     </VisualBrush.Visual>
