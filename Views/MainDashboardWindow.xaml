@@ -490,14 +490,14 @@
                             <!-- Compact window controls — right-docked, hidden unless Compact mode -->
                             <StackPanel x:Name="CompactControls" Orientation="Horizontal"
                                         VerticalAlignment="Center" Visibility="Collapsed"
-                                        DockPanel.Dock="Right" Margin="8,0,0,0">
-                                <Button Content="−" Width="20" Height="20" Margin="0,0,5,0"
+                                        DockPanel.Dock="Right" Margin="0,0,8,0">
+                                <Button Content="−" Width="20" Height="20" Margin="0,0,8,0"
                                         Style="{StaticResource MacButtonStyle}" Background="#FCC42D"
                                         Click="BtnMinimize_Click"/>
-                                <Button Content="⤢" Width="20" Height="20" Margin="0,0,5,0"
+                                <Button Content="⤢" Width="20" Height="20" Margin="0,0,8,0"
                                         Style="{StaticResource MacButtonStyle}" Background="#5FC038"
                                         Click="BtnMaximize_Click"/>
-                                <Button Content="✕" Width="20" Height="20"
+                                <Button Content="✕" Width="20" Height="20" Margin="0"
                                         Style="{StaticResource MacButtonStyle}" Background="#ED6158"
                                         Click="BtnCloseApp_Click" Tag="Close"/>
                             </StackPanel>
