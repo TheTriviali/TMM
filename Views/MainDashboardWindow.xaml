@@ -341,15 +341,15 @@
 
                         <!-- macOS controls -->
                         <StackPanel x:Name="MacControls" Orientation="Horizontal" VerticalAlignment="Center"
-                                    Margin="12,0,12,0" Visibility="Collapsed">
+                                    HorizontalAlignment="Left" Margin="12,0,0,0" Visibility="Collapsed">
                             <Button Content="✕" Width="14" Height="14" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FF5F56"
+                                    Style="{StaticResource MacButtonStyle}" Background="#ED6158"
                                     Click="BtnCloseApp_Click" Tag="Close"/>
                             <Button Content="−" Width="14" Height="14" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FFBD2E"
+                                    Style="{StaticResource MacButtonStyle}" Background="#FCC42D"
                                     Click="BtnMinimize_Click"/>
-                            <Button Content="⤢" Width="14" Height="14"
-                                    Style="{StaticResource MacButtonStyle}" Background="#27C93F"
+                            <Button Content="⤢" Width="14" Height="14" Margin="0"
+                                    Style="{StaticResource MacButtonStyle}" Background="#5FC038"
                                     Click="BtnMaximize_Click"/>
                         </StackPanel>
 
@@ -449,15 +449,15 @@
 
                         <!-- macOS Light controls -->
                         <StackPanel x:Name="MacLightControls" Orientation="Horizontal" VerticalAlignment="Center"
-                                    Margin="12,0,12,0" Visibility="Collapsed">
+                                    HorizontalAlignment="Left" Margin="12,0,0,0" Visibility="Collapsed">
                             <Button Content="✕" Width="14" Height="14" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FC5753"
+                                    Style="{StaticResource MacButtonStyle}" Background="#EE5A52"
                                     Click="BtnCloseApp_Click" Tag="Close"/>
                             <Button Content="−" Width="14" Height="14" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FDBC40"
+                                    Style="{StaticResource MacButtonStyle}" Background="#FDC82F"
                                     Click="BtnMinimize_Click"/>
-                            <Button Content="⤢" Width="14" Height="14"
-                                    Style="{StaticResource MacButtonStyle}" Background="#34C84A"
+                            <Button Content="⤢" Width="14" Height="14" Margin="0"
+                                    Style="{StaticResource MacButtonStyle}" Background="#62C554"
                                     Click="BtnMaximize_Click"/>
                         </StackPanel>
 
@@ -485,13 +485,13 @@
                                         VerticalAlignment="Center" Visibility="Collapsed"
                                         DockPanel.Dock="Right" Margin="8,0,0,0">
                                 <Button Content="−" Width="20" Height="20" Margin="0,0,5,0"
-                                        Style="{StaticResource MacButtonStyle}" Background="#FFBD2E"
+                                        Style="{StaticResource MacButtonStyle}" Background="#FCC42D"
                                         Click="BtnMinimize_Click"/>
                                 <Button Content="⤢" Width="20" Height="20" Margin="0,0,5,0"
-                                        Style="{StaticResource MacButtonStyle}" Background="#27C93F"
+                                        Style="{StaticResource MacButtonStyle}" Background="#5FC038"
                                         Click="BtnMaximize_Click"/>
                                 <Button Content="✕" Width="20" Height="20"
-                                        Style="{StaticResource MacButtonStyle}" Background="#FF5F56"
+                                        Style="{StaticResource MacButtonStyle}" Background="#ED6158"
                                         Click="BtnCloseApp_Click" Tag="Close"/>
                             </StackPanel>
 
