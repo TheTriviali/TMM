@@ -274,6 +274,14 @@ namespace TGTAMM
                     TitleBarBorder.CornerRadius = new CornerRadius(0);
                     break;
 
+                case "WinXP":
+                    VanillaControls.Visibility = Visibility.Visible;
+                    TitleBarBorder.Background = (Brush)Application.Current.Resources["WinXPTitleBrush"];
+                    TitleBarBorder.Opacity = 1.0;
+                    MainWindowBorder.CornerRadius = new CornerRadius(4);
+                    TitleBarBorder.CornerRadius = new CornerRadius(4, 4, 0, 0);
+                    break;
+
                 case "MacOS9":
                     MacLightControls.Visibility = Visibility.Visible;
                     TitleBarBorder.Background = (Brush)Application.Current.Resources["MacOS9TitleBrush"];

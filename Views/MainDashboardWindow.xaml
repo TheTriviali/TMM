@@ -309,6 +309,37 @@
             </Setter>
         </Style>
 
+        <!-- Windows XP Luna button style -->
+        <Style x:Key="WinXPButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="35"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="#ECE9D8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="outerXP" Background="#ECE9D8" BorderThickness="1" BorderBrush="#ACA899">
+                            <Border BorderBrush="#FFFFFF" BorderThickness="1,1,0,0">
+                                <Border x:Name="innerXP" BorderBrush="#ACA899" BorderThickness="0,0,1,1">
+                                    <TextBlock Text="{TemplateBinding Content}" FontFamily="Tahoma" FontSize="11"
+                                               Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Border>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="outerXP" Property="Background" Value="#F5F5EE"/>
+                                <Setter TargetName="outerXP" Property="BorderBrush" Value="#0A246A"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="outerXP" Property="Background" Value="#D4C4AC"/>
+                                <Setter TargetName="innerXP" Property="BorderBrush" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Windows 3.1 classic button style -->
         <Style x:Key="Win31ButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="35"/>

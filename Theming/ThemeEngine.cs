@@ -253,6 +253,20 @@ namespace TGTAMM
                     Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(220, 230, 245);
                 }
 
+                // Windows XP Luna: blue gradient titlebar
+                if (settings.TitlebarPersonalize)
+                {
+                    // Luna blue with accent influence
+                    byte r = (byte)(0 * 0.7 + accent.R * 0.3);
+                    byte g = (byte)(120 * 0.7 + accent.G * 0.3);
+                    byte b = (byte)(215 * 0.7 + accent.B * 0.3);
+                    Application.Current.Resources["WinXPTitleBrush"] = new SolidColorBrush(Color.FromRgb(r, g, b));
+                }
+                else
+                {
+                    Application.Current.Resources["WinXPTitleBrush"] = new SolidColorBrush(Color.FromRgb(0, 120, 215));
+                }
+
                 // Windows 3.1: teal base, accent can influence hue
                 if (settings.TitlebarPersonalize)
                 {

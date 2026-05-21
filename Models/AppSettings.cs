@@ -43,7 +43,7 @@ namespace TGTAMM
 
         // ── Mica / Backdrop ──────────────────────────────────────────────────
         public bool   MicaEnabled   { get; set; } = false;
-        public double MicaIntensity { get; set; } = 0.55;
+        public double MicaIntensity { get; set; } = 0.75;
 
         // ── Toolbar ──────────────────────────────────────────────────────────
         public bool ToolbarShowLabels { get; set; } = true;
