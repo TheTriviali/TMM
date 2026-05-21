@@ -20,7 +20,7 @@
                       Margin="0,0,0,16"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,0">
-                <Button Content="Cancel" Width="100" Height="32" Margin="0,0,8,0"
+                <Button Content="Cancel" Width="100" Height="32" Margin="0,0,12,0"
                         Foreground="{DynamicResource TextBrush}"
                         Background="{DynamicResource ControlBgBrush}"
                         BorderThickness="0" Cursor="Hand"
@@ -33,7 +33,7 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button Content="Exit" Width="100" Height="32"
+                <Button Content="Exit" Width="100" Height="32" Margin="0,0,0,0"
                         Foreground="{DynamicResource AccentTextBrush}"
                         Background="{DynamicResource AccentBrush}"
                         BorderThickness="0" Cursor="Hand"
@@ -41,7 +41,7 @@
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}" CornerRadius="5">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
                             </Border>
                         </ControlTemplate>
                     </Button.Template>
