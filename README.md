@@ -5,7 +5,7 @@ A specialized, high-performance mod manager for the classic 3D GTA Trilogy (III,
 ## ⚠️ Alpha Notice
 TGTAMM is currently in **Alpha**. Expect bugs, unpolished edge cases, and missing features. Feedback, issue reports, and pull requests are welcome!
 
-## 🚀 Core Features
+## 🚀 All The Features
 * **Virtual File System (VFS) Modding:** Mods are deployed to an AppData virtual folder — your base game installation is never touched. The virtual folder is created automatically on first deployment.
 * **Exe-as-Mod Downgrading:** Install a 1.0 gta3.exe/gta-vc.exe directly as a mod. The manager auto-detects the game, assigns load order 0, and unlocks VFS deployment even on Steam installs.
 * **Smart Nested Archive Extraction:** Archives that wrap content in a single subdirectory are automatically unwrapped so the exe and files end up at the right depth.
@@ -33,7 +33,7 @@ TGTAMM is currently in **Alpha**. Expect bugs, unpolished edge cases, and missin
 * **Automated Downgrader Integration:** Fetch and apply 1.0 patches within the app.
 * **Mod Profiles & Loadouts:** Save/swap between preset mod configurations (Vanilla+, Total Conversion, etc.).
 * **SAMP / MTA Support.**
-* **Complementary Color Picker:** Algorithmically suggest accent colors that pair with the chosen background.
+* **Fix Themes / Complementary Color Picker:** Algorithmically suggest accent colors that pair with the chosen background.
 
 ## 🔬 MD5 Reference
 
