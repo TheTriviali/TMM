@@ -4,24 +4,32 @@ All notable changes to TGTAMM are listed here, newest first.
 
 ---
 
-## [Unreleased] — 2026-05-02
+## [Unreleased] — 2026-05-21
 
 ### Added
-- **Per-game search boxes** — each game column (III / VC / SA) now has its own search box between the title and the mod list, replacing the single shared search bar.
-- **Toolbar label toggle** — italic *T* button in the toolbar left section shows/hides text labels beneath each centered tool icon. State persists across sessions via `AppSettings.ToolbarShowLabels`.
-- **Deploy button downgrade routing** — when deploy is greyed out and a vanilla (non-downgraded) executable is detected, hovering shows "Can't deploy — one or more games need a 1.0 downgrade. Click for help." Clicking opens the Help & Troubleshooting window directly.
-- `ToolbarShowLabels` property added to `AppSettings`.
+- **Toast notification system** — in-window toasts in bottom-right corner (1280x672 window). Replaces desktop overlay with in-app notifications that stack and auto-dismiss.
+- **Dice-roll theme button** — 🎲 button in toolbar applies random preset theme with success toast feedback.
+- **Accent-colored window borders** — toggleable option in Settings → Themes to apply accent color to window border (compatible with all themes including Compact).
+- **34+ theme presets** — comprehensive collection including Cyberpunk, Vaporwave, Terminal Green, Vice City Pink, San Andreas Dusk, and many more.
+- **Deploy-time override warnings** — when deploying with some games overridden, displays warning toast showing which games still need 1.0 executable.
+- **Override context menu access** — "⚡ Toggle Force Deploy Override" available in mod list right-click menus and empty-list context menus.
+- **Orange deploy button state** — when override is enabled, deploy button shows orange to signal "ready to deploy, but can't play yet."
+- **Error code documentation** — updated all references to "Application Load Error 5:0000065434" for clarity.
 
 ### Changed
-- **Toolbar is now full-window width** — moved above the sidebar/modlist split so it always spans the entire window regardless of sidebar state.
-- **Centered toolbar icon group** — the Install Mod → DXVK icon group is now centered between the left-pinned sidebar toggle and the right-pinned deploy/play/help buttons.
-- **Sidebar opens next to modlists only** — the toolbar remains fixed at the top; toggling the sidebar only affects the content area below it.
-- **Deploy button stays enabled** — the button is always clickable; when blocked by a downgrade requirement it routes to Help instead of being unresponsive.
-- **Win7 / Win8 / Win10 close button** — removed the styled pill/border at rest state. The × glyph now appears borderless and only gains a red background on hover, consistent with the other title bar styles.
+- **Main window dimensions** — locked to 1280x672 (optimized for 1280x720 displays with 48px taskbar at 100% scaling).
+- **Notification architecture** — moved from separate desktop overlay window to integrated bottom-right corner panel within MainDashboardWindow.
+- **Toolbar button sizing** — standardized to 38×38px for secondary buttons, 42×42px for primary deploy/play buttons.
+- **Mica backdrop intensity** — made configurable per-theme (improved visibility on dark themes).
+- **Panel color calculations** — simplified color theory with consistent lift values for better theme consistency.
+- **Help window** — clarified distinction between deploy override (enables VFS deployment) vs. 1.0 executable requirement (needed for gameplay).
 
-### Removed
-- **Clone Game button from Initial Setup** — cloning to the virtual folder happens automatically on first deployment, so the manual Clone button in the setup window was removed.
-- Single shared search bar (replaced by per-game search boxes).
+### Fixed
+- **Toolbar icon visibility** — fixed color inconsistencies across themes (AccentBrush/AccentTextBrush theming).
+- **Dice button visibility** — now uses AccentLabelBrush for consistent visibility on all themes.
+- **Notification stacking** — toasts now properly stack and move within window bounds, disappearing cleanly as timers expire.
+- **Corner rounding** — improved window border-radius consistency (10px outer, 9px inner clipping).
+- **Win 7/8/9x button styling** — refined appearance and hover states to match theme intent.
 
 ---
 
