@@ -1,0 +1,36 @@
+<Window x:Class="TGTAMM.ExitConfirmationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Exit TGTAMM" Height="180" Width="360"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        ShowInTaskbar="False">
+
+    <Border Background="{DynamicResource PanelBrush}" CornerRadius="10"
+            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+        <StackPanel Margin="24,20,24,20" VerticalAlignment="Center">
+            <TextBlock Text="Exit TGTAMM?" FontSize="16" FontWeight="Bold"
+                       Foreground="{DynamicResource TextBrush}" Margin="0,0,0,12"/>
+            <TextBlock Text="Are you sure you want to close the application?"
+                       Foreground="{DynamicResource SubTextBrush}" FontSize="12"
+                       TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+            <CheckBox x:Name="chkDontAskAgain" Content="Don't ask me again"
+                      Foreground="{DynamicResource TextBrush}" FontSize="11"
+                      Margin="0,0,0,16"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,0">
+                <Button Content="Cancel" Width="100" Height="32" Margin="0,0,8,0"
+                        Foreground="{DynamicResource TextBrush}"
+                        Background="{DynamicResource ControlBgBrush}"
+                        BorderThickness="0" CornerRadius="5" Cursor="Hand"
+                        Click="BtnCancel_Click"/>
+                <Button Content="Exit" Width="100" Height="32"
+                        Foreground="{DynamicResource AccentTextBrush}"
+                        Background="{DynamicResource AccentBrush}"
+                        BorderThickness="0" CornerRadius="5" Cursor="Hand"
+                        Click="BtnExit_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

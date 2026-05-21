@@ -69,6 +69,7 @@ namespace TGTAMM
         private bool _hasPendingChanges = true; // true on startup: virtual folder may be out of sync
         private bool _needsDowngradeHelp = false;
         private bool _deployReady = false;
+        private bool _exitConfirmationShown = false; // Track if user has been asked about exit
 
         private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
 
@@ -1582,6 +1583,29 @@ namespace TGTAMM
         private void TitleBar_MouseDown(object s, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left) DragMove();
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            // Show exit confirmation on first close attempt (unless user disabled it)
+            if (!_exitConfirmationShown && !_core.Settings.SkipExitConfirmation)
+            {
+                _exitConfirmationShown = true;
+
+                var dlg = new ExitConfirmationDialog();
+                if (dlg.ShowDialog() != true)
+                {
+                    e.Cancel = true;
+                    _exitConfirmationShown = false;
+                    return;
+                }
+
+                // Save user preference if they toggled "don't ask again"
+                if (dlg.DontAskAgain)
+                    _core.Settings.SkipExitConfirmation = true;
+            }
+
+            base.OnClosing(e);
         }
 
         private void Toast_Close(object sender, MouseButtonEventArgs e)

@@ -52,6 +52,10 @@ namespace TGTAMM
         // When true, the window outer border uses AccentBrush instead of HeaderBrush.
         public bool AccentBorderEnabled { get; set; } = false;
 
+        // ── Exit confirmation ────────────────────────────────────────────────
+        // When true, skip the "Are you sure?" dialog on app close.
+        public bool SkipExitConfirmation { get; set; } = false;
+
         // ── Per-game deploy overrides ─────────────────────────────────────────
         // When true for a game, deployment proceeds even if the exe is Vanilla
         // (Steam build). Toggled via right-click on the play buttons in the toolbar.
