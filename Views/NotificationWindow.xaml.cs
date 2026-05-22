@@ -1,7 +1,7 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class NotificationWindow : Window
     {

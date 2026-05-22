@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Windows;
 
-namespace TGTAMM
+namespace TMM
 {
     /// <summary>
     /// Single point of contact for invoking the Steam protocol handler.
     /// Previously each window (MainDashboard, InitialSetup, Settings, DebugConsole)
     /// inlined its own <c>Process.Start("steam://...")</c> with slightly different
-    /// error handling — this consolidates that.
+    /// error handling - this consolidates that.
     /// </summary>
     public static class SteamLauncher
     {

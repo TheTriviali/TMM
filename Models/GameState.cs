@@ -1,5 +1,5 @@
-// TABLE OF CONTENTS
-// ─────────────────────────────────────────────────────────────────
+﻿// TABLE OF CONTENTS
+// -----------------------------------------------------------------
 //   ExeStatus ENUM  (Unknown | Vanilla | Downgraded) ............. ~15
 //   GameDetectionState RECORD
 //     IsReady, ButtonColor, StatusLabel .......................... ~22
@@ -8,7 +8,7 @@
 //     ScanAll() / ScanGame() / For() ............................ ~59
 //     Detect() / ComputeMd5() (private) .......................... ~81
 //   GameState STATIC  (back-compat shim for BackendCore) ......... ~120
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Windows.Media;
 
-namespace TGTAMM
+namespace TMM
 {
     /// <summary>
     /// Detected state of a game executable.
@@ -48,7 +48,7 @@ namespace TGTAMM
         public string StatusLabel => Status switch
         {
             ExeStatus.Downgraded => "Ready (1.0)",
-            ExeStatus.Vanilla => "Vanilla — downgrade required",
+            ExeStatus.Vanilla => "Vanilla - downgrade required",
             _ => "Not detected",
         };
     }
@@ -114,7 +114,7 @@ namespace TGTAMM
                 return new GameDetectionState(profile, ExeStatus.Downgraded, exePath);
             }
 
-            log?.Invoke($"[{profile.Key}] Unrecognised hash — treating as Vanilla.");
+            log?.Invoke($"[{profile.Key}] Unrecognised hash - treating as Vanilla.");
             return new GameDetectionState(profile, ExeStatus.Vanilla, exePath);
         }
 
@@ -128,7 +128,7 @@ namespace TGTAMM
 
     /// <summary>Progress payload for long-running deploy/clone operations.</summary>
 
-    // ── Back-compat shim ─────────────────────────────────────────────────────
+    // -- Back-compat shim -----------------------------------------------------
     // BackendCore still uses the name 'GameState'. Keeps it compiling until
     // the rename is done properly.
     public static class GameState

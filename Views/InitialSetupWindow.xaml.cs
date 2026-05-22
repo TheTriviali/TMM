@@ -1,9 +1,9 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class InitialSetupWindow : Window
     {
@@ -48,7 +48,7 @@ namespace TGTAMM
             if (!anyReady)
             {
                 var result = MessageBox.Show(
-                    "No games are mapped yet. TGTAMM won't be able to manage mods until at least one game is located.\n\nClose anyway?",
+                    "No games are mapped yet. TMM won't be able to manage mods until at least one game is located.\n\nClose anyway?",
                     "No Games Mapped", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (result != MessageBoxResult.Yes) return;
             }
@@ -63,7 +63,7 @@ namespace TGTAMM
             {
                 MessageBox.Show(
                     "You must locate at least one game before finishing setup. " +
-                    "TGTAMM needs a path to know where to manage your mods.",
+                    "TMM needs a path to know where to manage your mods.",
                     "Setup Incomplete", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }

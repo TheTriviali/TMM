@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class ArchiveExtractionWindow : Window
     {

@@ -1,8 +1,8 @@
-namespace TGTAMM
+﻿namespace TMM
 {
     /// <summary>
     /// Theming-relevant slice of application settings.
-    /// ThemeEngine depends only on this interface — not on any app-specific settings model.
+    /// ThemeEngine depends only on this interface - not on any app-specific settings model.
     /// </summary>
     public interface IThemeSettings
     {

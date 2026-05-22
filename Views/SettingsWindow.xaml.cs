@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class SettingsWindow : Window
     {
@@ -44,13 +44,13 @@ namespace TGTAMM
             if (profile == null) return;
 
             string result = await _core.GetMd5DiagnosticsAsync(profile);
-            MessageBox.Show(result, $"MD5 Check — {profile.DisplayName}",
+            MessageBox.Show(result, $"MD5 Check - {profile.DisplayName}",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnOpenLog_Click(object sender, RoutedEventArgs e)
         {
-            string logPath = Path.Combine(_core.AppDataPath, "tgtamm.log");
+            string logPath = Path.Combine(_core.AppDataPath, "TMM.log");
             if (File.Exists(logPath))
                 Process.Start(new ProcessStartInfo(logPath) { UseShellExecute = true });
             else
@@ -60,18 +60,17 @@ namespace TGTAMM
 
         private void BtnWipeCache_Click(object sender, RoutedEventArgs e)
         {
-            _core.Log("User initiated manual TempStaging cache wipe.");
+            _core.Log("User initiated manual download cache wipe.");
             try
             {
-                if (Directory.Exists(_core.TempStagingPath))
-                    Directory.Delete(_core.TempStagingPath, true);
-                Directory.CreateDirectory(_core.TempStagingPath);
+                _core.WipeDownloadCache();
+                Directory.CreateDirectory(_core.DownloadCachePath);
                 NotificationService.ShowSuccess("Temporary cache wiped successfully");
             }
             catch (Exception ex)
             {
                 _core.Log($"Cache wipe failed: {ex.Message}");
-                NotificationService.ShowWarning("Cache wipe failed — close any open mod folders and try again");
+                NotificationService.ShowWarning("Cache wipe failed - close any open mod folders and try again");
             }
         }
 

@@ -14,14 +14,19 @@
 
 using System.Collections.Generic;
 
-namespace TGTAMM
+namespace TMM
 {
     public class AppSettings
     {
+        // Game paths: now dynamically populated from GameRegistry
+        // Initially populated with built-in games, custom games added as they're created
         public Dictionary<string, string?> GamePaths { get; set; } = new()
         {
             { "III", null }, { "VC", null }, { "SA", null }
         };
+
+        // Track which custom games exist (for cleanup and initialization)
+        public List<string> CustomGameKeys { get; set; } = new();
 
         public bool FirstLaunch   { get; set; } = true;
         public bool DebugStaging  { get; set; } = false;
@@ -74,5 +79,9 @@ namespace TGTAMM
         };
 
         public string LastPresetName { get; set; } = "macOS Dark";
+
+        // ── Multi-game (TMM) ───────────────────────────────────────────────────
+        // Track the last selected game for quick restoration on app launch
+        public string? LastSelectedGameKey { get; set; } = null;
     }
 }

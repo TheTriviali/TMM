@@ -1,17 +1,17 @@
-// TABLE OF CONTENTS
-// ─────────────────────────────────────────────────────────────────
+﻿// TABLE OF CONTENTS
+// -----------------------------------------------------------------
 //   GameProfile RECORD
 //     Known 1.0 MD5 hashes ........................................ ~18
 //     Static profiles (III, VC, SA) + All list ................... ~23
 //     ByKey() lookup .............................................. ~53
 //     IsValidMd5() / AllValidMd5s ................................ ~57
-//     Folder name helpers (RawFolderName, ModdedFolderName) ....... ~71
-// ─────────────────────────────────────────────────────────────────
+//     Folder name helpers (RawFolderName) .......................... ~71
+// -----------------------------------------------------------------
 
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TGTAMM
+namespace TMM
 {
     /// <summary>
     /// Single source of truth for per-game data.
@@ -25,7 +25,7 @@ namespace TGTAMM
         string Vanilla10Md5,
         IReadOnlyList<string>? AdditionalValidMd5s = null)
     {
-        // ── Known 1.0 hashes ────────────────────────────────────────────────────
+        // -- Known 1.0 hashes ----------------------------------------------------
         // Multiple variants exist: US/EU retail pressings, different downgrader
         // tools produce slightly different binaries. All listed hashes are valid
         // 1.0 builds that pass the Steam-DRM bypass test.
@@ -78,7 +78,6 @@ namespace TGTAMM
                 ? new[] { Vanilla10Md5 }
                 : new[] { Vanilla10Md5 }.Concat(AdditionalValidMd5s);
 
-        public string RawFolderName    => $"ModsRaw{Key}";
-        public string ModdedFolderName => $"Modded{Key}";
+        public string RawFolderName => $"ModsRaw{Key}";
     }
 }

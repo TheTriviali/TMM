@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace TGTAMM
+namespace TMM
 {
     public class NotificationTypeIconConverter : IValueConverter
     {
@@ -12,13 +12,13 @@ namespace TGTAMM
             {
                 return type switch
                 {
-                    NotificationType.Success => "✓",
-                    NotificationType.Warning => "⚠",
-                    NotificationType.Error => "✕",
-                    _ => "ⓘ"
+                    NotificationType.Success => "âœ“",
+                    NotificationType.Warning => "âš ",
+                    NotificationType.Error => "x",
+                    _ => "â“˜"
                 };
             }
-            return "ⓘ";
+            return "â“˜";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace TGTAMM
+namespace TMM
 {
     public enum NotificationType { Info, Success, Warning, Error }
 

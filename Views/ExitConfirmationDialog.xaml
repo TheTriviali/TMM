@@ -1,7 +1,7 @@
-<Window x:Class="TGTAMM.ExitConfirmationDialog"
+﻿<Window x:Class="TMM.ExitConfirmationDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Exit TGTAMM" Height="180" Width="360"
+        Title="Exit TMM" Height="180" Width="360"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         ShowInTaskbar="False">
@@ -9,7 +9,7 @@
     <Border Background="{DynamicResource PanelBrush}" CornerRadius="10"
             BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
         <StackPanel Margin="24,20,24,20" VerticalAlignment="Center">
-            <TextBlock Text="Exit TGTAMM?" FontSize="16" FontWeight="Bold"
+            <TextBlock Text="Exit TMM?" FontSize="16" FontWeight="Bold"
                        Foreground="{DynamicResource TextBrush}" Margin="0,0,0,12"/>
             <TextBlock Text="Are you sure you want to close the application?"
                        Foreground="{DynamicResource SubTextBrush}" FontSize="12"

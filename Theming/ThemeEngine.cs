@@ -1,26 +1,26 @@
-// TABLE OF CONTENTS
-// ─────────────────────────────────────────────────────────────────
+﻿// TABLE OF CONTENTS
+// -----------------------------------------------------------------
 //   DWM P/INVOKE  (DwmSetWindowAttribute) ........................ ~13
 //   PUBLIC ENTRY POINTS
-//     ApplyTheme()  — updates all dynamic brushes ................ ~18
-//       · Accent + AccentTextBrush + AccentLabelBrush ............. ~30
-//       · TextBrush + SubTextBrush ................................ ~39
-//       · BgBrush (with Mica alpha) ............................... ~60
-//       · PanelBrush + HeaderBrush (simplified, consistent) ....... ~64
-//       · ControlBgBrush + CheckeredRowBrush ...................... ~95
-//       · Titlebar brushes (Win8, macOS, Aero7, Win9x dark/light) ~120
+//     ApplyTheme()  - updates all dynamic brushes ................ ~18
+//       . Accent + AccentTextBrush + AccentLabelBrush ............. ~30
+//       . TextBrush + SubTextBrush ................................ ~39
+//       . BgBrush (with Mica alpha) ............................... ~60
+//       . PanelBrush + HeaderBrush (simplified, consistent) ....... ~64
+//       . ControlBgBrush + CheckeredRowBrush ...................... ~95
+//       . Titlebar brushes (Win8, macOS, Aero7, Win9x dark/light) ~120
 //     ApplyFont() ................................................. ~210
-//     TryApplyMica()  — DWM Mica/Acrylic backdrop ............... ~220
+//     TryApplyMica()  - DWM Mica/Acrylic backdrop ............... ~220
 //   COMPLEMENTARY COLOUR GENERATION
 //     GetComplementPalette()  (Complementary/Triadic/...) ........ ~260
-//     SuggestAccentForBg()  — WCAG-optimised hue sweep ........... ~290
+//     SuggestAccentForBg()  - WCAG-optimised hue sweep ........... ~290
 //   CONTRAST COLOUR ALGORITHMS
 //     GetContrastColor()  (WCAG | YIQ | Invert) ................. ~330
-//   HSV HELPERS  (public — shared with ThemeManagerWindow)
+//   HSV HELPERS  (public - shared with ThemeManagerWindow)
 //     HsvToRgb() / RgbToHsv() ................................... ~355
 //   INTERNAL HELPERS
 //     RelativeLuminance() / BlendColors() ........................ ~385
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
@@ -29,15 +29,15 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 
-namespace TGTAMM
+namespace TMM
 {
     public static class ThemeEngine
     {
-        // ── DWM P/Invoke ─────────────────────────────────────────────────────
+        // -- DWM P/Invoke -----------------------------------------------------
         [DllImport("dwmapi.dll", PreserveSig = false)]
         private static extern void DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int pvAttr, int cbAttr);
 
-        // ── Public entry points ───────────────────────────────────────────────
+        // -- Public entry points -----------------------------------------------
 
         public static void ApplyTheme(AppSettings settings)
         {
@@ -51,22 +51,22 @@ namespace TGTAMM
                 bool mica      = settings.MicaEnabled;
                 double micaAmt = settings.MicaIntensity; // user-adjustable Mica intensity
 
-                // ── Accent ────────────────────────────────────────────────────
+                // -- Accent ----------------------------------------------------
                 Application.Current.Resources["AccentBrush"] = new SolidColorBrush(accent);
 
-                // ── Smart text color for accent ───────────────────────────────
+                // -- Smart text color for accent -------------------------------
                 // Calculate text color that contrasts with the accent for buttons/highlights
                 Color accentTextColor = GetContrastColor(accent, settings.TextColorMode);
                 Application.Current.Resources["AccentTextBrush"] = new SolidColorBrush(accentTextColor);
                 Application.Current.Resources["HighlightTextBrush"] = new SolidColorBrush(accentTextColor);
 
-                // ── Smart text color ─────────────────────────────────────────
+                // -- Smart text color -----------------------------------------
                 Color textColor    = GetContrastColor(bg, settings.TextColorMode);
                 Color subTextColor = BlendColors(textColor, bg, isDark ? 0.50 : 0.42);
                 Application.Current.Resources["TextBrush"]    = new SolidColorBrush(textColor);
                 Application.Current.Resources["SubTextBrush"] = new SolidColorBrush(subTextColor);
 
-                // ── Accent label color ────────────────────────────────────────
+                // -- Accent label color ----------------------------------------
                 // A readable version of accent that maintains hue but ensures contrast with panel background
                 // Convert to HSV, reduce saturation/value for better readability, then convert back
                 var (h, s, v) = RgbToHsv(accent);
@@ -79,14 +79,14 @@ namespace TGTAMM
                 Color accentLabelColor = HsvToRgb(h, newSat, newVal);
                 Application.Current.Resources["AccentLabelBrush"] = new SolidColorBrush(accentLabelColor);
 
-                // ── Background ───────────────────────────────────────────────
+                // -- Background -----------------------------------------------
                 // When Mica is enabled, make the main bg semi-transparent so the
                 // DWM backdrop (Mica/Acrylic) bleeds through the window border.
                 byte bgAlpha = mica ? (byte)Math.Round(255 * Math.Max(0.45, 0.75 - micaAmt * 0.25)) : (byte)255;
                 Application.Current.Resources["BgBrush"] =
                     new SolidColorBrush(Color.FromArgb(bgAlpha, bg.R, bg.G, bg.B));
 
-                // ── Panels ────────────────────────────────────────────────────
+                // -- Panels ----------------------------------------------------
                 if (isDark)
                 {
                     if (mica)
@@ -160,7 +160,7 @@ namespace TGTAMM
                         new SolidColorBrush(Color.FromRgb(72, 82, 100));
                 }
 
-                // ── Titlebar brushes ──────────────────────────────────────────
+                // -- Titlebar brushes ------------------------------------------
                 if (settings.TitlebarPersonalize)
                 {
                     // Win8: accent-tinted, raised opacity for visibility
@@ -185,7 +185,7 @@ namespace TGTAMM
                             : Color.FromArgb(238, 238, 238, 242));
                 }
 
-                // Win7 Aero — gradient-like frosted glass. If personalize is on,
+                // Win7 Aero - gradient-like frosted glass. If personalize is on,
                 // tint with accent at low saturation for a subtle coloured glass look.
                 if (settings.TitlebarPersonalize)
                 {
@@ -205,7 +205,7 @@ namespace TGTAMM
                 Application.Current.Resources["MacLightTitleBrush"] =
                     new SolidColorBrush(Color.FromArgb(255, 236, 236, 238));
 
-                // ── Window border ─────────────────────────────────────────────────
+                // -- Window border -------------------------------------------------
                 Application.Current.Resources["WindowBorderBrush"] = settings.AccentBorderEnabled
                     ? new SolidColorBrush(accent)
                     : new SolidColorBrush(isDark
@@ -295,7 +295,7 @@ namespace TGTAMM
                     Application.Current.Resources["MacOS9TitleBrush"] = new SolidColorBrush(Color.FromRgb(192, 192, 192));
                 }
             }
-            catch { /* invalid hex — keep previous theme */ }
+            catch { /* invalid hex - keep previous theme */ }
         }
 
         public static void ApplyFont(Window window, AppSettings settings)
@@ -322,10 +322,10 @@ namespace TGTAMM
                 return;
             }
 
-            // Dark mode title bar text — makes Win11 caption text white
+            // Dark mode title bar text - makes Win11 caption text white
             try { int v = 1; DwmSetWindowAttribute(hwnd, 20, ref v, sizeof(int)); } catch { }
 
-            // Method 1: DWMWA_SYSTEMBACKDROP_TYPE (38) — Win11 22H2+
+            // Method 1: DWMWA_SYSTEMBACKDROP_TYPE (38) - Win11 22H2+
             // 2 = Mica, 3 = Acrylic, 4 = MicaAlt (more saturated, best with coloured themes)
             bool method1 = false;
             try
@@ -338,12 +338,12 @@ namespace TGTAMM
 
             if (!method1)
             {
-                // Method 2: undocumented DWMWA_MICA_EFFECT (1029) — Win11 RTM
+                // Method 2: undocumented DWMWA_MICA_EFFECT (1029) - Win11 RTM
                 try { int v = 1; DwmSetWindowAttribute(hwnd, 1029, ref v, sizeof(int)); } catch { }
             }
         }
 
-        // ── Complementary colour generation ───────────────────────────────────
+        // -- Complementary colour generation -----------------------------------
 
         /// <summary>
         /// Returns a palette of algorithmically derived companion colours
@@ -387,7 +387,7 @@ namespace TGTAMM
             double bestScore = -1;
             Color best = Colors.Cyan;
 
-            // Sweep 36 hues × 3 saturation levels × 3 value levels
+            // Sweep 36 hues Ã— 3 saturation levels Ã— 3 value levels
             for (int hi = 0; hi < 36; hi++)
             {
                 double hue = hi * 10.0;
@@ -419,7 +419,7 @@ namespace TGTAMM
             return $"#{best.R:X2}{best.G:X2}{best.B:X2}";
         }
 
-        // ── Contrast colour algorithms ────────────────────────────────────────
+        // -- Contrast colour algorithms ----------------------------------------
 
         public static Color GetContrastColor(Color bg, string mode)
         {
@@ -444,7 +444,7 @@ namespace TGTAMM
             }
         }
 
-        // ── HSV helpers (public so ThemeManagerWindow can share them) ─────────
+        // -- HSV helpers (public so ThemeManagerWindow can share them) ---------
 
         public static Color HsvToRgb(double h, double s, double v)
         {
@@ -475,7 +475,7 @@ namespace TGTAMM
             return (h, s, v);
         }
 
-        // ── Internal helpers ──────────────────────────────────────────────────
+        // -- Internal helpers --------------------------------------------------
 
         public static double RelativeLuminance(Color c)
         {

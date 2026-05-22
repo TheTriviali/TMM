@@ -1,6 +1,35 @@
 # Changelog
 
-All notable changes to TGTAMM are listed here, newest first.
+All notable changes to TMM are listed here, newest first.
+
+---
+
+## [2.0] — 2026-05-22
+
+### Added
+- **Direct Deploy:** Mods are now copied straight into the game's actual installation directory. No virtual filesystem, no staging folder, no intermediate copies.
+- **Automatic Backup & Rollback:** Before overwriting any file, the original is backed up to `AppData\TMM\Backups\{gameKey}\{timestamp}\`. Last 5 deploys per game are retained. `DeployManifest` JSON tracks every file changed.
+- **Rollback Button:** New toolbar button (undo icon) lets you restore the last deploy for the active game. Works in both GTA dashboard and Custom Game dashboard.
+- **Custom Game Support:** Add any game with a configurable name, directory, executable, and per-extension output subdirectory routing (e.g. `.asi` -> `scripts\`, `*` -> root).
+- **Multi-game Launcher:** New `GameLauncherWindow` home screen showing all configured games as cards. Built-in GTA III Series card + custom game cards with Edit/Delete actions.
+- **Back to Launcher Button:** Toolbar button in all dashboards to return to the launcher.
+- **Reset Button (Launcher):** Clears the download cache with a confirmation dialog.
+
+### Changed
+- **Project renamed:** TGTAMM -> TMM (Triviali's Mod Manager). AppData migrated automatically from `%APPDATA%\TGTAMM` to `%APPDATA%\TMM` on first launch.
+- **`TempStagingPath` -> `DownloadCachePath`:** Staging folder concept removed. Download cache is now only used for temporary archive downloads before extraction, not for deployment.
+- **DXVK config location:** `dxvk.conf` is now written to the actual game installation directory instead of the old virtual folder.
+- **Context menu "Open Virtual Folder"** renamed to **"Open Backup Folder"** — opens the rollback backup directory for that game.
+- **`GetDriveSpaceInfo()`** no longer references VFS; shows total AppData size.
+- **`BtnLaunchModded_Click`** now launches from the game's actual installation directory.
+- **Output mapping UI** in Add Custom Game dialog replaced with a `DataGrid` (Extension / Output Folder columns) replacing the raw textarea.
+- **Status bar in launcher** uses `AccentBrush` on a dark background panel for readability across all themes.
+
+### Removed
+- **Virtual File System (VFS):** `CloneToVirtualAsync()`, `ModdedFolderName`, `Modded{Key}` AppData folders — all removed.
+- **TempStaging folder:** No longer created. `TempStagingPath` property removed from `BackendCore`.
+- **`WipeTempStaging()`** replaced with `WipeDownloadCache()`.
+- **mojibake characters** across all `.cs` and `.xaml` source files cleaned up (double-encoded UTF-8/Windows-1252 sequences replaced with ASCII equivalents).
 
 ---
 

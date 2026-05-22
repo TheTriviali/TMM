@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class DebugConsoleWindow : Window
     {
@@ -12,7 +12,7 @@ namespace TGTAMM
         {
             _core = core;
             InitializeComponent();
-            txtLog.AppendText($"[Alpha Diagnostics — {DateTime.Now:yyyy-MM-dd HH:mm:ss}]\n");
+            txtLog.AppendText($"[Alpha Diagnostics - {DateTime.Now:yyyy-MM-dd HH:mm:ss}]\n");
             cmbGame.SelectedIndex = 0;
         }
 
@@ -30,7 +30,7 @@ namespace TGTAMM
             if (cmbGame.SelectedItem is not ComboBoxItem item) return;
             var profile = GameProfile.ByKey(item.Tag.ToString());
             if (profile == null) return;
-            txtLog.AppendText($"\n[MD5 Check — {profile.DisplayName}]\n");
+            txtLog.AppendText($"\n[MD5 Check - {profile.DisplayName}]\n");
             string result = await _core.GetMd5DiagnosticsAsync(profile);
             txtLog.AppendText(result + "\n");
             txtLog.ScrollToEnd();

@@ -1,7 +1,7 @@
-<Window x:Class="TGTAMM.InitialSetupWindow"
+﻿<Window x:Class="TMM.InitialSetupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:TGTAMM"
+        xmlns:local="clr-namespace:TMM"
         Title="GTA Trilogy Setup" Width="900" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" WindowStyle="None"
         AllowsTransparency="True" Background="Transparent"
@@ -26,7 +26,7 @@
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="bg" Background="Transparent" CornerRadius="0,10,0,0">
-                                <TextBlock Text="✕" Foreground="{DynamicResource SubTextBrush}"
+                                <TextBlock Text="x" Foreground="{DynamicResource SubTextBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
                             </Border>
                             <ControlTemplate.Triggers>
@@ -41,9 +41,9 @@
 
             <!-- Content -->
             <StackPanel Grid.Row="1" Margin="22,18,22,0">
-                <TextBlock Text="Welcome to TGTAMM" FontSize="24" FontWeight="Bold"
+                <TextBlock Text="Welcome to TMM" FontSize="24" FontWeight="Bold"
                            Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
-                <TextBlock Text="Configure game paths and initialize Virtual Environments."
+                <TextBlock Text="Configure game paths so TMM can deploy mods directly to your game directories."
                            Foreground="{DynamicResource SubTextBrush}" FontSize="12"
                            HorizontalAlignment="Center" Margin="0,5,0,18"/>
 

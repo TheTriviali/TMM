@@ -1,8 +1,8 @@
-<Application x:Class="TGTAMM.App"
+﻿<Application x:Class="TMM.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:TGTAMM"
-             StartupUri="Views/MainDashboardWindow.xaml">
+             xmlns:local="clr-namespace:TMM"
+             Startup="OnStartup">
     <Application.Resources>
         <!-- Notification type icon converter -->
         <local:NotificationTypeIconConverter x:Key="NotificationTypeIconConverter"/>
@@ -23,7 +23,7 @@
         <SolidColorBrush x:Key="Win8TitleBrush" Color="#0078D7"/>
         <SolidColorBrush x:Key="Aero7TitleBrush" Color="#30FFFFFF"/>
 
-        <!-- ── Global ComboBox style ──────────────────────────────────────────────
+        <!-- Global ComboBox style
              Uses a full custom ControlTemplate so the closed-state selection box
              always shows theme-aware colors, regardless of the system Aero theme.
              Windows (like ThemeManagerWindow) can override with a local implicit style. -->

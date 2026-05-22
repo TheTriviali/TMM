@@ -1,6 +1,6 @@
-using System.Windows;
+﻿using System.Windows;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class ExitConfirmationDialog : Window
     {

@@ -6,12 +6,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <RootNamespace>TGTAMM</RootNamespace>
-    <AssemblyName>TGTAMM</AssemblyName>
+    <RootNamespace>TMM</RootNamespace>
+    <AssemblyName>TMM</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SevenZipExtractor" Version="1.0.19" />
     <PackageReference Include="SharpCompress" Version="0.48.1" />
   </ItemGroup>
 

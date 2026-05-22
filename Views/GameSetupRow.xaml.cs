@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace TGTAMM
+namespace TMM
 {
     /// <summary>
     /// One-stop UI block for displaying and configuring the path / status of
@@ -68,7 +68,7 @@ namespace TGTAMM
 
             if (!Directory.Exists(path) || Directory.GetFileSystemEntries(path).Length == 0)
             {
-                lblStatus.Text = "⚠️ Ghost Install: Folder is missing or empty!";
+                lblStatus.Text = "âš ï¸ Ghost Install: Folder is missing or empty!";
                 lblStatus.Foreground = Brushes.Red;
                 return;
             }

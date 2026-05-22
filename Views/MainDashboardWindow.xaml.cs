@@ -1,5 +1,5 @@
-// TABLE OF CONTENTS
-// ─────────────────────────────────────────────────────────────────
+﻿// TABLE OF CONTENTS
+// -----------------------------------------------------------------
 //   STATE  (_core, _activeProfile, drag state, flags) ............ ~23
 //   INIT  (constructor, Window_Loaded) ........................... ~42
 //   UI REFRESH  (RefreshUIAsync) ................................. ~76
@@ -33,7 +33,7 @@
 //   CONTEXT MENU  (Rename/Toggle/Delete/MoveUp/MoveDown/...) ...... ~1218
 //   STANDARD BINDINGS  (ModCheckBox, Search, Sort, Keys) ......... ~1409
 //   HELPERS  (GetActiveList, ResolveProfile, FlagDeploy) ......... ~1475
-// ─────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------
 
 using SharpCompress.Readers;
 using System;
@@ -50,7 +50,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class MainDashboardWindow : Window
     {
@@ -66,7 +66,7 @@ namespace TGTAMM
         private bool _isSortedByLoadOrder = true;
         private Point _startPoint;
         private ModItem? _draggedItem;
-        private bool _hasPendingChanges = true; // true on startup: virtual folder may be out of sync
+        private bool _hasPendingChanges = true; // true on startup: game dir may not reflect current mod list
         private bool _needsDowngradeHelp = false;
         private bool _deployReady = false;
         private bool _exitConfirmationShown = false; // Track if user has been asked about exit
@@ -77,9 +77,9 @@ namespace TGTAMM
         // INIT
         // ==========================================================
 
-        public MainDashboardWindow()
+        public MainDashboardWindow(BackendCore core)
         {
-            _core = new BackendCore();
+            _core = core;
             InitializeComponent();
 
             // Bind each list directly to the per-profile ObservableCollection.
@@ -92,6 +92,9 @@ namespace TGTAMM
 
         private async void Window_Loaded(object s, RoutedEventArgs e)
         {
+            // Initialize GameRegistry and custom games
+            await _core.InitializeAsync();
+
             // Application.Current is guaranteed non-null from here onward.
             ThemeEngine.ApplyTheme(_core.Settings);
             ThemeEngine.ApplyFont(this, _core.Settings);
@@ -157,10 +160,10 @@ namespace TGTAMM
                     if (!isReady)
                         playBtn.Background = new SolidColorBrush(Color.FromRgb(70, 70, 70));
                     else if (status == ExeStatus.Vanilla && !hasOverride)
-                        // Red = vanilla, no override — can't deploy or play
+                        // Red = vanilla exe, no override - deploy works but game won't launch
                         playBtn.Background = new SolidColorBrush(Color.FromRgb(180, 45, 45));
                     else if (status == ExeStatus.Vanilla && hasOverride)
-                        // Orange = vanilla but override enabled — can deploy, game launch will still need 1.0 exe
+                        // Orange = vanilla but override enabled - can deploy, game launch will still need 1.0 exe
                         playBtn.Background = new SolidColorBrush(Color.FromRgb(200, 110, 20));
                     else
                         playBtn.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "AccentBrush");
@@ -177,9 +180,7 @@ namespace TGTAMM
             else
                 btnDeploy.Background = new SolidColorBrush(Color.FromRgb(70, 70, 70));
 
-            btnDeploy.ToolTip = !_deployReady && _needsDowngradeHelp
-                ? "Can't deploy — one or more games need a 1.0 downgrade. Click for help."
-                : _deployReady ? "Deploy Mods (F5)" : "No pending changes to deploy";
+            btnDeploy.ToolTip = _deployReady ? "Deploy Mods (F5)" : "No pending changes to deploy";
         }
 
         // ==========================================================
@@ -236,7 +237,7 @@ namespace TGTAMM
                 case "macOS":
                     MacControls.Visibility = Visibility.Visible;
                     TitleBarBorder.Background = (Brush)Application.Current.Resources["MacTitleBrush"];
-                    TitleBarBorder.Opacity = 1.0;  // User confirmed macOS Dark looks perfect — no change
+                    TitleBarBorder.Opacity = 1.0;  // User confirmed macOS Dark looks perfect - no change
                     break;
 
                 case "macOSLight":
@@ -264,7 +265,7 @@ namespace TGTAMM
 
                 case "Win9x":
                     Win9xControls.Visibility = Visibility.Visible;
-                    // Gradient brush is built inline — ThemeEngine exposes the two endpoint colors
+                    // Gradient brush is built inline - ThemeEngine exposes the two endpoint colors
                     var win9xBrush = new LinearGradientBrush
                     {
                         StartPoint = new System.Windows.Point(0, 0),
@@ -332,7 +333,7 @@ namespace TGTAMM
                 if (close != null) panel.Children.Add(close);
             }
 
-            if (panel.Name == "MacControls" || panel.Name == "CompactControls")
+            if (panel.Name == "MacControls" || panel.Name == "MacLightControls" || panel.Name == "CompactControls")
             {
                 int spacing = panel.Name == "CompactControls" ? 5 : 8;
                 foreach (var child in panel.Children.OfType<Button>())
@@ -367,7 +368,7 @@ namespace TGTAMM
             {
                 foreach (var item in batch)
                 {
-                    string path = Path.Combine(_core.TempStagingPath, Path.GetFileName(new Uri(item.url).LocalPath));
+                    string path = Path.Combine(_core.DownloadCachePath, Path.GetFileName(new Uri(item.url).LocalPath));
                     await _core.DownloadFileAsync(item.url, path);
                     downloaded.Add((path, item.hintKey));
                 }
@@ -428,7 +429,7 @@ namespace TGTAMM
         private async Task ProcessModInstallationAsync(string filePath, string hintKey = "")
         {
             string staging = Path.Combine(
-                _core.TempStagingPath,
+                _core.DownloadCachePath,
                 Path.GetFileNameWithoutExtension(filePath).Replace(".tar", "", StringComparison.OrdinalIgnoreCase));
             Directory.CreateDirectory(staging);
 
@@ -571,8 +572,8 @@ namespace TGTAMM
 
             MessageBox.Show(
                 "DXVK Installation Note:\n\n" +
-                "• GTA SA: Uses d3d9.dll (Vulkan translation)\n" +
-                "• GTA III/VC: Uses d3d8.dll (DXVK utilizes a proxy for legacy titles)",
+                "* GTA SA: Uses d3d9.dll (Vulkan translation)\n" +
+                "* GTA III/VC: Uses d3d8.dll (DXVK utilizes a proxy for legacy titles)",
                 "DXVK Deployment", MessageBoxButton.OK, MessageBoxImage.Information);
 
             var wizard = new ArchiveExtractionWindow(_core, filePath, staging, hintKey) { Owner = this };
@@ -616,7 +617,7 @@ namespace TGTAMM
         /// <summary>
         /// Post-install fixup for Modloader archives.
         /// SA: modloader.asi stays at the mod root (game root on deploy).
-        /// III/VC: modloader.asi must be inside a scripts/ subdirectory — Ultimate ASI
+        /// III/VC: modloader.asi must be inside a scripts/ subdirectory - Ultimate ASI
         ///         Loader picks it up from there. The modloader/ data folder stays at root.
         /// </summary>
         private static void CleanModloaderFolder(string target, string profileKey)
@@ -1037,7 +1038,7 @@ namespace TGTAMM
         {
             try
             {
-                string p = Path.Combine(_core.TempStagingPath, Path.GetFileName(new Uri(url).LocalPath));
+                string p = Path.Combine(_core.DownloadCachePath, Path.GetFileName(new Uri(url).LocalPath));
                 await _core.DownloadFileAsync(url, p);
                 await ProcessModInstallationAsync(p, hintKey);
                 txtDiskSpace.Text = _core.GetDriveSpaceInfo();
@@ -1100,7 +1101,7 @@ namespace TGTAMM
             txtDeployCount.Text          = "";
 
             var deployed = new List<string>();
-            var skipped  = new List<string>();
+            var vanillaExeWarnings = new List<string>();
 
             var progress = new Progress<DeploymentProgress>(p =>
             {
@@ -1124,40 +1125,24 @@ namespace TGTAMM
                 {
                     if (string.IsNullOrEmpty(_core.GetVanillaPath(profile))) continue;
 
-                    var gameState = await _core.VerifyGameStatusAsync(profile);
-                    if (gameState == ExeStatus.Vanilla && !_core.HasExeModOverride(profile))
-                    {
-                        skipped.Add(profile.Key);
-                        continue;
-                    }
-
                     txtDeployStage.Text = $"Deploying {profile.Key}...";
                     await _core.DeployModsAsync(profile, _core.Mods[profile.Key], progress);
                     deployed.Add(profile.Key);
+
+                    // Warn (don't block) if exe is still vanilla — mods deploy fine but game won't launch.
+                    var exeStatus = await _core.VerifyGameStatusAsync(profile);
+                    if (exeStatus == ExeStatus.Vanilla)
+                        vanillaExeWarnings.Add(profile.Key);
                 }
 
                 if (deployed.Count > 0) _hasPendingChanges = false;
 
-                // Check which deployed games still have a Steam/Vanilla exe (override was used)
-                var overriddenGames = new List<string>();
-                foreach (var key in deployed)
-                {
-                    var prof = GameProfile.ByKey(key);
-                    if (prof != null)
-                    {
-                        var exeStatus = await _core.VerifyGameStatusAsync(prof);
-                        if (exeStatus == ExeStatus.Vanilla)
-                            overriddenGames.Add(key);
-                    }
-                }
-
                 string summary = "";
-                if (deployed.Count > 0) summary += $"✅ Deployed: {string.Join(", ", deployed)}\n";
-                if (skipped.Count > 0)  summary += $"⚠️ Skipped (Vanilla, no override): {string.Join(", ", skipped)}\n";
-                if (overriddenGames.Count > 0)
-                    summary += $"\n⚠️ Override Warning — {string.Join(", ", overriddenGames)}:\n" +
-                               "Mods were deployed, but the game exe is still a Steam/Vanilla build.\n" +
-                               "The game will likely fail to launch (Application Load Error 5:0000065434).\n" +
+                if (deployed.Count > 0) summary += $"[OK] Deployed: {string.Join(", ", deployed)}\n";
+                if (vanillaExeWarnings.Count > 0)
+                    summary += $"\nWarning - {string.Join(", ", vanillaExeWarnings)}:\n" +
+                               "Mods deployed, but the game exe is still a Steam/Vanilla build.\n" +
+                               "The game will fail to launch (Application Load Error 5:0000065434).\n" +
                                "Install a 1.0 downgraded exe as a mod to fix this.";
                 if (!string.IsNullOrEmpty(summary.Trim()))
                     MessageBox.Show(summary.Trim(), "Deployment Complete");
@@ -1174,6 +1159,69 @@ namespace TGTAMM
                 pbDeploy.IsIndeterminate       = true;
                 pbDeploy.Value                 = 0;
                 await RefreshUIAsync();
+            }
+        }
+
+        private async void BtnRollback_Click(object s, RoutedEventArgs e)
+        {
+            var manifests = _core.GetRollbackManifests(_activeProfile.Key);
+            if (manifests.Count == 0)
+            {
+                MessageBox.Show($"No rollback points found for {_activeProfile.DisplayName}.\n\nDeploy mods first to create a backup.",
+                    "Rollback", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var latest = manifests[0];
+            string modList = latest.ModNames.Count > 0
+                ? string.Join(", ", latest.ModNames)
+                : "(no mods)";
+
+            var choice = MessageBox.Show(
+                $"Rollback {_activeProfile.DisplayName} to its state before the last deploy?\n\n" +
+                $"Restore point: {latest.Timestamp}\n" +
+                $"Mods that were applied: {modList}\n\n" +
+                $"Files changed: {latest.Entries.Count}",
+                "Confirm Rollback", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (choice != MessageBoxResult.Yes) return;
+
+            this.IsEnabled = false;
+            DialogOverlay.Visibility = Visibility.Visible;
+            DeployProgressPanel.Visibility = Visibility.Visible;
+            pbDeploy.IsIndeterminate = true;
+            txtDeployStage.Text = "Rolling back...";
+            txtDeployCount.Text = "";
+
+            try
+            {
+                var progress = new Progress<DeploymentProgress>(p =>
+                {
+                    txtDeployStage.Text = p.Stage;
+                    if (p.Total > 0)
+                    {
+                        pbDeploy.IsIndeterminate = false;
+                        pbDeploy.Value = (double)p.Current / p.Total * 100;
+                        txtDeployCount.Text = $"{p.Current} / {p.Total}";
+                    }
+                });
+
+                await _core.RollbackDeployAsync(latest, progress);
+                MessageBox.Show($"Rollback complete for {_activeProfile.DisplayName}.",
+                    "Rollback", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Rollback failed:\n{ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                this.IsEnabled = true;
+                DeployProgressPanel.Visibility = Visibility.Collapsed;
+                DialogOverlay.Visibility = Visibility.Collapsed;
+                pbDeploy.IsIndeterminate = true;
+                pbDeploy.Value = 0;
             }
         }
 
@@ -1212,17 +1260,23 @@ namespace TGTAMM
             var profile = GameProfile.ByKey(key);
             if (profile == null) return;
 
-            string targetPath = Path.Combine(_core.AppDataPath, profile.ModdedFolderName);
-            string exe = Path.Combine(targetPath, profile.ExeName);
-
-            if (!File.Exists(exe))
+            string? gameDir = _core.GetVanillaPath(profile);
+            if (string.IsNullOrEmpty(gameDir) || !Directory.Exists(gameDir))
             {
-                MessageBox.Show("Game not deployed. Please click 'Deploy Mods' first.",
+                MessageBox.Show("Game directory is not set or missing.",
                     "Launch Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            Process.Start(new ProcessStartInfo(exe) { WorkingDirectory = targetPath });
+            string exe = Path.Combine(gameDir, profile.ExeName);
+            if (!File.Exists(exe))
+            {
+                MessageBox.Show($"{profile.ExeName} not found in the game directory.",
+                    "Launch Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo(exe) { WorkingDirectory = gameDir });
         }
 
         private void BtnHelp_Click(object s, RoutedEventArgs e)
@@ -1236,9 +1290,9 @@ namespace TGTAMM
         }
 
         private static readonly string[] _toolbarLabelNames =
-            { "lblSidebar", "lblToggleLabels",
+            { "lblBack", "lblSidebar", "lblToggleLabels",
               "lblInstallMod", "lblSettings", "lblTheme", "lblRollTheme", "lblRefresh", "lblAppData", "lblDxvk",
-              "lblDeploy", "lblPlayIII", "lblPlayVC", "lblPlaySA",
+              "lblDeploy", "lblRollback", "lblPlayIII", "lblPlayVC", "lblPlaySA",
               "lblHelp", "lblAbout" };
 
         private void ApplyToolbarLabels()
@@ -1300,7 +1354,7 @@ namespace TGTAMM
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
             ApplyTitlebarStyle();
 
-            NotificationService.ShowSuccess($"🎲 {preset.Name}");
+            NotificationService.ShowSuccess($"ðŸŽ² {preset.Name}");
         }
 
         private async void MenuToggleOverrideList_Click(object s, RoutedEventArgs e)
@@ -1371,6 +1425,7 @@ namespace TGTAMM
             await RefreshUIAsync();
         }
 
+        private void BtnBackToLauncher_Click(object s, RoutedEventArgs e) => Close();
         private void BtnCloseApp_Click(object s, RoutedEventArgs e) => Application.Current.Shutdown();
         private void BtnMinimize_Click(object s, RoutedEventArgs e) => WindowState = WindowState.Minimized;
         private void BtnMaximize_Click(object s, RoutedEventArgs e)
@@ -1538,12 +1593,9 @@ namespace TGTAMM
         private void MenuOpenVirtualFolder_Click(object s, RoutedEventArgs e)
         {
             var profile = ResolveProfileFromContextMenu(e);
-            string vPath = Path.Combine(_core.AppDataPath, profile.ModdedFolderName);
-            if (Directory.Exists(vPath) && Directory.GetFileSystemEntries(vPath).Length > 0)
-                OpenFolder(vPath);
-            else
-                MessageBox.Show($"Virtual folder for {profile.DisplayName} hasn't been cloned yet. Deploy mods first.",
-                    "Not Cloned", MessageBoxButton.OK, MessageBoxImage.Information);
+            string backupDir = Path.Combine(_core.BackupsPath, profile.Key);
+            Directory.CreateDirectory(backupDir);
+            OpenFolder(backupDir);
         }
 
         private void MenuOpenModsFolder_Click(object s, RoutedEventArgs e)

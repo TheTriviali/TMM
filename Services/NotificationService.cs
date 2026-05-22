@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Windows.Threading;
 
-namespace TGTAMM
+namespace TMM
 {
     public static class NotificationService
     {

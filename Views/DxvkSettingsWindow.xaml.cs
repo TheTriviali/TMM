@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class DxvkSettingsWindow : Window
     {
@@ -30,7 +30,10 @@ namespace TGTAMM
             var profile = GameProfile.ByKey(tag);
             if (profile == null) return;
 
-            string confPath = Path.Combine(_core.AppDataPath, profile.ModdedFolderName, "dxvk.conf");
+            string? gameDir = _core.GetVanillaPath(profile);
+            if (string.IsNullOrEmpty(gameDir)) return;
+
+            string confPath = Path.Combine(gameDir, "dxvk.conf");
             if (!File.Exists(confPath)) return;
 
             string text = File.ReadAllText(confPath);
@@ -55,13 +58,18 @@ namespace TGTAMM
             if (tag == "ALL")
             {
                 foreach (var p in GameProfile.All)
-                    File.WriteAllText(Path.Combine(_core.AppDataPath, p.ModdedFolderName, "dxvk.conf"), conf);
+                {
+                    string? dir = _core.GetVanillaPath(p);
+                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                        File.WriteAllText(Path.Combine(dir, "dxvk.conf"), conf);
+                }
             }
             else
             {
                 var profile = GameProfile.ByKey(tag);
-                if (profile != null)
-                    File.WriteAllText(Path.Combine(_core.AppDataPath, profile.ModdedFolderName, "dxvk.conf"), conf);
+                string? dir = profile != null ? _core.GetVanillaPath(profile) : null;
+                if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                    File.WriteAllText(Path.Combine(dir, "dxvk.conf"), conf);
             }
 
             Close();

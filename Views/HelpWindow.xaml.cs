@@ -1,7 +1,7 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Windows;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class HelpWindow : Window
     {
