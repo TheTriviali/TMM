@@ -9,6 +9,8 @@ using System.Windows.Input;
 
 namespace TMM
 {
+    // ── Observable row models for the DataGrids ───────────────────────────────────
+
     public class MappingRow : INotifyPropertyChanged
     {
         private string _extension = "";
@@ -30,17 +32,37 @@ namespace TMM
         private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
+    public class CondRouteRow : INotifyPropertyChanged
+    {
+        private string _extension = ".asi";
+        private string _checkSubdir = "plugins";
+        private string _routeIfExists = "plugins";
+        private string _routeIfMissing = ".";
+
+        public string Extension     { get => _extension;     set { _extension     = value; OnPropertyChanged(nameof(Extension)); } }
+        public string CheckSubdir   { get => _checkSubdir;   set { _checkSubdir   = value; OnPropertyChanged(nameof(CheckSubdir)); } }
+        public string RouteIfExists { get => _routeIfExists; set { _routeIfExists = value; OnPropertyChanged(nameof(RouteIfExists)); } }
+        public string RouteIfMissing{ get => _routeIfMissing;set { _routeIfMissing= value; OnPropertyChanged(nameof(RouteIfMissing)); } }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+
+    // ── Window ────────────────────────────────────────────────────────────────────
+
     public partial class CustomGameConfigWindow : Window
     {
         public CustomGameProfile? Result { get; private set; }
         private readonly bool _isEdit;
-        private readonly ObservableCollection<MappingRow> _mappings = new();
+        private readonly ObservableCollection<MappingRow>   _mappings  = new();
+        private readonly ObservableCollection<CondRouteRow> _condRoutes = new();
 
         public CustomGameConfigWindow(CustomGameProfile? existing)
         {
             _isEdit = existing != null;
             InitializeComponent();
-            dgMappings.ItemsSource = _mappings;
+            dgMappings.ItemsSource   = _mappings;
+            dgCondRoutes.ItemsSource = _condRoutes;
 
             if (_isEdit && existing != null)
             {
@@ -53,6 +75,15 @@ namespace TMM
 
                 foreach (var kvp in existing.OutputDirectories)
                     _mappings.Add(new MappingRow { Extension = kvp.Key, OutputFolder = kvp.Value });
+
+                foreach (var cr in existing.ConditionalRoutes)
+                    _condRoutes.Add(new CondRouteRow
+                    {
+                        Extension      = cr.Extension,
+                        CheckSubdir    = cr.CheckSubdir,
+                        RouteIfExists  = cr.RouteIfExists,
+                        RouteIfMissing = cr.RouteIfMissing
+                    });
             }
         }
 
@@ -60,6 +91,8 @@ namespace TMM
         {
             ThemeEngine.ApplyTheme(((App)Application.Current).Core.Settings);
         }
+
+        // ── Browse buttons ────────────────────────────────────────────────────────
 
         private void BtnBrowseDir_Click(object sender, RoutedEventArgs e)
         {
@@ -74,7 +107,6 @@ namespace TMM
             if (dlg.ShowDialog() == true)
             {
                 txtGameDir.Text = dlg.FolderName;
-
                 if (string.IsNullOrWhiteSpace(txtGameName.Text))
                     txtGameName.Text = System.IO.Path.GetFileName(dlg.FolderName);
             }
@@ -102,6 +134,8 @@ namespace TMM
             }
         }
 
+        // ── Static mapping DataGrid ───────────────────────────────────────────────
+
         private void BtnAddMapping_Click(object sender, RoutedEventArgs e)
         {
             var row = new MappingRow { Extension = ".ext", OutputFolder = "." };
@@ -118,9 +152,30 @@ namespace TMM
                 _mappings.Remove(row);
         }
 
+        // ── Conditional routes DataGrid ───────────────────────────────────────────
+
+        private void BtnAddCondRoute_Click(object sender, RoutedEventArgs e)
+        {
+            var row = new CondRouteRow();
+            _condRoutes.Add(row);
+            dgCondRoutes.ScrollIntoView(row);
+            dgCondRoutes.SelectedItem = row;
+            dgCondRoutes.CurrentCell  = new System.Windows.Controls.DataGridCellInfo(row, dgCondRoutes.Columns[0]);
+            dgCondRoutes.BeginEdit();
+        }
+
+        private void BtnRemoveCondRoute_Click(object sender, RoutedEventArgs e)
+        {
+            if (dgCondRoutes.SelectedItem is CondRouteRow row)
+                _condRoutes.Remove(row);
+        }
+
+        // ── Save / Cancel ─────────────────────────────────────────────────────────
+
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             dgMappings.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
+            dgCondRoutes.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
 
             string name = txtGameName.Text.Trim();
             string dir  = txtGameDir.Text.Trim();
@@ -146,11 +201,20 @@ namespace TMM
             var outputDirs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var row in _mappings)
             {
-                string ext = row.Extension.Trim().ToLowerInvariant();
+                string ext    = row.Extension.Trim().ToLowerInvariant();
                 string folder = string.IsNullOrWhiteSpace(row.OutputFolder) ? "." : row.OutputFolder.Trim();
                 if (!string.IsNullOrEmpty(ext) && ext != ".ext")
                     outputDirs[ext] = folder;
             }
+
+            var condRoutes = _condRoutes
+                .Where(r => !string.IsNullOrWhiteSpace(r.Extension) && !string.IsNullOrWhiteSpace(r.CheckSubdir))
+                .Select(r => new ConditionalRoute(
+                    r.Extension.Trim().ToLowerInvariant(),
+                    r.CheckSubdir.Trim(),
+                    string.IsNullOrWhiteSpace(r.RouteIfExists)  ? "." : r.RouteIfExists.Trim(),
+                    string.IsNullOrWhiteSpace(r.RouteIfMissing) ? "." : r.RouteIfMissing.Trim()))
+                .ToList();
 
             Result = new CustomGameProfile
             {
@@ -158,24 +222,16 @@ namespace TMM
                 GameDirectory     = dir,
                 ExePath           = string.IsNullOrWhiteSpace(txtExePath.Text) ? null : txtExePath.Text.Trim(),
                 ModFileTypes      = fileTypes,
-                OutputDirectories = outputDirs
+                OutputDirectories = outputDirs,
+                ConditionalRoutes = condRoutes
             };
 
             DialogResult = true;
             Close();
         }
 
-        private void BtnCancel_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-            Close();
-        }
-
-        private void BtnClose_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-            Close();
-        }
+        private void BtnCancel_Click(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }
+        private void BtnClose_Click(object sender, RoutedEventArgs e)  { DialogResult = false; Close(); }
 
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {

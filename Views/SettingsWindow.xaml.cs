@@ -15,9 +15,13 @@ namespace TMM
         {
             _core = core;
             InitializeComponent();
-            rowIII.ShowActions = false; rowIII.Bind(_core, GameProfile.III);
-            rowVC.ShowActions  = false; rowVC.Bind(_core,  GameProfile.VC);
-            rowSA.ShowActions  = false; rowSA.Bind(_core,  GameProfile.SA);
+
+            rowIII.ShowActions   = false; rowIII.Bind(_core,   GameProfile.III);
+            rowVC.ShowActions    = false; rowVC.Bind(_core,    GameProfile.VC);
+            rowSA.ShowActions    = false; rowSA.Bind(_core,    GameProfile.SA);
+            rowIV.ShowActions    = false; rowIV.Bind(_core,    GameProfile.IV);
+            rowTLaD.ShowActions  = false; rowTLaD.Bind(_core,  GameProfile.TLaD);
+            rowTBoGT.ShowActions = false; rowTBoGT.Bind(_core, GameProfile.TBoGT);
         }
 
         private void BtnRerunSetup_Click(object sender, RoutedEventArgs e)
@@ -26,6 +30,9 @@ namespace TMM
             _ = rowIII.RefreshAsync();
             _ = rowVC.RefreshAsync();
             _ = rowSA.RefreshAsync();
+            _ = rowIV.RefreshAsync();
+            _ = rowTLaD.RefreshAsync();
+            _ = rowTBoGT.RefreshAsync();
         }
 
         private void BtnSteamAction_Click(object sender, RoutedEventArgs e)

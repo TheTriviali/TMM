@@ -12,7 +12,15 @@
       "Bash(python3 fix_chars.py)",
       "PowerShell(Remove-Item \"C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tgtamm\\\\TGTAMM\\\\fix_chars.py\" -Confirm:$false)",
       "Bash(git checkout *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'v2.0: direct deploy, multi-game launcher, backup/rollback' --body ' *)",
+      "Bash(python3 fix_emoji.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(python fix_emoji2.py)",
+      "Bash(del fix_emoji.py fix_emoji2.py)",
+      "Bash(start \"\" \"bin\\\\Debug\\\\net10.0-windows\\\\TMM.exe\")"
     ]
   }
 }

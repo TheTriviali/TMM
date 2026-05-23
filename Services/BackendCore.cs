@@ -231,6 +231,21 @@ namespace TMM
         public void SetVanillaPath(GameProfile profile, string? path)
         {
             Settings.GamePaths[profile.Key] = path;
+
+            // When the IV base path is set, auto-derive TLaD and TBoGT from it.
+            // Layout: [IV dir]\TLAD\  and  [IV dir]\EFLC\
+            // Only overwrite derived paths if the sub-folders actually exist.
+            if (profile.Key == "IV" && !string.IsNullOrEmpty(path))
+            {
+                var tladPath = Path.Combine(path, "TLAD");
+                if (Directory.Exists(tladPath))
+                    Settings.GamePaths[GameProfile.TLaD.Key] = tladPath;
+
+                var tbogtPath = Path.Combine(path, "EFLC");
+                if (Directory.Exists(tbogtPath))
+                    Settings.GamePaths[GameProfile.TBoGT.Key] = tbogtPath;
+            }
+
             SaveSettings();
         }
 
@@ -251,23 +266,37 @@ namespace TMM
                 {
                     if (!string.IsNullOrEmpty(GetVanillaPath(profile))) continue;
 
-                    string[] commonRoots =
-                    {
-                        Path.Combine(drive.Name, "SteamLibrary", "Steam", "steamapps", "common"),
-                        Path.Combine(drive.Name, "SteamLibrary", "steamapps", "common"),
-                        Path.Combine(drive.Name, "Program Files (x86)", "Steam", "steamapps", "common"),
-                        Path.Combine(drive.Name, "Games"),
-                        Path.Combine(drive.Name, "Rockstar Games")
-                    };
+                    // IV episodes are nested inside GTAIV\ so include that sub-folder too
+                    bool isIvFamily = GameProfile.IvFamilyKeys.Contains(profile.Key);
+                    string[] commonRoots = isIvFamily
+                        ? new[]
+                        {
+                            Path.Combine(drive.Name, "SteamLibrary", "Steam", "steamapps", "common", "Grand Theft Auto IV", "GTAIV"),
+                            Path.Combine(drive.Name, "SteamLibrary", "steamapps", "common", "Grand Theft Auto IV", "GTAIV"),
+                            Path.Combine(drive.Name, "Program Files (x86)", "Steam", "steamapps", "common", "Grand Theft Auto IV", "GTAIV"),
+                            Path.Combine(drive.Name, "Games", "Grand Theft Auto IV", "GTAIV"),
+                            Path.Combine(drive.Name, "Rockstar Games", "Grand Theft Auto IV", "GTAIV"),
+                        }
+                        : new[]
+                        {
+                            Path.Combine(drive.Name, "SteamLibrary", "Steam", "steamapps", "common"),
+                            Path.Combine(drive.Name, "SteamLibrary", "steamapps", "common"),
+                            Path.Combine(drive.Name, "Program Files (x86)", "Steam", "steamapps", "common"),
+                            Path.Combine(drive.Name, "Games"),
+                            Path.Combine(drive.Name, "Rockstar Games")
+                        };
 
                     foreach (var root in commonRoots.Where(Directory.Exists))
                     {
                         Log($"[QUICK] Checking: {root}");
-                        string found = ScanForExe(root, profile.ExeName);
+                        string found = isIvFamily
+                            ? (File.Exists(Path.Combine(root, profile.ExeName)) ? root : "")
+                            : ScanForExe(root, profile.ExeName);
                         if (!string.IsNullOrEmpty(found))
                         {
                             Log($"[SUCCESS] Found {profile.Key} in {found}");
-                            Settings.GamePaths[profile.Key] = found;
+                            // Use SetVanillaPath so IV auto-derives TLaD/TBoGT paths.
+                            SetVanillaPath(profile, found);
                             break;
                         }
                     }
@@ -734,6 +763,7 @@ namespace TMM
                 Log($"[Deploy:{profile.Key}]   SKIP (disabled) [{m.LoadOrder}] {m.Name}");
 
             // Build flat file map: relative game-dir path -> winning source file.
+            // ConditionalRoutes on the profile are applied here (e.g. .asi → plugins\).
             var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var mod in enabled)
             {
@@ -743,7 +773,11 @@ namespace TMM
                     continue;
                 }
                 foreach (var file in Directory.EnumerateFiles(mod.RawFolderPath, "*", SearchOption.AllDirectories))
-                    fileMap[Path.GetRelativePath(mod.RawFolderPath, file)] = file;
+                {
+                    string rel = Path.GetRelativePath(mod.RawFolderPath, file);
+                    rel = ApplyConditionalRoutes(profile.ConditionalRoutes, gameDir, rel);
+                    fileMap[rel] = file;
+                }
             }
 
             await DeployFilesToGameDirAsync(profile.Key, gameDir, fileMap,
@@ -753,6 +787,7 @@ namespace TMM
         /// <summary>
         /// Deploy enabled mods for a custom game directly to the game directory,
         /// applying per-extension output subdirectory routing from the game config.
+        /// ConditionalRoutes in the config take priority over static OutputDirectories.
         /// </summary>
         public async Task DeployCustomGameModsAsync(
             GameProfile profile,
@@ -761,7 +796,10 @@ namespace TMM
             IProgress<DeploymentProgress>? progress = null,
             CancellationToken ct = default)
         {
-            string gameDir = config.GameDirectory;
+            // Prefer the profile's vanilla path (for built-in IV family games), fall
+            // back to config.GameDirectory (for pure custom games).
+            string? vanilla = GetVanillaPath(profile);
+            string gameDir = !string.IsNullOrEmpty(vanilla) ? vanilla : config.GameDirectory;
             if (string.IsNullOrEmpty(gameDir) || !Directory.Exists(gameDir))
                 throw new InvalidOperationException($"Game directory for '{config.GameName}' is missing or not set.");
 
@@ -771,7 +809,7 @@ namespace TMM
 
             Log($"[CustomDeploy:{profile.Key}] Starting - {enabled.Count} enabled, {disabled.Count} disabled");
 
-            // Build file map with extension-based output routing.
+            // Build file map with extension-based output routing (conditional first).
             var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var mod in enabled)
             {
@@ -779,7 +817,9 @@ namespace TMM
                 foreach (var file in Directory.EnumerateFiles(mod.RawFolderPath, "*", SearchOption.AllDirectories))
                 {
                     string ext = Path.GetExtension(file).ToLowerInvariant();
-                    string outSubDir = config.GetOutputDirectory(ext);
+                    // ResolveOutputDirectory checks ConditionalRoutes first,
+                    // then falls back to the static OutputDirectories map.
+                    string outSubDir = config.ResolveOutputDirectory(ext, gameDir);
                     string fileName = Path.GetFileName(file);
                     string rel = outSubDir == "." ? fileName : Path.Combine(outSubDir, fileName);
                     fileMap[rel] = file;
@@ -788,6 +828,29 @@ namespace TMM
 
             await DeployFilesToGameDirAsync(profile.Key, gameDir, fileMap,
                 enabled.Select(m => m.Name).ToList(), progress, ct);
+        }
+
+        /// <summary>
+        /// Applies profile-level ConditionalRoutes to a relative file path.
+        /// If the target extension matches a rule, the output path is re-routed
+        /// based on whether the specified sub-directory exists in the game dir.
+        /// </summary>
+        private static string ApplyConditionalRoutes(
+            IReadOnlyList<ConditionalRoute>? routes,
+            string gameDir,
+            string relPath)
+        {
+            if (routes == null || routes.Count == 0) return relPath;
+            string ext = Path.GetExtension(relPath).ToLowerInvariant();
+            foreach (var cond in routes)
+            {
+                if (!cond.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase)) continue;
+                string check = Path.Combine(gameDir, cond.CheckSubdir);
+                string routeTo = Directory.Exists(check) ? cond.RouteIfExists : cond.RouteIfMissing;
+                string fileName = Path.GetFileName(relPath);
+                return routeTo == "." ? fileName : Path.Combine(routeTo, fileName);
+            }
+            return relPath;
         }
 
         /// <summary>

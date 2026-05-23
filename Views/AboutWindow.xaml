@@ -87,7 +87,7 @@
                     <!-- Description -->
                     <TextBlock TextWrapping="Wrap" FontSize="12" LineHeight="20"
                                Foreground="{DynamicResource TextBrush}" Margin="0,0,0,12"
-                               Text="A modern, themeable mod manager for GTA III, Vice City and San Andreas. Install mods, manage load order, deploy virtual game copies, and keep your vanilla installation pristine."/>
+                               Text="A modern, themeable mod manager for the GTA III Series (III, Vice City, San Andreas) and GTA IV Complete Edition (IV, The Lost and Damned, The Ballad of Gay Tony). Install mods, manage load order, deploy directly to your game directory with automatic backup and rollback."/>
 
                     <!-- Disclaimer -->
                     <Border Background="#0AFFFFFF" CornerRadius="6" Padding="10,7" Margin="0,0,0,16">
@@ -151,7 +151,7 @@
             <!-- Footer -->
             <Border Grid.Row="2" Padding="24,12" Background="#0D000000">
                 <Grid>
-                    <TextBlock Text="Made with â¤ by Triviali" FontSize="11"
+                    <TextBlock Text="Made with &#x2665; by Triviali" FontSize="11"
                                Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center"/>
                     <Button Content="Close" Click="BtnClose_Click" HorizontalAlignment="Right"
                             Height="28" Padding="20,0" BorderThickness="0" Cursor="Hand" FontSize="12"

@@ -36,6 +36,7 @@ namespace TMM
             GameCardsPanel.Children.Clear();
 
             GameCardsPanel.Children.Add(BuildBuiltInCard());
+            GameCardsPanel.Children.Add(BuildIvCard());
 
             foreach (var (key, config) in GameRegistry.Instance.GetCustomGames())
                 GameCardsPanel.Children.Add(BuildCustomCard(key, config));
@@ -58,6 +59,27 @@ namespace TMM
 
             var manageBtn = MakeManageButton("Manage");
             manageBtn.Click += (_, _) => OpenGTASeries();
+            sp.Children.Add(manageBtn);
+
+            card.Child = sp;
+            return card;
+        }
+
+        private Border BuildIvCard()
+        {
+            bool anyReady = _core.IsGameReady(GameProfile.IV) ||
+                            _core.IsGameReady(GameProfile.TLaD) ||
+                            _core.IsGameReady(GameProfile.TBoGT);
+
+            var card = MakeCardShell();
+            var sp = new StackPanel();
+
+            sp.Children.Add(MakeCardTitle("GTA IV Series"));
+            sp.Children.Add(MakeCardSubtitle("IV · The Lost and Damned · The Ballad of Gay Tony"));
+            sp.Children.Add(MakeStatusDot(anyReady));
+
+            var manageBtn = MakeManageButton("Manage");
+            manageBtn.Click += (_, _) => OpenGtaIv();
             sp.Children.Add(manageBtn);
 
             card.Child = sp;
@@ -276,6 +298,16 @@ namespace TMM
             _core.Settings.LastSelectedGameKey = "GTA_SERIES";
             _core.SaveSettings();
             var w = new MainDashboardWindow(_core) { Owner = this };
+            w.Closed += (_, _) => { Show(); RebuildCards(); };
+            Hide();
+            w.Show();
+        }
+
+        private void OpenGtaIv()
+        {
+            _core.Settings.LastSelectedGameKey = "IV";
+            _core.SaveSettings();
+            var w = new Gta4DashboardWindow(_core) { Owner = this };
             w.Closed += (_, _) => { Show(); RebuildCards(); };
             Hide();
             w.Show();

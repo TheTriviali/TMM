@@ -52,10 +52,8 @@ namespace TMM
         private void InitializeBuiltInGames()
         {
             _builtInGames.Clear();
-            foreach (var profile in new[] { GameProfile.III, GameProfile.VC, GameProfile.SA })
-            {
+            foreach (var profile in GameProfile.All)
                 _builtInGames[profile.Key] = profile;
-            }
         }
 
         private async Task LoadCustomGamesAsync()
