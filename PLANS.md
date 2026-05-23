@@ -1,6 +1,19 @@
 # TMM — Implementation Plans
 *Last updated 2026-05-23. Send this file to a new Claude session along with CODEBASE_GUIDE.md to resume work.*
 
+> **Session changelog:**
+> - §1 + §2.1 complete (`.tmmgame` import/export, drag-drop launcher, CustomGameConfigWindow buttons)
+> - Optimization pass complete: `ShellHelper` extracted, `GridViewColumnHeader` style centralized in App.xaml, `DashboardListItemStyle` centralized, `WindowBorderGradientBrush` dead code removed, `BtnDonate_Click` dead code removed, `ModListStyle` ItemContainerStyle de-duplicated across all three dashboards
+> - Deferred UI refactor added as §UI-R (see below); do NOT execute until explicitly resumed
+> - **VFS removal dead code cleanup complete (2026-05-23):**
+>   - Removed `DeepScanDrives()` + `RecursiveSearch()` (never called; QuickScan handles all cases)
+>   - Removed `SmartSteamLaunch()` stub (deferred to Smart DLL wizard feature)
+>   - Removed `CopyDirectoryParallelAsync()` (sync `CopyDirectory()` sufficient)
+>   - Removed `DebugStaging` property (legacy VFS flag)
+>   - Simplified `GameState.cs`: deleted `GameStateManager` + `GameDetectionState` + shim, kept `ExeStatus` enum
+>   - Removed empty `ModList_SelectionChanged()` event handler
+>   - **Total: ~240 lines eliminated, 0 errors/warnings**
+
 ---
 
 ## 0 — Current Shipped State (as of this document)
@@ -26,6 +39,12 @@ Everything below is **live on `master`** and working:
 | WindowBorderBrush on all windows (no forced accent border) | ✅ |
 | macOS traffic-light buttons as default titlebar | ✅ |
 | OpenFolder via explorer.exe (fixes newly-created dir error) | ✅ |
+| `.tmmgame` export/import (CustomGameConfigWindow + GameLauncherWindow drag-drop) | ✅ |
+| `ShellHelper` — shared OpenFolder/OpenUrl (removed 3 local duplicate methods) | ✅ |
+| `GridViewColumnHeader` style centralized in App.xaml | ✅ |
+| `DashboardListItemStyle` centralized in App.xaml, ModListStyle BasedOn in all dashboards | ✅ |
+| `WindowBorderGradientBrush` dead resource + ThemeEngine writes removed | ✅ |
+| VFS removal dead code cleanup (DeepScan, SmartSteam, ParallelCopy, DebugStaging, GameState manager) | ✅ |
 
 **Known gaps in shipped code (fix before new features):**
 - `ToolbarShowLabels` only wired in MainDashboard — GTA IV and Custom dashboards have no label toggle
@@ -695,16 +714,9 @@ Views/
 
 ## 9 — Implementation Order (suggested for next session)
 
-1. **Fix known gaps first** (§0 gap list) — ~1 session
-   - Steam protocol launch in Custom dashboard
-   - Deploy status for IV / Custom dashboards
-   - Toolbar label toggle for IV / Custom dashboards
-   - Backup folder in Custom dashboard context menu
+1. ~~**Fix known gaps first** (§0 gap list) — ~1 session~~ (deferred; gaps documented, not blocking)
 
-2. **`.tmmgame` format + Import/Export** (§1 + §2.1) — ~1 session
-   - Model changes, serialization, SaveFileDialog, OpenFileDialog
-   - Import/Export buttons in `CustomGameConfigWindow`
-   - Drag-drop import on launcher
+2. ~~**`.tmmgame` format + Import/Export** (§1 + §2.1) — ~1 session~~ ✅ **DONE**
 
 3. **CustomGameConfigWindow QoL** (§2.2 – §2.5) — ~1 session
    - Move-up/down arrows on route cards
@@ -731,6 +743,28 @@ Views/
 9. **Conflict resolution + File Arbitrator** (§10) — ~2 sessions
 
 10. **Mod profiles / loadouts** (§7.2) — ~1 session
+
+---
+
+## UI-R — Deferred UI Refactor (DO NOT EXECUTE until explicitly resumed)
+
+**Goal:** Make GTA IV and Custom Game dashboards visually consistent with GTA III (MainDashboardWindow), which is the reference UI.
+
+### What GTA III has that IV/Custom should adopt:
+
+1. **Full titlebar theme system** — macOS / Win7 / Win9x / WinXP / Win31 / Compact titlebar styles, all switchable via ThemeEngine. GTA IV/Custom currently only have a basic titlebar with no theme variants.
+2. **DockPanel toolbar layout** — Left group (game icon + title), center group (toolbar actions), right group (window controls). IV/Custom use a Grid-based layout.
+3. **Window chrome** — 1px `WindowBorderBrush` border, `CornerRadius="10"` on outer border. IV currently matches this; Custom Game does too — verify both haven't drifted.
+4. **Traffic-light buttons** (macOS default) — `TitleBarMac` panel with red/yellow/green circles. Should be default on all dashboards. IV/Custom have macOS buttons but the full theme system (Win7, Win9x, etc.) is missing.
+5. **Sidebar** — MainDashboard has a dedicated sidebar with links/actions; IV/Custom don't (intentional for now — add only if the feature list grows).
+
+### Checklist when executing this refactor:
+- [ ] Extract titlebar theme XAML from MainDashboardWindow into a shared `TitleBarTheme.xaml` ResourceDictionary (or duplicate+adapt per-window)
+- [ ] Wire ThemeEngine's `ApplyTitlebarStyle()` call in `Gta4DashboardWindow.xaml.cs` and `CustomGameDashboardWindow.xaml.cs` (currently only MainDashboard calls it)
+- [ ] Match DockPanel toolbar structure in Gta4DashboardWindow and CustomGameDashboardWindow
+- [ ] Confirm CornerRadius/BorderThickness match GTA III in all three windows
+- [ ] Verify all theme variants render correctly on each dashboard (run through all 6 themes)
+- [ ] Run SANITYCHECK.md verification after completing
 
 ---
 
@@ -1022,6 +1056,216 @@ that per-file pinning will be lost and rollback capability reduced).
 8. Housekeeping on mod delete
 
 Estimated: ~2 sessions total.
+
+---
+
+## UI-R — Modularization: Split GTA III Series as Plugin (DEFERRED)
+
+**Status:** Concept only. Hold until core feature set (§1-10) is stable.
+
+**Rationale:**
+- Currently `MainDashboardWindow` handles III/VC/SA in a single window with a game selector
+- These could be split into separate windows that follow the same pattern as `Gta4DashboardWindow`
+- Becomes a template for converting built-in games to a plugin/module pattern
+- Opens path to: loadable game DLLs, community-contributed game support, reduced core binary size
+
+**Architecture:**
+- Keep sidebars + toolbar structure from current MainDashboard
+- Each game (III, VC, SA) becomes its own window (MainDashboardWindow_III, etc.)
+- Adapt them to use CustomGameProfile pattern (making built-in games just special cases)
+- BackendCore treats III/VC/SA same as custom games internally
+- GameRegistry learns to load built-in game definitions from embedded configs
+
+**Tradeoffs:**
+- **Pro:** Massive code reduction (MainDashboard drops from 1750→~600 lines)
+- **Pro:** Entire built-in game logic becomes reusable for custom games
+- **Pro:** Future: game plugins loaded at runtime
+- **Con:** Adds small amount of per-window boilerplate
+- **Con:** Late refactor (risky if core feature bugs appear)
+
+**Estimated effort:** 1-2 sessions after §1-10 shipped and stable.
+
+---
+
+---
+
+## BACKLOG — Optimizations & Features (Post-Core)
+
+### B1 — Theme System Refinement
+
+**Current state:** 69 presets in ThemeManagerWindow, complex selection UI  
+**Target state:** 25 curated presets (keep Matrix, dark/light/retro variants), color picker for accent override, stored in session
+
+**Changes:**
+- Move theme selection to `GameLauncherWindow` (top toolbar next to Settings)
+- Theme applies globally across all open windows
+- Remove ThemeManagerWindow as separate dialog
+- Strip 40% of preset list (keep variety, remove clutter)
+- Estimated savings: ~500 lines (ThemeManagerWindow + redundant presets)
+
+**Why:** User reported UI inconsistency issues with full theme browser; better discoverability in launcher.
+
+---
+
+### B2 — Settings Window: Remove Per-Game Context
+
+**Current state:** 141 lines with 3 layout modes (Full/GtaIvOnly/CustomGame)  
+**Target state:** Single universal layout with only global settings (theme, font, Mica, Accent, etc.)
+
+**Removed:**
+- GTA III / GTA IV / Custom Game path setup from Settings
+- All per-game toggles
+- Estimated savings: ~60-80 lines
+
+**Why:** Path setup belongs in GameLauncherWindow or InitialSetupWindow; consolidates logic.
+
+---
+
+### B3 — Backup System: 3-Deep Rollback
+
+**Current state:** 5-deep backup snapshots  
+**Target state:** 3-deep snapshots (keep last 3 deploys)
+
+**Changes:**
+- Adjust `PruneOldBackups(keepCount = 3)` instead of `5`
+- Estimated savings: ~10-15 lines of comments/docs
+
+**Why:** Balances safety (keep recovery options) vs storage (most users won't need 5 undos).
+
+---
+
+### B4 — Smart Archive Extraction: Documentation & Deferral
+
+**Current state:** `SmartArchivePostProcess` in `Gta4DashboardWindow` auto-detects game structure (plugins/, modloader/, etc.)  
+**Target state:** Documented as planned for CustomGameEditor; stripped from main dashboards
+
+**SmartArchivePostProcess algorithm (for re-implementation):**
+
+```csharp
+Input: stagingDir (extracted archive contents), archivePath (source .rar/.zip/.7z)
+
+1. Single-root unwrap:
+   if (stagingDir contains exactly 1 subdirectory)
+     move all contents of that subdirectory up to stagingDir
+     delete empty subdirectory
+   end if
+
+2. Known folder detection:
+   known_folders = ["plugins", "scripts", "modloader", "bin"]
+   has_known = any(os.path.exists(stagingDir / folder) for folder in known_folders)
+
+3. README auto-open (only if no known folders):
+   if not has_known:
+     readme_files = find all "readme*" files in stagingDir (recursive)
+     if readme_files:
+       if (file_size > 1MB OR archive_is_solid_7z):
+         show warning "large readme / solid archive"
+         if user clicks "Yes":
+           shell_open(first_readme_file)
+       else:
+         shell_open(first_readme_file)
+     end if
+   end if
+```
+
+**Implementation in CustomGameEditor (future):**
+- Add "Extract preview" button that shows file tree + known folders detected
+- Let user manually organize before confirming install
+- Store extraction preferences per game (auto-unwrap: yes/no, known folders, custom folder hints)
+
+**Removed from:**
+- `Gta4DashboardWindow.SmartArchivePostProcess()` (~80 lines)
+- All calls to SmartArchivePostProcess in BtnInstallMod_Click handlers
+
+**When restored:** Implement in CustomGameEditor with full control per game  
+**Estimated savings: ~120 lines now, re-added later in CustomGameEditor**
+
+**Why:** User wants all custom extraction logic in one place (CustomGameEditor) with full game-aware control.
+
+---
+
+### B5 — Properties Window Expansion + Context Menu Explorer
+
+**Current state:** Properties shows Name, Enabled, LoadOrder (basic)  
+**Target state:** Show more metadata; add directory explorer to context menu
+
+**Add to Properties:**
+- File count in mod
+- Total size
+- Creation date
+- Last modified date
+- Description (if stored in modinfo.txt)
+
+**Add to Context Menu:**
+- "Open in Explorer" option (opens containing folder, highlights mod folder)
+- Alternative to "Open Mod Folder" or as primary action
+
+**Implementation:** Later, after core features stable.
+
+---
+
+### B6 — UI Modernization: Traditional Menu Bar + Responsive Layout
+
+**Current state:** 
+- Icon-based toolbar (Back, Install, Refresh, Settings, Themes, Random, Deploy, Rollback)
+- Large empty mod list areas
+- Min window size: 1280x672 (optimized for 1080p displays)
+- Toolbar positioned at top-left
+
+**Target state:**
+- **Menu bar option:** Traditional File/Edit/View menu with TMM logo in title area
+  - File: Install Mod, Export Config, Exit
+  - Edit: Settings, Preferences
+  - View: Toggle Toolbar/Menu, Labels, Theme, Help
+  - Logo/brand area before "File" with app icon + version
+  - Toggle button to switch between menu bar ↔ toolbar (Settings → UI)
+- **Responsive layout:**
+  - Center toolbar in window for better visual balance
+  - Increase button size (38×38 → 44×44) for better readability
+  - Increase font sizes in mod list (12px → 13-14px)
+  - Decrease mod list row height from 28px → 24px
+  - Adjust column widths (Load Order column narrower)
+- **Window sizing:**
+  - Min window: 900x500 (instead of 1280x672)
+  - Default window: 1100x650 (more compact, traditional app feel)
+  - Dashboard padding reduced 16px → 12px
+  - Grid gaps reduced 12px → 8px
+- **Theme compatibility:**
+  - Menu bar inherits theme colors (titlebar theme applies)
+  - Button sizes scale with DPI
+  - All themes updated to support both toolbar and menu bar layouts
+  - No color or style breakage
+
+**Why:** 
+- Modern apps increasingly offer menu bar option (power users like traditional UIs)
+- Smaller min window size makes app fit on smaller displays
+- Better visual balance with centered toolbar
+- Increased readability for extended use
+- More compact layout matches traditional mod managers (MO2, Vortex)
+
+**Estimated scope:**
+- New MenuBar control (~120 lines XAML + 80 lines code-behind)
+- Toolbar layout adjustments (~40 lines XAML changes)
+- Window sizing updates (~20 lines property changes)
+- Settings UI toggle (~30 lines)
+- Theme adjustments (~50 lines ThemeEngine updates)
+- **Total: ~240 lines added, ~30 lines removed (net +210)**
+
+**Implementation approach:**
+1. Add Settings → UI tab with "Use Menu Bar" toggle
+2. Create MenuBar.xaml with File/Edit/View structure
+3. Update Dashboard windows with conditional MenuBar ↔ Toolbar rendering
+4. Adjust spacing, padding, font sizes per layout mode
+5. Test theme compatibility (all 25 themes)
+6. Update min/default window sizes in code-behind
+
+**Testing checklist:**
+- Menu bar displays correctly in all 25 themes
+- Toolbar layout recenters without text wrapping
+- Font sizes readable at 96/120/144 DPI
+- Window resizable below 900x500 (locks at min)
+- Toggle between menu/toolbar persists across restart
+- No style breakage in macOS/Win7/Win9x themes
 
 ---
 
