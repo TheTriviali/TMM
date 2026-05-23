@@ -71,8 +71,6 @@ namespace TMM
         private bool _deployReady = false;
         private bool _exitConfirmationShown = false; // Track if user has been asked about exit
 
-        private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
-
         // ==========================================================
         // INIT
         // ==========================================================
@@ -669,7 +667,7 @@ namespace TMM
                 {
                     if (!d.RootElement.TryGetProperty(profile.Key, out var elem)) continue;
 
-                    var items = JsonSerializer.Deserialize<ObservableCollection<ModItem>>(elem.GetRawText(), JsonOpts);
+                    var items = JsonSerializer.Deserialize<ObservableCollection<ModItem>>(elem.GetRawText(), JsonHelper.PrettyOptions);
                     if (items == null) continue;
 
                     var list = _core.Mods[profile.Key];
@@ -691,7 +689,7 @@ namespace TMM
                 };
                 File.WriteAllText(
                     Path.Combine(_core.AppDataPath, "modlist.json"),
-                    JsonSerializer.Serialize(snapshot, JsonOpts));
+                    JsonSerializer.Serialize(snapshot, JsonHelper.PrettyOptions));
             }
             catch (Exception ex) { _core.Log($"SaveMods failed: {ex.Message}"); }
         }
@@ -703,7 +701,7 @@ namespace TMM
                 if (Directory.Exists(mod.RawFolderPath))
                     File.WriteAllText(
                         Path.Combine(mod.RawFolderPath, "modinfo.txt"),
-                        JsonSerializer.Serialize(mod, JsonOpts));
+                        JsonSerializer.Serialize(mod, JsonHelper.PrettyOptions));
             }
             catch (Exception ex) { Debug.WriteLine(ex.Message); }
         }
@@ -1065,7 +1063,7 @@ namespace TMM
                     string info = Path.Combine(d, "modinfo.txt");
                     var list = _core.Mods[profile.Key];
                     list.Add(File.Exists(info)
-                        ? JsonSerializer.Deserialize<ModItem>(File.ReadAllText(info), JsonOpts)!
+                        ? JsonSerializer.Deserialize<ModItem>(File.ReadAllText(info), JsonHelper.PrettyOptions)!
                         : new ModItem { Name = Path.GetFileName(d), RawFolderPath = d, IsEnabled = true, LoadOrder = list.Count });
                 }
             }

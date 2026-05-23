@@ -25,8 +25,6 @@ namespace TMM
         private Point _startPoint;
         private ModItem? _draggedItem;
 
-        private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
-
         public CustomGameDashboardWindow(BackendCore core, GameProfile profile, CustomGameProfile config)
         {
             _core    = core;
@@ -207,7 +205,7 @@ namespace TMM
             {
                 string info = Path.Combine(d, "modinfo.txt");
                 _mods.Add(File.Exists(info)
-                    ? JsonSerializer.Deserialize<ModItem>(File.ReadAllText(info), JsonOpts) ?? NewMod(d, order)
+                    ? JsonSerializer.Deserialize<ModItem>(File.ReadAllText(info), JsonHelper.PrettyOptions) ?? NewMod(d, order)
                     : NewMod(d, order));
                 order++;
             }
@@ -409,7 +407,7 @@ namespace TMM
             if (!File.Exists(json)) return;
             try
             {
-                var saved = JsonSerializer.Deserialize<List<ModItem>>(File.ReadAllText(json), JsonOpts);
+                var saved = JsonSerializer.Deserialize<List<ModItem>>(File.ReadAllText(json), JsonHelper.PrettyOptions);
                 if (saved == null) return;
                 _mods.Clear();
                 foreach (var m in saved.OrderBy(x => x.LoadOrder))
@@ -423,7 +421,7 @@ namespace TMM
             string folder = Path.Combine(_core.AppDataPath, _profile.RawFolderName);
             Directory.CreateDirectory(folder);
             File.WriteAllText(Path.Combine(folder, "modlist.json"),
-                JsonSerializer.Serialize(_mods.ToList(), JsonOpts));
+                JsonSerializer.Serialize(_mods.ToList(), JsonHelper.PrettyOptions));
         }
 
         private static void SyncModInfoToFolder(ModItem mod)
@@ -431,7 +429,7 @@ namespace TMM
             if (!Directory.Exists(mod.RawFolderPath)) return;
             File.WriteAllText(
                 Path.Combine(mod.RawFolderPath, "modinfo.txt"),
-                JsonSerializer.Serialize(mod, JsonOpts));
+                JsonSerializer.Serialize(mod, JsonHelper.PrettyOptions));
         }
 
         // ── Drag & Drop reorder ────────────────────────────────────────────────

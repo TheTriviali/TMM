@@ -74,7 +74,6 @@ namespace TMM
         public IReadOnlyDictionary<string, ObservableCollection<ModItem>> Mods => _modsDict;
 
         private static readonly HttpClient HttpClient = new();
-        private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
 
         // ==========================================================
         // INIT
@@ -185,7 +184,7 @@ namespace TMM
             {
                 File.WriteAllText(
                     Path.Combine(AppDataPath, "settings.json"),
-                    JsonSerializer.Serialize(Settings, JsonOpts));
+                    JsonSerializer.Serialize(Settings, JsonHelper.PrettyOptions));
             }
             catch (Exception ex) { Log($"SaveSettings failed: {ex.Message}"); }
         }
@@ -523,7 +522,7 @@ namespace TMM
                     {
                         try
                         {
-                            var loaded = JsonSerializer.Deserialize<ModItem>(File.ReadAllText(infoPath), JsonOpts);
+                            var loaded = JsonSerializer.Deserialize<ModItem>(File.ReadAllText(infoPath), JsonHelper.PrettyOptions);
                             if (loaded != null)
                             {
                                 loaded.RawFolderPath = subFolder;
@@ -870,7 +869,7 @@ namespace TMM
             var manifest = new DeployManifest(timestamp, gameKey, gameDir, modNames, entries);
             File.WriteAllText(
                 Path.Combine(backupDir, "manifest.json"),
-                JsonSerializer.Serialize(manifest, JsonOpts));
+                JsonSerializer.Serialize(manifest, JsonHelper.PrettyOptions));
 
             PruneOldBackups(gameKey);
             int backedUp = entries.Count(e => e.BackupFilePath != null);

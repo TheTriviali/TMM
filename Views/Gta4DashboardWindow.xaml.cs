@@ -28,8 +28,6 @@ namespace TMM
         private readonly BackendCore _core;
         private readonly (GameProfile Profile, ObservableCollection<ModItem> Mods)[] _episodes;
 
-        private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
-
         private Point    _startPoint;
         private ModItem? _draggedItem;
         private ListView? _activeList;          // tracks which column has focus
@@ -844,7 +842,7 @@ namespace TMM
                 if (Directory.Exists(mod.RawFolderPath))
                     File.WriteAllText(
                         Path.Combine(mod.RawFolderPath, "modinfo.txt"),
-                        JsonSerializer.Serialize(mod, JsonOpts));
+                        JsonSerializer.Serialize(mod, JsonHelper.PrettyOptions));
             }
             catch { /* best effort */ }
         }

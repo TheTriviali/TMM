@@ -34,13 +34,6 @@ namespace TMM
         private readonly Dictionary<string, GameProfile> _builtInGames = new();
         private readonly Dictionary<string, (CustomGameProfile config, GameProfile profile)> _customGames = new();
         private string _customGamesPath = "";
-        private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
-        private static readonly JsonSerializerOptions TmmGameOpts = new()
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
 
         private GameRegistry()
         {
@@ -148,7 +141,7 @@ namespace TMM
 
             // Save to JSON file
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
-            var json = JsonSerializer.Serialize(config, JsonOpts);
+            var json = JsonSerializer.Serialize(config, JsonHelper.PrettyOptions);
             await File.WriteAllTextAsync(filePath, json);
 
             // Add to registry
@@ -165,7 +158,7 @@ namespace TMM
                 throw new ArgumentException($"Custom game '{key}' not found");
 
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
-            var json = JsonSerializer.Serialize(config, JsonOpts);
+            var json = JsonSerializer.Serialize(config, JsonHelper.PrettyOptions);
             await File.WriteAllTextAsync(filePath, json);
 
             var profile = CustomGameProfileToGameProfile(key, config);
@@ -209,7 +202,7 @@ namespace TMM
                 Author            = config.Author,
                 Version           = config.Version,
             };
-            var json = JsonSerializer.Serialize(export, TmmGameOpts);
+            var json = JsonSerializer.Serialize(export, JsonHelper.TmmGameOptions);
             await File.WriteAllTextAsync(destPath, json);
         }
 
@@ -220,7 +213,7 @@ namespace TMM
         public static async Task<CustomGameProfile> ImportGameConfigAsync(string sourcePath)
         {
             var json = await File.ReadAllTextAsync(sourcePath);
-            var export = JsonSerializer.Deserialize<TmmGameExport>(json, TmmGameOpts)
+            var export = JsonSerializer.Deserialize<TmmGameExport>(json, JsonHelper.TmmGameOptions)
                 ?? throw new InvalidDataException("Invalid .tmmgame file");
 
             return new CustomGameProfile
