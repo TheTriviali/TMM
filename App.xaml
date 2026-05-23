@@ -4,6 +4,8 @@
              xmlns:local="clr-namespace:TMM"
              Startup="OnStartup">
     <Application.Resources>
+        <BitmapImage x:Key="AppIcon" UriSource="Assets/icon.ico"/>
+
         <!-- Notification type icon converter -->
         <local:NotificationTypeIconConverter x:Key="NotificationTypeIconConverter"/>
 

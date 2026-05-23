@@ -265,8 +265,6 @@ namespace TMM
             };
             btn.SetResourceReference(Button.BackgroundProperty, "AccentBrush");
             btn.SetResourceReference(Button.ForegroundProperty, "AccentTextBrush");
-            // Simple template via style
-            btn.Style = (Style)FindResource("CardButtonStyle");
             return btn;
         }
 
@@ -305,6 +303,15 @@ namespace TMM
 
         private void OpenGtaIv()
         {
+            bool anyIvReady = GameProfile.IvFamilyKeys.Any(k =>
+            {
+                var p = GameProfile.ByKey(k);
+                return p != null && _core.IsGameReady(p);
+            });
+
+            if (!anyIvReady)
+                new InitialSetupWindow(_core) { Owner = this }.ShowDialog();
+
             _core.Settings.LastSelectedGameKey = "IV";
             _core.SaveSettings();
             var w = new Gta4DashboardWindow(_core) { Owner = this };

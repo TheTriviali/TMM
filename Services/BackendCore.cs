@@ -233,15 +233,17 @@ namespace TMM
             Settings.GamePaths[profile.Key] = path;
 
             // When the IV base path is set, auto-derive TLaD and TBoGT from it.
-            // Layout: [IV dir]\TLAD\  and  [IV dir]\EFLC\
-            // Only overwrite derived paths if the sub-folders actually exist.
+            // Standard layout: [IV dir]\TLAD\  and  [IV dir]\EFLC\
+            // Also check alternate names: TLAD/TLaD and EFLC/TBoGT
             if (profile.Key == "IV" && !string.IsNullOrEmpty(path))
             {
                 var tladPath = Path.Combine(path, "TLAD");
+                if (!Directory.Exists(tladPath)) tladPath = Path.Combine(path, "TLaD");
                 if (Directory.Exists(tladPath))
                     Settings.GamePaths[GameProfile.TLaD.Key] = tladPath;
 
                 var tbogtPath = Path.Combine(path, "EFLC");
+                if (!Directory.Exists(tbogtPath)) tbogtPath = Path.Combine(path, "TBoGT");
                 if (Directory.Exists(tbogtPath))
                     Settings.GamePaths[GameProfile.TBoGT.Key] = tbogtPath;
             }
@@ -289,9 +291,24 @@ namespace TMM
                     foreach (var root in commonRoots.Where(Directory.Exists))
                     {
                         Log($"[QUICK] Checking: {root}");
-                        string found = isIvFamily
-                            ? (File.Exists(Path.Combine(root, profile.ExeName)) ? root : "")
-                            : ScanForExe(root, profile.ExeName);
+                        string found = "";
+                        if (isIvFamily)
+                        {
+                            // For IV/TLaD/TBoGT, check in root and in episode subdirectories
+                            if (File.Exists(Path.Combine(root, profile.ExeName)))
+                                found = root;
+                            else if (profile.Key == "TLaD" && File.Exists(Path.Combine(root, "TLaD", profile.ExeName)))
+                                found = Path.Combine(root, "TLaD");
+                            else if (profile.Key == "TLaD" && File.Exists(Path.Combine(root, "TLAD", profile.ExeName)))
+                                found = Path.Combine(root, "TLAD");
+                            else if (profile.Key == "TBoGT" && File.Exists(Path.Combine(root, "TBoGT", profile.ExeName)))
+                                found = Path.Combine(root, "TBoGT");
+                            else if (profile.Key == "TBoGT" && File.Exists(Path.Combine(root, "EFLC", profile.ExeName)))
+                                found = Path.Combine(root, "EFLC");
+                        }
+                        else
+                            found = ScanForExe(root, profile.ExeName);
+
                         if (!string.IsNullOrEmpty(found))
                         {
                             Log($"[SUCCESS] Found {profile.Key} in {found}");

@@ -8,7 +8,12 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>TMM</RootNamespace>
     <AssemblyName>TMM</AssemblyName>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\icon.ico"/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="SharpCompress" Version="0.48.1" />

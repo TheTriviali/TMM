@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TMM"
         Title="TMM — Triviali's Mod Manager"
+        Icon="{StaticResource AppIcon}"
         Height="520" Width="760"
         MinHeight="440" MinWidth="600"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
