@@ -2,71 +2,26 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
+using System.Windows.Controls;
 
 namespace TMM
 {
-    // ── Observable row models for the DataGrids ───────────────────────────────────
-
-    public class MappingRow : INotifyPropertyChanged
-    {
-        private string _extension = "";
-        private string _outputFolder = ".";
-
-        public string Extension
-        {
-            get => _extension;
-            set { _extension = value; OnPropertyChanged(nameof(Extension)); }
-        }
-
-        public string OutputFolder
-        {
-            get => _outputFolder;
-            set { _outputFolder = value; OnPropertyChanged(nameof(OutputFolder)); }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
-
-    public class CondRouteRow : INotifyPropertyChanged
-    {
-        private string _extension = ".asi";
-        private string _checkSubdir = "plugins";
-        private string _routeIfExists = "plugins";
-        private string _routeIfMissing = ".";
-        private bool _hasConflict = false;
-
-        public string Extension     { get => _extension;     set { _extension     = value; OnPropertyChanged(nameof(Extension)); } }
-        public string CheckSubdir   { get => _checkSubdir;   set { _checkSubdir   = value; OnPropertyChanged(nameof(CheckSubdir)); } }
-        public string RouteIfExists { get => _routeIfExists; set { _routeIfExists = value; OnPropertyChanged(nameof(RouteIfExists)); } }
-        public string RouteIfMissing{ get => _routeIfMissing;set { _routeIfMissing= value; OnPropertyChanged(nameof(RouteIfMissing)); } }
-        public bool HasConflict     { get => _hasConflict;   set { _hasConflict   = value; OnPropertyChanged(nameof(HasConflict)); } }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-    }
-
-    // ── Window ────────────────────────────────────────────────────────────────────
-
     public partial class CustomGameConfigWindow : TmmWindow
     {
         public CustomGameProfile? Result { get; private set; }
         private readonly bool _isEdit;
-        private readonly ObservableCollection<MappingRow>   _mappings   = new();
-        private readonly ObservableCollection<CondRouteRow> _condRoutes = new();
+        private readonly ObservableCollection<RoutingRule> _rules = new();
 
         public CustomGameConfigWindow(CustomGameProfile? existing, bool isTemplate = false)
         {
             _isEdit = existing != null && !isTemplate;
             InitializeComponent();
-            dgMappings.ItemsSource    = _mappings;
-            icCondRoutes.ItemsSource  = _condRoutes;
-            _condRoutes.CollectionChanged += (_, _) => UpdateEmptyState();
+            icRules.ItemsSource = _rules;
+            _rules.CollectionChanged += (_, _) => UpdateEmptyState();
 
             if (existing != null)
             {
@@ -78,31 +33,28 @@ namespace TMM
 
         private void PopulateFormFromConfig(CustomGameProfile config)
         {
-            txtGameName.Text   = config.GameName;
-            txtGameDir.Text    = config.GameDirectory;
-            txtExePath.Text    = config.ExePath ?? "";
-            txtFileTypes.Text  = config.ModFileTypes;
-            txtSteamAppId.Text = config.SteamAppId ?? "";
-            txtDescription.Text= config.Description ?? "";
-            txtAuthor.Text     = config.Author ?? "";
-            txtVersion.Text    = config.Version ?? "";
-            _mappings.Clear();
-            _condRoutes.Clear();
+            txtGameName.Text    = config.GameName;
+            txtGameDir.Text     = config.GameDirectory;
+            txtExePath.Text     = config.ExePath ?? "";
+            txtSteamAppId.Text  = config.SteamAppId ?? "";
+            txtDescription.Text = config.Description ?? "";
+            txtAuthor.Text      = config.Author ?? "";
+            txtVersion.Text     = config.Version ?? "";
 
-            foreach (var kvp in config.OutputDirectories)
-                _mappings.Add(new MappingRow { Extension = kvp.Key, OutputFolder = kvp.Value });
-
-            foreach (var cr in config.ConditionalRoutes)
+            _rules.Clear();
+            foreach (var rule in config.RoutingRules)
             {
-                var row = new CondRouteRow
+                var r = new RoutingRule
                 {
-                    Extension      = cr.Extension,
-                    CheckSubdir    = cr.CheckSubdir,
-                    RouteIfExists  = cr.RouteIfExists,
-                    RouteIfMissing = cr.RouteIfMissing
+                    RuleName            = rule.RuleName,
+                    ExtensionPattern    = rule.ExtensionPattern,
+                    NameContains        = rule.NameContains,
+                    CheckSubdir         = rule.CheckSubdir,
+                    Destination         = rule.Destination,
+                    FallbackDestination = rule.FallbackDestination,
                 };
-                row.PropertyChanged += (_, _) => ValidateRuleConflicts();
-                _condRoutes.Add(row);
+                r.PropertyChanged += (_, _) => ValidateRuleConflicts();
+                _rules.Add(r);
             }
             ValidateRuleConflicts();
         }
@@ -113,41 +65,29 @@ namespace TMM
             string dir  = txtGameDir.Text.Trim();
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(dir)) return null;
 
-            var outputDirs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var row in _mappings)
-            {
-                string ext    = row.Extension.Trim().ToLowerInvariant();
-                string folder = string.IsNullOrWhiteSpace(row.OutputFolder) ? "." : row.OutputFolder.Trim();
-                if (!string.IsNullOrEmpty(ext) && ext != ".ext" && ext.StartsWith("."))
-                    outputDirs[ext] = folder;
-            }
-
-            var condRoutes = new List<ConditionalRoute>();
-            foreach (var r in _condRoutes)
-            {
-                string ext = r.Extension.Trim();
-                string sub = r.CheckSubdir.Trim();
-                if (string.IsNullOrWhiteSpace(ext) || string.IsNullOrWhiteSpace(sub)) continue;
-                condRoutes.Add(new ConditionalRoute(
-                    ext.ToLowerInvariant(), sub,
-                    string.IsNullOrWhiteSpace(r.RouteIfExists)  ? "." : r.RouteIfExists.Trim(),
-                    string.IsNullOrWhiteSpace(r.RouteIfMissing) ? "." : r.RouteIfMissing.Trim()));
-            }
-
             return new CustomGameProfile
             {
-                GameName          = name,
-                GameDirectory     = dir,
-                ExePath           = string.IsNullOrWhiteSpace(txtExePath.Text) ? null : txtExePath.Text.Trim(),
-                SteamAppId        = string.IsNullOrWhiteSpace(txtSteamAppId.Text) ? null : txtSteamAppId.Text.Trim(),
-                ModFileTypes      = string.IsNullOrWhiteSpace(txtFileTypes.Text) ? ".zip, .rar, .7z" : txtFileTypes.Text.Trim(),
-                OutputDirectories = outputDirs,
-                ConditionalRoutes = condRoutes,
-                Description       = string.IsNullOrWhiteSpace(txtDescription.Text) ? null : txtDescription.Text.Trim(),
-                Author            = string.IsNullOrWhiteSpace(txtAuthor.Text) ? null : txtAuthor.Text.Trim(),
-                Version           = string.IsNullOrWhiteSpace(txtVersion.Text) ? null : txtVersion.Text.Trim()
+                GameName     = name,
+                GameDirectory = dir,
+                ExePath      = NullIfBlank(txtExePath.Text),
+                SteamAppId   = NullIfBlank(txtSteamAppId.Text),
+                RoutingRules = _rules.Select(r => new RoutingRule
+                {
+                    RuleName            = r.RuleName,
+                    ExtensionPattern    = r.ExtensionPattern.Trim(),
+                    NameContains        = NullIfBlank(r.NameContains),
+                    CheckSubdir         = NullIfBlank(r.CheckSubdir),
+                    Destination         = string.IsNullOrWhiteSpace(r.Destination) ? "." : r.Destination.Trim(),
+                    FallbackDestination = NullIfBlank(r.FallbackDestination),
+                }).ToList(),
+                Description = NullIfBlank(txtDescription.Text),
+                Author      = NullIfBlank(txtAuthor.Text),
+                Version     = NullIfBlank(txtVersion.Text),
             };
         }
+
+        private static string? NullIfBlank(string? s) =>
+            string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -158,25 +98,28 @@ namespace TMM
         private void UpdateEmptyState()
         {
             if (pnlRoutingEmpty != null)
-                pnlRoutingEmpty.Visibility = _condRoutes.Count == 0
-                    ? System.Windows.Visibility.Visible
-                    : System.Windows.Visibility.Collapsed;
+                pnlRoutingEmpty.Visibility = _rules.Count == 0
+                    ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void ValidateRuleConflicts()
         {
+            // Flag rules that share the same ExtensionPattern with no NameContains
+            // distinguishing them (those might silently shadow each other).
             var seen = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            foreach (var r in _condRoutes) r.HasConflict = false;
-            foreach (var r in _condRoutes)
+            foreach (var r in _rules) r.HasConflict = false;
+            foreach (var r in _rules)
             {
-                string ext = r.Extension.Trim().ToLowerInvariant();
+                // Only flag pure-extension conflicts (no name filter makes them ambiguous)
+                if (!string.IsNullOrWhiteSpace(r.NameContains)) continue;
+                string ext = r.ExtensionPattern.Trim().ToLowerInvariant();
                 if (string.IsNullOrEmpty(ext)) continue;
                 if (seen.ContainsKey(ext))
                 {
                     r.HasConflict = true;
-                    _condRoutes[seen[ext]].HasConflict = true;
+                    _rules[seen[ext]].HasConflict = true;
                 }
-                else seen[ext] = _condRoutes.IndexOf(r);
+                else seen[ext] = _rules.IndexOf(r);
             }
         }
 
@@ -185,7 +128,7 @@ namespace TMM
         private void BtnOpenGameDir_Click(object sender, RoutedEventArgs e)
         {
             string gameDir = txtGameDir.Text.Trim();
-            if (!string.IsNullOrEmpty(gameDir) && System.IO.Directory.Exists(gameDir))
+            if (!string.IsNullOrEmpty(gameDir) && Directory.Exists(gameDir))
                 ShellHelper.OpenFolder(gameDir);
         }
 
@@ -198,12 +141,11 @@ namespace TMM
                     ? Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
                     : txtGameDir.Text
             };
-
             if (dlg.ShowDialog() == true)
             {
                 txtGameDir.Text = dlg.FolderName;
                 if (string.IsNullOrWhiteSpace(txtGameName.Text))
-                    txtGameName.Text = System.IO.Path.GetFileName(dlg.FolderName);
+                    txtGameName.Text = Path.GetFileName(dlg.FolderName);
             }
         }
 
@@ -214,82 +156,84 @@ namespace TMM
             {
                 Title = "Select Game Executable",
                 Filter = "Executables (*.exe)|*.exe|All Files (*.*)|*.*",
-                InitialDirectory = System.IO.Directory.Exists(gameDir)
+                InitialDirectory = Directory.Exists(gameDir)
                     ? gameDir
                     : Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
             };
-
             if (dlg.ShowDialog() == true)
             {
                 string exePath = dlg.FileName;
-                if (!string.IsNullOrEmpty(gameDir) && exePath.StartsWith(gameDir, StringComparison.OrdinalIgnoreCase))
-                    exePath = exePath[gameDir.Length..].TrimStart(System.IO.Path.DirectorySeparatorChar,
-                                                                  System.IO.Path.AltDirectorySeparatorChar);
+                if (!string.IsNullOrEmpty(gameDir) &&
+                    exePath.StartsWith(gameDir, StringComparison.OrdinalIgnoreCase))
+                    exePath = exePath[gameDir.Length..].TrimStart(Path.DirectorySeparatorChar,
+                                                                    Path.AltDirectorySeparatorChar);
                 txtExePath.Text = exePath;
             }
         }
 
-        private void BtnQuickAddFileType_Click(object sender, RoutedEventArgs e)
+        // ── Rule card: WHEN / IF / THEN / ELSE actions ────────────────────────────
+
+        private void BtnAddNameFilter_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Button btn && btn.Tag is string ext)
+            if ((sender as Button)?.DataContext is RoutingRule rule)
+                rule.NameContains = "text";
+        }
+
+        private void BtnRemoveNameFilter_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.DataContext is RoutingRule rule)
+                rule.NameContains = null;
+        }
+
+        private void BtnAddCondition_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.DataContext is RoutingRule rule)
             {
-                string current = txtFileTypes.Text.Trim();
-                if (string.IsNullOrEmpty(current))
-                    txtFileTypes.Text = ext;
-                else if (!current.Contains(ext, StringComparison.OrdinalIgnoreCase))
-                    txtFileTypes.Text = current + ", " + ext;
+                rule.CheckSubdir       = "folder";
+                rule.FallbackDestination = ".";
             }
         }
 
-        // ── Static mapping DataGrid ───────────────────────────────────────────────
-
-        private void BtnAddMapping_Click(object sender, RoutedEventArgs e)
+        private void BtnRemoveCondition_Click(object sender, RoutedEventArgs e)
         {
-            var row = new MappingRow { Extension = ".ext", OutputFolder = "." };
-            _mappings.Add(row);
-            dgMappings.ScrollIntoView(row);
-            dgMappings.SelectedItem = row;
-            dgMappings.CurrentCell  = new System.Windows.Controls.DataGridCellInfo(row, dgMappings.Columns[0]);
-            dgMappings.BeginEdit();
+            if ((sender as Button)?.DataContext is RoutingRule rule)
+            {
+                rule.CheckSubdir       = null;
+                rule.FallbackDestination = null;
+            }
         }
 
-        private void BtnRemoveMapping_Click(object sender, RoutedEventArgs e)
-        {
-            if (dgMappings.SelectedItem is MappingRow row)
-                _mappings.Remove(row);
-        }
+        // ── Rule list management ──────────────────────────────────────────────────
 
-        // ── Conditional routes (sentence builder) ────────────────────────────────
-
-        private void BtnAddCondRoute_Click(object sender, RoutedEventArgs e)
+        private void BtnAddRule_Click(object sender, RoutedEventArgs e)
         {
-            var row = new CondRouteRow();
-            row.PropertyChanged += (_, _) => ValidateRuleConflicts();
-            _condRoutes.Add(row);
+            var rule = new RoutingRule { ExtensionPattern = ".ext", Destination = "." };
+            rule.PropertyChanged += (_, _) => ValidateRuleConflicts();
+            _rules.Add(rule);
             ValidateRuleConflicts();
         }
 
-        private void BtnRemoveCondRouteItem_Click(object sender, RoutedEventArgs e)
+        private void BtnRemoveRule_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Button btn && btn.DataContext is CondRouteRow row)
-                _condRoutes.Remove(row);
+            if ((sender as Button)?.DataContext is RoutingRule rule)
+                _rules.Remove(rule);
         }
 
         private void BtnMoveRuleUp_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Button btn && btn.DataContext is CondRouteRow row)
+            if ((sender as Button)?.DataContext is RoutingRule rule)
             {
-                int idx = _condRoutes.IndexOf(row);
-                if (idx > 0) _condRoutes.Move(idx, idx - 1);
+                int idx = _rules.IndexOf(rule);
+                if (idx > 0) _rules.Move(idx, idx - 1);
             }
         }
 
         private void BtnMoveRuleDown_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Button btn && btn.DataContext is CondRouteRow row)
+            if ((sender as Button)?.DataContext is RoutingRule rule)
             {
-                int idx = _condRoutes.IndexOf(row);
-                if (idx < _condRoutes.Count - 1) _condRoutes.Move(idx, idx + 1);
+                int idx = _rules.IndexOf(rule);
+                if (idx < _rules.Count - 1) _rules.Move(idx, idx + 1);
             }
         }
 
@@ -297,43 +241,121 @@ namespace TMM
 
         private void BtnApplyPreset_Click(object sender, RoutedEventArgs e)
         {
-            if (cmbPresets.SelectedItem is not System.Windows.Controls.ComboBoxItem item) return;
+            if (cmbPresets.SelectedItem is not ComboBoxItem item) return;
             string tag = item.Tag as string ?? "";
 
-            var rules = tag switch
+            RoutingRule[] rules = tag switch
             {
                 "asi" => new[]
                 {
-                    new CondRouteRow { Extension = ".asi", CheckSubdir = "plugins", RouteIfExists = "plugins", RouteIfMissing = "." }
+                    new RoutingRule { ExtensionPattern = ".asi", CheckSubdir = "plugins",
+                                      Destination = "plugins", FallbackDestination = "." },
                 },
                 "source" => new[]
                 {
-                    new CondRouteRow { Extension = ".vpk", CheckSubdir = "custom",  RouteIfExists = "custom",  RouteIfMissing = "." },
-                    new CondRouteRow { Extension = ".cfg", CheckSubdir = "cfg",     RouteIfExists = "cfg",     RouteIfMissing = "." }
+                    new RoutingRule { ExtensionPattern = ".vpk", CheckSubdir = "custom",
+                                      Destination = "custom", FallbackDestination = "." },
+                    new RoutingRule { ExtensionPattern = ".cfg", CheckSubdir = "cfg",
+                                      Destination = "cfg", FallbackDestination = "." },
                 },
                 "skse" => new[]
                 {
-                    new CondRouteRow { Extension = ".dll", CheckSubdir = "SKSE\\Plugins", RouteIfExists = "SKSE\\Plugins", RouteIfMissing = "." },
-                    new CondRouteRow { Extension = ".pex", CheckSubdir = "Data\\Scripts",  RouteIfExists = "Data\\Scripts",  RouteIfMissing = "." }
+                    new RoutingRule { ExtensionPattern = ".dll", CheckSubdir = "Data\\SKSE",
+                                      Destination = "Data\\SKSE\\Plugins", FallbackDestination = "." },
+                    new RoutingRule { ExtensionPattern = ".pex", CheckSubdir = "Data\\Scripts",
+                                      Destination = "Data\\Scripts", FallbackDestination = "." },
+                    new RoutingRule { ExtensionPattern = ".esp", Destination = "Data" },
+                    new RoutingRule { ExtensionPattern = ".esm", Destination = "Data" },
+                    new RoutingRule { ExtensionPattern = ".bsa", Destination = "Data" },
                 },
                 "cleo" => new[]
                 {
-                    new CondRouteRow { Extension = ".cs",   CheckSubdir = "CLEO", RouteIfExists = "CLEO", RouteIfMissing = "." },
-                    new CondRouteRow { Extension = ".cleo", CheckSubdir = "CLEO", RouteIfExists = "CLEO", RouteIfMissing = "." },
-                    new CondRouteRow { Extension = ".fxt",  CheckSubdir = "CLEO", RouteIfExists = "CLEO", RouteIfMissing = "." }
+                    new RoutingRule { ExtensionPattern = ".cs",   CheckSubdir = "CLEO",
+                                      Destination = "CLEO", FallbackDestination = "." },
+                    new RoutingRule { ExtensionPattern = ".cleo", CheckSubdir = "CLEO",
+                                      Destination = "CLEO", FallbackDestination = "." },
+                    new RoutingRule { ExtensionPattern = ".fxt",  CheckSubdir = "CLEO",
+                                      Destination = "CLEO", FallbackDestination = "." },
                 },
-                "clear" => Array.Empty<CondRouteRow>(),
-                _ => null
+                "clear" => Array.Empty<RoutingRule>(),
+                _ => null!
             };
 
             if (rules == null) return;
-            _condRoutes.Clear();
+            _rules.Clear();
             foreach (var r in rules)
             {
                 r.PropertyChanged += (_, _) => ValidateRuleConflicts();
-                _condRoutes.Add(r);
+                _rules.Add(r);
             }
             ValidateRuleConflicts();
+        }
+
+        // ── Test Routing ──────────────────────────────────────────────────────────
+
+        private void BtnTestRouting_Click(object sender, RoutedEventArgs e)
+        {
+            if (pnlTestRouting.Visibility == Visibility.Collapsed)
+            {
+                pnlTestRouting.Visibility = Visibility.Visible;
+                if (!string.IsNullOrEmpty(txtTestFile.Text)) RunTestRoute();
+            }
+            else
+            {
+                pnlTestRouting.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void BtnTestRoutingBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            var ofd = new OpenFileDialog { Title = "Select a file to test routing" };
+            if (ofd.ShowDialog() == true)
+            {
+                txtTestFile.Text = ofd.FileName;
+                RunTestRoute();
+            }
+        }
+
+        private void RunTestRoute()
+        {
+            string filePath = txtTestFile.Text.Trim();
+            if (string.IsNullOrEmpty(filePath)) { txtTestResult.Text = "→ (no file selected)"; return; }
+
+            string ext      = Path.GetExtension(filePath).ToLowerInvariant();
+            string fileName = Path.GetFileName(filePath);
+            string gameDir  = txtGameDir.Text.Trim();
+
+            foreach (var rule in _rules)
+            {
+                if (!MatchesExt(rule.ExtensionPattern, ext)) continue;
+                if (!string.IsNullOrWhiteSpace(rule.NameContains) &&
+                    !fileName.Contains(rule.NameContains, StringComparison.OrdinalIgnoreCase)) continue;
+
+                if (rule.HasCondition)
+                {
+                    bool exists = !string.IsNullOrEmpty(gameDir) &&
+                                  Directory.Exists(Path.Combine(gameDir, rule.CheckSubdir!));
+                    string dest   = exists ? rule.Destination : (rule.FallbackDestination ?? ".");
+                    string reason = exists
+                        ? $"({rule.CheckSubdir}\\ exists)"
+                        : $"({rule.CheckSubdir}\\ not found)";
+                    txtTestResult.Text = $"→  {(dest == "." ? "(game root)" : dest)}  {reason}";
+                }
+                else
+                {
+                    string dest = string.IsNullOrWhiteSpace(rule.Destination) ? "." : rule.Destination;
+                    txtTestResult.Text = $"→  {(dest == "." ? "(game root)" : dest)}  (matched rule: {rule.ExtensionPattern})";
+                }
+                return;
+            }
+
+            txtTestResult.Text = "→  (game root)  (no rule matched — default)";
+        }
+
+        private static bool MatchesExt(string pattern, string ext)
+        {
+            if (pattern is "*" or ".*" or "any") return true;
+            return pattern.Equals(ext, StringComparison.OrdinalIgnoreCase);
         }
 
         // ── Import / Export ───────────────────────────────────────────────────────
@@ -362,7 +384,6 @@ namespace TMM
 
         private async void BtnExportConfig_Click(object sender, RoutedEventArgs e)
         {
-            dgMappings.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
             var config = BuildCurrentProfile();
             if (config == null)
             {
@@ -371,7 +392,7 @@ namespace TMM
                 return;
             }
 
-            string safeName = string.Join("_", config.GameName.Split(System.IO.Path.GetInvalidFileNameChars()));
+            string safeName = string.Join("_", config.GameName.Split(Path.GetInvalidFileNameChars()));
             var dlg = new SaveFileDialog
             {
                 Title      = "Export .tmmgame Config",
@@ -398,26 +419,23 @@ namespace TMM
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
-            dgMappings.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
-
             string name = txtGameName.Text.Trim();
             string dir  = txtGameDir.Text.Trim();
 
             if (string.IsNullOrEmpty(name))
             {
-                MessageBox.Show("Please enter a game name.", "Required Field", MessageBoxButton.OK, MessageBoxImage.Warning);
-                txtGameName.Focus();
-                return;
+                MessageBox.Show("Please enter a game name.", "Required Field",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtGameName.Focus(); return;
             }
-
             if (string.IsNullOrEmpty(dir))
             {
-                MessageBox.Show("Please select the game directory.", "Required Field", MessageBoxButton.OK, MessageBoxImage.Warning);
-                txtGameDir.Focus();
-                return;
+                MessageBox.Show("Please select the game directory.", "Required Field",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtGameDir.Focus(); return;
             }
 
-            // ── Validate Steam AppId (optional, must be numeric if provided) ────
+            // Validate Steam AppId
             string? steamAppId = null;
             string appIdText = txtSteamAppId.Text.Trim();
             if (!string.IsNullOrEmpty(appIdText))
@@ -426,147 +444,56 @@ namespace TMM
                 {
                     MessageBox.Show("Steam App ID must be a positive number (e.g., 12210).\n\nLeave empty to disable Steam integration.",
                         "Invalid Steam App ID", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    txtSteamAppId.Focus();
-                    return;
+                    txtSteamAppId.Focus(); return;
                 }
                 steamAppId = appIdText;
             }
 
-            string fileTypes = string.IsNullOrWhiteSpace(txtFileTypes.Text)
-                ? ".zip, .rar, .7z"
-                : txtFileTypes.Text.Trim();
-
-            // ── Validate output directory mappings ──────────────────────────────
-            var outputDirs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var row in _mappings)
+            // Validate routing rules
+            var routingRules = new List<RoutingRule>();
+            foreach (var r in _rules)
             {
-                string ext    = row.Extension.Trim().ToLowerInvariant();
-                string folder = string.IsNullOrWhiteSpace(row.OutputFolder) ? "." : row.OutputFolder.Trim();
-
-                // Validate extension format (must start with . or be empty/default)
-                if (!string.IsNullOrEmpty(ext) && ext != ".ext")
+                string ext = r.ExtensionPattern.Trim();
+                if (string.IsNullOrEmpty(ext))
                 {
-                    if (!ext.StartsWith("."))
-                    {
-                        MessageBox.Show($"Extension '{ext}' must start with a dot (e.g., .asi, .ini).",
-                            "Invalid Extension", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-                    outputDirs[ext] = folder;
-                }
-            }
-
-            // ── Validate conditional routes ─────────────────────────────────────
-            var condRoutes = new List<ConditionalRoute>();
-            foreach (var r in _condRoutes)
-            {
-                string ext = r.Extension.Trim();
-                string sub = r.CheckSubdir.Trim();
-
-                // Skip empty rows
-                if (string.IsNullOrWhiteSpace(ext) && string.IsNullOrWhiteSpace(sub))
-                    continue;
-
-                // Both fields required if either is filled
-                if (string.IsNullOrWhiteSpace(ext) || string.IsNullOrWhiteSpace(sub))
-                {
-                    MessageBox.Show("Conditional routing rules require both Extension and Check Subfolder fields.\n\n" +
-                        "Leave both empty to skip a row, or fill both to create a rule.",
+                    MessageBox.Show("One or more rules have an empty extension pattern. Use * for catch-all.",
                         "Incomplete Rule", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
-
-                // Validate extension format
-                if (!ext.StartsWith("."))
+                if (string.IsNullOrWhiteSpace(r.Destination))
                 {
-                    MessageBox.Show($"Extension '{ext}' must start with a dot (e.g., .asi).",
-                        "Invalid Extension", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"Rule for '{ext}' has no destination. Use . for game root.",
+                        "Incomplete Rule", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
-
-                string routeIfExists  = string.IsNullOrWhiteSpace(r.RouteIfExists)  ? "." : r.RouteIfExists.Trim();
-                string routeIfMissing = string.IsNullOrWhiteSpace(r.RouteIfMissing) ? "." : r.RouteIfMissing.Trim();
-
-                condRoutes.Add(new ConditionalRoute(ext.ToLowerInvariant(), sub, routeIfExists, routeIfMissing));
+                routingRules.Add(new RoutingRule
+                {
+                    RuleName            = r.RuleName,
+                    ExtensionPattern    = ext,
+                    NameContains        = NullIfBlank(r.NameContains),
+                    CheckSubdir         = NullIfBlank(r.CheckSubdir),
+                    Destination         = r.Destination.Trim(),
+                    FallbackDestination = NullIfBlank(r.FallbackDestination),
+                });
             }
 
             Result = new CustomGameProfile
             {
-                GameName          = name,
-                GameDirectory     = dir,
-                ExePath           = string.IsNullOrWhiteSpace(txtExePath.Text) ? null : txtExePath.Text.Trim(),
-                SteamAppId        = steamAppId,
-                ModFileTypes      = fileTypes,
-                OutputDirectories = outputDirs,
-                ConditionalRoutes = condRoutes,
-                Description       = string.IsNullOrWhiteSpace(txtDescription.Text) ? null : txtDescription.Text.Trim(),
-                Author            = string.IsNullOrWhiteSpace(txtAuthor.Text) ? null : txtAuthor.Text.Trim(),
-                Version           = string.IsNullOrWhiteSpace(txtVersion.Text) ? null : txtVersion.Text.Trim()
+                GameName      = name,
+                GameDirectory = dir,
+                ExePath       = NullIfBlank(txtExePath.Text),
+                SteamAppId    = steamAppId,
+                RoutingRules  = routingRules,
+                Description   = NullIfBlank(txtDescription.Text),
+                Author        = NullIfBlank(txtAuthor.Text),
+                Version       = NullIfBlank(txtVersion.Text),
             };
 
             DialogResult = true;
             Close();
         }
 
-        private void BtnTestRouting_Click(object sender, RoutedEventArgs e)
-        {
-            if (pnlTestRouting.Visibility == Visibility.Collapsed)
-            {
-                pnlTestRouting.Visibility = Visibility.Visible;
-                if (!string.IsNullOrEmpty(txtTestFile.Text))
-                    RunTestRoute();
-            }
-            else
-            {
-                pnlTestRouting.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        private void BtnTestRoutingBrowse_Click(object sender, RoutedEventArgs e)
-        {
-            var ofd = new OpenFileDialog { Title = "Select a file to test routing" };
-            if (ofd.ShowDialog() == true)
-            {
-                txtTestFile.Text = ofd.FileName;
-                RunTestRoute();
-            }
-        }
-
-        private void RunTestRoute()
-        {
-            string filePath = txtTestFile.Text.Trim();
-            if (string.IsNullOrEmpty(filePath))
-            {
-                txtTestResult.Text = "→ (no file selected)";
-                return;
-            }
-
-            string ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
-            string gameDir = txtGameDir.Text.Trim();
-
-            foreach (var r in _condRoutes)
-            {
-                if (!r.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase)) continue;
-                bool exists = !string.IsNullOrEmpty(gameDir) &&
-                              System.IO.Directory.Exists(System.IO.Path.Combine(gameDir, r.CheckSubdir));
-                string dest = exists ? r.RouteIfExists : r.RouteIfMissing;
-                string reason = exists ? $"({r.CheckSubdir}\\ exists)" : $"({r.CheckSubdir}\\ not found)";
-                txtTestResult.Text = $"→  {(dest == "." ? "(game root)" : dest)}  {reason}";
-                return;
-            }
-
-            if (_mappings.FirstOrDefault(m => m.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase))
-                    is MappingRow match)
-            {
-                txtTestResult.Text = $"→  {(match.OutputFolder == "." ? "(game root)" : match.OutputFolder)}  (static rule)";
-                return;
-            }
-
-            txtTestResult.Text = "→  (game root)  (no rule — default)";
-        }
-
         private void BtnCancel_Click(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }
         private new void BtnClose_Click(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }
-
     }
 }

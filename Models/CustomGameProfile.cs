@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,31 +8,20 @@ namespace TMM
 {
     /// <summary>
     /// Represents a user-defined custom game configuration.
-    /// Serialized to/from JSON in AppData.
+    /// Serialized to/from JSON in AppData/CustomGames/.
     /// </summary>
     public class CustomGameProfile
     {
         public string GameName { get; set; } = "";
         public string GameDirectory { get; set; } = "";
-
-        // Optional path to game exe, relative to GameDirectory (e.g. "hl2.exe")
         public string? ExePath { get; set; }
-
-        // Optional Steam AppId for verify/install shortcuts (e.g. "12210" for GTA IV)
-        // If empty/null, Steam integration buttons are hidden/disabled
         public string? SteamAppId { get; set; }
 
-        // Comma-separated file types: ".rar, .zip, .7z"
-        public string ModFileTypes { get; set; } = ".rar, .zip, .7z";
-
-        // Static mapping: filetype → output subdirectory (relative to game root)
-        // e.g., { ".asi": ".", ".ini": "config" }
-        public Dictionary<string, string> OutputDirectories { get; set; } = new();
-
-        // Conditional routing rules evaluated at deploy-time.
-        // These take priority over OutputDirectories for the same extension.
-        // e.g. "put .asi in plugins\ if that folder exists, else in ."
-        public List<ConditionalRoute> ConditionalRoutes { get; set; } = new();
+        /// <summary>
+        /// Ordered list of routing rules (first match wins).
+        /// Replaces the old ModFileTypes + OutputDirectories + ConditionalRoutes trio.
+        /// </summary>
+        public List<RoutingRule> RoutingRules { get; set; } = new();
 
         public InstallerHints? InstallerHints { get; set; }
         public LauncherCardConfig? LauncherCard { get; set; }
@@ -42,46 +32,80 @@ namespace TMM
         [JsonIgnore]
         public bool IsBuiltIn { get; set; }
 
-        // ── Helpers ──────────────────────────────────────────────────────────────
-
-        /// <summary>Parses ModFileTypes string into a list of extensions (lowercase).</summary>
-        public List<string> GetFileTypes() =>
-            ModFileTypes
-                .Split(',')
-                .Select(ft => ft.Trim().ToLowerInvariant())
-                .Where(ft => !string.IsNullOrEmpty(ft))
-                .ToList();
+        // ── File acceptance ───────────────────────────────────────────────────────
 
         /// <summary>
-        /// Gets output directory for a given file extension using only the static
-        /// OutputDirectories map.  A "*" key acts as catch-all.  Falls back to "." (root).
+        /// Returns true if this game config accepts the given file extension for install.
+        /// Archives (.zip/.rar/.7z) are always accepted.
+        /// A "*" / "any" catch-all rule accepts all extensions.
+        /// If no rules are defined, all files are accepted (open policy).
         /// </summary>
-        public string GetOutputDirectory(string fileExtension)
+        public bool AcceptsFileType(string ext)
         {
-            string lower = fileExtension.ToLowerInvariant();
-            if (OutputDirectories.TryGetValue(lower, out var dir)) return dir;
-            if (OutputDirectories.TryGetValue("*", out var wildcard)) return wildcard;
-            return ".";
+            string lower = ext.ToLowerInvariant();
+            if (lower is ".zip" or ".rar" or ".7z") return true;
+            if (RoutingRules.Count == 0) return true;
+            foreach (var rule in RoutingRules)
+            {
+                if (rule.ExtensionPattern is "*" or ".*" or "any") return true;
+                if (rule.ExtensionPattern.Equals(lower, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
         }
 
         /// <summary>
-        /// Gets the output directory for a file, applying ConditionalRoutes first
-        /// (they can check whether a sub-folder actually exists), then falling back
-        /// to the static OutputDirectories map.
+        /// Returns distinct accepted extensions for the file-open dialog filter.
+        /// Returns empty list when a catch-all rule exists (means "all files").
+        /// Always includes archives.
         /// </summary>
-        /// <param name="fileExtension">Extension of the file being deployed, e.g. ".asi".</param>
-        /// <param name="gameDir">Absolute path to the game installation directory.</param>
-        public string ResolveOutputDirectory(string fileExtension, string gameDir)
+        public List<string> GetFileTypes()
         {
-            string lower = fileExtension.ToLowerInvariant();
-            foreach (var cond in ConditionalRoutes)
+            var results = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                { ".zip", ".rar", ".7z" };
+            foreach (var rule in RoutingRules)
             {
-                if (!cond.Extension.Equals(lower, System.StringComparison.OrdinalIgnoreCase))
-                    continue;
-                string checkPath = Path.Combine(gameDir, cond.CheckSubdir);
-                return Directory.Exists(checkPath) ? cond.RouteIfExists : cond.RouteIfMissing;
+                if (rule.ExtensionPattern is "*" or ".*" or "any")
+                    return new List<string>(); // catch-all → show "All Files" in dialog
+                if (!string.IsNullOrWhiteSpace(rule.ExtensionPattern) &&
+                    rule.ExtensionPattern.StartsWith('.'))
+                    results.Add(rule.ExtensionPattern.ToLowerInvariant());
             }
-            return GetOutputDirectory(lower);
+            return results.ToList();
+        }
+
+        // ── Routing resolution ────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Resolves the output sub-directory for a file being deployed.
+        /// Rules are evaluated in order; first match wins.
+        /// </summary>
+        /// <param name="fileExtension">Lowercase extension of the file, e.g. ".dll"</param>
+        /// <param name="fileName">Filename only (no directory), for NameContains matching.</param>
+        /// <param name="gameDir">Absolute game directory path, for IF condition checking.</param>
+        public string ResolveOutputDirectory(string fileExtension, string fileName, string gameDir)
+        {
+            string lowerExt = fileExtension.ToLowerInvariant();
+            foreach (var rule in RoutingRules)
+            {
+                if (!MatchesExtension(rule.ExtensionPattern, lowerExt)) continue;
+                if (!string.IsNullOrWhiteSpace(rule.NameContains) &&
+                    !fileName.Contains(rule.NameContains, StringComparison.OrdinalIgnoreCase)) continue;
+
+                if (rule.HasCondition)
+                {
+                    bool exists = !string.IsNullOrEmpty(gameDir) &&
+                                  Directory.Exists(Path.Combine(gameDir, rule.CheckSubdir!));
+                    return exists ? rule.Destination : (rule.FallbackDestination ?? ".");
+                }
+                return rule.Destination;
+            }
+            return ".";
+        }
+
+        private static bool MatchesExtension(string pattern, string ext)
+        {
+            if (pattern is "*" or ".*" or "any") return true;
+            return pattern.Equals(ext, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

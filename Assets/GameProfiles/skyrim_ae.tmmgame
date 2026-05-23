@@ -1,25 +1,47 @@
 {
-  "$schema": "tmm-game/1.0",
+  "$schema": "tmm-game/1.1",
   "gameName": "Skyrim Anniversary Edition",
   "gameDirectory": "",
   "exePath": "SkyrimSE.exe",
   "steamAppId": "489830",
-  "modFileTypes": ".zip, .rar, .7z, .esp, .esm, .esl, .dll, .bsa, .ba2, .ini, .json, .pex, .psc",
-  "outputDirectories": {
-    ".esp": "Data",
-    ".esm": "Data",
-    ".esl": "Data",
-    ".bsa": "Data",
-    ".ba2": "Data",
-    ".pex": "Data\\Scripts",
-    ".psc": "Data\\Scripts\\Source"
-  },
-  "conditionalRoutes": [
+  "routingRules": [
     {
-      "extension": ".dll",
+      "ruleName": "SKSE Plugins",
+      "extensionPattern": ".dll",
       "checkSubdir": "Data\\SKSE",
-      "routeIfExists": "Data\\SKSE\\Plugins",
-      "routeIfMissing": "."
+      "destination": "Data\\SKSE\\Plugins",
+      "fallbackDestination": "."
+    },
+    {
+      "ruleName": "ESP/ESM/ESL Plugins",
+      "extensionPattern": ".esp",
+      "destination": "Data"
+    },
+    {
+      "extensionPattern": ".esm",
+      "destination": "Data"
+    },
+    {
+      "extensionPattern": ".esl",
+      "destination": "Data"
+    },
+    {
+      "ruleName": "BSA Archives",
+      "extensionPattern": ".bsa",
+      "destination": "Data"
+    },
+    {
+      "extensionPattern": ".ba2",
+      "destination": "Data"
+    },
+    {
+      "ruleName": "Papyrus Scripts",
+      "extensionPattern": ".pex",
+      "destination": "Data\\Scripts"
+    },
+    {
+      "extensionPattern": ".psc",
+      "destination": "Data\\Scripts\\Source"
     }
   ],
   "installerHints": {
@@ -34,5 +56,5 @@
     "accentColor": null
   },
   "description": "Built-in support for Skyrim Anniversary Edition (v1.6+). Routes ESP/ESM to Data\\, SKSE plugins to Data\\SKSE\\Plugins\\, and detects engine proxies (DXVK, ENB, ReShade) automatically.",
-  "version": "1.0"
+  "version": "1.1"
 }

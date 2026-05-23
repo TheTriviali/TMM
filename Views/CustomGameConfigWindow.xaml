@@ -3,20 +3,32 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TMM"
         Title="Configure Custom Game"
-        Height="800" Width="800"
-        MinHeight="620" MinWidth="580"
+        Height="860" Width="820"
+        MinHeight="640" MinWidth="600"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
         Loaded="Window_Loaded">
 
     <Window.Resources>
+
+        <!-- ── Field labels (Game Name *, Game Directory *, etc.) ─────────────── -->
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
             <Setter Property="FontSize"    Value="11"/>
             <Setter Property="FontWeight"  Value="SemiBold"/>
             <Setter Property="Margin"      Value="0,0,0,4"/>
+            <Setter Property="Foreground"  Value="{DynamicResource TextBrush}"/>
+        </Style>
+
+        <!-- Dim helper text beneath labels -->
+        <Style x:Key="FieldHintStyle" TargetType="TextBlock">
+            <Setter Property="FontSize"    Value="10"/>
+            <Setter Property="Opacity"     Value="0.55"/>
+            <Setter Property="Margin"      Value="0,-2,0,4"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="Foreground"  Value="{DynamicResource SubTextBrush}"/>
         </Style>
 
+        <!-- Standard text field -->
         <Style x:Key="FieldBoxStyle" TargetType="TextBox">
             <Setter Property="Background"      Value="{DynamicResource ControlBgBrush}"/>
             <Setter Property="Foreground"      Value="{DynamicResource TextBrush}"/>
@@ -32,6 +44,7 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Browse / action buttons -->
         <Style x:Key="BrowseBtnStyle" TargetType="Button">
             <Setter Property="Background"      Value="{DynamicResource HeaderBrush}"/>
             <Setter Property="Foreground"      Value="{DynamicResource TextBrush}"/>
@@ -62,7 +75,7 @@
             <Setter Property="FontSize"        Value="12"/>
         </Style>
 
-        <!-- Inline TextBox that sits inside a sentence — accent-colored, underline-only border -->
+        <!-- Inline text boxes inside rule sentence builder -->
         <Style x:Key="SentenceBoxStyle" TargetType="TextBox">
             <Setter Property="Background"      Value="Transparent"/>
             <Setter Property="Foreground"      Value="{DynamicResource AccentBrush}"/>
@@ -78,6 +91,42 @@
                 <Trigger Property="IsFocused" Value="True">
                     <Setter Property="BorderBrush"     Value="{DynamicResource AccentBrush}"/>
                     <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- WHEN / IF / THEN / ELSE keyword labels on rule cards -->
+        <Style x:Key="RuleKeywordStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily"        Value="Consolas, Courier New"/>
+            <Setter Property="FontSize"          Value="10"/>
+            <Setter Property="FontWeight"        Value="Bold"/>
+            <Setter Property="Foreground"        Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Width"             Value="44"/>
+            <Setter Property="Margin"            Value="0,0,2,0"/>
+        </Style>
+
+        <!-- Prose text between keywords and boxes on rule cards -->
+        <Style x:Key="RuleProseStyle" TargetType="TextBlock">
+            <Setter Property="FontSize"          Value="12"/>
+            <Setter Property="Foreground"        Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin"            Value="0,0,2,0"/>
+        </Style>
+
+        <!-- Small inline "+add" buttons on rule cards -->
+        <Style x:Key="RuleAddBtnStyle" TargetType="Button">
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="FontSize"        Value="10"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Padding"         Value="4,2"/>
+            <Setter Property="Margin"          Value="6,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -115,16 +164,17 @@
                     <Border Background="#1A0883FF" BorderBrush="#330883FF" BorderThickness="1"
                             CornerRadius="5" Padding="10,8" Margin="0,0,0,16">
                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#88BBFF"
-                                   Text="TMM copies mods from its internal storage into your game directory at deploy time. Keep a backup of your original game folder. File routing below tells TMM where each file type should land — if unsure, leave everything as . (game root)."/>
+                                   Text="TMM copies mods from its internal storage into your game directory at deploy time. Keep a backup of your original game folder. Routing rules below tell TMM where each file type should land — if unsure, leave everything as . (game root)."/>
                     </Border>
 
-                    <!-- ── Basic info ───────────────────────────────────────────── -->
+                    <!-- ── Basic info ──────────────────────────────────────────────────── -->
                     <TextBlock Text="Game Name *" Style="{StaticResource FieldLabelStyle}"/>
                     <TextBox x:Name="txtGameName" Style="{StaticResource FieldBoxStyle}"/>
 
                     <TextBlock Text="Description (optional)" Style="{StaticResource FieldLabelStyle}"/>
                     <TextBox x:Name="txtDescription" Style="{StaticResource FieldBoxStyle}"
-                             TextWrapping="Wrap" Height="60" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                             TextWrapping="Wrap" Height="56" AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
                              ToolTip="Optional description shown as tooltip on launcher card"/>
 
                     <TextBlock Text="Game Directory *" Style="{StaticResource FieldLabelStyle}"/>
@@ -149,8 +199,7 @@
                     </Grid>
 
                     <TextBlock Text="Game Executable (optional)" Style="{StaticResource FieldLabelStyle}"/>
-                    <TextBlock TextWrapping="Wrap" FontSize="10" Opacity="0.6" Margin="0,-2,0,4"
-                               Foreground="{DynamicResource SubTextBrush}"
+                    <TextBlock Style="{StaticResource FieldHintStyle}"
                                Text="Relative to game directory, e.g.  hl2.exe  or  bin\launcher.exe"/>
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
@@ -164,34 +213,18 @@
                                 Click="BtnBrowseExe_Click"/>
                     </Grid>
 
-                    <TextBlock Text="Supported Mod File Types *" Style="{StaticResource FieldLabelStyle}"/>
-                    <TextBlock TextWrapping="Wrap" FontSize="10" Opacity="0.6" Margin="0,-2,0,4"
-                               Foreground="{DynamicResource SubTextBrush}"
-                               Text="Comma-separated extensions. Archives (.zip .rar .7z) are extracted automatically."/>
-                    <TextBox x:Name="txtFileTypes" Style="{StaticResource FieldBoxStyle}"/>
-
-                    <WrapPanel Margin="0,-8,0,12">
-                        <Button Content=".zip"  Click="BtnQuickAddFileType_Click" Tag=".zip"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
-                        <Button Content=".rar"  Click="BtnQuickAddFileType_Click" Tag=".rar"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
-                        <Button Content=".7z"   Click="BtnQuickAddFileType_Click" Tag=".7z"   Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
-                        <Button Content=".esp"  Click="BtnQuickAddFileType_Click" Tag=".esp"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
-                        <Button Content=".dll"  Click="BtnQuickAddFileType_Click" Tag=".dll"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
-                        <Button Content=".jar"  Click="BtnQuickAddFileType_Click" Tag=".jar"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
-                        <Button Content=".ini"  Click="BtnQuickAddFileType_Click" Tag=".ini"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" FontSize="10"/>
-                    </WrapPanel>
-
                     <TextBlock Text="Steam App ID (optional)" Style="{StaticResource FieldLabelStyle}"/>
-                    <TextBlock TextWrapping="Wrap" FontSize="10" Opacity="0.6" Margin="0,-2,0,4"
-                               Foreground="{DynamicResource SubTextBrush}"
+                    <TextBlock Style="{StaticResource FieldHintStyle}"
                                Text="Numeric Steam ID for Launch via Steam (e.g. 12210 for GTA IV). Leave empty to launch the exe directly."/>
                     <TextBox x:Name="txtSteamAppId" Style="{StaticResource FieldBoxStyle}"/>
 
+                    <!-- Metadata expander -->
                     <Expander Background="{DynamicResource HeaderBrush}" Foreground="{DynamicResource TextBrush}"
                               Margin="0,0,0,12" IsExpanded="False">
                         <Expander.Header>
                             <TextBlock Text="Metadata (optional)" FontSize="11" FontWeight="SemiBold"/>
                         </Expander.Header>
-                        <StackPanel Margin="8,8,0,0">
+                        <StackPanel Margin="8,8,0,4">
                             <TextBlock Text="Author" Style="{StaticResource FieldLabelStyle}"/>
                             <TextBox x:Name="txtAuthor" Style="{StaticResource FieldBoxStyle}"/>
                             <TextBlock Text="Version" Style="{StaticResource FieldLabelStyle}"/>
@@ -199,110 +232,10 @@
                         </StackPanel>
                     </Expander>
 
-                    <!-- ── Output Directory Mapping ─────────────────────────────── -->
-                    <TextBlock Text="Output Directory Mapping" Style="{StaticResource FieldLabelStyle}" Margin="0,6,0,4"/>
-                    <TextBlock TextWrapping="Wrap" FontSize="10" Opacity="0.6" Margin="0,-2,0,8"
-                               Foreground="{DynamicResource SubTextBrush}"
-                               Text="Which subfolder each file type lands in on deploy. Use  .  for the game root.  Example: .vpk → custom"/>
-
-                    <Border Background="{DynamicResource ControlBgBrush}" CornerRadius="4"
-                            BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1" Margin="0,0,0,4">
-                        <DataGrid x:Name="dgMappings"
-                                  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
-                                  CanUserSortColumns="False" CanUserResizeRows="False"
-                                  HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                                  RowHeaderWidth="0" BorderThickness="0"
-                                  Background="Transparent" RowBackground="Transparent"
-                                  AlternatingRowBackground="#0DFFFFFF"
-                                  Foreground="{DynamicResource TextBrush}"
-                                  HorizontalGridLinesBrush="#1AFFFFFF"
-                                  SelectionMode="Single" SelectionUnit="FullRow"
-                                  MinHeight="64" MaxHeight="140">
-                            <DataGrid.Resources>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                                <Style TargetType="DataGridRow">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                                <Style TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background"       Value="{DynamicResource HeaderBrush}"/>
-                                    <Setter Property="Foreground"       Value="{DynamicResource SubTextBrush}"/>
-                                    <Setter Property="BorderThickness"  Value="0,0,0,1"/>
-                                    <Setter Property="BorderBrush"      Value="{DynamicResource SubTextBrush}"/>
-                                    <Setter Property="Padding"          Value="8,6"/>
-                                    <Setter Property="FontSize"         Value="11"/>
-                                    <Setter Property="FontWeight"       Value="SemiBold"/>
-                                </Style>
-                            </DataGrid.Resources>
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Extension" Width="130"
-                                                    Binding="{Binding Extension, UpdateSourceTrigger=LostFocus}">
-                                    <DataGridTextColumn.EditingElementStyle>
-                                        <Style TargetType="TextBox">
-                                            <Setter Property="Background" Value="{DynamicResource ControlBgBrush}"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-                                            <Setter Property="BorderThickness" Value="0"/>
-                                            <Setter Property="Padding" Value="4,2"/>
-                                            <Setter Property="FontFamily" Value="Consolas, Courier New"/>
-                                        </Style>
-                                    </DataGridTextColumn.EditingElementStyle>
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Padding"     Value="6,3"/>
-                                            <Setter Property="FontFamily"  Value="Consolas, Courier New"/>
-                                            <Setter Property="FontSize"    Value="12"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                                <DataGridTextColumn Header="Output Folder  (. = game root)" Width="*"
-                                                    Binding="{Binding OutputFolder, UpdateSourceTrigger=LostFocus}">
-                                    <DataGridTextColumn.EditingElementStyle>
-                                        <Style TargetType="TextBox">
-                                            <Setter Property="Background" Value="{DynamicResource ControlBgBrush}"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-                                            <Setter Property="BorderThickness" Value="0"/>
-                                            <Setter Property="Padding" Value="4,2"/>
-                                            <Setter Property="FontFamily" Value="Consolas, Courier New"/>
-                                        </Style>
-                                    </DataGridTextColumn.EditingElementStyle>
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Padding"     Value="6,3"/>
-                                            <Setter Property="FontFamily"  Value="Consolas, Courier New"/>
-                                            <Setter Property="FontSize"    Value="12"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Border>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                        <Button Content="+ Add Row"          Click="BtnAddMapping_Click"
-                                Style="{StaticResource BrowseBtnStyle}" Margin="0,0,8,0" Padding="8,4"/>
-                        <Button Content="&#x2212; Remove Selected" Click="BtnRemoveMapping_Click"
-                                Style="{StaticResource BrowseBtnStyle}" Padding="8,4"/>
-                    </StackPanel>
-
-                    <!-- ── Conditional Routing Rules ────────────────────────────── -->
-                    <TextBlock Text="Conditional Routing Rules" Style="{StaticResource FieldLabelStyle}" Margin="0,4,0,4"/>
-                    <TextBlock TextWrapping="Wrap" FontSize="10" Opacity="0.7" Margin="0,-2,0,10"
-                               Foreground="{DynamicResource SubTextBrush}"
-                               Text="Smart routing at deploy time — TMM checks whether a subfolder exists and places files accordingly. Useful for games where mods go in plugins\ only when a mod loader is installed, otherwise the game root."/>
+                    <!-- ── Routing Rules ───────────────────────────────────────────────── -->
+                    <TextBlock Text="Routing Rules" Style="{StaticResource FieldLabelStyle}" Margin="0,6,0,4"/>
+                    <TextBlock Style="{StaticResource FieldHintStyle}"
+                               Text="Rules are evaluated in order — first match wins. Use * as the extension to create a catch-all. Files that match no rule go to the game root by default."/>
 
                     <!-- Preset templates strip -->
                     <Grid Margin="0,0,0,10">
@@ -313,8 +246,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Load preset:" VerticalAlignment="Center"
                                    FontSize="11" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,8,0"/>
-                        <ComboBox x:Name="cmbPresets" Grid.Column="1"
-                                  Padding="8,5" FontSize="11">
+                        <ComboBox x:Name="cmbPresets" Grid.Column="1" Padding="8,5" FontSize="11">
                             <ComboBoxItem Tag="asi"    Content="ASI Loader  (GTA IV, GTA V, LA Noire, etc.)"/>
                             <ComboBoxItem Tag="source" Content="Source Engine  (Half-Life 2, Portal, TF2)"/>
                             <ComboBoxItem Tag="skse"   Content="Script Extender  (Skyrim / Fallout 4)"/>
@@ -326,64 +258,182 @@
                                 Click="BtnApplyPreset_Click"/>
                     </Grid>
 
-                    <!-- Sentence-builder rule cards -->
-                    <ItemsControl x:Name="icCondRoutes" Margin="0,0,0,4">
+                    <!-- Rule cards -->
+                    <ItemsControl x:Name="icRules" Margin="0,0,0,4">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{DynamicResource HeaderBrush}"
-                                        CornerRadius="6"
-                                        Padding="12,10" Margin="0,0,0,6">
+                            <DataTemplate DataType="{x:Type local:RoutingRule}">
+                                <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6">
                                     <Border.Style>
                                         <Style TargetType="Border">
-                                            <Setter Property="BorderBrush" Value="{DynamicResource SubTextBrush}"/>
+                                            <Setter Property="Background"      Value="{DynamicResource HeaderBrush}"/>
+                                            <Setter Property="BorderBrush"     Value="{DynamicResource SubTextBrush}"/>
                                             <Setter Property="BorderThickness" Value="1"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding HasConflict}" Value="True">
-                                                    <Setter Property="BorderBrush" Value="#FF5555"/>
+                                                    <Setter Property="BorderBrush"     Value="#FF5555"/>
                                                     <Setter Property="BorderThickness" Value="1.5"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
+
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- Sentence -->
-                                        <WrapPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <TextBlock Text="Put " VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource SubTextBrush}" FontSize="12"/>
-                                            <TextBox Text="{Binding Extension, UpdateSourceTrigger=PropertyChanged}"
-                                                     Style="{StaticResource SentenceBoxStyle}" Width="68"
-                                                     ToolTip="File extension to match, e.g.  .asi"/>
-                                            <TextBlock Text=" files into " VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource SubTextBrush}" FontSize="12"/>
-                                            <TextBox Text="{Binding RouteIfExists, UpdateSourceTrigger=PropertyChanged}"
-                                                     Style="{StaticResource SentenceBoxStyle}" Width="90"
-                                                     ToolTip="Subfolder to use when the check folder exists  (. = game root)"/>
-                                            <TextBlock Text=" if " VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource SubTextBrush}" FontSize="12"/>
-                                            <TextBox Text="{Binding CheckSubdir, UpdateSourceTrigger=PropertyChanged}"
-                                                     Style="{StaticResource SentenceBoxStyle}" Width="90"
-                                                     ToolTip="Subfolder to check for existence in the game directory"/>
-                                            <TextBlock Text="\ exists, otherwise " VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource SubTextBrush}" FontSize="12"/>
-                                            <TextBox Text="{Binding RouteIfMissing, UpdateSourceTrigger=PropertyChanged}"
-                                                     Style="{StaticResource SentenceBoxStyle}" Width="58"
-                                                     ToolTip="Subfolder to use when the check folder does NOT exist  (. = game root)"/>
-                                        </WrapPanel>
+                                        <!-- Rule content -->
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
 
-                                        <!-- Move Up/Down/Remove buttons -->
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <!-- WHEN row -->
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                                <TextBlock Text="WHEN" Style="{StaticResource RuleKeywordStyle}"/>
+                                                <TextBlock Text="ext = " Style="{StaticResource RuleProseStyle}"/>
+                                                <TextBox Text="{Binding ExtensionPattern, UpdateSourceTrigger=PropertyChanged}"
+                                                         Style="{StaticResource SentenceBoxStyle}" Width="68"
+                                                         ToolTip="Extension to match: .dll   .esp   *  (any extension)"/>
+                                                <Button Content="+ name filter" Click="BtnAddNameFilter_Click">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource RuleAddBtnStyle}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding HasNameFilter}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </StackPanel>
+
+                                            <!-- AND name filter row (HasNameFilter) -->
+                                            <StackPanel Orientation="Horizontal" Margin="44,0,0,3">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasNameFilter}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <TextBlock Text="AND" Style="{StaticResource RuleKeywordStyle}"/>
+                                                <TextBlock Text="name contains " Style="{StaticResource RuleProseStyle}"/>
+                                                <TextBox Text="{Binding NameContains, UpdateSourceTrigger=PropertyChanged}"
+                                                         Style="{StaticResource SentenceBoxStyle}" Width="110"
+                                                         ToolTip="Filename must contain this text (case-insensitive)"/>
+                                                <Button Content="&#xE8BB;"
+                                                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="8"
+                                                        Width="20" Height="20"
+                                                        Background="Transparent" BorderThickness="0"
+                                                        Foreground="{DynamicResource SubTextBrush}"
+                                                        Cursor="Hand" Margin="4,0,0,0" VerticalAlignment="Center"
+                                                        ToolTip="Remove name filter"
+                                                        Click="BtnRemoveNameFilter_Click"/>
+                                            </StackPanel>
+
+                                            <!-- Separator (HasCondition only) -->
+                                            <Rectangle Height="1" Fill="{DynamicResource SubTextBrush}"
+                                                       Opacity="0.15" Margin="0,5,0,5">
+                                                <Rectangle.Style>
+                                                    <Style TargetType="Rectangle">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasCondition}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Rectangle.Style>
+                                            </Rectangle>
+
+                                            <!-- IF row (HasCondition) -->
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasCondition}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <TextBlock Text="IF" Style="{StaticResource RuleKeywordStyle}"/>
+                                                <TextBox Text="{Binding CheckSubdir, UpdateSourceTrigger=PropertyChanged}"
+                                                         Style="{StaticResource SentenceBoxStyle}" Width="130"
+                                                         ToolTip="Subfolder to check for existence in the game directory, e.g.  Data\SKSE"/>
+                                                <TextBlock Text=" exists in game dir" Style="{StaticResource RuleProseStyle}"/>
+                                                <Button Content="&#xE8BB;"
+                                                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="8"
+                                                        Width="20" Height="20"
+                                                        Background="Transparent" BorderThickness="0"
+                                                        Foreground="{DynamicResource SubTextBrush}"
+                                                        Cursor="Hand" Margin="6,0,0,0" VerticalAlignment="Center"
+                                                        ToolTip="Remove condition"
+                                                        Click="BtnRemoveCondition_Click"/>
+                                            </StackPanel>
+
+                                            <!-- + add condition (no condition set) -->
+                                            <Button Content="+ add IF condition" Click="BtnAddCondition_Click"
+                                                    HorizontalAlignment="Left" Margin="44,0,0,3">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource RuleAddBtnStyle}">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasCondition}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+
+                                            <!-- Separator before THEN -->
+                                            <Rectangle Height="1" Fill="{DynamicResource SubTextBrush}"
+                                                       Opacity="0.15" Margin="0,5,0,5"/>
+
+                                            <!-- THEN row -->
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                                <TextBlock Text="THEN" Style="{StaticResource RuleKeywordStyle}"/>
+                                                <TextBlock Text="route to " Style="{StaticResource RuleProseStyle}"/>
+                                                <TextBox Text="{Binding Destination, UpdateSourceTrigger=PropertyChanged}"
+                                                         Style="{StaticResource SentenceBoxStyle}" Width="180"
+                                                         ToolTip="Output subfolder relative to game root. Use . for game root."/>
+                                            </StackPanel>
+
+                                            <!-- ELSE row (HasCondition) -->
+                                            <StackPanel Orientation="Horizontal">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasCondition}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <TextBlock Text="ELSE" Style="{StaticResource RuleKeywordStyle}"/>
+                                                <TextBlock Text="route to " Style="{StaticResource RuleProseStyle}"/>
+                                                <TextBox Text="{Binding FallbackDestination, UpdateSourceTrigger=PropertyChanged}"
+                                                         Style="{StaticResource SentenceBoxStyle}" Width="180"
+                                                         ToolTip="Fallback destination when IF condition is false. Leave empty for game root."/>
+                                            </StackPanel>
+
+                                        </StackPanel>
+
+                                        <!-- Move / Remove buttons -->
+                                        <StackPanel Grid.Column="1" Orientation="Vertical"
+                                                    VerticalAlignment="Top" Margin="4,0,0,0">
                                             <Button Content="&#xE70E;"
                                                     FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                                     FontSize="9" Width="26" Height="26"
                                                     Background="Transparent" BorderThickness="0"
                                                     Foreground="{DynamicResource SubTextBrush}"
-                                                    Cursor="Hand" Margin="0,0,3,0"
-                                                    VerticalAlignment="Center"
+                                                    Cursor="Hand" Margin="0,0,0,3"
                                                     ToolTip="Move rule up"
                                                     Click="BtnMoveRuleUp_Click"/>
                                             <Button Content="&#xE70D;"
@@ -391,8 +441,7 @@
                                                     FontSize="9" Width="26" Height="26"
                                                     Background="Transparent" BorderThickness="0"
                                                     Foreground="{DynamicResource SubTextBrush}"
-                                                    Cursor="Hand" Margin="0,0,3,0"
-                                                    VerticalAlignment="Center"
+                                                    Cursor="Hand" Margin="0,0,0,3"
                                                     ToolTip="Move rule down"
                                                     Click="BtnMoveRuleDown_Click"/>
                                             <Button Content="&#xE8BB;"
@@ -401,9 +450,8 @@
                                                     Background="Transparent" BorderThickness="0"
                                                     Foreground="{DynamicResource SubTextBrush}"
                                                     Cursor="Hand"
-                                                    VerticalAlignment="Center"
                                                     ToolTip="Remove this rule"
-                                                    Click="BtnRemoveCondRouteItem_Click"/>
+                                                    Click="BtnRemoveRule_Click"/>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -416,38 +464,59 @@
                             Padding="12,10" Margin="0,0,0,6" Visibility="Visible">
                         <TextBlock TextWrapping="Wrap" FontSize="11" Opacity="0.55"
                                    Foreground="{DynamicResource TextBrush}" TextAlignment="Center"
-                                   Text="No routing rules yet. Click '+ Add Rule' or pick a preset above.&#x0A;Most games don't need any rules — leave blank and mods go to the game root."/>
+                                   Text="No routing rules yet. Click '+ Add Rule' or pick a preset above.&#x0A;Without any rules, all mod files are deployed to the game root by default."/>
                     </Border>
 
+                    <!-- Default catch-all note -->
+                    <Border Background="#0AFFFFFF" CornerRadius="4" Padding="10,6" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Consolas, Courier New" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource SubTextBrush}" Margin="0,0,6,0"
+                                       VerticalAlignment="Center" Text="default"/>
+                            <TextBlock FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                                       VerticalAlignment="Center"
+                                       Text="→ any file not matched by a rule above goes to the game root  (.)"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Add Rule / Test Routing buttons -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                        <Button Content="+ Add Rule" Click="BtnAddCondRoute_Click"
+                        <Button Content="+ Add Rule"      Click="BtnAddRule_Click"
                                 Style="{StaticResource BrowseBtnStyle}" Margin="0,0,8,0" Padding="8,4"/>
                         <Button Content="Test Routing..." Click="BtnTestRouting_Click"
                                 Style="{StaticResource BrowseBtnStyle}" Padding="8,4"/>
                     </StackPanel>
 
-                    <!-- Footer note -->
+                    <!-- Archive note -->
                     <Border Background="#1AFF8800" BorderBrush="#33FF8800" BorderThickness="1"
                             CornerRadius="5" Padding="10,8" Margin="0,0,0,10">
                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#FFCC66"
-                                   Text="Note: TMM does not restructure mod archives automatically. If a downloaded archive uses a nested folder layout, you may need to reorganize files after installing so they land in the right place on deploy."/>
+                                   Text="Archives (.zip .rar .7z) are always auto-extracted — routing rules apply to the files inside, not the archive itself. Nested directories within an archive are preserved unless rules redirect them."/>
                     </Border>
 
                     <!-- Test Routing Panel (initially collapsed) -->
                     <Border x:Name="pnlTestRouting" Visibility="Collapsed"
                             Background="{DynamicResource ControlBgBrush}" CornerRadius="4"
-                            BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1" Padding="12,10" Margin="0,0,0,10">
+                            BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1"
+                            Padding="12,10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Test Routing" FontSize="12" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <TextBox x:Name="txtTestFile" Style="{StaticResource FieldBoxStyle}"
-                                         Margin="0,0,8,0" MinHeight="32"/>
-                                <Button Content="Browse..." Click="BtnTestRoutingBrowse_Click"
-                                        Style="{StaticResource BrowseBtnStyle}" Padding="8,4" Width="Auto"/>
-                            </StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="txtTestFile" Grid.Column="0"
+                                         Style="{StaticResource FieldBoxStyle}" Margin="0"
+                                         ToolTip="Enter or browse a filename to simulate routing"/>
+                                <Button Grid.Column="1" Content="Browse..."
+                                        Style="{StaticResource BrowseBtnStyle}" Padding="8,4"
+                                        Click="BtnTestRoutingBrowse_Click"/>
+                            </Grid>
                             <TextBlock x:Name="txtTestResult" Text="→ (nothing yet)"
-                                       FontSize="11" Foreground="{DynamicResource SubTextBrush}" Margin="0,4,0,0"/>
+                                       FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                                       FontFamily="Consolas, Courier New" Margin="0,4,0,0"/>
                         </StackPanel>
                     </Border>
 
@@ -462,7 +531,7 @@
                         <Button Content="Import .tmmgame" Margin="0,0,8,0"
                                 Style="{StaticResource BrowseBtnStyle}" Padding="10,5"
                                 Click="BtnImportConfig_Click"/>
-                        <Button Content="Export .tmmgame" Margin="0"
+                        <Button Content="Export .tmmgame"
                                 Style="{StaticResource BrowseBtnStyle}" Padding="10,5"
                                 Click="BtnExportConfig_Click"/>
                     </StackPanel>

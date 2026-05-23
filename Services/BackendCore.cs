@@ -734,9 +734,8 @@ namespace TMM
         }
 
         /// <summary>
-        /// Deploy enabled mods for a custom game directly to the game directory,
-        /// applying per-extension output subdirectory routing from the game config.
-        /// ConditionalRoutes in the config take priority over static OutputDirectories.
+        /// Deploy enabled mods for a custom game directly to the game directory.
+        /// RoutingRules in the config determine which subfolder each file lands in (first-match-wins).
         /// </summary>
         public async Task DeployCustomGameModsAsync(
             GameProfile profile,
@@ -758,18 +757,16 @@ namespace TMM
 
             Log($"[CustomDeploy:{profile.Key}] Starting - {enabled.Count} enabled, {disabled.Count} disabled");
 
-            // Build file map with extension-based output routing (conditional first).
+            // Build file map with routing rules (first-match-wins, extension + optional name filter).
             var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var mod in enabled)
             {
                 if (!Directory.Exists(mod.RawFolderPath)) continue;
                 foreach (var file in Directory.EnumerateFiles(mod.RawFolderPath, "*", SearchOption.AllDirectories))
                 {
-                    string ext = Path.GetExtension(file).ToLowerInvariant();
-                    // ResolveOutputDirectory checks ConditionalRoutes first,
-                    // then falls back to the static OutputDirectories map.
-                    string outSubDir = config.ResolveOutputDirectory(ext, gameDir);
+                    string ext      = Path.GetExtension(file).ToLowerInvariant();
                     string fileName = Path.GetFileName(file);
+                    string outSubDir = config.ResolveOutputDirectory(ext, fileName, gameDir);
                     string rel = outSubDir == "." ? fileName : Path.Combine(outSubDir, fileName);
                     fileMap[rel] = file;
                 }

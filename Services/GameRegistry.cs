@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -73,27 +73,11 @@ namespace TMM
                     using var reader = new StreamReader(stream);
                     var json = await reader.ReadToEndAsync();
                     var export = JsonSerializer.Deserialize<TmmGameExport>(json, JsonHelper.TmmGameOptions);
-
                     if (export?.GameName == null) continue;
 
-                    var config = new CustomGameProfile
-                    {
-                        GameName          = export.GameName,
-                        GameDirectory     = "", // Built-in profiles don't have a default path
-                        ExePath           = export.ExePath,
-                        SteamAppId        = export.SteamAppId,
-                        ModFileTypes      = export.ModFileTypes ?? ".rar, .zip, .7z",
-                        OutputDirectories = export.OutputDirectories ?? new(),
-                        ConditionalRoutes = export.ConditionalRoutes ?? new(),
-                        InstallerHints    = export.InstallerHints,
-                        LauncherCard      = export.LauncherCard,
-                        Description       = export.Description,
-                        Author            = export.Author,
-                        Version           = export.Version,
-                        IsBuiltIn         = true
-                    };
+                    var config = ProfileMigration.FromExport(export, Path.GetFileNameWithoutExtension(resourceName));
+                    config.IsBuiltIn = true;
 
-                    // Use game name as key for built-in profiles
                     string key = $"BUILTIN_{export.GameName.ToUpperInvariant().Replace(" ", "_")}";
                     var profile = CustomGameProfileToGameProfile(key, config);
                     _customGames[key] = (config, profile);
@@ -110,19 +94,49 @@ namespace TMM
             _customGames.Clear();
             if (!Directory.Exists(_customGamesPath)) return;
 
+            await LoadBuiltInProfilesAsync();
+
             var jsonFiles = Directory.GetFiles(_customGamesPath, "*.json");
             foreach (var file in jsonFiles)
             {
                 try
                 {
                     var json = await File.ReadAllTextAsync(file);
-                    var config = JsonSerializer.Deserialize<CustomGameProfile>(json);
-                    if (config != null && !string.IsNullOrEmpty(config.GameName))
+
+                    // Try new format first (has RoutingRules); fall back via legacy migration
+                    CustomGameProfile? config = null;
+                    try
                     {
-                        string key = Path.GetFileNameWithoutExtension(file);
-                        var profile = CustomGameProfileToGameProfile(key, config);
-                        _customGames[key] = (config, profile);
+                        config = JsonSerializer.Deserialize<CustomGameProfile>(json);
                     }
+                    catch { /* fall through to legacy */ }
+
+                    if (config == null || string.IsNullOrEmpty(config.GameName)) continue;
+
+                    // If RoutingRules is empty, check for legacy fields in the raw JSON
+                    if (config.RoutingRules.Count == 0)
+                    {
+                        // Deserialize as legacy export format to get old OutputDirectories / ConditionalRoutes
+                        var legacy = JsonSerializer.Deserialize<TmmGameExport>(json, JsonHelper.TmmGameOptions);
+                        if (legacy != null)
+                        {
+                            ProfileMigration.MigrateOldFields(
+                                config,
+                                legacy.ConditionalRoutes,
+                                legacy.OutputDirectories);
+
+                            // Persist the migrated format so we don't re-migrate next launch
+                            if (config.RoutingRules.Count > 0)
+                            {
+                                var migrated = JsonSerializer.Serialize(config, JsonHelper.PrettyOptions);
+                                await File.WriteAllTextAsync(file, migrated);
+                            }
+                        }
+                    }
+
+                    string key = Path.GetFileNameWithoutExtension(file);
+                    var profile = CustomGameProfileToGameProfile(key, config);
+                    _customGames[key] = (config, profile);
                 }
                 catch (Exception ex)
                 {
@@ -135,13 +149,8 @@ namespace TMM
         public GameProfile? GetGameProfile(string? key)
         {
             if (string.IsNullOrEmpty(key)) return null;
-
-            if (_builtInGames.TryGetValue(key, out var builtIn))
-                return builtIn;
-
-            if (_customGames.TryGetValue(key, out var custom))
-                return custom.profile;
-
+            if (_builtInGames.TryGetValue(key, out var builtIn)) return builtIn;
+            if (_customGames.TryGetValue(key, out var custom)) return custom.profile;
             return null;
         }
 
@@ -161,47 +170,37 @@ namespace TMM
             return all.OrderBy(g => g.DisplayName).ToList();
         }
 
-        /// <summary>Get only built-in games.</summary>
         public IReadOnlyList<GameProfile> GetBuiltInGames() =>
             _builtInGames.Values.ToList();
 
-        /// <summary>Get only user-created custom games (not built-in).</summary>
         public IReadOnlyList<(string Key, CustomGameProfile Config)> GetCustomGames() =>
-            _customGames.Where(kvp => !kvp.Value.config.IsBuiltIn).Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
+            _customGames.Where(kvp => !kvp.Value.config.IsBuiltIn)
+                        .Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
 
-        /// <summary>Get only built-in custom games (Skyrim, Minecraft, etc.).</summary>
         public IReadOnlyList<(string Key, CustomGameProfile Config)> GetBuiltInCustomGames() =>
-            _customGames.Where(kvp => kvp.Value.config.IsBuiltIn).Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
+            _customGames.Where(kvp => kvp.Value.config.IsBuiltIn)
+                        .Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
 
         /// <summary>Add a new custom game. Returns the generated key.</summary>
         public async Task<string> AddCustomGameAsync(CustomGameProfile config)
         {
-            if (string.IsNullOrEmpty(config.GameName))
-                throw new ArgumentException("Game name cannot be empty");
+            if (string.IsNullOrEmpty(config.GameName))  throw new ArgumentException("Game name cannot be empty");
+            if (string.IsNullOrEmpty(config.GameDirectory)) throw new ArgumentException("Game directory cannot be empty");
 
-            if (string.IsNullOrEmpty(config.GameDirectory))
-                throw new ArgumentException("Game directory cannot be empty");
-
-            // Generate a unique key: CUSTOM_1, CUSTOM_2, etc.
             int counter = 1;
             string key;
             while (true)
             {
                 key = $"CUSTOM_{counter}";
-                if (!_customGames.ContainsKey(key) && !_builtInGames.ContainsKey(key))
-                    break;
+                if (!_customGames.ContainsKey(key) && !_builtInGames.ContainsKey(key)) break;
                 counter++;
             }
 
-            // Save to JSON file
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
-            var json = JsonSerializer.Serialize(config, JsonHelper.PrettyOptions);
-            await File.WriteAllTextAsync(filePath, json);
+            await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
 
-            // Add to registry
             var profile = CustomGameProfileToGameProfile(key, config);
             _customGames[key] = (config, profile);
-
             return key;
         }
 
@@ -212,8 +211,7 @@ namespace TMM
                 throw new ArgumentException($"Custom game '{key}' not found");
 
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
-            var json = JsonSerializer.Serialize(config, JsonHelper.PrettyOptions);
-            await File.WriteAllTextAsync(filePath, json);
+            await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
 
             var profile = CustomGameProfileToGameProfile(key, config);
             _customGames[key] = (config, profile);
@@ -226,42 +224,35 @@ namespace TMM
                 throw new ArgumentException($"Custom game '{key}' not found");
 
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-
+            if (File.Exists(filePath)) File.Delete(filePath);
             _customGames.Remove(key);
         }
 
-        /// <summary>Reload all custom games from disk (useful if files were modified externally).</summary>
-        public async Task ReloadCustomGamesAsync()
-        {
-            await LoadCustomGamesAsync();
-        }
+        public async Task ReloadCustomGamesAsync() => await LoadCustomGamesAsync();
 
-        /// <summary>Export a CustomGameProfile to a .tmmgame file (camelCase JSON).</summary>
+        /// <summary>Export a CustomGameProfile to a .tmmgame file (camelCase JSON, new format).</summary>
         public static async Task ExportConfigAsync(CustomGameProfile config, string destPath)
         {
             var export = new TmmGameExport
             {
-                GameName          = config.GameName,
-                GameDirectory     = config.GameDirectory.Replace('\\', '/'),
-                ExePath           = config.ExePath?.Replace('\\', '/'),
-                SteamAppId        = config.SteamAppId,
-                ModFileTypes      = config.ModFileTypes,
-                OutputDirectories = config.OutputDirectories.Count > 0 ? config.OutputDirectories : null,
-                ConditionalRoutes = config.ConditionalRoutes.Count > 0 ? config.ConditionalRoutes : null,
-                InstallerHints    = config.InstallerHints,
-                LauncherCard      = config.LauncherCard,
-                Description       = config.Description,
-                Author            = config.Author,
-                Version           = config.Version,
+                GameName       = config.GameName,
+                GameDirectory  = config.GameDirectory.Replace('\\', '/'),
+                ExePath        = config.ExePath?.Replace('\\', '/'),
+                SteamAppId     = config.SteamAppId,
+                RoutingRules   = config.RoutingRules.Count > 0 ? config.RoutingRules : null,
+                InstallerHints = config.InstallerHints,
+                LauncherCard   = config.LauncherCard,
+                Description    = config.Description,
+                Author         = config.Author,
+                Version        = config.Version,
+                // Legacy fields intentionally omitted — new format only
             };
-            var json = JsonSerializer.Serialize(export, JsonHelper.TmmGameOptions);
-            await File.WriteAllTextAsync(destPath, json);
+            await File.WriteAllTextAsync(destPath, JsonSerializer.Serialize(export, JsonHelper.TmmGameOptions));
         }
 
         /// <summary>
         /// Import a .tmmgame file. Returns a CustomGameProfile ready for AddCustomGameAsync.
+        /// Supports both new (routingRules) and legacy (outputDirectories + conditionalRoutes) formats.
         /// Does NOT add it to the registry — caller decides whether to add or just preview.
         /// </summary>
         public static async Task<CustomGameProfile> ImportGameConfigAsync(string sourcePath)
@@ -270,32 +261,17 @@ namespace TMM
             var export = JsonSerializer.Deserialize<TmmGameExport>(json, JsonHelper.TmmGameOptions)
                 ?? throw new InvalidDataException("Invalid .tmmgame file");
 
-            return new CustomGameProfile
-            {
-                GameName          = export.GameName ?? Path.GetFileNameWithoutExtension(sourcePath),
-                GameDirectory     = export.GameDirectory,
-                ExePath           = export.ExePath,
-                SteamAppId        = export.SteamAppId,
-                ModFileTypes      = export.ModFileTypes ?? ".rar, .zip, .7z",
-                OutputDirectories = export.OutputDirectories ?? new(),
-                ConditionalRoutes = export.ConditionalRoutes ?? new(),
-                InstallerHints    = export.InstallerHints,
-                LauncherCard      = export.LauncherCard,
-                Description       = export.Description,
-                Author            = export.Author,
-                Version           = export.Version,
-            };
+            return ProfileMigration.FromExport(export, Path.GetFileNameWithoutExtension(sourcePath));
         }
 
-        /// <summary>Convert a CustomGameProfile to a GameProfile.</summary>
         private static GameProfile CustomGameProfileToGameProfile(string key, CustomGameProfile custom)
         {
             return new GameProfile(
                 Key: key,
                 DisplayName: custom.GameName,
                 ShortName: custom.GameName.Length > 10 ? custom.GameName[..10] : custom.GameName,
-                ExeName: "", // Custom games may not have a standard .exe name
-                SteamAppId: "", // Custom games are not on Steam
+                ExeName: "",
+                SteamAppId: "",
                 Vanilla10Md5: "");
         }
     }
