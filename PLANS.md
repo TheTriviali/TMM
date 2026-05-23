@@ -728,9 +728,300 @@ Views/
 8. **Minecraft built-in profile** (§5) — ~1 session
    - Embed `minecraft.tmmgame`, `PeekArchiveType()`, world picker dialog, shader detection
 
-9. **Conflict resolution** (§7.1) — ~1 session
+9. **Conflict resolution + File Arbitrator** (§10) — ~2 sessions
 
 10. **Mod profiles / loadouts** (§7.2) — ~1 session
+
+---
+
+## 10 — Advanced Overwrite & Conflict Resolution
+
+Design goal: simpler than Vortex's VFS, but gives the user full per-file control.
+No virtual filesystem — TMM still deploys directly. Conflict resolution is a layer
+*on top of* the existing deploy pipeline, not a replacement of it.
+
+---
+
+### 10.1 Core data model
+
+#### File Version Store
+
+For every file overwritten by any mod, TMM keeps that mod's version in a persistent
+store. Storage layout:
+
+```
+AppData\TMM\FileVersions\
+  {gameKey}\
+    {sanitized_relative_path}\       e.g.  "Data__SKSE__Plugins__SkyUI.dll"
+      _original.bak                  ← game's original file (captured once, never overwritten)
+      SkyUI-5.2.bin                  ← SkyUI mod's version (updated when mod changes)
+      SkyUI-5.3.bin                  ← if user updates SkyUI, previous version stays
+      SkyUI_SE-4.1.bin               ← competing mod's version
+```
+
+Path sanitisation: replace `\` and `/` with `__`, strip leading dots.
+
+#### File Ownership Registry
+
+One JSON file per game:
+```
+AppData\TMM\{gameKey}_fileregistry.json
+```
+
+Structure:
+```json
+{
+  "version": 1,
+  "entries": {
+    "Data\\SKSE\\Plugins\\SkyUI.dll": {
+      "owner": "SkyUI",
+      "pinnedTo": null,
+      "claimedBy": ["SkyUI", "SkyUI_SE"],
+      "originalCaptured": true
+    },
+    "d3d11.dll": {
+      "owner": "DXVK",
+      "pinnedTo": null,
+      "claimedBy": ["DXVK"],
+      "originalCaptured": true
+    }
+  }
+}
+```
+
+Fields:
+- `owner` — which mod currently has its version deployed (last-write wins by load order, unless overridden)
+- `pinnedTo` — if non-null, this mod's version is always used regardless of load order
+- `claimedBy` — all mods that have ever written this file (conflict = `claimedBy.Count > 1`)
+- `originalCaptured` — whether we have `_original.bak` for this path
+
+#### Model changes
+
+New class `Models/FileVersionStore.cs`:
+```csharp
+public record FileRegistryEntry(
+    string Owner,
+    string? PinnedTo,
+    List<string> ClaimedBy,
+    bool OriginalCaptured
+);
+
+public class FileVersionStore
+{
+    public int Version { get; set; } = 1;
+    public Dictionary<string, FileRegistryEntry> Entries { get; set; } = new();
+}
+```
+
+---
+
+### 10.2 Deploy pipeline changes (BackendCore)
+
+Current deploy flow:
+```
+foreach mod → foreach file → backup original → copy to game dir
+```
+
+New deploy flow:
+```
+foreach mod (in load order):
+  foreach file in mod:
+    relativePath = file relative to game dir
+
+    // 1. Capture original if not already done
+    if registry[relativePath].originalCaptured == false:
+      copy game file → FileVersions/{gameKey}/{sanitized}/original.bak
+      registry[relativePath].originalCaptured = true
+
+    // 2. Store this mod's version
+    copy mod file → FileVersions/{gameKey}/{sanitized}/{modName}.bin
+
+    // 3. Register claim
+    registry[relativePath].claimedBy.Add(modName)  // if not already present
+
+    // 4. Determine winner
+    winner = registry[relativePath].pinnedTo ?? modName   // pin overrides load order
+
+    // 5. Deploy winner's version
+    source = pinnedTo != null
+        ? FileVersions/{gameKey}/{sanitized}/{pinnedTo}.bin
+        : mod file (in-memory, already extracted)
+    copy source → gameDir/relativePath
+
+    registry[relativePath].owner = winner
+
+// Save registry
+```
+
+Key point: if a file is `pinnedTo` a mod that has a lower load order, the pinned
+version is still deployed. Load order continues to control non-conflicted files.
+
+---
+
+### 10.3 New BackendCore methods
+
+```csharp
+// Returns all conflicted files (claimedBy.Count > 1) for a game
+public List<(string RelativePath, FileRegistryEntry Entry)> GetConflicts(GameProfile profile);
+
+// Returns all versions stored for a given file path
+public List<(string ModName, string VersionPath, DateTime LastModified)>
+    GetVersionsForFile(GameProfile profile, string relativePath);
+
+// Pin a specific file to a specific mod's version (persists to registry)
+// Pass null to unpin (revert to load-order-wins)
+public void PinFileVersion(GameProfile profile, string relativePath, string? modName);
+
+// Get the stored original (pre-all-mods) version path for a file
+public string? GetOriginalVersionPath(GameProfile profile, string relativePath);
+
+// Open a stored version in a temp location for preview
+public string ExtractVersionToTemp(string versionPath);
+```
+
+---
+
+### 10.4 Conflict Resolver — UI
+
+New window: `Views/ConflictResolverWindow.xaml`
+
+Opened from:
+- A "Conflicts" toolbar button in each dashboard (shows the count badge: `Conflicts (3)`)
+- Automatically after deploy if new conflicts are introduced ("Deploy complete — 3 new conflicts found. Review now?")
+
+#### Layout (two-panel)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  TMM — Conflict Resolver — Skyrim AE                        [×]     │
+├──────────────────┬──────────────────────────────────────────────────┤
+│  CONFLICT LIST   │  FILE VERSIONS                                    │
+│  ─────────────── │  ─────────────────────────────────────────────── │
+│  ● 3 conflicts   │  Data\SKSE\Plugins\SkyUI.dll                      │
+│                  │                                                    │
+│  Data\SKSE\Pl... │  ┌─ Versions ─────────────────────────────────┐  │
+│    SkyUI  ←win   │  │ ◉ SkyUI v5.2        127 KB   [Preview]     │  │
+│    SkyUI_SE      │  │   SkyUI_SE v4.1     118 KB   [Preview]     │  │
+│                  │  │   Original           96 KB   [Preview]     │  │
+│  Data\meshes\... │  └────────────────────────────────────────────┘  │
+│    ModA  ←win    │                                                    │
+│    ModB          │  Pinned to:  SkyUI  [Change ▾]  [Clear Pin]       │
+│                  │                                                    │
+│  scripts\main... │  Load order winner would be: SkyUI_SE             │
+│    ModC  ←win    │  Current deployed version:   SkyUI (pinned)       │
+│    ModD          │                                                    │
+│                  │  [Browse File Explorer →]                         │
+│  ─────────────── │                                                    │
+│  ◉ = pinned      │                                                    │
+│  ← = current win │                                                    │
+├──────────────────┴──────────────────────────────────────────────────┤
+│                    [ Redeploy to apply changes ]   [ Close ]        │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+Left panel: `ListView` of conflicted files grouped by directory.
+Each item shows competing mods; `←win` marks current winner; `◉` marks a pinned file.
+
+Right panel: Selected file's version list. Each row: mod name, size, last modified, Preview button.
+
+**Preview button:** copies the `.bin` to a temp path with the correct extension and opens it with `ShellExecute` (lets user open `.esp` in xEdit, `.dll` in Dependencies, etc.).
+
+**Change ▾ dropdown:** picks which mod to pin to (or "Load order winner").
+
+**Clear Pin:** removes the pin; load order resumes control on next deploy.
+
+---
+
+### 10.5 File Explorer — UI
+
+Opened from "Browse File Explorer →" button in the Conflict Resolver, or from a toolbar button in each dashboard.
+
+New window: `Views/FileExplorerWindow.xaml`
+
+#### Layout
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TMM — File Explorer — Skyrim AE                     [×]    │
+├─────────────────────┬───────────────────────────────────────┤
+│  DIRECTORY TREE     │  FILES IN:  Data\SKSE\Plugins\        │
+│                     │  ─────────────────────────────────    │
+│  ▶ (game root)      │  ● SkyUI.dll        127 KB   [2 mods] │
+│  ▼ Data             │  ◆ hudframework.dll   94 KB   [1 mod]  │
+│    ▼ SKSE           │  ○ PapyrusUtil.dll    61 KB   [clean] │
+│      ▼ Plugins  ← │                                        │
+│    ▼ Scripts        │                                        │
+│    ▶ meshes         │                                        │
+│    ▶ textures       │                                        │
+│  ▶ scripts\         │                                        │
+├─────────────────────┴───────────────────────────────────────┤
+│  Legend:  ● conflict   ◆ 1 mod   ○ original/clean          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Tree:** `TreeView` built by scanning the game directory. Directories with any
+conflicted descendants are highlighted.
+
+**File list:** `ListView` for the selected directory. Each row:
+- Dot colour: ● red = conflict, ◆ yellow = 1 mod owns it, ○ green = no mod touches it
+- Badge: `[2 mods]` is clickable and jumps to that file in the Conflict Resolver
+
+**Implementation note:** The tree is built lazily (expand-on-demand) to avoid
+scanning the entire game dir upfront. Files are cross-referenced against the
+`FileVersionStore` registry to determine their dot colour.
+
+---
+
+### 10.6 Conflict badge in dashboards
+
+Each dashboard toolbar shows a conflict indicator:
+
+```
+[⚠ 3 conflicts]  ← orange button, click opens ConflictResolverWindow
+```
+
+or when clean:
+
+```
+[✓ No conflicts]  ← grey, still clickable (opens resolver showing "all clear")
+```
+
+Badge count = `GetConflicts(profile).Count`.
+
+Updated after every deploy and when mods are added/removed.
+
+**XAML element name:** `btnConflicts` (same pattern as `btnDeploy`).
+**Handler:** `BtnConflicts_Click` → `new ConflictResolverWindow(_core, _profile) { Owner = this }.ShowDialog()`.
+
+---
+
+### 10.7 Storage management
+
+The FileVersionStore can grow large over time. Add a housekeeping pass:
+
+**Triggered:** When a mod is deleted from TMM (context menu → Delete Mod).
+
+**Action:** Remove that mod's `.bin` files from `FileVersions\{gameKey}\{paths}\`.
+If `claimedBy` becomes empty after removal, delete the entire path folder.
+Update the registry entries accordingly.
+
+**Manual cleanup:** Settings → Diagnostics → "Wipe File Version Cache" (with warning
+that per-file pinning will be lost and rollback capability reduced).
+
+---
+
+### 10.8 Implementation order within this feature
+
+1. `FileVersionStore` model + `fileregistry.json` persistence
+2. `BackendCore` deploy pipeline changes (capture originals, store mod versions, apply pins)
+3. New `BackendCore` methods (GetConflicts, GetVersionsForFile, PinFileVersion)
+4. `ConflictResolverWindow` (list panel + version panel + pin controls)
+5. Conflict badge in all dashboard toolbars
+6. `FileExplorerWindow` (directory tree + file list with dot indicators)
+7. Preview button (temp-extract + ShellExecute)
+8. Housekeeping on mod delete
+
+Estimated: ~2 sessions total.
 
 ---
 
