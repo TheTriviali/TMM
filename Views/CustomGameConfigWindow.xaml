@@ -93,6 +93,13 @@
                                Text="Comma-separated extensions. Archives (.zip, .rar, .7z) are extracted on install."/>
                     <TextBox x:Name="txtFileTypes" Style="{DynamicResource FieldBoxStyle}"/>
 
+                    <!-- Steam AppId (optional) -->
+                    <TextBlock Text="Steam App ID (optional)" Style="{DynamicResource FieldLabelStyle}"/>
+                    <TextBlock TextWrapping="Wrap" FontSize="10" Opacity="0.6" Margin="0,-2,0,4"
+                               Foreground="{DynamicResource SubTextBrush}"
+                               Text="Numeric Steam ID for integration shortcuts (e.g. 12210 for GTA IV). Leave empty to disable Steam features."/>
+                    <TextBox x:Name="txtSteamAppId" Style="{DynamicResource FieldBoxStyle}"/>
+
                     <!-- Output Directory Mapping -->
                     <TextBlock Text="Output Directory Mapping" Style="{DynamicResource FieldLabelStyle}"/>
                     <TextBlock TextWrapping="Wrap" FontSize="10" Opacity="0.6" Margin="0,-2,0,6"

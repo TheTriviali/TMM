@@ -72,6 +72,7 @@ namespace TMM
                 txtGameDir.Text     = existing.GameDirectory;
                 txtExePath.Text     = existing.ExePath ?? "";
                 txtFileTypes.Text   = existing.ModFileTypes;
+                txtSteamAppId.Text  = existing.SteamAppId ?? "";
 
                 foreach (var kvp in existing.OutputDirectories)
                     _mappings.Add(new MappingRow { Extension = kvp.Key, OutputFolder = kvp.Value });
@@ -194,33 +195,85 @@ namespace TMM
                 return;
             }
 
+            // ── Validate Steam AppId (optional, must be numeric if provided) ────
+            string? steamAppId = null;
+            string appIdText = txtSteamAppId.Text.Trim();
+            if (!string.IsNullOrEmpty(appIdText))
+            {
+                if (!uint.TryParse(appIdText, out _))
+                {
+                    MessageBox.Show("Steam App ID must be a positive number (e.g., 12210).\n\nLeave empty to disable Steam integration.",
+                        "Invalid Steam App ID", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    txtSteamAppId.Focus();
+                    return;
+                }
+                steamAppId = appIdText;
+            }
+
             string fileTypes = string.IsNullOrWhiteSpace(txtFileTypes.Text)
                 ? ".zip, .rar, .7z"
                 : txtFileTypes.Text.Trim();
 
+            // ── Validate output directory mappings ──────────────────────────────
             var outputDirs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var row in _mappings)
             {
                 string ext    = row.Extension.Trim().ToLowerInvariant();
                 string folder = string.IsNullOrWhiteSpace(row.OutputFolder) ? "." : row.OutputFolder.Trim();
+
+                // Validate extension format (must start with . or be empty/default)
                 if (!string.IsNullOrEmpty(ext) && ext != ".ext")
+                {
+                    if (!ext.StartsWith("."))
+                    {
+                        MessageBox.Show($"Extension '{ext}' must start with a dot (e.g., .asi, .ini).",
+                            "Invalid Extension", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
                     outputDirs[ext] = folder;
+                }
             }
 
-            var condRoutes = _condRoutes
-                .Where(r => !string.IsNullOrWhiteSpace(r.Extension) && !string.IsNullOrWhiteSpace(r.CheckSubdir))
-                .Select(r => new ConditionalRoute(
-                    r.Extension.Trim().ToLowerInvariant(),
-                    r.CheckSubdir.Trim(),
-                    string.IsNullOrWhiteSpace(r.RouteIfExists)  ? "." : r.RouteIfExists.Trim(),
-                    string.IsNullOrWhiteSpace(r.RouteIfMissing) ? "." : r.RouteIfMissing.Trim()))
-                .ToList();
+            // ── Validate conditional routes ─────────────────────────────────────
+            var condRoutes = new List<ConditionalRoute>();
+            foreach (var r in _condRoutes)
+            {
+                string ext = r.Extension.Trim();
+                string sub = r.CheckSubdir.Trim();
+
+                // Skip empty rows
+                if (string.IsNullOrWhiteSpace(ext) && string.IsNullOrWhiteSpace(sub))
+                    continue;
+
+                // Both fields required if either is filled
+                if (string.IsNullOrWhiteSpace(ext) || string.IsNullOrWhiteSpace(sub))
+                {
+                    MessageBox.Show("Conditional routing rules require both Extension and Check Subfolder fields.\n\n" +
+                        "Leave both empty to skip a row, or fill both to create a rule.",
+                        "Incomplete Rule", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Validate extension format
+                if (!ext.StartsWith("."))
+                {
+                    MessageBox.Show($"Extension '{ext}' must start with a dot (e.g., .asi).",
+                        "Invalid Extension", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                string routeIfExists  = string.IsNullOrWhiteSpace(r.RouteIfExists)  ? "." : r.RouteIfExists.Trim();
+                string routeIfMissing = string.IsNullOrWhiteSpace(r.RouteIfMissing) ? "." : r.RouteIfMissing.Trim();
+
+                condRoutes.Add(new ConditionalRoute(ext.ToLowerInvariant(), sub, routeIfExists, routeIfMissing));
+            }
 
             Result = new CustomGameProfile
             {
                 GameName          = name,
                 GameDirectory     = dir,
                 ExePath           = string.IsNullOrWhiteSpace(txtExePath.Text) ? null : txtExePath.Text.Trim(),
+                SteamAppId        = steamAppId,
                 ModFileTypes      = fileTypes,
                 OutputDirectories = outputDirs,
                 ConditionalRoutes = condRoutes

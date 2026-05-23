@@ -204,6 +204,9 @@ namespace TMM
                 if (ext is ".zip" or ".rar" or ".7z")
                 {
                     await BackendCore.ExtractArchiveSafeAsync(filePath, destDir, CancellationToken.None);
+
+                    // Smart archive detection & routing
+                    await SmartArchivePostProcess(destDir, filePath);
                 }
                 else
                 {
@@ -225,6 +228,61 @@ namespace TMM
                 MessageBox.Show($"Failed to install '{modName}':\n{ex.Message}", "Install Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private async Task SmartArchivePostProcess(string stagingDir, string archivePath)
+        {
+            // ── Single root folder unwrap ──────────────────────────────────────
+            var entries = Directory.GetFileSystemEntries(stagingDir);
+            if (entries.Length == 1 && Directory.Exists(entries[0]))
+            {
+                string singleRoot = entries[0];
+                // Move all contents up one level, then delete the empty subdir
+                foreach (var entry in Directory.GetFileSystemEntries(singleRoot))
+                {
+                    string destPath = Path.Combine(stagingDir, Path.GetFileName(entry));
+                    if (Directory.Exists(entry))
+                    {
+                        if (!Directory.Exists(destPath)) Directory.Move(entry, destPath);
+                    }
+                    else
+                    {
+                        if (!File.Exists(destPath)) File.Move(entry, destPath, overwrite: true);
+                    }
+                }
+                try { Directory.Delete(singleRoot, false); } catch { }
+            }
+
+            // ── Known folder detection (plugins, scripts, modloader) ──────────────
+            var knownFolders = new[] { "plugins", "scripts", "modloader", "bin" };
+            bool hasKnownFolders = knownFolders.Any(f => Directory.Exists(Path.Combine(stagingDir, f)));
+
+            if (!hasKnownFolders)
+            {
+                // ── Look for README files (only if no known structure) ──────────────
+                var readmes = Directory.GetFiles(stagingDir, "readme*", SearchOption.AllDirectories)
+                    .FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(readmes))
+                {
+                    var info = new FileInfo(readmes);
+                    // Warn if file is large or archive is solid (sequential extraction needed)
+                    if (info.Length > 1_000_000 || (archivePath.EndsWith(".7z", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        var result = MessageBox.Show(
+                            "This archive contains a large README file or uses solid compression.\n\n" +
+                            "Opening the README might take a moment (extraction may need to read the entire archive).\n\n" +
+                            "Open README anyway?",
+                            "Large README Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        if (result != MessageBoxResult.Yes) return;
+                    }
+
+                    try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(readmes) { UseShellExecute = true }); }
+                    catch { /* Silently fail if README can't open */ }
+                }
+            }
+
+            await Task.CompletedTask;
         }
 
         private async void BtnRefresh_Click(object sender, RoutedEventArgs e) => await RefreshAsync();

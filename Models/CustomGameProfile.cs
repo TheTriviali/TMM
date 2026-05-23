@@ -16,6 +16,10 @@ namespace TMM
         // Optional path to game exe, relative to GameDirectory (e.g. "hl2.exe")
         public string? ExePath { get; set; }
 
+        // Optional Steam AppId for verify/install shortcuts (e.g. "12210" for GTA IV)
+        // If empty/null, Steam integration buttons are hidden/disabled
+        public string? SteamAppId { get; set; }
+
         // Comma-separated file types: ".rar, .zip, .7z"
         public string ModFileTypes { get; set; } = ".rar, .zip, .7z";
 
