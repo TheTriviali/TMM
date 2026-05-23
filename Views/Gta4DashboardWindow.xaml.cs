@@ -1,32 +1,41 @@
+using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace TMM
 {
     /// <summary>
     /// Three-column dashboard for GTA IV, TLaD, and TBoGT.
-    /// Each column manages its own mod list and deploy/rollback pipeline.
+    /// Each column manages its own mod list, directory picker, search filter, and deploy/rollback pipeline.
     /// ASI routing (plugins\ folder check) is handled transparently by BackendCore
     /// via the ConditionalRoutes on each GameProfile.
     /// </summary>
     public partial class Gta4DashboardWindow : Window
     {
-        private readonly BackendCore _core;
+        // ── State ─────────────────────────────────────────────────────────────────
 
-        // The three profiles and their mod collections.
+        private readonly BackendCore _core;
         private readonly (GameProfile Profile, ObservableCollection<ModItem> Mods)[] _episodes;
 
-        private Point _startPoint;
+        private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
+
+        private Point    _startPoint;
         private ModItem? _draggedItem;
-        private ListView? _dragSource;
+        private ListView? _activeList;          // tracks which column has focus
         private CancellationTokenSource? _deployCts;
+
+        // ── Construction ──────────────────────────────────────────────────────────
 
         public Gta4DashboardWindow(BackendCore core)
         {
@@ -43,6 +52,8 @@ namespace TMM
             listIV.ItemsSource    = _episodes[0].Mods;
             listTLaD.ItemsSource  = _episodes[1].Mods;
             listTBoGT.ItemsSource = _episodes[2].Mods;
+
+            _activeList = listIV;
         }
 
         // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -60,10 +71,12 @@ namespace TMM
             await _core.RefreshAllModListsAsync();
             UpdatePathLabels();
             UpdateDeployButtons();
-            txtDiskSpace.Text = _core.GetDriveSpaceInfo();
-            txtStatus.Text = $"IV: {_episodes[0].Mods.Count(m => m.IsEnabled)} enabled  |  " +
-                             $"TLaD: {_episodes[1].Mods.Count(m => m.IsEnabled)} enabled  |  " +
-                             $"TBoGT: {_episodes[2].Mods.Count(m => m.IsEnabled)} enabled";
+            UpdateStatusDots();
+            UpdateLaunchButtons();
+            string disk = _core.GetDriveSpaceInfo();
+            txtDiskSpace.Text    = disk;
+            txtToolbarDisk.Text  = disk;
+            UpdateStatusBar();
         }
 
         private void UpdatePathLabels()
@@ -80,6 +93,44 @@ namespace TMM
             btnDeployTBoGT.IsEnabled = _core.IsGameReady(GameProfile.TBoGT);
         }
 
+        private void UpdateStatusDots()
+        {
+            SetDotColor(dotIV,    _core.IsGameReady(GameProfile.IV));
+            SetDotColor(dotTLaD,  _core.IsGameReady(GameProfile.TLaD));
+            SetDotColor(dotTBoGT, _core.IsGameReady(GameProfile.TBoGT));
+        }
+
+        private static void SetDotColor(System.Windows.Shapes.Ellipse dot, bool ready)
+        {
+            dot.Fill = new SolidColorBrush(ready
+                ? Color.FromRgb(80, 200, 100)
+                : Color.FromRgb(160, 60, 60));
+        }
+
+        private void UpdateLaunchButtons()
+        {
+            // Show launch buttons only when the game directory + exe exist
+            UpdateLaunchButton(btnLaunchIV,    GameProfile.IV);
+            UpdateLaunchButton(btnLaunchTLaD,  GameProfile.TLaD);
+            UpdateLaunchButton(btnLaunchTBoGT, GameProfile.TBoGT);
+        }
+
+        private void UpdateLaunchButton(Button btn, GameProfile profile)
+        {
+            string? dir = _core.GetVanillaPath(profile);
+            bool canLaunch = !string.IsNullOrEmpty(dir)
+                          && Directory.Exists(dir)
+                          && File.Exists(Path.Combine(dir, profile.ExeName));
+            btn.Visibility = canLaunch ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void UpdateStatusBar()
+        {
+            txtStatus.Text = $"IV: {_episodes[0].Mods.Count(m => m.IsEnabled)} enabled  |  " +
+                             $"TLaD: {_episodes[1].Mods.Count(m => m.IsEnabled)} enabled  |  " +
+                             $"TBoGT: {_episodes[2].Mods.Count(m => m.IsEnabled)} enabled";
+        }
+
         // ── Window chrome ─────────────────────────────────────────────────────────
 
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
@@ -90,31 +141,47 @@ namespace TMM
                 DragMove();
         }
 
-        private void BtnMinimize_Click(object sender, RoutedEventArgs e)  => WindowState = WindowState.Minimized;
-        private void BtnMaxRestore_Click(object sender, RoutedEventArgs e) =>
+        private void BtnMinimize_Click(object sender, RoutedEventArgs e)   => WindowState = WindowState.Minimized;
+        private void BtnMaxRestore_Click(object sender, RoutedEventArgs e)  =>
             WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
         private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
 
         private void Window_StateChanged(object sender, EventArgs e)
         {
             btnMaxRestore.Content = WindowState == WindowState.Maximized ? "" : "";
+            bool maximized = WindowState == WindowState.Maximized;
+            OuterBorder.CornerRadius = maximized ? new CornerRadius(0) : new CornerRadius(10);
         }
 
         // ── Toolbar ───────────────────────────────────────────────────────────────
 
         private async void BtnInstallMod_Click(object sender, RoutedEventArgs e)
         {
-            // Show a picker for which episode to install into.
-            var picker = new EpisodePicker("Install mod for:", _episodes.Select(ep => ep.Profile).ToArray());
-            if (picker.ShowDialog() != true || picker.SelectedProfile == null) return;
+            // If a specific list has focus, default to that episode; otherwise ask.
+            var defaultProfile = ResolveProfileFromList(_activeList);
+            GameProfile? profile = defaultProfile;
 
-            var profile = picker.SelectedProfile;
+            if (profile == null)
+            {
+                var picker = new EpisodePicker("Install mod for:", _episodes.Select(ep => ep.Profile).ToArray());
+                if (picker.ShowDialog() != true || picker.SelectedProfile == null) return;
+                profile = picker.SelectedProfile;
+            }
+            else
+            {
+                // Still offer a picker but pre-selected episode as a title hint
+                var picker = new EpisodePicker($"Install mod for (default: {profile.ShortName}):",
+                    _episodes.Select(ep => ep.Profile).ToArray());
+                if (picker.ShowDialog() != true || picker.SelectedProfile == null) return;
+                profile = picker.SelectedProfile;
+            }
+
             string rawFolder = Path.Combine(_core.AppDataPath, profile.RawFolderName);
 
-            var dlg = new Microsoft.Win32.OpenFileDialog
+            var dlg = new OpenFileDialog
             {
-                Title = $"Install Mod for {profile.DisplayName}",
-                Filter = "Mod Archives & Folders|*.zip;*.rar;*.7z;*.asi;*.dll;*.ini;*.dat|All files|*.*",
+                Title       = $"Install Mod for {profile.DisplayName}",
+                Filter      = "Mod Archives & Files|*.zip;*.rar;*.7z;*.asi;*.dll;*.ini;*.dat|All files|*.*",
                 Multiselect = true
             };
             if (dlg.ShowDialog() != true) return;
@@ -127,9 +194,9 @@ namespace TMM
 
         private async Task InstallModFileAsync(string filePath, string rawFolder, GameProfile profile)
         {
-            string ext = Path.GetExtension(filePath).ToLowerInvariant();
-            string modName = Path.GetFileNameWithoutExtension(filePath);
-            string destDir = Path.Combine(rawFolder, modName);
+            string ext      = Path.GetExtension(filePath).ToLowerInvariant();
+            string modName  = Path.GetFileNameWithoutExtension(filePath);
+            string destDir  = Path.Combine(rawFolder, modName);
             Directory.CreateDirectory(destDir);
 
             try
@@ -143,18 +210,14 @@ namespace TMM
                     File.Copy(filePath, Path.Combine(destDir, Path.GetFileName(filePath)), overwrite: true);
                 }
 
-                // Write modinfo
                 var item = new ModItem
                 {
-                    Name = modName,
-                    IsEnabled = true,
-                    LoadOrder = _core.Mods[profile.Key].Count,
+                    Name          = modName,
+                    IsEnabled     = true,
+                    LoadOrder     = _core.Mods[profile.Key].Count,
                     RawFolderPath = destDir
                 };
-                System.IO.File.WriteAllText(
-                    Path.Combine(destDir, "modinfo.txt"),
-                    System.Text.Json.JsonSerializer.Serialize(item, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-
+                SyncModInfoToFolder(item);
                 txtStatus.Text = $"Installed '{modName}' for {profile.ShortName}";
             }
             catch (Exception ex)
@@ -173,25 +236,80 @@ namespace TMM
             await RefreshAsync();
         }
 
-        // ── Deploy / Rollback ─────────────────────────────────────────────────────
+        private async void BtnDeployAll_Click(object sender, RoutedEventArgs e)
+        {
+            int count = 0;
+            foreach (var (profile, _) in _episodes)
+            {
+                if (!_core.IsGameReady(profile)) continue;
+                await RunDeployAsync(profile, null);
+                count++;
+            }
+            if (count == 0)
+                MessageBox.Show("No IV episodes are configured. Set game paths via the browse buttons.",
+                    "Nothing to Deploy", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void BtnOpenAppData_Click(object sender, RoutedEventArgs e) => _core.OpenAppData();
+
+        private async void BtnSettings_Click(object sender, RoutedEventArgs e)
+        {
+            new SettingsWindow(_core) { Owner = this }.ShowDialog();
+            ThemeEngine.ApplyTheme(_core.Settings);
+            ThemeEngine.ApplyFont(this, _core.Settings);
+            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            await RefreshAsync();
+        }
+
+        // ── Per-column browse ─────────────────────────────────────────────────────
+
+        private async void BtnBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button btn || btn.Tag is not string key) return;
+            var profile = GameProfile.ByKey(key);
+            if (profile == null) return;
+
+            var dlg = new OpenFolderDialog
+            {
+                Title = $"Select {profile.DisplayName} directory"
+            };
+
+            string? current = _core.GetVanillaPath(profile);
+            if (!string.IsNullOrEmpty(current) && Directory.Exists(current))
+                dlg.InitialDirectory = current;
+
+            if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.FolderName)) return;
+
+            _core.SetVanillaPath(profile, dlg.FolderName);
+            _core.SaveSettings();
+            await RefreshAsync();
+        }
+
+        // ── Deploy / Rollback / Launch ────────────────────────────────────────────
 
         private async void BtnDeploy_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button btn || btn.Tag is not string key) return;
             var profile = GameProfile.ByKey(key);
             if (profile == null) return;
+            await RunDeployAsync(profile, btn);
+        }
 
+        private async Task RunDeployAsync(GameProfile profile, Button? btn)
+        {
             string? gameDir = _core.GetVanillaPath(profile);
             if (string.IsNullOrEmpty(gameDir) || !Directory.Exists(gameDir))
             {
-                MessageBox.Show($"Game directory for {profile.DisplayName} is not set or missing.\n\nUse 'Rescan Paths' or open Setup to configure it.",
+                MessageBox.Show(
+                    $"Game directory for {profile.DisplayName} is not set or missing.\n\n" +
+                    "Use the browse button (folder icon) next to the path label to set it.",
                     "Directory Missing", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             _deployCts?.Cancel();
             _deployCts = new CancellationTokenSource();
-            btn.IsEnabled = false;
+            if (btn != null) btn.IsEnabled = false;
             txtStatus.Text = $"Deploying {profile.ShortName}...";
 
             try
@@ -214,7 +332,7 @@ namespace TMM
             }
             finally
             {
-                btn.IsEnabled = true;
+                if (btn != null) btn.IsEnabled = true;
             }
         }
 
@@ -240,7 +358,7 @@ namespace TMM
             if (MessageBox.Show(info, "Confirm Rollback", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
-            btn.IsEnabled = false;
+            btn.IsEnabled  = false;
             txtStatus.Text = $"Rolling back {profile.ShortName}...";
 
             try
@@ -262,87 +380,391 @@ namespace TMM
             }
         }
 
-        // ── Mod list interaction ──────────────────────────────────────────────────
-
-        private void ModCheckBox_Changed(object sender, RoutedEventArgs e)
+        private void BtnLaunch_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is CheckBox { DataContext: ModItem item })
-                SaveModList(item);
-        }
+            if (sender is not Button btn || btn.Tag is not string key) return;
+            var profile = GameProfile.ByKey(key);
+            if (profile == null) return;
 
-        private void SaveModList(ModItem item)
-        {
-            // Find which profile owns this item by checking all three mod lists.
-            foreach (var (profile, mods) in _episodes)
+            string? gameDir = _core.GetVanillaPath(profile);
+            if (string.IsNullOrEmpty(gameDir) || !Directory.Exists(gameDir))
             {
-                if (!mods.Contains(item)) continue;
-                string infoPath = Path.Combine(item.RawFolderPath, "modinfo.txt");
-                try
-                {
-                    System.IO.File.WriteAllText(infoPath,
-                        System.Text.Json.JsonSerializer.Serialize(item,
-                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-                }
-                catch { /* best effort */ }
-                break;
+                MessageBox.Show("Game directory is not set or missing.", "Launch Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string exe = Path.Combine(gameDir, profile.ExeName);
+            if (!File.Exists(exe))
+            {
+                MessageBox.Show($"{profile.ExeName} was not found in the game directory.", "Launch Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo(exe) { WorkingDirectory = gameDir });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to launch: {ex.Message}", "Launch Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        // ── Keyboard shortcuts ────────────────────────────────────────────────────
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.Key == Key.F2)    { MenuRename_Click(null, null!); e.Handled = true; }
+            else if (e.Key == Key.Space)  { MenuToggle_Click(null, null!); e.Handled = true; }
+            else if (e.Key == Key.Delete) { MenuDelete_Click(null, null!); e.Handled = true; }
+            else if (e.Key == Key.F5)     { BtnDeployAll_Click(null!, null!); e.Handled = true; }
+            else if (Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (e.Key == Key.Up)   { MenuMoveUp_Click(null, null!);   e.Handled = true; }
+                else if (e.Key == Key.Down) { MenuMoveDown_Click(null, null!); e.Handled = true; }
+            }
+            base.OnKeyDown(e);
+        }
+
+        private void List_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Let per-list key events bubble to the window handler.
+            OnKeyDown(e);
+        }
+
+        // ── Search / filter ───────────────────────────────────────────────────────
+
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is not TextBox tb || tb.Tag is not string key) return;
+            ApplySearchFilter(key, tb.Text);
+        }
+
+        private void BtnClearSearch_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button btn || btn.Tag is not string key) return;
+            TextBox? tb = key switch
+            {
+                "IV"    => txtSearchIV,
+                "TLaD"  => txtSearchTLaD,
+                "TBoGT" => txtSearchTBoGT,
+                _       => null
+            };
+            if (tb != null) tb.Text = "";
+        }
+
+        private void ApplySearchFilter(string key, string text)
+        {
+            var v = CollectionViewSource.GetDefaultView(_core.Mods[key]);
+            v.Filter = string.IsNullOrWhiteSpace(text)
+                ? null
+                : i => ((ModItem)i).Name.Contains(text, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // ── Mod list interaction ──────────────────────────────────────────────────
+
+        private void List_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is ListView lv) _activeList = lv;
+        }
+
+        private void ModCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox { DataContext: ModItem item })
+            {
+                SyncModInfoToFolder(item);
+                UpdateStatusBar();
+            }
+        }
+
+        // ── Context menu ──────────────────────────────────────────────────────────
+
+        private void MenuRename_Click(object? sender, RoutedEventArgs e)
+        {
+            var mod = GetSelectedMod();
+            if (mod == null) return;
+
+            var win = new RenameWindow(mod.Name) { Owner = this };
+            if (win.ShowDialog() == true)
+            {
+                mod.Name = win.NewName;
+                SyncModInfoToFolder(mod);
+            }
+        }
+
+        private void MenuToggle_Click(object? sender, RoutedEventArgs e)
+        {
+            var mod = GetSelectedMod();
+            if (mod == null) return;
+            mod.IsEnabled = !mod.IsEnabled;
+            SyncModInfoToFolder(mod);
+            UpdateStatusBar();
+        }
+
+        private void MenuDelete_Click(object? sender, RoutedEventArgs e)
+        {
+            if (_activeList == null) return;
+            if (_activeList.Tag is not string key) return;
+
+            var mods     = _core.Mods[key];
+            var selected = _activeList.SelectedItems.Cast<ModItem>().ToList();
+
+            if (selected.Count == 0) return;
+            if (MessageBox.Show($"Delete {selected.Count} mod(s)?", "Confirm Delete",
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+
+            foreach (var m in selected)
+            {
+                try
+                {
+                    if (Directory.Exists(m.RawFolderPath))
+                        BackendCore.ForceDeleteDirectory(m.RawFolderPath);
+                    mods.Remove(m);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error deleting '{m.Name}':\n{ex.Message}", "Delete Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+
+            txtDiskSpace.Text = _core.GetDriveSpaceInfo();
+            UpdateStatusBar();
+        }
+
+        private void MenuMoveUp_Click(object? sender, RoutedEventArgs e)
+        {
+            var mod = GetSelectedMod();
+            if (mod == null) return;
+            var list = GetActiveModList();
+            int idx = list.IndexOf(mod);
+            if (idx <= 0) return;
+            var other = list[idx - 1];
+            (mod.LoadOrder, other.LoadOrder) = (other.LoadOrder, mod.LoadOrder);
+            list.Move(idx, idx - 1);
+            SyncModInfoToFolder(mod);
+            SyncModInfoToFolder(other);
+        }
+
+        private void MenuMoveDown_Click(object? sender, RoutedEventArgs e)
+        {
+            var mod = GetSelectedMod();
+            if (mod == null) return;
+            var list = GetActiveModList();
+            int idx = list.IndexOf(mod);
+            if (idx < 0 || idx >= list.Count - 1) return;
+            var other = list[idx + 1];
+            (mod.LoadOrder, other.LoadOrder) = (other.LoadOrder, mod.LoadOrder);
+            list.Move(idx, idx + 1);
+            SyncModInfoToFolder(mod);
+            SyncModInfoToFolder(other);
+        }
+
+        private void MenuSetLoadOrder_Click(object sender, RoutedEventArgs e)
+        {
+            var mod  = GetSelectedMod();
+            var list = GetActiveModList();
+            if (mod == null || list.Count == 0) return;
+
+            int maxOrder = list.Count - 1;
+            var win = new RenameWindow(mod.LoadOrder.ToString())
+            {
+                Title = $"Set Load Order (0–{maxOrder})",
+                Owner = this
+            };
+            if (win.ShowDialog() != true || !int.TryParse(win.NewName, out int newOrder)) return;
+
+            newOrder = Math.Clamp(newOrder, 0, maxOrder);
+            list.Remove(mod);
+            list.Insert(newOrder, mod);
+            for (int i = 0; i < list.Count; i++) list[i].LoadOrder = i;
+
+            var sorted = list.OrderBy(x => x.LoadOrder).ToList();
+            list.Clear();
+            foreach (var m in sorted) list.Add(m);
+            foreach (var m in list) SyncModInfoToFolder(m);
+        }
+
+        private void MenuOpenFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var mod = GetSelectedMod();
+            if (mod != null && Directory.Exists(mod.RawFolderPath))
+                OpenFolder(mod.RawFolderPath);
+        }
+
+        private void MenuOpenGameFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var profile = GetActiveProfile();
+            string? path = _core.GetVanillaPath(profile);
+            if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
+                OpenFolder(path);
+            else
+                MessageBox.Show($"Game folder for {profile.DisplayName} is not set or missing.",
+                    "Folder Not Found", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void MenuOpenModsStore_Click(object sender, RoutedEventArgs e)
+        {
+            var profile = GetActiveProfile();
+            string path = Path.Combine(_core.AppDataPath, profile.RawFolderName);
+            Directory.CreateDirectory(path);
+            OpenFolder(path);
+        }
+
+        private void MenuProperties_Click(object sender, RoutedEventArgs e)
+        {
+            var mod = GetSelectedMod();
+            if (mod == null) return;
+            new ModPropertiesWindow(mod) { Owner = this }.ShowDialog();
+        }
+
+        private static void OpenFolder(string path) =>
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true, Verb = "open" });
 
         // ── Drag-and-drop reorder ─────────────────────────────────────────────────
 
         private void List_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             _startPoint = e.GetPosition(null);
-            _dragSource = sender as ListView;
+            if (sender is ListView lv)
+            {
+                _activeList = lv;
+                if (e.OriginalSource is FrameworkElement el && el.DataContext is ModItem m)
+                    _draggedItem = m;
+            }
         }
 
         private void List_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton != MouseButtonState.Pressed || _dragSource == null) return;
+            if (e.LeftButton != MouseButtonState.Pressed || _draggedItem == null) return;
             var pos = e.GetPosition(null);
             if (Math.Abs(pos.X - _startPoint.X) < SystemParameters.MinimumHorizontalDragDistance &&
                 Math.Abs(pos.Y - _startPoint.Y) < SystemParameters.MinimumVerticalDragDistance) return;
 
-            if (_dragSource.SelectedItem is ModItem item)
-            {
-                _draggedItem = item;
-                DragDrop.DoDragDrop(_dragSource, item, DragDropEffects.Move);
-            }
+            if (sender is ListView lv)
+                DragDrop.DoDragDrop(lv, _draggedItem, DragDropEffects.Move);
         }
 
         private void List_DragOver(object sender, DragEventArgs e)
         {
+            if (sender is not ListView lv || _draggedItem == null) { e.Effects = DragDropEffects.None; return; }
             e.Effects = DragDropEffects.Move;
+            e.Handled = true;
+
+            var line = GetDropLine(lv);
+            if (line == null) return;
+            double y = GetInsertionLineY(lv, e.GetPosition(lv).Y);
+            Canvas.SetTop(line, y - 1);
+            line.Width = Math.Max(lv.ActualWidth - 4, 0);
+            Canvas.SetLeft(line, 2);
+            line.Visibility = Visibility.Visible;
+        }
+
+        private void List_DragLeave(object sender, DragEventArgs e)
+        {
+            if (sender is ListView lv) HideDropLine(lv);
             e.Handled = true;
         }
 
-        private void List_DragLeave(object sender, DragEventArgs e) => e.Handled = true;
-
         private void List_Drop(object sender, DragEventArgs e)
         {
-            if (_draggedItem == null || sender is not ListView list) return;
-            if (list.Tag is not string key) return;
+            if (sender is ListView lv) HideDropLine(lv);
+            if (_draggedItem == null || sender is not ListView targetList) return;
+            if (targetList.Tag is not string key) return;
 
             var (_, mods) = _episodes.FirstOrDefault(ep => ep.Profile.Key == key);
-            if (mods == null || !mods.Contains(_draggedItem)) return;
+            if (mods == null || !mods.Contains(_draggedItem)) { _draggedItem = null; return; }
 
-            int fromIdx = mods.IndexOf(_draggedItem);
-            int toIdx   = 0;
-
-            // Find drop target index
-            var target = (e.OriginalSource as FrameworkElement)?.DataContext as ModItem;
-            if (target != null) toIdx = mods.IndexOf(target);
+            int fromIdx  = mods.IndexOf(_draggedItem);
+            int insertIdx = GetInsertionIndex(targetList, e.GetPosition(targetList).Y);
+            if (insertIdx > fromIdx) insertIdx--;
+            int toIdx = Math.Clamp(insertIdx, 0, mods.Count - 1);
 
             if (fromIdx == toIdx) { _draggedItem = null; return; }
             mods.Move(fromIdx, toIdx);
 
-            // Re-number load orders
             for (int i = 0; i < mods.Count; i++)
             {
                 mods[i].LoadOrder = i;
-                SaveModList(mods[i]);
+                SyncModInfoToFolder(mods[i]);
             }
             _draggedItem = null;
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────────
+
+        private System.Windows.Shapes.Rectangle? GetDropLine(ListView lv) => lv.Name switch
+        {
+            "listIV"    => DropLineIV,
+            "listTLaD"  => DropLineTLaD,
+            "listTBoGT" => DropLineTBoGT,
+            _           => null
+        };
+
+        private void HideDropLine(ListView lv) { System.Windows.Shapes.Rectangle? l = GetDropLine(lv); if (l != null) l.Visibility = Visibility.Collapsed; }
+
+        private static double GetInsertionLineY(ListView lv, double mouseY)
+        {
+            for (int i = 0; i < lv.Items.Count; i++)
+            {
+                if (lv.ItemContainerGenerator.ContainerFromIndex(i) is not ListViewItem item) continue;
+                var pos = item.TranslatePoint(new Point(0, 0), lv);
+                if (mouseY < pos.Y + item.ActualHeight / 2.0) return pos.Y;
+            }
+            if (lv.Items.Count > 0 &&
+                lv.ItemContainerGenerator.ContainerFromIndex(lv.Items.Count - 1) is ListViewItem last)
+            {
+                var pos = last.TranslatePoint(new Point(0, 0), lv);
+                return pos.Y + last.ActualHeight;
+            }
+            return 0;
+        }
+
+        private static int GetInsertionIndex(ListView lv, double mouseY)
+        {
+            for (int i = 0; i < lv.Items.Count; i++)
+            {
+                if (lv.ItemContainerGenerator.ContainerFromIndex(i) is not ListViewItem item) continue;
+                var pos = item.TranslatePoint(new Point(0, 0), lv);
+                if (mouseY < pos.Y + item.ActualHeight / 2.0) return i;
+            }
+            return lv.Items.Count;
+        }
+
+        private ModItem? GetSelectedMod() => _activeList?.SelectedItem as ModItem;
+
+        private ObservableCollection<ModItem> GetActiveModList()
+        {
+            if (_activeList?.Tag is string key) return _core.Mods[key];
+            return _episodes[0].Mods; // fallback: IV
+        }
+
+        private GameProfile GetActiveProfile()
+        {
+            if (_activeList?.Tag is string key)
+            {
+                var ep = _episodes.FirstOrDefault(ep => ep.Profile.Key == key);
+                if (ep.Profile != null) return ep.Profile;
+            }
+            return GameProfile.IV;
+        }
+
+        private static GameProfile? ResolveProfileFromList(ListView? lv) =>
+            lv?.Tag is string key ? GameProfile.ByKey(key) : null;
+
+        private static void SyncModInfoToFolder(ModItem mod)
+        {
+            try
+            {
+                if (Directory.Exists(mod.RawFolderPath))
+                    File.WriteAllText(
+                        Path.Combine(mod.RawFolderPath, "modinfo.txt"),
+                        JsonSerializer.Serialize(mod, JsonOpts));
+            }
+            catch { /* best effort */ }
         }
     }
 
@@ -361,7 +783,13 @@ namespace TMM
             ResizeMode = ResizeMode.NoResize;
 
             var sp = new StackPanel { Margin = new Thickness(16) };
-            sp.Children.Add(new TextBlock { Text = prompt, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 10) });
+            sp.Children.Add(new TextBlock
+            {
+                Text = prompt,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 10),
+                TextWrapping = TextWrapping.Wrap
+            });
 
             foreach (var p in profiles)
             {
