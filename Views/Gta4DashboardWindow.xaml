@@ -226,6 +226,16 @@
                             Style="{StaticResource ToolIconBtn}" Margin="2,0"
                             Click="BtnSettings_Click"/>
 
+                    <!-- Theme Manager -->
+                    <Button Content="&#xE790;" ToolTip="Themes"
+                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
+                            Click="BtnTheme_Click"/>
+
+                    <!-- Random Theme (dice) -->
+                    <Button Content="&#xF4A6;" ToolTip="Random theme"
+                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
+                            Click="BtnRollTheme_Click"/>
+
                 </StackPanel>
 
                 <!-- Right side: disk space label -->

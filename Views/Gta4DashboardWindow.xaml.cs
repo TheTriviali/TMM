@@ -319,6 +319,39 @@ namespace TMM
             await RefreshAsync();
         }
 
+        private void BtnTheme_Click(object sender, RoutedEventArgs e)
+        {
+            new ThemeManagerWindow(_core) { Owner = this }.ShowDialog();
+            ThemeEngine.ApplyTheme(_core.Settings);
+            ThemeEngine.ApplyFont(this, _core.Settings);
+            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+        }
+
+        private void BtnRollTheme_Click(object sender, RoutedEventArgs e)
+        {
+            var presets = ThemeManagerWindow.BuiltInPresets;
+            if (presets.Count == 0) return;
+            var preset = presets[new Random().Next(presets.Count)];
+
+            _core.Settings.AccentColor         = preset.AccentColor;
+            _core.Settings.BgColor             = preset.BgColor;
+            _core.Settings.ColorMode           = preset.ColorMode;
+            _core.Settings.TitlebarTheme       = preset.TitlebarTheme;
+            _core.Settings.TitlebarAlignment   = preset.TitlebarAlignment;
+            _core.Settings.TitlebarPersonalize = preset.TitlebarPersonalize;
+            _core.Settings.TitlebarOpacity     = preset.TitlebarOpacity;
+            _core.Settings.FontFamily          = preset.FontFamily;
+            _core.Settings.TextColorMode       = preset.TextColorMode;
+            _core.Settings.MicaEnabled         = preset.MicaEnabled;
+            _core.Settings.MicaIntensity       = preset.MicaIntensity;
+            _core.Settings.LastPresetName      = preset.Name;
+            _core.SaveSettings();
+
+            ThemeEngine.ApplyTheme(_core.Settings);
+            ThemeEngine.ApplyFont(this, _core.Settings);
+            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+        }
+
         // ── Per-column browse ─────────────────────────────────────────────────────
 
         private async void BtnBrowse_Click(object sender, RoutedEventArgs e)

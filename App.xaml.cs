@@ -32,10 +32,8 @@ namespace TMM
 
         private static void ShowCrashDialog(Exception ex)
         {
-            string msg = $"TMM ran into a problem and needs to close.\n\n" +
-                         $"Error: {ex.Message}\n\n" +
-                         $"If this keeps happening, please report it on GitHub.";
-            MessageBox.Show(msg, "TMM — Unexpected Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            try { new CrashReportWindow(ex).ShowDialog(); }
+            catch { MessageBox.Show(ex.Message, "TMM — Unexpected Error", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
     }
 }
