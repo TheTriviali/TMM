@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace TMM
 {
@@ -31,6 +32,15 @@ namespace TMM
         // These take priority over OutputDirectories for the same extension.
         // e.g. "put .asi in plugins\ if that folder exists, else in ."
         public List<ConditionalRoute> ConditionalRoutes { get; set; } = new();
+
+        public InstallerHints? InstallerHints { get; set; }
+        public LauncherCardConfig? LauncherCard { get; set; }
+        public string? Description { get; set; }
+        public string? Author { get; set; }
+        public string? Version { get; set; }
+
+        [JsonIgnore]
+        public bool IsBuiltIn { get; set; }
 
         // ── Helpers ──────────────────────────────────────────────────────────────
 

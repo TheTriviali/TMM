@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 namespace TMM
 {
-    public partial class DebugConsoleWindow : Window
+    public partial class DebugConsoleWindow : TmmWindow
     {
         private readonly BackendCore _core;
 
@@ -36,6 +36,5 @@ namespace TMM
             txtLog.ScrollToEnd();
         }
 
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

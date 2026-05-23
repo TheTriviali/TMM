@@ -1,6 +1,7 @@
-<Window x:Class="TMM.Gta4DashboardWindow"
+<local:DashboardWindowBase x:Class="TMM.Gta4DashboardWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TMM"
         Title="TMM &#x2014; GTA IV Series"
         Icon="{StaticResource AppIcon}"
         Height="680" Width="1180" MinHeight="540" MinWidth="960"
@@ -9,27 +10,6 @@
         Loaded="Window_Loaded" StateChanged="Window_StateChanged">
 
     <Window.Resources>
-
-        <!-- Column header style -->
-        <Style TargetType="{x:Type GridViewColumnHeader}">
-            <Setter Property="Background"      Value="{DynamicResource HeaderBrush}"/>
-            <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
-            <Setter Property="Padding"         Value="8,4"/>
-            <Setter Property="BorderThickness" Value="0,0,1,1"/>
-            <Setter Property="BorderBrush"     Value="#22FFFFFF"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
 
         <!-- Shared mod list template -->
         <ControlTemplate x:Key="ModListTemplate" TargetType="ListView">
@@ -84,22 +64,8 @@
             <Setter Property="Template"         Value="{StaticResource ModListTemplate}"/>
             <Setter Property="ItemContainerStyle">
                 <Setter.Value>
-                    <Style TargetType="ListViewItem">
-                        <Setter Property="ContextMenu"               Value="{StaticResource ModContextMenu}"/>
-                        <Setter Property="Background"                Value="Transparent"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                        <Style.Triggers>
-                            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                                <Setter Property="Background" Value="{DynamicResource CheckeredRowBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#3D3D3D"/>
-                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#2A2A2A"/>
-                            </Trigger>
-                        </Style.Triggers>
+                    <Style TargetType="ListViewItem" BasedOn="{StaticResource DashboardListItemStyle}">
+                        <Setter Property="ContextMenu" Value="{StaticResource ModContextMenu}"/>
                     </Style>
                 </Setter.Value>
             </Setter>
@@ -174,8 +140,8 @@
 
             <!-- ── Toolbar ─────────────────────────────────────────────────────── -->
             <Grid DockPanel.Dock="Top" Background="{DynamicResource HeaderBrush}"
-                  Height="44" Margin="0,0,0,1">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+                  MinHeight="44" Margin="0,0,0,1">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,6">
 
                     <!-- Back -->
                     <Button Background="Transparent" BorderThickness="0"
@@ -184,7 +150,7 @@
                             <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                        FontSize="12" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SubTextBrush}"/>
-                            <TextBlock Text=" Back" FontSize="11" VerticalAlignment="Center"
+                            <TextBlock x:Name="lblBack" Text=" Back" FontSize="11" VerticalAlignment="Center"
                                        Foreground="{DynamicResource SubTextBrush}" Margin="2,0,0,0"/>
                         </StackPanel>
                     </Button>
@@ -192,49 +158,89 @@
                     <Separator Width="1" Height="20" Background="#33FFFFFF" Margin="4,0"/>
 
                     <!-- Install Mod -->
-                    <Button Content="&#xE8F4;" ToolTip="Install Mod..."
-                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
-                            Click="BtnInstallMod_Click"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <Button Content="&#xE8F4;" ToolTip="Install Mod..."
+                                Style="{StaticResource ToolIconBtn}"
+                                Click="BtnInstallMod_Click"/>
+                        <TextBlock x:Name="lblInstall" Text="Install" FontSize="10"
+                                   Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                   Margin="0,2,0,0" Visibility="Visible"/>
+                    </StackPanel>
 
                     <!-- Refresh -->
-                    <Button Content="&#xE72C;" ToolTip="Refresh mod lists"
-                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
-                            Click="BtnRefresh_Click"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <Button Content="&#xE72C;" ToolTip="Refresh mod lists"
+                                Style="{StaticResource ToolIconBtn}"
+                                Click="BtnRefresh_Click"/>
+                        <TextBlock x:Name="lblRefresh" Text="Refresh" FontSize="10"
+                                   Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                   Margin="0,2,0,0" Visibility="Visible"/>
+                    </StackPanel>
 
                     <!-- Rescan Paths -->
-                    <Button Content="&#xE721;" ToolTip="Rescan game paths"
-                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
-                            Click="BtnRescanPaths_Click"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <Button Content="&#xE721;" ToolTip="Rescan game paths"
+                                Style="{StaticResource ToolIconBtn}"
+                                Click="BtnRescanPaths_Click"/>
+                        <TextBlock x:Name="lblRescan" Text="Rescan" FontSize="10"
+                                   Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                   Margin="0,2,0,0" Visibility="Visible"/>
+                    </StackPanel>
 
                     <Separator Width="1" Height="20" Background="#33FFFFFF" Margin="4,0"/>
 
                     <!-- Deploy All -->
-                    <Button x:Name="btnDeployAll" Content="&#xE896;"
-                            ToolTip="Deploy all IV episodes (F5)"
-                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
-                            Click="BtnDeployAll_Click"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <Button x:Name="btnDeployAll" Content="&#xE896;"
+                                ToolTip="Deploy all IV episodes (F5)"
+                                Style="{StaticResource ToolIconBtn}"
+                                Click="BtnDeployAll_Click"/>
+                        <TextBlock x:Name="lblDeployAll" Text="Deploy All" FontSize="10"
+                                   Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                   Margin="0,2,0,0" Visibility="Visible"/>
+                    </StackPanel>
 
                     <Separator Width="1" Height="20" Background="#33FFFFFF" Margin="4,0"/>
 
                     <!-- App Data -->
-                    <Button Content="&#xEC50;" ToolTip="Open TMM data folder"
-                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
-                            Click="BtnOpenAppData_Click"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <Button Content="&#xEC50;" ToolTip="Open TMM data folder"
+                                Style="{StaticResource ToolIconBtn}"
+                                Click="BtnOpenAppData_Click"/>
+                        <TextBlock x:Name="lblAppData" Text="App Data" FontSize="10"
+                                   Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                   Margin="0,2,0,0" Visibility="Visible"/>
+                    </StackPanel>
 
                     <!-- Settings -->
-                    <Button Content="&#xE713;" ToolTip="Settings"
-                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
-                            Click="BtnSettings_Click"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <Button Content="&#xE713;" ToolTip="Settings"
+                                Style="{StaticResource ToolIconBtn}"
+                                Click="BtnSettings_Click"/>
+                        <TextBlock x:Name="lblSettings" Text="Settings" FontSize="10"
+                                   Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                   Margin="0,2,0,0" Visibility="Visible"/>
+                    </StackPanel>
 
                     <!-- Theme Manager -->
-                    <Button Content="&#xE790;" ToolTip="Themes"
-                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
-                            Click="BtnTheme_Click"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <Button Content="&#xE790;" ToolTip="Themes"
+                                Style="{StaticResource ToolIconBtn}"
+                                Click="BtnTheme_Click"/>
+                        <TextBlock x:Name="lblThemes" Text="Themes" FontSize="10"
+                                   Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                   Margin="0,2,0,0" Visibility="Visible"/>
+                    </StackPanel>
 
                     <!-- Random Theme (dice) -->
-                    <Button Content="&#xE89A;" ToolTip="Random theme"
-                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
-                            Click="BtnRollTheme_Click"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <Button Content="&#xE89A;" ToolTip="Random theme"
+                                Style="{StaticResource ToolIconBtn}"
+                                Click="BtnRollTheme_Click"/>
+                        <TextBlock x:Name="lblDice" Text="Random" FontSize="10"
+                                   Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                   Margin="0,2,0,0" Visibility="Visible"/>
+                    </StackPanel>
 
                 </StackPanel>
 
@@ -589,4 +595,4 @@
             </UniformGrid>
         </DockPanel>
     </Border>
-</Window>
+</local:DashboardWindowBase>

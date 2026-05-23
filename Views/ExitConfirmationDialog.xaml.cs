@@ -2,7 +2,7 @@
 
 namespace TMM
 {
-    public partial class ExitConfirmationDialog : Window
+    public partial class ExitConfirmationDialog : TmmWindow
     {
         public bool DontAskAgain { get; private set; }
 

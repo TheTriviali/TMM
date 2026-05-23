@@ -14,7 +14,7 @@ using System.Windows.Media;
 
 namespace TMM
 {
-    public partial class CustomGameDashboardWindow : Window
+    public partial class CustomGameDashboardWindow : DashboardWindowBase
     {
         private readonly BackendCore _core;
         private readonly GameProfile _profile;
@@ -42,7 +42,7 @@ namespace TMM
             Title = "TMM — " + config.GameName;
             txtGameTitle.Text = " — " + config.GameName;
 
-            btnLaunch.Visibility = string.IsNullOrEmpty(config.ExePath)
+            pnlLaunch.Visibility = string.IsNullOrEmpty(config.ExePath)
                 ? Visibility.Collapsed
                 : Visibility.Visible;
 
@@ -55,8 +55,14 @@ namespace TMM
             ThemeEngine.ApplyTheme(_core.Settings);
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            ApplyToolbarLabels();
             await RefreshAsync();
         }
+
+        private static readonly string[] _toolbarLabelNames =
+            { "lblEditConfig", "lblInstall", "lblRefresh", "lblDeploy", "lblRollback", "lblLaunch", "lblSettings", "lblThemes", "lblDice", "lblBack" };
+
+        private void ApplyToolbarLabels() => ApplyToolbarLabels(_core.Settings, _toolbarLabelNames);
 
         private async Task RefreshAsync()
         {
@@ -78,12 +84,16 @@ namespace TMM
             bool ready = !string.IsNullOrEmpty(_config.GameDirectory) &&
                          Directory.Exists(_config.GameDirectory);
             bool hasEnabled = _mods.Any(m => m.IsEnabled);
+            bool hasOverride = _core.Settings.DeployOverrides.TryGetValue(_profile.Key, out bool ov) && ov;
 
             _hasPendingChanges = ready && hasEnabled;
-            if (_hasPendingChanges)
-                btnDeploy.SetResourceReference(Button.BackgroundProperty, "AccentBrush");
+
+            if (!_hasPendingChanges)
+                btnDeploy.Background = UiColors.DisabledBrush;
+            else if (hasOverride)
+                btnDeploy.Background = UiColors.PendingBrush;
             else
-                btnDeploy.Background = new SolidColorBrush(Color.FromRgb(70, 70, 70));
+                btnDeploy.SetResourceReference(Button.BackgroundProperty, "AccentBrush");
 
             btnDeploy.ToolTip = !ready
                 ? "Game directory not configured or missing"
@@ -92,21 +102,11 @@ namespace TMM
 
         // ── Window chrome ──────────────────────────────────────────────────────
 
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left) DragMove();
-        }
-
         private void Window_StateChanged(object sender, EventArgs e)
         {
             OuterBorder.CornerRadius = WindowState == WindowState.Maximized
                 ? new CornerRadius(0) : new CornerRadius(10);
         }
-
-        private void BtnMinimize_Click(object sender, RoutedEventArgs e) =>
-            WindowState = WindowState.Minimized;
-
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
 
         private void BtnBack_Click(object sender, RoutedEventArgs e) => Close();
 
@@ -320,6 +320,13 @@ namespace TMM
 
         private void BtnLaunch_Click(object sender, RoutedEventArgs e)
         {
+            // Prefer Steam protocol launch when SteamAppId is configured
+            if (!string.IsNullOrWhiteSpace(_config.SteamAppId))
+            {
+                SteamLauncher.Invoke("rungameid", _config.SteamAppId);
+                return;
+            }
+
             if (string.IsNullOrEmpty(_config.ExePath)) return;
             string exeFull = Path.IsPathRooted(_config.ExePath)
                 ? _config.ExePath
@@ -346,7 +353,7 @@ namespace TMM
 
             Title = "TMM — " + _config.GameName;
             txtGameTitle.Text = " — " + _config.GameName;
-            btnLaunch.Visibility = string.IsNullOrEmpty(_config.ExePath)
+            pnlLaunch.Visibility = string.IsNullOrEmpty(_config.ExePath)
                 ? Visibility.Collapsed : Visibility.Visible;
 
             await RefreshAsync();
@@ -354,10 +361,11 @@ namespace TMM
 
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
-            new SettingsWindow(_core, SettingsContext.CustomGame) { Owner = this }.ShowDialog();
+            new SettingsWindow(_core) { Owner = this }.ShowDialog();
             ThemeEngine.ApplyTheme(_core.Settings);
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            ApplyToolbarLabels();
         }
 
         private void BtnTheme_Click(object sender, RoutedEventArgs e)
@@ -533,8 +541,6 @@ namespace TMM
             }
         }
 
-        private void ModList_SelectionChanged(object sender, SelectionChangedEventArgs e) { }
-
         // ── Search ─────────────────────────────────────────────────────────────
 
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -585,22 +591,29 @@ namespace TMM
         private void MenuOpenFolder_Click(object sender, RoutedEventArgs e)
         {
             if (ModList.SelectedItem is ModItem m && Directory.Exists(m.RawFolderPath))
-                OpenFolder(m.RawFolderPath);
+                ShellHelper.OpenFolder(m.RawFolderPath);
         }
 
         private void MenuOpenGameFolder_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(_config.GameDirectory) && Directory.Exists(_config.GameDirectory))
-                OpenFolder(_config.GameDirectory);
+                ShellHelper.OpenFolder(_config.GameDirectory);
             else
                 MessageBox.Show("Game directory not set or does not exist.", "Not Found");
+        }
+
+        private void MenuOpenBackupFolder_Click(object sender, RoutedEventArgs e)
+        {
+            string path = Path.Combine(_core.BackupsPath, _profile.Key);
+            Directory.CreateDirectory(path);
+            ShellHelper.OpenFolder(path);
         }
 
         private void MenuOpenModsFolder_Click(object sender, RoutedEventArgs e)
         {
             string path = Path.Combine(_core.AppDataPath, _profile.RawFolderName);
             Directory.CreateDirectory(path);
-            OpenFolder(path);
+            ShellHelper.OpenFolder(path);
         }
 
         private void MenuMoveUp_Click(object sender, RoutedEventArgs e)
@@ -698,10 +711,5 @@ namespace TMM
             }
         }
 
-        private static void OpenFolder(string path)
-        {
-            Directory.CreateDirectory(path);
-            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true });
-        }
     }
 }

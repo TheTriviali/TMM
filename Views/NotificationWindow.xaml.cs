@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace TMM
 {
-    public partial class NotificationWindow : Window
+    public partial class NotificationWindow : TmmWindow
     {
         public NotificationWindow()
         {

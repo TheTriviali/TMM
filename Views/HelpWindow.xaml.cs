@@ -3,7 +3,7 @@ using System.Windows;
 
 namespace TMM
 {
-    public partial class HelpWindow : Window
+    public partial class HelpWindow : TmmWindow
     {
         public HelpWindow() => InitializeComponent();
 
@@ -13,6 +13,5 @@ namespace TMM
                 Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
 
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

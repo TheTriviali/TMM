@@ -5,7 +5,7 @@ using System.Windows.Media;
 
 namespace TMM
 {
-    public partial class ModPropertiesWindow : Window
+    public partial class ModPropertiesWindow : TmmWindow
     {
         public ModPropertiesWindow(ModItem mod)
         {
@@ -67,6 +67,5 @@ namespace TMM
             catch { /* access denied - skip */ }
         }
 
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

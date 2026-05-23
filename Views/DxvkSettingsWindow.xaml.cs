@@ -5,7 +5,7 @@ using System.Windows.Controls;
 
 namespace TMM
 {
-    public partial class DxvkSettingsWindow : Window
+    public partial class DxvkSettingsWindow : TmmWindow
     {
         private readonly BackendCore _core;
 

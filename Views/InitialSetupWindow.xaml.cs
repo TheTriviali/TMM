@@ -5,7 +5,7 @@ using System.Windows.Input;
 
 namespace TMM
 {
-    public partial class InitialSetupWindow : Window
+    public partial class InitialSetupWindow : TmmWindow
     {
         private readonly BackendCore _core;
 
@@ -49,12 +49,7 @@ namespace TMM
             await rowTBoGT.RefreshAsync();
         }
 
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left) DragMove();
-        }
-
-        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        private new void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             bool anyReady = GameProfile.All.Any(_core.IsGameReady);
             if (!anyReady)

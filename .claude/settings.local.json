@@ -28,7 +28,27 @@
       "Bash(git merge feature/v2-direct-deploy-multi-game --no-ff -m ' *)",
       "Bash(git branch *)",
       "Bash(git stash *)",
-      "Bash(dotnet run *)"
+      "Bash(dotnet run *)",
+      "Bash(Read \"C:\\\\Users\\\\noahd\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-noahd-source-repos-tgtamm-TGTAMM\\\\81876d6c-777e-428a-8ad8-a0e109d48195\\\\tasks\\\\bsc3z99mx.output\")",
+      "Bash(Start-Process \"C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tgtamm\\\\TGTAMM\\\\bin\\\\Debug\\\\net10.0-windows\\\\TMM.exe\")",
+      "PowerShell(Start-Process \"C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tgtamm\\\\TGTAMM\\\\bin\\\\Debug\\\\net10.0-windows\\\\TMM.exe\")",
+      "Bash(Stop-Process -Name \"TMM\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tgtamm\\\\TGTAMM\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(sort -t: -k1,1)",
+      "Bash(Get-Content Views/AboutWindow.xaml)",
+      "Bash(Select-Object -Last 1)",
+      "Bash(Get-Content Views/CrashReportWindow.xaml)",
+      "Bash(Get-Content Views/HelpWindow.xaml)",
+      "Bash(Get-Content Views/DebugConsoleWindow.xaml)",
+      "Bash(Get-Content Views/ModPropertiesWindow.xaml)",
+      "Bash(Get-Content Views/RenameWindow.xaml)",
+      "Bash(Get-Content Views/ArchiveExtractionWindow.xaml)",
+      "Bash(Get-Content Views/ExitConfirmationDialog.xaml)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\noahd\\\\Desktop\\\\TGTAMM\\\\Publish\")",
+      "Read(//c/Users/noahd/Desktop/**)",
+      "Bash(dotnet publish *)",
+      "Bash(git commit -m 'Add B6 to PLANS.md: UI Modernization with traditional menu bar + responsive layout *)"
     ]
   }
 }

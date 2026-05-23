@@ -6,7 +6,7 @@ using System.Windows.Shapes;
 
 namespace TMM
 {
-    public partial class GameLauncherWindow : Window
+    public partial class GameLauncherWindow : TmmWindow
     {
         private readonly BackendCore _core;
 
@@ -236,9 +236,7 @@ namespace TMM
                 Width = 7, Height = 7,
                 Margin = new Thickness(0, 0, 5, 0),
                 VerticalAlignment = VerticalAlignment.Center,
-                Fill = ready
-                    ? new SolidColorBrush(Color.FromRgb(80, 200, 100))
-                    : new SolidColorBrush(Color.FromRgb(160, 60, 60))
+                Fill = ready ? UiColors.ReadyBrush : UiColors.NotReadyBrush
             });
             var lbl = new TextBlock
             {
@@ -385,6 +383,69 @@ namespace TMM
             txtStatus.Text = $"Removed '{config.GameName}'";
         }
 
+        private void BtnImportTmmgame_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Title  = "Import .tmmgame Config",
+                Filter = "TMM Game Config (*.tmmgame)|*.tmmgame|All Files (*.*)|*.*"
+            };
+            if (dlg.ShowDialog() != true) return;
+            _ = ImportTmmgameAsync(dlg.FileName);
+        }
+
+        private void Window_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Any(f => f.EndsWith(".tmmgame", System.StringComparison.OrdinalIgnoreCase)))
+                {
+                    e.Effects = DragDropEffects.Copy;
+                    e.Handled = true;
+                    return;
+                }
+            }
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private void Window_Drop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            var tmmgame = files.FirstOrDefault(f => f.EndsWith(".tmmgame", System.StringComparison.OrdinalIgnoreCase));
+            if (tmmgame != null)
+                _ = ImportTmmgameAsync(tmmgame);
+        }
+
+        private async System.Threading.Tasks.Task ImportTmmgameAsync(string path)
+        {
+            CustomGameProfile config;
+            try
+            {
+                config = await GameRegistry.ImportGameConfigAsync(path);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to read config:\n{ex.Message}", "Import Failed",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var dlg = new CustomGameConfigWindow(config, isTemplate: true) { Owner = this };
+            if (dlg.ShowDialog() != true || dlg.Result == null) return;
+
+            string key = await GameRegistry.Instance.AddCustomGameAsync(dlg.Result);
+            await _core.InitializeAsync();
+
+            _core.Settings.GamePaths.TryAdd(key, dlg.Result.GameDirectory);
+            _core.SaveSettings();
+
+            RebuildCards();
+            txtStatus.Text = $"Imported '{dlg.Result.GameName}'";
+        }
+
         private void BtnReset_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show(
@@ -418,15 +479,7 @@ namespace TMM
         private void BtnAbout_Click(object sender, RoutedEventArgs e) =>
             new AboutWindow(_core) { Owner = this }.ShowDialog();
 
-        private void BtnMinimize_Click(object sender, RoutedEventArgs e) =>
-            WindowState = WindowState.Minimized;
-
-        private void BtnClose_Click(object sender, RoutedEventArgs e) =>
+        private new void BtnClose_Click(object sender, RoutedEventArgs e) =>
             Application.Current.Shutdown();
-
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left) DragMove();
-        }
     }
 }

@@ -124,7 +124,6 @@ Mods[key]         → ObservableCollection<ModItem> per game
 
 InitializeAsync() → load settings, create mod dirs, register all game profiles with GameRegistry
 QuickScan()       → check fixed drives at known Steam/ProgramFiles paths for each game exe
-DeepScanDrives()  → recursive search (slower, user-triggered)
 SetVanillaPath(profile, path)
   → saves path; if IV, auto-derives TLaD (TLAD\ or TLaD\) and TBoGT (EFLC\ or TBoGT\)
 IsGameReady(profile) → true if path is set and non-empty
@@ -165,7 +164,7 @@ Types: Info, Success, Warning, Error
 
 #### `SteamLauncher`
 ```
-SmartSteamLaunch(profile, gameDir) → tries steam://rungameid/{AppId}, falls back to direct exe launch
+Invoke(action, appId) → runs Steam protocol commands (install/validate/uninstall/rungameid)
 ```
 
 ---
@@ -181,7 +180,7 @@ SmartSteamLaunch(profile, gameDir) → tries steam://rungameid/{AppId}, falls ba
 | `ConditionalRoute` | If file has Extension and CheckSubdir exists → write to TargetSubdir, else Fallback |
 | `DeployManifest` | Backup snapshot: Timestamp, ModNames, per-file backup paths. Used for rollback |
 | `DeploymentProgress` | Stage string + Current/Total count. Passed as IProgress<T> to deploy/rollback |
-| `GameState` | Transient per-game state (IsGameRunning, etc.) |
+| `ExeStatus` | Enum: Unknown, Vanilla (Steam), Downgraded (1.0) |
 | `NotificationItem` | Message + Type for toast display |
 
 ---
@@ -245,7 +244,7 @@ Window-local styles: `ColActionBtn` `ToolIconBtn` `ModListStyle` `ModListTemplat
 **archive extraction** → `BackendCore.ExtractArchiveSafeAsync` (SharpCompress)  
 **smart archive unwrap** → `Gta4DashboardWindow.SmartArchivePostProcess`  
 **ASI routing to plugins folder** → `ConditionalRoute` on IV/TLaD/TBoGT profiles  
-**Steam launch** → `SteamLauncher.SmartSteamLaunch`  
+**Steam launch** → `SteamLauncher.Invoke` (install/validate/uninstall/rungameid commands)  
 **drag-drop reorder** → `MainDashboardWindow` + `Gta4DashboardWindow` List_Drop handlers  
 **context menu on mod** → `ModContextMenu` resource in each dashboard XAML  
 **backup snapshots location** → `%APPDATA%\TMM\Backups\`  

@@ -1,6 +1,7 @@
-<Window x:Class="TMM.CustomGameConfigWindow"
+<local:TmmWindow x:Class="TMM.CustomGameConfigWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TMM"
         Title="Configure Custom Game"
         Height="800" Width="800"
         MinHeight="620" MinWidth="580"
@@ -368,15 +369,25 @@
             <!-- Footer buttons -->
             <Border Grid.Row="2" Background="{DynamicResource HeaderBrush}"
                     CornerRadius="0,0,8,8" Padding="16,10">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Cancel" Width="80" Margin="0,0,8,0"
-                            Style="{StaticResource CancelBtnStyle}"
-                            Click="BtnCancel_Click"/>
-                    <Button x:Name="btnSave" Content="Save" Width="80"
-                            Style="{StaticResource SaveBtnStyle}"
-                            Click="BtnSave_Click"/>
-                </StackPanel>
+                <Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Button Content="Import .tmmgame" Margin="0,0,8,0"
+                                Style="{StaticResource BrowseBtnStyle}" Padding="10,5"
+                                Click="BtnImportConfig_Click"/>
+                        <Button Content="Export .tmmgame" Margin="0"
+                                Style="{StaticResource BrowseBtnStyle}" Padding="10,5"
+                                Click="BtnExportConfig_Click"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Cancel" Width="80" Margin="0,0,8,0"
+                                Style="{StaticResource CancelBtnStyle}"
+                                Click="BtnCancel_Click"/>
+                        <Button x:Name="btnSave" Content="Save" Width="80"
+                                Style="{StaticResource SaveBtnStyle}"
+                                Click="BtnSave_Click"/>
+                    </StackPanel>
+                </Grid>
             </Border>
         </Grid>
     </Border>
-</Window>
+</local:TmmWindow>

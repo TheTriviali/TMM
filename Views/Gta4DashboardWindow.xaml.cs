@@ -21,7 +21,7 @@ namespace TMM
     /// ASI routing (plugins\ folder check) is handled transparently by BackendCore
     /// via the ConditionalRoutes on each GameProfile.
     /// </summary>
-    public partial class Gta4DashboardWindow : Window
+    public partial class Gta4DashboardWindow : DashboardWindowBase
     {
         // ── State ─────────────────────────────────────────────────────────────────
 
@@ -34,6 +34,9 @@ namespace TMM
         private ModItem? _draggedItem;
         private ListView? _activeList;          // tracks which column has focus
         private CancellationTokenSource? _deployCts;
+
+        // Per-episode deploy pending flags (IV=0, TLaD=1, TBoGT=2)
+        private readonly bool[] _pendingByEpisode = { true, true, true };
 
         // ── Construction ──────────────────────────────────────────────────────────
 
@@ -63,8 +66,14 @@ namespace TMM
             ThemeEngine.ApplyTheme(_core.Settings);
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            ApplyToolbarLabels();
             await RefreshAsync();
         }
+
+        private static readonly string[] _toolbarLabelNames =
+            { "lblInstall", "lblRefresh", "lblRescan", "lblDeployAll", "lblAppData", "lblSettings", "lblThemes", "lblDice", "lblBack" };
+
+        private void ApplyToolbarLabels() => ApplyToolbarLabels(_core.Settings, _toolbarLabelNames);
 
         private async Task RefreshAsync()
         {
@@ -88,10 +97,31 @@ namespace TMM
 
         private void UpdateDeployButtons()
         {
-            btnDeployIV.IsEnabled    = _core.IsGameReady(GameProfile.IV);
-            btnDeployTLaD.IsEnabled  = _core.IsGameReady(GameProfile.TLaD);
-            btnDeployTBoGT.IsEnabled = _core.IsGameReady(GameProfile.TBoGT);
+            UpdateEpisodeDeployButton(btnDeployIV,    GameProfile.IV,    0);
+            UpdateEpisodeDeployButton(btnDeployTLaD,  GameProfile.TLaD,  1);
+            UpdateEpisodeDeployButton(btnDeployTBoGT, GameProfile.TBoGT, 2);
         }
+
+        private void UpdateEpisodeDeployButton(Button btn, GameProfile profile, int episodeIdx)
+        {
+            bool ready    = _core.IsGameReady(profile);
+            bool pending  = _pendingByEpisode[episodeIdx];
+            bool hasMods  = _core.Mods[profile.Key].Any(m => m.IsEnabled);
+            bool override_ = _core.Settings.DeployOverrides.TryGetValue(profile.Key, out bool ov) && ov;
+
+            btn.IsEnabled = ready;
+
+            if (!ready || !hasMods)
+                btn.Background = UiColors.DisabledBrush;
+            else if (pending && override_)
+                btn.Background = UiColors.PendingBrush;
+            else if (pending)
+                btn.SetResourceReference(Control.BackgroundProperty, "AccentBrush");
+            else
+                btn.Background = UiColors.DisabledBrush;
+        }
+
+        private int EpisodeIndex(string key) => key switch { "IV" => 0, "TLaD" => 1, "TBoGT" => 2, _ => 0 };
 
         private void UpdateStatusDots()
         {
@@ -102,9 +132,7 @@ namespace TMM
 
         private static void SetDotColor(System.Windows.Shapes.Ellipse dot, bool ready)
         {
-            dot.Fill = new SolidColorBrush(ready
-                ? Color.FromRgb(80, 200, 100)
-                : Color.FromRgb(160, 60, 60));
+            dot.Fill = new SolidColorBrush(ready ? UiColors.ReadyGreen : UiColors.NotReadyRed);
         }
 
         private void UpdateLaunchButtons()
@@ -133,7 +161,7 @@ namespace TMM
 
         // ── Window chrome ─────────────────────────────────────────────────────────
 
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+        private new void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left && e.ClickCount == 2)
                 BtnMaxRestore_Click(sender, e);
@@ -141,10 +169,7 @@ namespace TMM
                 DragMove();
         }
 
-        private void BtnMinimize_Click(object sender, RoutedEventArgs e)   => WindowState = WindowState.Minimized;
-        private void BtnMaxRestore_Click(object sender, RoutedEventArgs e)  =>
-            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+        private void BtnMaxRestore_Click(object sender, RoutedEventArgs e) => BtnMaximize_Click(sender, e);
 
         private void Window_StateChanged(object sender, EventArgs e)
         {
@@ -204,9 +229,6 @@ namespace TMM
                 if (ext is ".zip" or ".rar" or ".7z")
                 {
                     await BackendCore.ExtractArchiveSafeAsync(filePath, destDir, CancellationToken.None);
-
-                    // Smart archive detection & routing
-                    await SmartArchivePostProcess(destDir, filePath);
                 }
                 else
                 {
@@ -228,61 +250,6 @@ namespace TMM
                 MessageBox.Show($"Failed to install '{modName}':\n{ex.Message}", "Install Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        private async Task SmartArchivePostProcess(string stagingDir, string archivePath)
-        {
-            // ── Single root folder unwrap ──────────────────────────────────────
-            var entries = Directory.GetFileSystemEntries(stagingDir);
-            if (entries.Length == 1 && Directory.Exists(entries[0]))
-            {
-                string singleRoot = entries[0];
-                // Move all contents up one level, then delete the empty subdir
-                foreach (var entry in Directory.GetFileSystemEntries(singleRoot))
-                {
-                    string destPath = Path.Combine(stagingDir, Path.GetFileName(entry));
-                    if (Directory.Exists(entry))
-                    {
-                        if (!Directory.Exists(destPath)) Directory.Move(entry, destPath);
-                    }
-                    else
-                    {
-                        if (!File.Exists(destPath)) File.Move(entry, destPath, overwrite: true);
-                    }
-                }
-                try { Directory.Delete(singleRoot, false); } catch { }
-            }
-
-            // ── Known folder detection (plugins, scripts, modloader) ──────────────
-            var knownFolders = new[] { "plugins", "scripts", "modloader", "bin" };
-            bool hasKnownFolders = knownFolders.Any(f => Directory.Exists(Path.Combine(stagingDir, f)));
-
-            if (!hasKnownFolders)
-            {
-                // ── Look for README files (only if no known structure) ──────────────
-                var readmes = Directory.GetFiles(stagingDir, "readme*", SearchOption.AllDirectories)
-                    .FirstOrDefault();
-
-                if (!string.IsNullOrEmpty(readmes))
-                {
-                    var info = new FileInfo(readmes);
-                    // Warn if file is large or archive is solid (sequential extraction needed)
-                    if (info.Length > 1_000_000 || (archivePath.EndsWith(".7z", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        var result = MessageBox.Show(
-                            "This archive contains a large README file or uses solid compression.\n\n" +
-                            "Opening the README might take a moment (extraction may need to read the entire archive).\n\n" +
-                            "Open README anyway?",
-                            "Large README Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                        if (result != MessageBoxResult.Yes) return;
-                    }
-
-                    try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(readmes) { UseShellExecute = true }); }
-                    catch { /* Silently fail if README can't open */ }
-                }
-            }
-
-            await Task.CompletedTask;
         }
 
         private async void BtnRefresh_Click(object sender, RoutedEventArgs e) => await RefreshAsync();
@@ -312,10 +279,11 @@ namespace TMM
 
         private async void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
-            new SettingsWindow(_core, SettingsContext.GtaIvOnly) { Owner = this }.ShowDialog();
+            new SettingsWindow(_core) { Owner = this }.ShowDialog();
             ThemeEngine.ApplyTheme(_core.Settings);
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            ApplyToolbarLabels();
             await RefreshAsync();
         }
 
@@ -409,6 +377,8 @@ namespace TMM
                     txtStatus.Text = $"[{profile.ShortName}] {p.Stage} ({p.Current}/{p.Total})");
 
                 await _core.DeployModsAsync(profile, _core.Mods[profile.Key], progress, _deployCts.Token);
+                _pendingByEpisode[EpisodeIndex(profile.Key)] = false;
+                UpdateDeployButtons();
                 txtStatus.Text = $"{profile.DisplayName} deployed successfully.";
             }
             catch (OperationCanceledException)
@@ -568,6 +538,16 @@ namespace TMM
             {
                 SyncModInfoToFolder(item);
                 UpdateStatusBar();
+                // Flag whichever episode contains this mod as pending
+                for (int i = 0; i < _episodes.Length; i++)
+                {
+                    if (_episodes[i].Mods.Contains(item))
+                    {
+                        _pendingByEpisode[i] = true;
+                        UpdateDeployButtons();
+                        break;
+                    }
+                }
             }
         }
 
@@ -593,6 +573,7 @@ namespace TMM
             mod.IsEnabled = !mod.IsEnabled;
             SyncModInfoToFolder(mod);
             UpdateStatusBar();
+            FlagEpisodePending();
         }
 
         private void MenuDelete_Click(object? sender, RoutedEventArgs e)
@@ -638,6 +619,7 @@ namespace TMM
             list.Move(idx, idx - 1);
             SyncModInfoToFolder(mod);
             SyncModInfoToFolder(other);
+            FlagEpisodePending();
         }
 
         private void MenuMoveDown_Click(object? sender, RoutedEventArgs e)
@@ -652,6 +634,14 @@ namespace TMM
             list.Move(idx, idx + 1);
             SyncModInfoToFolder(mod);
             SyncModInfoToFolder(other);
+            FlagEpisodePending();
+        }
+
+        private void FlagEpisodePending()
+        {
+            int idx = EpisodeIndex(GetActiveProfile().Key);
+            _pendingByEpisode[idx] = true;
+            UpdateDeployButtons();
         }
 
         private void MenuSetLoadOrder_Click(object sender, RoutedEventArgs e)
@@ -677,13 +667,14 @@ namespace TMM
             list.Clear();
             foreach (var m in sorted) list.Add(m);
             foreach (var m in list) SyncModInfoToFolder(m);
+            FlagEpisodePending();
         }
 
         private void MenuOpenFolder_Click(object sender, RoutedEventArgs e)
         {
             var mod = GetSelectedMod();
             if (mod != null && Directory.Exists(mod.RawFolderPath))
-                OpenFolder(mod.RawFolderPath);
+                ShellHelper.OpenFolder(mod.RawFolderPath);
         }
 
         private void MenuOpenGameFolder_Click(object sender, RoutedEventArgs e)
@@ -691,7 +682,7 @@ namespace TMM
             var profile = GetActiveProfile();
             string? path = _core.GetVanillaPath(profile);
             if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
-                OpenFolder(path);
+                ShellHelper.OpenFolder(path);
             else
                 MessageBox.Show($"Game folder for {profile.DisplayName} is not set or missing.",
                     "Folder Not Found", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -702,7 +693,7 @@ namespace TMM
             var profile = GetActiveProfile();
             string path = Path.Combine(_core.AppDataPath, profile.RawFolderName);
             Directory.CreateDirectory(path);
-            OpenFolder(path);
+            ShellHelper.OpenFolder(path);
         }
 
         private void MenuProperties_Click(object sender, RoutedEventArgs e)
@@ -712,8 +703,6 @@ namespace TMM
             new ModPropertiesWindow(mod) { Owner = this }.ShowDialog();
         }
 
-        private static void OpenFolder(string path) =>
-            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true, Verb = "open" });
 
         // ── Drag-and-drop reorder ─────────────────────────────────────────────────
 
@@ -782,6 +771,8 @@ namespace TMM
                 mods[i].LoadOrder = i;
                 SyncModInfoToFolder(mods[i]);
             }
+            _pendingByEpisode[EpisodeIndex(key)] = true;
+            UpdateDeployButtons();
             _draggedItem = null;
         }
 

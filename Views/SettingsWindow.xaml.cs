@@ -7,48 +7,14 @@ using System.Windows.Input;
 
 namespace TMM
 {
-    public enum SettingsContext { Full, GtaIvOnly, CustomGame }
-
-    public partial class SettingsWindow : Window
+    public partial class SettingsWindow : TmmWindow
     {
         private readonly BackendCore _core;
 
-        public SettingsWindow(BackendCore core, SettingsContext context = SettingsContext.Full)
+        public SettingsWindow(BackendCore core)
         {
             _core = core;
             InitializeComponent();
-
-            rowIII.ShowActions   = false; rowIII.Bind(_core,   GameProfile.III);
-            rowVC.ShowActions    = false; rowVC.Bind(_core,    GameProfile.VC);
-            rowSA.ShowActions    = false; rowSA.Bind(_core,    GameProfile.SA);
-            rowIV.ShowActions    = false; rowIV.Bind(_core,    GameProfile.IV);
-            rowTLaD.ShowActions  = false; rowTLaD.Bind(_core,  GameProfile.TLaD);
-            rowTBoGT.ShowActions = false; rowTBoGT.Bind(_core, GameProfile.TBoGT);
-
-            ApplyContext(context);
-        }
-
-        private void ApplyContext(SettingsContext context)
-        {
-            if (context == SettingsContext.CustomGame)
-            {
-                pnlGtaIII.Visibility      = Visibility.Collapsed;
-                pnlGtaIV.Visibility       = Visibility.Collapsed;
-                pnlSteamControls.Visibility = Visibility.Collapsed;
-                btnMd5.Visibility          = Visibility.Collapsed;
-                // Shrink window since most content is hidden
-                gridDiagnostics.Columns = 3;
-                Height = 280;
-            }
-            else if (context == SettingsContext.GtaIvOnly)
-            {
-                pnlGtaIII.Visibility = Visibility.Collapsed;
-                // Scope Steam Controls and MD5 to IV games only
-                cmbItemIII.Visibility = Visibility.Collapsed;
-                cmbItemVC.Visibility  = Visibility.Collapsed;
-                cmbItemSA.Visibility  = Visibility.Collapsed;
-                cmbSteamGame.SelectedIndex = 0; // selects IV (first visible item)
-            }
         }
 
         private void BtnRerunSetup_Click(object sender, RoutedEventArgs e)
@@ -137,11 +103,5 @@ namespace TMM
         private void BtnOpenConsole_Click(object sender, RoutedEventArgs e)
             => new DebugConsoleWindow(_core) { Owner = this }.ShowDialog();
 
-        private void TitleBar_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == System.Windows.Input.MouseButton.Left) DragMove();
-        }
-
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

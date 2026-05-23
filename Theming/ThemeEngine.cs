@@ -212,33 +212,6 @@ namespace TMM
                         ? Color.FromArgb(60, 255, 255, 255)
                         : Color.FromArgb(80, 0, 0, 0));
 
-                // Border gradient: accent color to darker shade and back
-                if (settings.AccentBorderEnabled)
-                {
-                    var gradient = new LinearGradientBrush();
-                    gradient.StartPoint = new Point(0, 0);
-                    gradient.EndPoint = new Point(1, 1);
-                    gradient.GradientStops.Add(new GradientStop(accent, 0));
-
-                    // Darker middle stop (reduce brightness by ~40%)
-                    var darkAccent = Color.FromArgb(accent.A,
-                        (byte)(accent.R * 0.6),
-                        (byte)(accent.G * 0.6),
-                        (byte)(accent.B * 0.6));
-                    gradient.GradientStops.Add(new GradientStop(darkAccent, 0.5));
-                    gradient.GradientStops.Add(new GradientStop(accent, 1));
-
-                    Application.Current.Resources["WindowBorderGradientBrush"] = gradient;
-                }
-                else
-                {
-                    // Use same color for non-accent border
-                    var solidBrush = isDark
-                        ? new SolidColorBrush(Color.FromArgb(60, 255, 255, 255))
-                        : new SolidColorBrush(Color.FromArgb(80, 0, 0, 0));
-                    Application.Current.Resources["WindowBorderGradientBrush"] = solidBrush;
-                }
-
                 // Win9x: classic gradient, adapted to dark/light mode
                 if (isDark)
                 {

@@ -52,7 +52,7 @@ using System.Windows.Media;
 
 namespace TMM
 {
-    public partial class MainDashboardWindow : Window
+    public partial class MainDashboardWindow : DashboardWindowBase
     {
         // ==========================================================
         // STATE
@@ -158,13 +158,13 @@ namespace TMM
                 if (FindName($"btnPlay{profile.Key}") is Button playBtn)
                 {
                     if (!isReady)
-                        playBtn.Background = new SolidColorBrush(Color.FromRgb(70, 70, 70));
+                        playBtn.Background = UiColors.DisabledBrush;
                     else if (status == ExeStatus.Vanilla && !hasOverride)
                         // Red = vanilla exe, no override - deploy works but game won't launch
                         playBtn.Background = new SolidColorBrush(Color.FromRgb(180, 45, 45));
                     else if (status == ExeStatus.Vanilla && hasOverride)
                         // Orange = vanilla but override enabled - can deploy, game launch will still need 1.0 exe
-                        playBtn.Background = new SolidColorBrush(Color.FromRgb(200, 110, 20));
+                        playBtn.Background = UiColors.PendingBrush;
                     else
                         playBtn.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "AccentBrush");
                 }
@@ -178,7 +178,7 @@ namespace TMM
             if (_deployReady)
                 btnDeploy.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "AccentBrush");
             else
-                btnDeploy.Background = new SolidColorBrush(Color.FromRgb(70, 70, 70));
+                btnDeploy.Background = UiColors.DisabledBrush;
 
             btnDeploy.ToolTip = _deployReady ? "Deploy Mods (F5)" : "No pending changes to deploy";
         }
@@ -200,8 +200,8 @@ namespace TMM
             // Win9x, Win31, and maximized both use square corners.
             bool isSquare   = _core.Settings.TitlebarTheme == "Win9x" || _core.Settings.TitlebarTheme == "Win31";
             bool squarify   = isSquare || WindowState == WindowState.Maximized;
-            MainWindowBorder.CornerRadius = squarify ? new CornerRadius(0) : new CornerRadius(12);
-            TitleBarBorder.CornerRadius   = squarify ? new CornerRadius(0) : new CornerRadius(12, 12, 0, 0);
+            MainWindowBorder.CornerRadius = squarify ? new CornerRadius(0) : new CornerRadius(10);
+            TitleBarBorder.CornerRadius   = squarify ? new CornerRadius(0) : new CornerRadius(10, 10, 0, 0);
             if (MainWindowBorder.Child is Border innerBorder)
             {
                 var vb = innerBorder.OpacityMask as VisualBrush;
@@ -531,7 +531,7 @@ namespace TMM
             }
             finally
             {
-                if (!_core.Settings.DebugStaging && Directory.Exists(staging))
+                if (Directory.Exists(staging))
                 {
                     try { Directory.Delete(staging, true); }
                     catch { /* locked - cleanup happens on next launch */ }
@@ -1249,7 +1249,7 @@ namespace TMM
         {
             if (sender is Button btn && btn.Tag is string url)
             {
-                try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+                try { ShellHelper.OpenUrl(url); }
                 catch (Exception ex) { MessageBox.Show($"Could not open link: {ex.Message}"); }
             }
         }
@@ -1297,11 +1297,7 @@ namespace TMM
 
         private void ApplyToolbarLabels()
         {
-            var vis = _core.Settings.ToolbarShowLabels ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var name in _toolbarLabelNames)
-                if (FindName(name) is TextBlock tb) tb.Visibility = vis;
-
-            // Highlight the T button when labels are on
+            ApplyToolbarLabels(_core.Settings, _toolbarLabelNames);
             if (FindName("btnToggleLabels") is Button btn)
                 btn.Opacity = _core.Settings.ToolbarShowLabels ? 1.0 : 0.5;
         }
@@ -1381,8 +1377,8 @@ namespace TMM
             bool maximized = WindowState == WindowState.Maximized;
             bool isWin9x   = _core.Settings.TitlebarTheme == "Win9x";
             var corners = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(10);
-            MainWindowBorder.CornerRadius   = corners;
-            TitleBarBorder.CornerRadius     = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(10, 10, 0, 0);
+            MainWindowBorder.CornerRadius = corners;
+            TitleBarBorder.CornerRadius   = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(10, 10, 0, 0);
             if (MainWindowBorder.Child is Border inner)
             {
                 var vb = inner.OpacityMask as System.Windows.Media.VisualBrush;
@@ -1411,8 +1407,6 @@ namespace TMM
             DialogOverlay.Visibility = Visibility.Collapsed;
         }
 
-        private void BtnDonate_Click(object s, RoutedEventArgs e)
-            => Process.Start(new ProcessStartInfo("https://ko-fi.com/") { UseShellExecute = true });
 
         private void BtnOpenAppData_Click(object s, RoutedEventArgs e) => _core.OpenAppData();
 
@@ -1427,9 +1421,6 @@ namespace TMM
 
         private void BtnBackToLauncher_Click(object s, RoutedEventArgs e) => Close();
         private void BtnCloseApp_Click(object s, RoutedEventArgs e) => Application.Current.Shutdown();
-        private void BtnMinimize_Click(object s, RoutedEventArgs e) => WindowState = WindowState.Minimized;
-        private void BtnMaximize_Click(object s, RoutedEventArgs e)
-            => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
         // ==========================================================
         // CONTEXT MENU
@@ -1568,7 +1559,7 @@ namespace TMM
         {
             var mod = GetSelectedMod();
             if (mod != null && Directory.Exists(mod.RawFolderPath))
-                OpenFolder(mod.RawFolderPath);
+                ShellHelper.OpenFolder(mod.RawFolderPath);
         }
 
         private GameProfile ResolveProfileFromContextMenu(RoutedEventArgs e)
@@ -1584,7 +1575,7 @@ namespace TMM
             var profile = ResolveProfileFromContextMenu(e);
             string? path = _core.GetVanillaPath(profile);
             if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
-                OpenFolder(path);
+                ShellHelper.OpenFolder(path);
             else
                 MessageBox.Show($"Base game folder for {profile.DisplayName} is not set or doesn't exist.",
                     "Folder Not Found", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -1595,7 +1586,7 @@ namespace TMM
             var profile = ResolveProfileFromContextMenu(e);
             string backupDir = Path.Combine(_core.BackupsPath, profile.Key);
             Directory.CreateDirectory(backupDir);
-            OpenFolder(backupDir);
+            ShellHelper.OpenFolder(backupDir);
         }
 
         private void MenuOpenModsFolder_Click(object s, RoutedEventArgs e)
@@ -1603,11 +1594,9 @@ namespace TMM
             var profile = ResolveProfileFromContextMenu(e);
             string path = Path.Combine(_core.AppDataPath, profile.RawFolderName);
             Directory.CreateDirectory(path);
-            OpenFolder(path);
+            ShellHelper.OpenFolder(path);
         }
 
-        private static void OpenFolder(string path) =>
-            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true, Verb = "open" });
 
         private void MenuProperties_Click(object s, RoutedEventArgs e)
         {
@@ -1664,11 +1653,6 @@ namespace TMM
                 : l.OrderBy(m => m.Name).ToList();
             l.Clear();
             foreach (var i in sorted) l.Add(i);
-        }
-
-        private void TitleBar_MouseDown(object s, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left) DragMove();
         }
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)

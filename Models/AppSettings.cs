@@ -28,8 +28,7 @@ namespace TMM
         // Track which custom games exist (for cleanup and initialization)
         public List<string> CustomGameKeys { get; set; } = new();
 
-        public bool FirstLaunch   { get; set; } = true;
-        public bool DebugStaging  { get; set; } = false;
+        public bool FirstLaunch { get; set; } = true;
 
         // ── Colors ──────────────────────────────────────────────────────────
         public string AccentColor   { get; set; } = "#0883FF";

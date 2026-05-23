@@ -1,4 +1,4 @@
-<Window x:Class="TMM.InitialSetupWindow"
+<local:TmmWindow x:Class="TMM.InitialSetupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TMM"
@@ -77,4 +77,4 @@
             </Border>
         </Grid>
     </Border>
-</Window>
+</local:TmmWindow>

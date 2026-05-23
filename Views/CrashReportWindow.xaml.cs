@@ -1,10 +1,9 @@
 using System;
 using System.Windows;
-using System.Windows.Input;
 
 namespace TMM
 {
-    public partial class CrashReportWindow : Window
+    public partial class CrashReportWindow : TmmWindow
     {
         private readonly string _fullText;
 
@@ -29,11 +28,5 @@ namespace TMM
             catch { /* clipboard unavailable — silent */ }
         }
 
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
-
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left) DragMove();
-        }
     }
 }

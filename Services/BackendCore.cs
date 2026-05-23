@@ -7,13 +7,11 @@
 //   GAME PATH ACCESS  (GetVanillaPath, SetVanillaPath, IsGameReady) ~146
 //   GAME DETECTION
 //     QuickScan() ................................................. ~162
-//     DeepScanDrives() ............................................ ~198
 //     ScanForExe() ................................................ ~226
 //   GAME STATUS & EXE VERIFICATION
 //     VerifyGameStatusAsync() ..................................... ~263
 //     HasExeModOverride() ......................................... ~296
 //     FindExeInMod() .............................................. ~306
-//     SmartSteamLaunch() .......................................... ~330
 //     GetFileMD5Async() / GetEffectiveMd5Async() ................. ~352
 //     GetMd5DiagnosticsAsync() .................................... ~389
 //   MOD LIST LOAD/SAVE
@@ -21,7 +19,7 @@
 //   DOWNLOAD CACHE
 //     DownloadCachePath / WipeDownloadCache() ..................... ~490
 //     GetDriveSpaceInfo() / FormatBytes() ......................... ~501
-//   BACKUP / ROLLBACK
+//   BACKUP / ROLLBACK (3-deep snapshots)
 //     BackupsPath ................................................. ~522
 //     GetRollbackManifests() ...................................... ~524
 //     RollbackDeployAsync() ....................................... ~545
@@ -30,7 +28,6 @@
 //     DeployModsAsync() ........................................... ~605
 //     DeployCustomGameModsAsync() ................................. ~640
 //     DeployFilesToGameDirAsync() ................................. ~675
-//     CopyDirectoryParallelAsync() ................................ ~740
 //     ForceDeleteDirectory() ...................................... ~795
 //     CopyDirectory() (sync fallback) ............................ ~820
 //   ARCHIVE EXTRACTION
@@ -323,26 +320,6 @@ namespace TMM
             Log("--- Quick Scan Finished ---");
         }
 
-        public void DeepScanDrives()
-        {
-            Log("--- Starting Deep Scan (Recursive) ---");
-
-            foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady && d.DriveType == DriveType.Fixed))
-            {
-                foreach (var profile in GameProfile.All)
-                {
-                    if (!string.IsNullOrEmpty(GetVanillaPath(profile))) continue;
-
-                    Log($"Deep searching {drive.Name} for {profile.Key}...");
-                    string found = RecursiveSearch(drive.RootDirectory.FullName, profile.ExeName, 0);
-                    if (!string.IsNullOrEmpty(found))
-                        Settings.GamePaths[profile.Key] = found;
-                }
-            }
-            SaveSettings();
-            Log("--- Deep Scan Finished ---");
-        }
-
         private string ScanForExe(string root, string exeName)
         {
             try
@@ -359,28 +336,6 @@ namespace TMM
                 }
             }
             catch (Exception ex) { Log($"Skip folder {root}: {ex.Message}"); }
-            return "";
-        }
-
-        private string RecursiveSearch(string currentDir, string targetExe, int depth)
-        {
-            if (depth > 4) return ""; // bound for sanity / speed
-
-            try
-            {
-                if (File.Exists(Path.Combine(currentDir, targetExe))) return currentDir;
-
-                foreach (var dir in Directory.GetDirectories(currentDir))
-                {
-                    if (dir.Contains("$RECYCLE.BIN") ||
-                        dir.Contains("System Volume Information") ||
-                        dir.Contains("Windows")) continue;
-
-                    string result = RecursiveSearch(dir, targetExe, depth + 1);
-                    if (!string.IsNullOrEmpty(result)) return result;
-                }
-            }
-            catch { /* permission errors are expected at root */ }
             return "";
         }
 
@@ -466,28 +421,6 @@ namespace TMM
                 }
             }
             return null;
-        }
-
-        public void SmartSteamLaunch(GameProfile profile)
-        {
-            string? path = GetVanillaPath(profile);
-            bool isGhost = !string.IsNullOrEmpty(path) &&
-                           (!Directory.Exists(path) || Directory.GetFileSystemEntries(path).Length == 0);
-
-            if (isGhost)
-            {
-                var result = MessageBox.Show(
-                    $"TMM detected a 'Ghost Install' for {profile.DisplayName}.\n\n" +
-                    "Steam thinks the game is installed, but the folder is missing or empty. " +
-                    "Would you like to launch Steam Validation to fix the directory?",
-                    "Ghost Install Detected", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-
-                if (result == MessageBoxResult.Yes) SteamLauncher.Validate(profile, Log);
-            }
-            else
-            {
-                SteamLauncher.Install(profile, Log);
-            }
         }
 
         private static async Task<string> GetFileMD5Async(string filePath)
@@ -735,7 +668,7 @@ namespace TMM
             Log($"[Rollback:{manifest.GameKey}] Done.");
         }
 
-        private void PruneOldBackups(string gameKey, int keepCount = 5)
+        private void PruneOldBackups(string gameKey, int keepCount = 3)
         {
             string gameBackupDir = Path.Combine(BackupsPath, gameKey);
             if (!Directory.Exists(gameBackupDir)) return;
@@ -942,60 +875,6 @@ namespace TMM
             PruneOldBackups(gameKey);
             int backedUp = entries.Count(e => e.BackupFilePath != null);
             Log($"[Deploy:{gameKey}] Done - {done} files written, {backedUp} backed up, manifest saved.");
-        }
-
-        /// <summary>
-        /// Parallel async file copy. Up to 4 files in flight at once. Real
-        /// async I/O (FileStream with useAsync=true), CopyToAsync, cancellation,
-        /// and per-file progress reporting.
-        /// </summary>
-        private static async Task CopyDirectoryParallelAsync(
-            string sourceDir,
-            string destDir,
-            bool overwrite,
-            IProgress<DeploymentProgress>? progress,
-            CancellationToken ct)
-        {
-            if (!Directory.Exists(sourceDir)) return;
-            Directory.CreateDirectory(destDir);
-
-            var files = Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories).ToList();
-            int total = files.Count;
-            int processed = 0;
-
-            await Parallel.ForEachAsync(
-                files,
-                new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct },
-                async (file, token) =>
-                {
-                    string rel = Path.GetRelativePath(sourceDir, file);
-                    string targetFile = Path.Combine(destDir, rel);
-                    string? targetSubDir = Path.GetDirectoryName(targetFile);
-                    if (!string.IsNullOrEmpty(targetSubDir)) Directory.CreateDirectory(targetSubDir);
-
-                    if (!overwrite && File.Exists(targetFile))
-                    {
-                        Interlocked.Increment(ref processed);
-                        return;
-                    }
-
-                    // Strip read-only on overwrite targets (mod files often inherit it from archives).
-                    if (overwrite && File.Exists(targetFile))
-                    {
-                        try { File.SetAttributes(targetFile, FileAttributes.Normal); }
-                        catch { /* best effort */ }
-                    }
-
-                    await using var src = new FileStream(file, FileMode.Open, FileAccess.Read,
-                        FileShare.Read, 81920, useAsync: true);
-                    await using var dst = new FileStream(targetFile, FileMode.Create, FileAccess.Write,
-                        FileShare.None, 81920, useAsync: true);
-                    await src.CopyToAsync(dst, token);
-
-                    int done = Interlocked.Increment(ref processed);
-                    if (done % 20 == 0 || done == total)
-                        progress?.Report(new($"Copying file {done}/{total}", done, total));
-                });
         }
 
         /// <summary>

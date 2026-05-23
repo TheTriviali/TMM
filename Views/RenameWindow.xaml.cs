@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace TMM
 {
-    public partial class RenameWindow : Window
+    public partial class RenameWindow : TmmWindow
     {
         public string NewName { get; private set; } = "";
 
@@ -31,9 +31,5 @@ namespace TMM
             DialogResult = false; Close();
         }
 
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left) DragMove();
-        }
     }
 }

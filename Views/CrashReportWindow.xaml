@@ -1,6 +1,7 @@
-<Window x:Class="TMM.CrashReportWindow"
+<local:TmmWindow x:Class="TMM.CrashReportWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TMM"
         Title="TMM — Unexpected Error"
         Height="340" Width="520"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
@@ -64,4 +65,4 @@
             </Border>
         </Grid>
     </Border>
-</Window>
+</local:TmmWindow>

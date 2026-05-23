@@ -35,6 +35,12 @@ namespace TMM
         private readonly Dictionary<string, (CustomGameProfile config, GameProfile profile)> _customGames = new();
         private string _customGamesPath = "";
         private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
+        private static readonly JsonSerializerOptions TmmGameOpts = new()
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
 
         private GameRegistry()
         {
@@ -183,6 +189,55 @@ namespace TMM
         public async Task ReloadCustomGamesAsync()
         {
             await LoadCustomGamesAsync();
+        }
+
+        /// <summary>Export a CustomGameProfile to a .tmmgame file (camelCase JSON).</summary>
+        public static async Task ExportConfigAsync(CustomGameProfile config, string destPath)
+        {
+            var export = new TmmGameExport
+            {
+                GameName          = config.GameName,
+                GameDirectory     = config.GameDirectory.Replace('\\', '/'),
+                ExePath           = config.ExePath?.Replace('\\', '/'),
+                SteamAppId        = config.SteamAppId,
+                ModFileTypes      = config.ModFileTypes,
+                OutputDirectories = config.OutputDirectories.Count > 0 ? config.OutputDirectories : null,
+                ConditionalRoutes = config.ConditionalRoutes.Count > 0 ? config.ConditionalRoutes : null,
+                InstallerHints    = config.InstallerHints,
+                LauncherCard      = config.LauncherCard,
+                Description       = config.Description,
+                Author            = config.Author,
+                Version           = config.Version,
+            };
+            var json = JsonSerializer.Serialize(export, TmmGameOpts);
+            await File.WriteAllTextAsync(destPath, json);
+        }
+
+        /// <summary>
+        /// Import a .tmmgame file. Returns a CustomGameProfile ready for AddCustomGameAsync.
+        /// Does NOT add it to the registry — caller decides whether to add or just preview.
+        /// </summary>
+        public static async Task<CustomGameProfile> ImportGameConfigAsync(string sourcePath)
+        {
+            var json = await File.ReadAllTextAsync(sourcePath);
+            var export = JsonSerializer.Deserialize<TmmGameExport>(json, TmmGameOpts)
+                ?? throw new InvalidDataException("Invalid .tmmgame file");
+
+            return new CustomGameProfile
+            {
+                GameName          = export.GameName ?? Path.GetFileNameWithoutExtension(sourcePath),
+                GameDirectory     = export.GameDirectory,
+                ExePath           = export.ExePath,
+                SteamAppId        = export.SteamAppId,
+                ModFileTypes      = export.ModFileTypes ?? ".rar, .zip, .7z",
+                OutputDirectories = export.OutputDirectories ?? new(),
+                ConditionalRoutes = export.ConditionalRoutes ?? new(),
+                InstallerHints    = export.InstallerHints,
+                LauncherCard      = export.LauncherCard,
+                Description       = export.Description,
+                Author            = export.Author,
+                Version           = export.Version,
+            };
         }
 
         /// <summary>Convert a CustomGameProfile to a GameProfile.</summary>

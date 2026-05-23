@@ -1,4 +1,4 @@
-<Window x:Class="TMM.GameLauncherWindow"
+<local:TmmWindow x:Class="TMM.GameLauncherWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:TMM"
@@ -7,7 +7,8 @@
         Height="520" Width="760"
         MinHeight="440" MinWidth="600"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
-        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded"
+        AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">
 
     <Window.Resources>
         <!-- Game card style -->
@@ -70,6 +71,33 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="#22FFFFFF"/>
                                 <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HeaderActionBtn" TargetType="Button">
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding"         Value="10,6"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#22FFFFFF"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#33FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -178,17 +206,47 @@
                     </StackPanel>
 
                     <!-- Top-right actions -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button x:Name="btnReset" Style="{StaticResource SmallIconBtn}"
-                                Content="&#xE72C;" ToolTip="Reset / Clear Cache"
-                                Padding="6" Click="BtnReset_Click"
-                                Foreground="#FF8888"/>
-                        <Button x:Name="btnSettings" Style="{StaticResource SmallIconBtn}"
-                                Content="&#xE713;" ToolTip="Settings"
-                                Padding="6" Click="BtnSettings_Click"/>
-                        <Button x:Name="btnAbout" Style="{StaticResource SmallIconBtn}"
-                                Content="&#xE946;" ToolTip="About"
-                                Padding="6" Click="BtnAbout_Click"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="btnImportGame" Style="{StaticResource HeaderActionBtn}"
+                                ToolTip="Import .tmmgame config file" Click="BtnImportTmmgame_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8B5;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="13" VerticalAlignment="Center" Margin="0,0,5,0"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                <TextBlock Text="Import" FontSize="11" VerticalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="btnReset" Style="{StaticResource HeaderActionBtn}"
+                                ToolTip="Reset / Clear Cache" Click="BtnReset_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="13" VerticalAlignment="Center" Margin="0,0,5,0"
+                                           Foreground="#FF8888"/>
+                                <TextBlock Text="Reset" FontSize="11" VerticalAlignment="Center"
+                                           Foreground="#FF8888"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="btnSettings" Style="{StaticResource HeaderActionBtn}"
+                                ToolTip="Settings" Click="BtnSettings_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="13" VerticalAlignment="Center" Margin="0,0,5,0"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                <TextBlock Text="Settings" FontSize="11" VerticalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="btnAbout" Style="{StaticResource HeaderActionBtn}"
+                                ToolTip="About" Click="BtnAbout_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="13" VerticalAlignment="Center" Margin="0,0,5,0"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                <TextBlock Text="About" FontSize="11" VerticalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Grid>
 
@@ -209,4 +267,4 @@
             </Grid>
         </Grid>
     </Border>
-</Window>
+</local:TmmWindow>

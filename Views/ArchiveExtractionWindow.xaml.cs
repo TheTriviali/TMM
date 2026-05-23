@@ -4,7 +4,7 @@ using System.Windows;
 
 namespace TMM
 {
-    public partial class ArchiveExtractionWindow : Window
+    public partial class ArchiveExtractionWindow : TmmWindow
     {
         private readonly BackendCore _core;
         public List<string> SelectedTargets { get; } = new();
@@ -67,11 +67,6 @@ namespace TMM
 
             DialogResult = true;
             Close();
-        }
-
-        private void TitleBar_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == System.Windows.Input.MouseButton.Left) DragMove();
         }
 
         private void BtnCancel_Click(object sender, RoutedEventArgs e) => Close();

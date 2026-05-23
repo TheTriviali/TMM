@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -50,43 +51,89 @@ namespace TMM
 
     // ── Window ────────────────────────────────────────────────────────────────────
 
-    public partial class CustomGameConfigWindow : Window
+    public partial class CustomGameConfigWindow : TmmWindow
     {
         public CustomGameProfile? Result { get; private set; }
         private readonly bool _isEdit;
         private readonly ObservableCollection<MappingRow>   _mappings   = new();
         private readonly ObservableCollection<CondRouteRow> _condRoutes = new();
 
-        public CustomGameConfigWindow(CustomGameProfile? existing)
+        public CustomGameConfigWindow(CustomGameProfile? existing, bool isTemplate = false)
         {
-            _isEdit = existing != null;
+            _isEdit = existing != null && !isTemplate;
             InitializeComponent();
             dgMappings.ItemsSource    = _mappings;
             icCondRoutes.ItemsSource  = _condRoutes;
             _condRoutes.CollectionChanged += (_, _) => UpdateEmptyState();
 
-            if (_isEdit && existing != null)
+            if (existing != null)
             {
-                txtWindowTitle.Text = "Edit Custom Game";
-                btnSave.Content     = "Update";
-                txtGameName.Text    = existing.GameName;
-                txtGameDir.Text     = existing.GameDirectory;
-                txtExePath.Text     = existing.ExePath ?? "";
-                txtFileTypes.Text   = existing.ModFileTypes;
-                txtSteamAppId.Text  = existing.SteamAppId ?? "";
-
-                foreach (var kvp in existing.OutputDirectories)
-                    _mappings.Add(new MappingRow { Extension = kvp.Key, OutputFolder = kvp.Value });
-
-                foreach (var cr in existing.ConditionalRoutes)
-                    _condRoutes.Add(new CondRouteRow
-                    {
-                        Extension      = cr.Extension,
-                        CheckSubdir    = cr.CheckSubdir,
-                        RouteIfExists  = cr.RouteIfExists,
-                        RouteIfMissing = cr.RouteIfMissing
-                    });
+                txtWindowTitle.Text = isTemplate ? "Import Game Config" : "Edit Custom Game";
+                if (!isTemplate) btnSave.Content = "Update";
+                PopulateFormFromConfig(existing);
             }
+        }
+
+        private void PopulateFormFromConfig(CustomGameProfile config)
+        {
+            txtGameName.Text   = config.GameName;
+            txtGameDir.Text    = config.GameDirectory;
+            txtExePath.Text    = config.ExePath ?? "";
+            txtFileTypes.Text  = config.ModFileTypes;
+            txtSteamAppId.Text = config.SteamAppId ?? "";
+            _mappings.Clear();
+            _condRoutes.Clear();
+
+            foreach (var kvp in config.OutputDirectories)
+                _mappings.Add(new MappingRow { Extension = kvp.Key, OutputFolder = kvp.Value });
+
+            foreach (var cr in config.ConditionalRoutes)
+                _condRoutes.Add(new CondRouteRow
+                {
+                    Extension      = cr.Extension,
+                    CheckSubdir    = cr.CheckSubdir,
+                    RouteIfExists  = cr.RouteIfExists,
+                    RouteIfMissing = cr.RouteIfMissing
+                });
+        }
+
+        private CustomGameProfile? BuildCurrentProfile()
+        {
+            string name = txtGameName.Text.Trim();
+            string dir  = txtGameDir.Text.Trim();
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(dir)) return null;
+
+            var outputDirs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in _mappings)
+            {
+                string ext    = row.Extension.Trim().ToLowerInvariant();
+                string folder = string.IsNullOrWhiteSpace(row.OutputFolder) ? "." : row.OutputFolder.Trim();
+                if (!string.IsNullOrEmpty(ext) && ext != ".ext" && ext.StartsWith("."))
+                    outputDirs[ext] = folder;
+            }
+
+            var condRoutes = new List<ConditionalRoute>();
+            foreach (var r in _condRoutes)
+            {
+                string ext = r.Extension.Trim();
+                string sub = r.CheckSubdir.Trim();
+                if (string.IsNullOrWhiteSpace(ext) || string.IsNullOrWhiteSpace(sub)) continue;
+                condRoutes.Add(new ConditionalRoute(
+                    ext.ToLowerInvariant(), sub,
+                    string.IsNullOrWhiteSpace(r.RouteIfExists)  ? "." : r.RouteIfExists.Trim(),
+                    string.IsNullOrWhiteSpace(r.RouteIfMissing) ? "." : r.RouteIfMissing.Trim()));
+            }
+
+            return new CustomGameProfile
+            {
+                GameName          = name,
+                GameDirectory     = dir,
+                ExePath           = string.IsNullOrWhiteSpace(txtExePath.Text) ? null : txtExePath.Text.Trim(),
+                SteamAppId        = string.IsNullOrWhiteSpace(txtSteamAppId.Text) ? null : txtSteamAppId.Text.Trim(),
+                ModFileTypes      = string.IsNullOrWhiteSpace(txtFileTypes.Text) ? ".zip, .rar, .7z" : txtFileTypes.Text.Trim(),
+                OutputDirectories = outputDirs,
+                ConditionalRoutes = condRoutes
+            };
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -214,6 +261,64 @@ namespace TMM
             foreach (var r in rules) _condRoutes.Add(r);
         }
 
+        // ── Import / Export ───────────────────────────────────────────────────────
+
+        private async void BtnImportConfig_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog
+            {
+                Title  = "Import .tmmgame Config",
+                Filter = "TMM Game Config (*.tmmgame)|*.tmmgame|All Files (*.*)|*.*"
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                var config = await GameRegistry.ImportGameConfigAsync(dlg.FileName);
+                PopulateFormFromConfig(config);
+                txtWindowTitle.Text = "Import Game Config";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to import config:\n{ex.Message}", "Import Failed",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void BtnExportConfig_Click(object sender, RoutedEventArgs e)
+        {
+            dgMappings.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
+            var config = BuildCurrentProfile();
+            if (config == null)
+            {
+                MessageBox.Show("Please fill in at least a Game Name and Game Directory before exporting.",
+                    "Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string safeName = string.Join("_", config.GameName.Split(System.IO.Path.GetInvalidFileNameChars()));
+            var dlg = new SaveFileDialog
+            {
+                Title      = "Export .tmmgame Config",
+                Filter     = "TMM Game Config (*.tmmgame)|*.tmmgame",
+                FileName   = safeName,
+                DefaultExt = ".tmmgame"
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                await GameRegistry.ExportConfigAsync(config, dlg.FileName);
+                MessageBox.Show($"Exported to:\n{dlg.FileName}", "Export Complete",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to export config:\n{ex.Message}", "Export Failed",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         // ── Save / Cancel ─────────────────────────────────────────────────────────
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -326,11 +431,7 @@ namespace TMM
         }
 
         private void BtnCancel_Click(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }
-        private void BtnClose_Click(object sender, RoutedEventArgs e)  { DialogResult = false; Close(); }
+        private new void BtnClose_Click(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }
 
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left) DragMove();
-        }
     }
 }

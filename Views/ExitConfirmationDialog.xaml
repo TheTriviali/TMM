@@ -1,6 +1,7 @@
-﻿<Window x:Class="TMM.ExitConfirmationDialog"
+﻿<local:TmmWindow x:Class="TMM.ExitConfirmationDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TMM"
         Title="Exit TMM" Height="180" Width="360"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
@@ -49,4 +50,4 @@
             </StackPanel>
         </StackPanel>
     </Border>
-</Window>
+</local:TmmWindow>
