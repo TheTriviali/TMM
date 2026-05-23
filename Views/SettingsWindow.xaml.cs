@@ -7,11 +7,13 @@ using System.Windows.Input;
 
 namespace TMM
 {
+    public enum SettingsContext { Full, GtaIvOnly, CustomGame }
+
     public partial class SettingsWindow : Window
     {
         private readonly BackendCore _core;
 
-        public SettingsWindow(BackendCore core)
+        public SettingsWindow(BackendCore core, SettingsContext context = SettingsContext.Full)
         {
             _core = core;
             InitializeComponent();
@@ -22,6 +24,31 @@ namespace TMM
             rowIV.ShowActions    = false; rowIV.Bind(_core,    GameProfile.IV);
             rowTLaD.ShowActions  = false; rowTLaD.Bind(_core,  GameProfile.TLaD);
             rowTBoGT.ShowActions = false; rowTBoGT.Bind(_core, GameProfile.TBoGT);
+
+            ApplyContext(context);
+        }
+
+        private void ApplyContext(SettingsContext context)
+        {
+            if (context == SettingsContext.CustomGame)
+            {
+                pnlGtaIII.Visibility      = Visibility.Collapsed;
+                pnlGtaIV.Visibility       = Visibility.Collapsed;
+                pnlSteamControls.Visibility = Visibility.Collapsed;
+                btnMd5.Visibility          = Visibility.Collapsed;
+                // Shrink window since most content is hidden
+                gridDiagnostics.Columns = 3;
+                Height = 280;
+            }
+            else if (context == SettingsContext.GtaIvOnly)
+            {
+                pnlGtaIII.Visibility = Visibility.Collapsed;
+                // Scope Steam Controls and MD5 to IV games only
+                cmbItemIII.Visibility = Visibility.Collapsed;
+                cmbItemVC.Visibility  = Visibility.Collapsed;
+                cmbItemSA.Visibility  = Visibility.Collapsed;
+                cmbSteamGame.SelectedIndex = 0; // selects IV (first visible item)
+            }
         }
 
         private void BtnRerunSetup_Click(object sender, RoutedEventArgs e)

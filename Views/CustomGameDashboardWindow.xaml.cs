@@ -18,7 +18,7 @@ namespace TMM
     {
         private readonly BackendCore _core;
         private readonly GameProfile _profile;
-        private readonly CustomGameProfile _config;
+        private CustomGameProfile _config;
 
         private readonly ObservableCollection<ModItem> _mods;
         private bool _hasPendingChanges = true;
@@ -336,9 +336,25 @@ namespace TMM
 
         // ── Settings ──────────────────────────────────────────────────────────
 
+        private async void BtnEditConfig_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new CustomGameConfigWindow(_config) { Owner = this };
+            if (dlg.ShowDialog() != true || dlg.Result == null) return;
+
+            await GameRegistry.Instance.UpdateCustomGameAsync(_profile.Key, dlg.Result);
+            _config = dlg.Result;
+
+            Title = "TMM — " + _config.GameName;
+            txtGameTitle.Text = " — " + _config.GameName;
+            btnLaunch.Visibility = string.IsNullOrEmpty(_config.ExePath)
+                ? Visibility.Collapsed : Visibility.Visible;
+
+            await RefreshAsync();
+        }
+
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
-            new SettingsWindow(_core) { Owner = this }.ShowDialog();
+            new SettingsWindow(_core, SettingsContext.CustomGame) { Owner = this }.ShowDialog();
             ThemeEngine.ApplyTheme(_core.Settings);
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);

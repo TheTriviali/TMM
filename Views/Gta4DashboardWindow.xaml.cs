@@ -312,7 +312,7 @@ namespace TMM
 
         private async void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
-            new SettingsWindow(_core) { Owner = this }.ShowDialog();
+            new SettingsWindow(_core, SettingsContext.GtaIvOnly) { Owner = this }.ShowDialog();
             ThemeEngine.ApplyTheme(_core.Settings);
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);

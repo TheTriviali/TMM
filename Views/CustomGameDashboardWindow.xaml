@@ -166,6 +166,13 @@
 
                     <Separator Width="1" Height="20" Background="#33FFFFFF" Margin="4,0"/>
 
+                    <!-- Edit game config -->
+                    <Button Content="&#xE70F;" ToolTip="Edit game configuration"
+                            Style="{DynamicResource IconButtonStyle}" Padding="7,4" Margin="2,0"
+                            Click="BtnEditConfig_Click"/>
+
+                    <Separator Width="1" Height="20" Background="#33FFFFFF" Margin="4,0"/>
+
                     <Button x:Name="btnInstallMod" Content="&#xE8F4;" ToolTip="Install Mod (Ctrl+O)"
                             Style="{DynamicResource IconButtonStyle}" Padding="7,4" Margin="2,0"
                             Click="BtnInstallMod_Click"/>

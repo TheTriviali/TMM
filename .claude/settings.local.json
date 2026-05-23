@@ -20,7 +20,15 @@
       "Bash(python3 -c ' *)",
       "Bash(python fix_emoji2.py)",
       "Bash(del fix_emoji.py fix_emoji2.py)",
-      "Bash(start \"\" \"bin\\\\Debug\\\\net10.0-windows\\\\TMM.exe\")"
+      "Bash(start \"\" \"bin\\\\Debug\\\\net10.0-windows\\\\TMM.exe\")",
+      "Bash(Start-Process -FilePath \"C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tgtamm\\\\TGTAMM\\\\bin\\\\Release\\\\net10.0-windows\\\\TMM.exe\" -NoNewWindow)",
+      "Bash(Start-Sleep -Seconds 3)",
+      "Bash(Write-Output \"Application launched successfully\")",
+      "PowerShell(Start-Process -FilePath \"C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tgtamm\\\\TGTAMM\\\\bin\\\\Release\\\\net10.0-windows\\\\TMM.exe\" -NoNewWindow)",
+      "Bash(git merge feature/v2-direct-deploy-multi-game --no-ff -m ' *)",
+      "Bash(git branch *)",
+      "Bash(git stash *)",
+      "Bash(dotnet run *)"
     ]
   }
 }

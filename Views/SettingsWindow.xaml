@@ -39,27 +39,32 @@
             <!-- Content -->
             <StackPanel Grid.Row="1" Margin="18,14,18,0">
 
-                <!-- Game Paths -->
-                <TextBlock Text="GTA III Series" FontSize="13" FontWeight="SemiBold"
-                           Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
-                <local:GameSetupRow x:Name="rowIII"/>
-                <local:GameSetupRow x:Name="rowVC"/>
-                <local:GameSetupRow x:Name="rowSA"/>
+                <!-- GTA III Series paths -->
+                <StackPanel x:Name="pnlGtaIII">
+                    <TextBlock Text="GTA III Series" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+                    <local:GameSetupRow x:Name="rowIII"/>
+                    <local:GameSetupRow x:Name="rowVC"/>
+                    <local:GameSetupRow x:Name="rowSA"/>
+                    <Border Height="1" Background="{DynamicResource SubTextBrush}" Opacity="0.15" Margin="0,8,0,10"/>
+                </StackPanel>
 
-                <Border Height="1" Background="{DynamicResource SubTextBrush}" Opacity="0.15" Margin="0,8,0,10"/>
-                <TextBlock Text="GTA IV — Complete Edition" FontSize="13" FontWeight="SemiBold"
-                           Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
-                <local:GameSetupRow x:Name="rowIV"/>
-                <local:GameSetupRow x:Name="rowTLaD"/>
-                <local:GameSetupRow x:Name="rowTBoGT"/>
+                <!-- GTA IV paths -->
+                <StackPanel x:Name="pnlGtaIV">
+                    <TextBlock Text="GTA IV — Complete Edition" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+                    <local:GameSetupRow x:Name="rowIV"/>
+                    <local:GameSetupRow x:Name="rowTLaD"/>
+                    <local:GameSetupRow x:Name="rowTBoGT"/>
+                    <Button Content="Run Initial Setup Wizard" Click="BtnRerunSetup_Click"
+                            Height="28" Background="{DynamicResource PanelBrush}"
+                            Foreground="{DynamicResource AccentBrush}"
+                            BorderThickness="0" Cursor="Hand" Margin="0,8,0,10" FontSize="12"/>
+                </StackPanel>
 
-                <Button Content="Run Initial Setup Wizard" Click="BtnRerunSetup_Click"
-                        Height="28" Background="{DynamicResource PanelBrush}"
-                        Foreground="{DynamicResource AccentBrush}"
-                        BorderThickness="0" Cursor="Hand" Margin="0,8,0,10" FontSize="12"/>
-
-                <!-- Steam Controls -->
-                <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                <!-- Steam Controls (GTA only) -->
+                <Border x:Name="pnlSteamControls"
+                        BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
                         Padding="0,10,0,0" Margin="0,0,0,10">
                     <StackPanel>
                         <Grid Margin="0,0,0,8">
@@ -73,10 +78,10 @@
                                       Background="{DynamicResource ControlBgBrush}"
                                       Foreground="{DynamicResource TextBrush}"
                                       BorderThickness="0" Padding="6,3">
-                                <ComboBoxItem Content="GTA III"        Tag="III"/>
-                                <ComboBoxItem Content="GTA Vice City"  Tag="VC"/>
-                                <ComboBoxItem Content="GTA San Andreas" Tag="SA"/>
-                                <ComboBoxItem Content="GTA IV"         Tag="IV"/>
+                                <ComboBoxItem x:Name="cmbItemIII"  Content="GTA III"         Tag="III"/>
+                                <ComboBoxItem x:Name="cmbItemVC"   Content="GTA Vice City"   Tag="VC"/>
+                                <ComboBoxItem x:Name="cmbItemSA"   Content="GTA San Andreas"  Tag="SA"/>
+                                <ComboBoxItem x:Name="cmbItemIV"   Content="GTA IV"           Tag="IV"/>
                             </ComboBox>
                         </Grid>
                         <UniformGrid Columns="3">
@@ -100,8 +105,8 @@
                     <StackPanel>
                         <TextBlock Text="Diagnostics" FontSize="13" FontWeight="SemiBold"
                                    Foreground="#FF88EE" Margin="0,0,0,8"/>
-                        <UniformGrid Columns="4">
-                            <Button Content="MD5" Click="BtnMd5Check_Click"
+                        <UniformGrid x:Name="gridDiagnostics" Columns="4">
+                            <Button x:Name="btnMd5" Content="MD5" Click="BtnMd5Check_Click"
                                     Height="26" Margin="0,0,3,0" Background="{DynamicResource PanelBrush}"
                                     Foreground="{DynamicResource AccentBrush}" BorderThickness="0" Cursor="Hand"
                                     ToolTip="Check exe MD5 - modlist exe mod overrides vanilla if present"/>
