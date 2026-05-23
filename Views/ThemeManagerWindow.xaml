@@ -185,38 +185,16 @@
                     <TextBlock Text="Control Style" Foreground="{DynamicResource SubTextBrush}" FontSize="12" Margin="0,0,0,3"/>
                     <ComboBox x:Name="cmbTheme" SelectionChanged="ModularSetting_Changed"
                               Margin="0,0,0,8">
-                        <ComboBoxItem Content="Windows 7 (True Aero)" Tag="Win7"/>
-                        <ComboBoxItem Content="Windows 8/10 (Modern)" Tag="Win8"/>
-                        <ComboBoxItem Content="Windows 9x (Classic)" Tag="Win9x"/>
-                        <ComboBoxItem Content="macOS Dark" Tag="macOS"/>
-                        <ComboBoxItem Content="macOS Light" Tag="macOSLight"/>
-                        <ComboBoxItem Content="Vanilla Modern" Tag="Vanilla"/>
+                        <ComboBoxItem Content="Vanilla (W11)" Tag="Vanilla"/>
                         <ComboBoxItem Content="Compact / Inline" Tag="Compact"/>
                     </ComboBox>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Color Palette" Foreground="{DynamicResource SubTextBrush}" FontSize="12" Margin="0,0,0,3"/>
-                            <ComboBox x:Name="cmbColor" SelectionChanged="ModularSetting_Changed">
-                                <ComboBoxItem Content="Dark Mode" Tag="Dark"/>
-                                <ComboBoxItem Content="Light Mode" Tag="Light"/>
-                            </ComboBox>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Alignment" Foreground="{DynamicResource SubTextBrush}" FontSize="12" Margin="0,0,0,3"/>
-                            <ComboBox x:Name="cmbAlign" SelectionChanged="ModularSetting_Changed">
-                                <ComboBoxItem Content="Right Aligned" Tag="Right"/>
-                                <ComboBoxItem Content="Left Aligned" Tag="Left"/>
-                            </ComboBox>
-                        </StackPanel>
-                    </Grid>
-                    <CheckBox x:Name="chkPersonalize" Content="Personalize top bar with accent"
-                              Foreground="{DynamicResource TextBrush}" FontSize="12" Margin="0,0,0,8"
-                              Checked="ModularSetting_Changed" Unchecked="ModularSetting_Changed"/>
+                    <StackPanel Margin="0,0,0,8">
+                        <TextBlock Text="Color Palette" Foreground="{DynamicResource SubTextBrush}" FontSize="12" Margin="0,0,0,3"/>
+                        <ComboBox x:Name="cmbColor" SelectionChanged="ModularSetting_Changed">
+                            <ComboBoxItem Content="Dark Mode" Tag="Dark"/>
+                            <ComboBoxItem Content="Light Mode" Tag="Light"/>
+                        </ComboBox>
+                    </StackPanel>
 
                     <Border Height="1" Background="{DynamicResource SubTextBrush}" Opacity="0.2" Margin="0,0,0,10"/>
 

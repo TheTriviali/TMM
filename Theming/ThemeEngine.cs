@@ -6,20 +6,20 @@
 //       . Accent + AccentTextBrush + AccentLabelBrush ............. ~30
 //       . TextBrush + SubTextBrush ................................ ~39
 //       . BgBrush (with Mica alpha) ............................... ~60
-//       . PanelBrush + HeaderBrush (simplified, consistent) ....... ~64
+//       . PanelBrush + HeaderBrush ................................ ~64
 //       . ControlBgBrush + CheckeredRowBrush ...................... ~95
-//       . Titlebar brushes (Win8, macOS, Aero7, Win9x dark/light) ~120
-//     ApplyFont() ................................................. ~210
-//     TryApplyMica()  - DWM Mica/Acrylic backdrop ............... ~220
+//       . WindowBorderBrush ...................................... ~120
+//     ApplyFont() ................................................. ~130
+//     TryApplyMica()  - DWM Mica/Acrylic backdrop ............... ~140
 //   COMPLEMENTARY COLOUR GENERATION
-//     GetComplementPalette()  (Complementary/Triadic/...) ........ ~260
-//     SuggestAccentForBg()  - WCAG-optimised hue sweep ........... ~290
+//     GetComplementPalette()  (Complementary/Triadic/...) ........ ~180
+//     SuggestAccentForBg()  - WCAG-optimised hue sweep ........... ~210
 //   CONTRAST COLOUR ALGORITHMS
-//     GetContrastColor()  (WCAG | YIQ | Invert) ................. ~330
+//     GetContrastColor()  (WCAG | YIQ | Invert) ................. ~250
 //   HSV HELPERS  (public - shared with ThemeManagerWindow)
-//     HsvToRgb() / RgbToHsv() ................................... ~355
+//     HsvToRgb() / RgbToHsv() ................................... ~270
 //   INTERNAL HELPERS
-//     RelativeLuminance() / BlendColors() ........................ ~385
+//     RelativeLuminance() / BlendColors() ........................ ~300
 // -----------------------------------------------------------------
 
 using System;
@@ -160,113 +160,12 @@ namespace TMM
                         new SolidColorBrush(Color.FromRgb(72, 82, 100));
                 }
 
-                // -- Titlebar brushes ------------------------------------------
-                if (settings.TitlebarPersonalize)
-                {
-                    // Win8: accent-tinted, raised opacity for visibility
-                    Application.Current.Resources["Win8TitleBrush"] =
-                        new SolidColorBrush(Color.FromArgb(200, accent.R, accent.G, accent.B));
-                    // macOS Dark: very deep accent shadow
-                    Application.Current.Resources["MacTitleBrush"] =
-                        new SolidColorBrush(Color.FromArgb(238,
-                            (byte)Math.Round(accent.R * 0.10),
-                            (byte)Math.Round(accent.G * 0.10),
-                            (byte)Math.Round(accent.B * 0.10)));
-                }
-                else
-                {
-                    Application.Current.Resources["Win8TitleBrush"] =
-                        new SolidColorBrush(isDark
-                            ? Color.FromArgb(190, 22, 22, 24)
-                            : Color.FromArgb(190, 215, 220, 232));
-                    Application.Current.Resources["MacTitleBrush"] =
-                        new SolidColorBrush(isDark
-                            ? Color.FromArgb(238, 26, 26, 28)
-                            : Color.FromArgb(238, 238, 238, 242));
-                }
-
-                // Win7 Aero - gradient-like frosted glass. If personalize is on,
-                // tint with accent at low saturation for a subtle coloured glass look.
-                if (settings.TitlebarPersonalize)
-                {
-                    byte ar = (byte)Math.Round(accent.R * 0.25 + 100 * 0.75);
-                    byte ag = (byte)Math.Round(accent.G * 0.25 + 160 * 0.75);
-                    byte ab = (byte)Math.Round(accent.B * 0.25 + 200 * 0.75);
-                    Application.Current.Resources["Aero7TitleBrush"] =
-                        new SolidColorBrush(Color.FromArgb(90, ar, ag, ab));
-                }
-                else
-                {
-                    Application.Current.Resources["Aero7TitleBrush"] =
-                        new SolidColorBrush(Color.FromArgb(82, 120, 190, 240));
-                }
-
-                // macOS Light
-                Application.Current.Resources["MacLightTitleBrush"] =
-                    new SolidColorBrush(Color.FromArgb(255, 236, 236, 238));
-
                 // -- Window border -------------------------------------------------
                 Application.Current.Resources["WindowBorderBrush"] = settings.AccentBorderEnabled
                     ? new SolidColorBrush(accent)
                     : new SolidColorBrush(isDark
                         ? Color.FromArgb(60, 255, 255, 255)
                         : Color.FromArgb(80, 0, 0, 0));
-
-                // Win9x: classic gradient, adapted to dark/light mode
-                if (isDark)
-                {
-                    // Dark mode: deep blue gradient
-                    Application.Current.Resources["Win9xTitleStartColor"] = Color.FromRgb(10, 36, 106);
-                    Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(166, 202, 240);
-                }
-                else
-                {
-                    // Light mode: lighter blue gradient for visibility
-                    Application.Current.Resources["Win9xTitleStartColor"] = Color.FromRgb(50, 100, 180);
-                    Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(220, 230, 245);
-                }
-
-                // Windows XP Luna: blue gradient titlebar
-                if (settings.TitlebarPersonalize)
-                {
-                    // Luna blue with accent influence
-                    byte r = (byte)(0 * 0.7 + accent.R * 0.3);
-                    byte g = (byte)(120 * 0.7 + accent.G * 0.3);
-                    byte b = (byte)(215 * 0.7 + accent.B * 0.3);
-                    Application.Current.Resources["WinXPTitleBrush"] = new SolidColorBrush(Color.FromRgb(r, g, b));
-                }
-                else
-                {
-                    Application.Current.Resources["WinXPTitleBrush"] = new SolidColorBrush(Color.FromRgb(0, 120, 215));
-                }
-
-                // Windows 3.1: teal base, accent can influence hue
-                if (settings.TitlebarPersonalize)
-                {
-                    // Blend accent with classic teal
-                    byte r = (byte)(0 * 0.7 + accent.R * 0.3);
-                    byte g = (byte)(128 * 0.7 + accent.G * 0.3);
-                    byte b = (byte)(128 * 0.7 + accent.B * 0.3);
-                    Application.Current.Resources["Win31TitleBrush"] = new SolidColorBrush(Color.FromRgb(r, g, b));
-                }
-                else
-                {
-                    Application.Current.Resources["Win31TitleBrush"] = new SolidColorBrush(Color.FromRgb(0, 128, 128));
-                }
-
-                // Classic Mac OS 9: gray base, accent can influence tone
-                if (settings.TitlebarPersonalize)
-                {
-                    // Blend accent with classic gray
-                    byte r = (byte)(192 * 0.7 + accent.R * 0.3);
-                    byte g = (byte)(192 * 0.7 + accent.G * 0.3);
-                    byte b = (byte)(192 * 0.7 + accent.B * 0.3);
-                    Application.Current.Resources["MacOS9TitleBrush"] = new SolidColorBrush(Color.FromRgb(r, g, b));
-                }
-                else
-                {
-                    Application.Current.Resources["MacOS9TitleBrush"] = new SolidColorBrush(Color.FromRgb(192, 192, 192));
-                }
             }
             catch { /* invalid hex - keep previous theme */ }
         }

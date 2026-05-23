@@ -69,7 +69,6 @@ namespace TMM
         private bool _hasPendingChanges = true; // true on startup: game dir may not reflect current mod list
         private bool _needsDowngradeHelp = false;
         private bool _deployReady = false;
-        private bool _exitConfirmationShown = false; // Track if user has been asked about exit
 
         // ==========================================================
         // INIT
@@ -117,7 +116,6 @@ namespace TMM
             }
 
             await RefreshUIAsync();
-            ApplyToolbarLabels();
         }
 
         // ==========================================================
@@ -192,12 +190,8 @@ namespace TMM
             // (e.g., immediately after factory reset + process restart).
             if (Application.Current == null) return;
 
-            TitleBarBorder.Visibility = Visibility.Visible;
-            TitleBarBorder.Background = Brushes.Transparent;
-
-            // Win9x, Win31, and maximized both use square corners.
-            bool isSquare   = _core.Settings.TitlebarTheme == "Win9x" || _core.Settings.TitlebarTheme == "Win31";
-            bool squarify   = isSquare || WindowState == WindowState.Maximized;
+            // Maximized windows use square corners.
+            bool squarify = WindowState == WindowState.Maximized;
             MainWindowBorder.CornerRadius = squarify ? new CornerRadius(0) : new CornerRadius(10);
             TitleBarBorder.CornerRadius   = squarify ? new CornerRadius(0) : new CornerRadius(10, 10, 0, 0);
             if (MainWindowBorder.Child is Border innerBorder)
@@ -207,136 +201,26 @@ namespace TMM
                     maskBorder.CornerRadius = squarify ? new CornerRadius(0) : new CornerRadius(11);
             }
 
-            var containers = new[] { MacControls, VanillaControls, Win8Controls, Win7Controls,
-                                     Win9xControls, MacLightControls, CompactControls };
-            foreach (var c in containers) c.Visibility = Visibility.Collapsed;
+            // Hide both control groups, then show the right one.
+            VanillaControls.Visibility  = Visibility.Collapsed;
+            CompactControls.Visibility  = Visibility.Collapsed;
 
-            HorizontalAlignment align = _core.Settings.TitlebarAlignment == "Left"
-                ? HorizontalAlignment.Left
-                : HorizontalAlignment.Right;
-            bool isLeft = align == HorizontalAlignment.Left;
-
-            foreach (var c in containers)
-                UpdateControlLayout(c, align, isLeft);
-
-            if (isLeft)
+            if (_core.Settings.TitlebarTheme == "Compact")
             {
-                DockPanel.SetDock(CompactControls, Dock.Left);
-                CompactControls.Margin = new Thickness(0, 0, 15, 0);
+                TitleBarBorder.Visibility  = Visibility.Collapsed;
+                CompactControls.Visibility = Visibility.Visible;
             }
             else
             {
-                DockPanel.SetDock(CompactControls, Dock.Right);
-                CompactControls.Margin = new Thickness(15, 0, 0, 0);
-            }
-
-            switch (_core.Settings.TitlebarTheme)
-            {
-                case "macOS":
-                    MacControls.Visibility = Visibility.Visible;
-                    TitleBarBorder.Background = (Brush)Application.Current.Resources["MacTitleBrush"];
-                    TitleBarBorder.Opacity = 1.0;  // User confirmed macOS Dark looks perfect - no change
-                    break;
-
-                case "macOSLight":
-                    MacLightControls.Visibility = Visibility.Visible;
-                    TitleBarBorder.Background = (Brush)Application.Current.Resources["MacLightTitleBrush"];
-                    TitleBarBorder.Opacity = 1.0;  // Light titlebar must be fully opaque to look light
-                    break;
-
-                case "Vanilla":
-                    VanillaControls.Visibility = Visibility.Visible;
-                    TitleBarBorder.Opacity = _core.Settings.TitlebarOpacity;
-                    break;
-
-                case "Win8":
-                    Win8Controls.Visibility = Visibility.Visible;
-                    TitleBarBorder.Background = (Brush)Application.Current.Resources["Win8TitleBrush"];
-                    TitleBarBorder.Opacity = _core.Settings.TitlebarOpacity;
-                    break;
-
-                case "Win7":
-                    Win7Controls.Visibility = Visibility.Visible;
-                    TitleBarBorder.Background = (Brush)Application.Current.Resources["Aero7TitleBrush"];
-                    TitleBarBorder.Opacity = _core.Settings.TitlebarOpacity;
-                    break;
-
-                case "Win9x":
-                    Win9xControls.Visibility = Visibility.Visible;
-                    // Gradient brush is built inline - ThemeEngine exposes the two endpoint colors
-                    var win9xBrush = new LinearGradientBrush
-                    {
-                        StartPoint = new System.Windows.Point(0, 0),
-                        EndPoint   = new System.Windows.Point(1, 0)
-                    };
-                    win9xBrush.GradientStops.Add(new GradientStop(
-                        (Color)Application.Current.Resources["Win9xTitleStartColor"], 0));
-                    win9xBrush.GradientStops.Add(new GradientStop(
-                        (Color)Application.Current.Resources["Win9xTitleEndColor"], 1));
-                    TitleBarBorder.Background = win9xBrush;
-                    TitleBarBorder.Opacity = 1.0;  // Classic Win9x has no transparency
-                    break;
-
-                case "Win31":
-                    VanillaControls.Visibility = Visibility.Visible;
-                    TitleBarBorder.Background = (Brush)Application.Current.Resources["Win31TitleBrush"];
-                    TitleBarBorder.Opacity = 1.0;
-                    MainWindowBorder.CornerRadius = new CornerRadius(0);
-                    TitleBarBorder.CornerRadius = new CornerRadius(0);
-                    break;
-
-                case "WinXP":
-                    VanillaControls.Visibility = Visibility.Visible;
-                    TitleBarBorder.Background = (Brush)Application.Current.Resources["WinXPTitleBrush"];
-                    TitleBarBorder.Opacity = 1.0;
-                    MainWindowBorder.CornerRadius = new CornerRadius(4);
-                    TitleBarBorder.CornerRadius = new CornerRadius(4, 4, 0, 0);
-                    break;
-
-                case "MacOS9":
-                    MacLightControls.Visibility = Visibility.Visible;
-                    TitleBarBorder.Background = (Brush)Application.Current.Resources["MacOS9TitleBrush"];
-                    TitleBarBorder.Opacity = 1.0;
-                    break;
-
-                case "Compact":
-                    TitleBarBorder.Visibility = Visibility.Collapsed;
-                    CompactControls.Visibility = Visibility.Visible;
-                    break;
+                // Default: W11 Vanilla (also handles any legacy/unknown theme value)
+                TitleBarBorder.Visibility  = Visibility.Visible;
+                TitleBarBorder.Background  = Brushes.Transparent;
+                TitleBarBorder.Opacity     = 1.0;
+                VanillaControls.Visibility = Visibility.Visible;
             }
 
             // Apply font (cascades to all child controls in the main window)
             ThemeEngine.ApplyFont(this, _core.Settings);
-        }
-
-        private static void UpdateControlLayout(StackPanel? panel, HorizontalAlignment align, bool isLeft)
-        {
-            if (panel == null) return;
-
-            panel.HorizontalAlignment = align;
-            var children = panel.Children.Cast<UIElement>().ToList();
-            panel.Children.Clear();
-
-            var close = children.FirstOrDefault(x => x is Button b && b.Tag?.ToString() == "Close");
-            var others = children.Where(x => x != close).ToList();
-
-            if (isLeft)
-            {
-                if (close != null) panel.Children.Add(close);
-                foreach (var o in others) panel.Children.Add(o);
-            }
-            else
-            {
-                foreach (var o in others) panel.Children.Add(o);
-                if (close != null) panel.Children.Add(close);
-            }
-
-            if (panel.Name == "MacControls" || panel.Name == "MacLightControls" || panel.Name == "CompactControls")
-            {
-                int spacing = panel.Name == "CompactControls" ? 5 : 8;
-                foreach (var child in panel.Children.OfType<Button>())
-                    child.Margin = isLeft ? new Thickness(0, 0, spacing, 0) : new Thickness(spacing, 0, 0, 0);
-            }
         }
 
         // ==========================================================
@@ -525,7 +409,7 @@ namespace TMM
             }
             catch (Exception ex)
             {
-                ShowExtractionDebug(ex.Message, staging);
+                NotificationService.ShowError($"Extraction failed: {ex.Message}");
             }
             finally
             {
@@ -704,31 +588,6 @@ namespace TMM
                         JsonSerializer.Serialize(mod, JsonHelper.PrettyOptions));
             }
             catch (Exception ex) { Debug.WriteLine(ex.Message); }
-        }
-
-        private void ShowExtractionDebug(string errorMessage, string stagingPath)
-        {
-            string tree = "=== STAGING DIRECTORY DUMP ===\r\n" + (Directory.Exists(stagingPath)
-                ? string.Join("\r\n", Directory.GetFiles(stagingPath, "*.*", SearchOption.AllDirectories)
-                    .Select(f => f.Replace(stagingPath, "")))
-                : "Directory does not exist.");
-
-            new Window
-            {
-                Title = "Extraction Debugger",
-                Width = 650,
-                Height = 450,
-                Owner = this,
-                Content = new TextBox
-                {
-                    Text = $"ERROR:\r\n{errorMessage}\r\n\r\n{tree}",
-                    IsReadOnly = true,
-                    TextWrapping = TextWrapping.Wrap,
-                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                    Margin = new Thickness(10),
-                    FontFamily = new FontFamily("Consolas")
-                }
-            }.ShowDialog();
         }
 
         // ==========================================================
@@ -1280,26 +1139,6 @@ namespace TMM
         private void BtnHelp_Click(object s, RoutedEventArgs e)
             => new HelpWindow { Owner = this }.ShowDialog();
 
-        private void BtnToggleLabels_Click(object s, RoutedEventArgs e)
-        {
-            _core.Settings.ToolbarShowLabels = !_core.Settings.ToolbarShowLabels;
-            _core.SaveSettings();
-            ApplyToolbarLabels();
-        }
-
-        private static readonly string[] _toolbarLabelNames =
-            { "lblBack", "lblSidebar", "lblToggleLabels",
-              "lblInstallMod", "lblSettings", "lblTheme", "lblRollTheme", "lblRefresh", "lblAppData", "lblDxvk",
-              "lblDeploy", "lblRollback", "lblPlayIII", "lblPlayVC", "lblPlaySA",
-              "lblHelp", "lblAbout" };
-
-        private void ApplyToolbarLabels()
-        {
-            ApplyToolbarLabels(_core.Settings, _toolbarLabelNames);
-            if (FindName("btnToggleLabels") is Button btn)
-                btn.Opacity = _core.Settings.ToolbarShowLabels ? 1.0 : 0.5;
-        }
-
         private async void MenuToggleOverride_Click(object s, RoutedEventArgs e)
         {
             if (s is not MenuItem mi || mi.Tag is not string key) return;
@@ -1320,35 +1159,6 @@ namespace TMM
                 isNowOn ? MessageBoxImage.Warning : MessageBoxImage.Information);
 
             await RefreshUIAsync();
-        }
-
-        private void BtnRollTheme_Click(object s, RoutedEventArgs e)
-        {
-            var presets = ThemeManagerWindow.BuiltInPresets;
-            if (presets.Count == 0) return;
-            var rnd    = new Random();
-            var preset = presets[rnd.Next(presets.Count)];
-
-            _core.Settings.AccentColor         = preset.AccentColor;
-            _core.Settings.BgColor             = preset.BgColor;
-            _core.Settings.ColorMode           = preset.ColorMode;
-            _core.Settings.TitlebarTheme       = preset.TitlebarTheme;
-            _core.Settings.TitlebarAlignment   = preset.TitlebarAlignment;
-            _core.Settings.TitlebarPersonalize = preset.TitlebarPersonalize;
-            _core.Settings.TitlebarOpacity     = preset.TitlebarOpacity;
-            _core.Settings.FontFamily          = preset.FontFamily;
-            _core.Settings.TextColorMode       = preset.TextColorMode;
-            _core.Settings.MicaEnabled         = preset.MicaEnabled;
-            _core.Settings.MicaIntensity       = preset.MicaIntensity;
-            _core.Settings.LastPresetName      = preset.Name;
-            _core.SaveSettings();
-
-            ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
-            ApplyTitlebarStyle();
-
-            NotificationService.ShowSuccess($"{preset.Name}");
         }
 
         private async void MenuToggleOverrideList_Click(object s, RoutedEventArgs e)
@@ -1373,15 +1183,13 @@ namespace TMM
         private void Window_StateChanged(object? s, EventArgs e)
         {
             bool maximized = WindowState == WindowState.Maximized;
-            bool isWin9x   = _core.Settings.TitlebarTheme == "Win9x";
-            var corners = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(10);
-            MainWindowBorder.CornerRadius = corners;
-            TitleBarBorder.CornerRadius   = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(10, 10, 0, 0);
+            MainWindowBorder.CornerRadius = maximized ? new CornerRadius(0) : new CornerRadius(10);
+            TitleBarBorder.CornerRadius   = maximized ? new CornerRadius(0) : new CornerRadius(10, 10, 0, 0);
             if (MainWindowBorder.Child is Border inner)
             {
                 var vb = inner.OpacityMask as System.Windows.Media.VisualBrush;
                 if (vb?.Visual is Border mask)
-                    mask.CornerRadius = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(11);
+                    mask.CornerRadius = maximized ? new CornerRadius(0) : new CornerRadius(11);
             }
         }
 
@@ -1655,30 +1463,12 @@ namespace TMM
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            // Show exit confirmation on first close attempt (unless user disabled it)
-            if (!_exitConfirmationShown && !_core.Settings.SkipExitConfirmation)
-            {
-                _exitConfirmationShown = true;
-
-                var dlg = new ExitConfirmationDialog();
-                if (dlg.ShowDialog() != true)
-                {
-                    e.Cancel = true;
-                    _exitConfirmationShown = false;
-                    return;
-                }
-
-                // Save user preference if they toggled "don't ask again"
-                if (dlg.DontAskAgain)
-                    _core.Settings.SkipExitConfirmation = true;
-            }
-
             // Save window position and size (only if not maximized/minimized)
             if (WindowState == WindowState.Normal)
             {
-                _core.Settings.WindowLeft = Left;
-                _core.Settings.WindowTop = Top;
-                _core.Settings.WindowWidth = Width;
+                _core.Settings.WindowLeft  = Left;
+                _core.Settings.WindowTop   = Top;
+                _core.Settings.WindowWidth  = Width;
                 _core.Settings.WindowHeight = Height;
             }
 

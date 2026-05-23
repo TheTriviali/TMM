@@ -295,9 +295,20 @@
                                                          ToolTip="Extension to match: .dll   .esp   *  (any extension)"/>
                                                 <Button Content="+ name filter" Click="BtnAddNameFilter_Click">
                                                     <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource RuleAddBtnStyle}">
-                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Background"       Value="Transparent"/>
+                                                            <Setter Property="BorderThickness"  Value="0"/>
+                                                            <Setter Property="Foreground"       Value="{DynamicResource SubTextBrush}"/>
+                                                            <Setter Property="FontSize"         Value="10"/>
+                                                            <Setter Property="Cursor"           Value="Hand"/>
+                                                            <Setter Property="Padding"          Value="4,2"/>
+                                                            <Setter Property="Margin"           Value="6,0,0,0"/>
+                                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                                            <Setter Property="Visibility"       Value="Visible"/>
                                                             <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                                </Trigger>
                                                                 <DataTrigger Binding="{Binding HasNameFilter}" Value="True">
                                                                     <Setter Property="Visibility" Value="Collapsed"/>
                                                                 </DataTrigger>
@@ -380,9 +391,19 @@
                                             <Button Content="+ add IF condition" Click="BtnAddCondition_Click"
                                                     HorizontalAlignment="Left" Margin="44,0,0,3">
                                                 <Button.Style>
-                                                    <Style TargetType="Button" BasedOn="{StaticResource RuleAddBtnStyle}">
-                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Background"       Value="Transparent"/>
+                                                        <Setter Property="BorderThickness"  Value="0"/>
+                                                        <Setter Property="Foreground"       Value="{DynamicResource SubTextBrush}"/>
+                                                        <Setter Property="FontSize"         Value="10"/>
+                                                        <Setter Property="Cursor"           Value="Hand"/>
+                                                        <Setter Property="Padding"          Value="4,2"/>
+                                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                                        <Setter Property="Visibility"       Value="Visible"/>
                                                         <Style.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                            </Trigger>
                                                             <DataTrigger Binding="{Binding HasCondition}" Value="True">
                                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                             </DataTrigger>

@@ -37,10 +37,7 @@ namespace TMM
         public string TextColorMode { get; set; } = "WCAG";
 
         // ── Titlebar ─────────────────────────────────────────────────────────
-        public string TitlebarTheme     { get; set; } = "macOS";
-        public string TitlebarAlignment { get; set; } = "Left";
-        public bool   TitlebarPersonalize { get; set; } = true;
-        public double TitlebarOpacity   { get; set; } = 0.88;
+        public string TitlebarTheme { get; set; } = "Vanilla";
 
         // ── Typography ───────────────────────────────────────────────────────
         public string FontFamily { get; set; } = "Segoe UI Light";
@@ -49,25 +46,15 @@ namespace TMM
         public bool   MicaEnabled   { get; set; } = false;
         public double MicaIntensity { get; set; } = 0.75;
 
-        // ── Toolbar ──────────────────────────────────────────────────────────
-        public bool ToolbarShowLabels { get; set; } = true;
-
         // ── Accent border ────────────────────────────────────────────────────
         // When true, the window outer border uses AccentBrush instead of HeaderBrush.
         public bool AccentBorderEnabled { get; set; } = false;
-
-        // ── Exit confirmation ────────────────────────────────────────────────
-        // When true, skip the "Are you sure?" dialog on app close.
-        public bool SkipExitConfirmation { get; set; } = false;
 
         // ── Window state ──────────────────────────────────────────────────────
         public double WindowLeft { get; set; } = -1;
         public double WindowTop { get; set; } = -1;
         public double WindowWidth { get; set; } = 1280;
         public double WindowHeight { get; set; } = 672;
-
-        // ── Recent themes ────────────────────────────────────────────────────
-        public List<string> RecentThemes { get; set; } = new();
 
         // ── Per-game deploy overrides ─────────────────────────────────────────
         // When true for a game, deployment proceeds even if the exe is Vanilla

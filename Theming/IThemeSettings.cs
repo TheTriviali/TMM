@@ -10,7 +10,6 @@
         string BgColor            { get; }
         string ColorMode          { get; }
         string TextColorMode      { get; }
-        bool   TitlebarPersonalize { get; }
         string FontFamily         { get; }
         bool   MicaEnabled        { get; }
     }

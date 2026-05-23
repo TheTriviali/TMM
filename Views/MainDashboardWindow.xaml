@@ -214,122 +214,6 @@
             </Setter>
         </Style>
 
-        <Style x:Key="Win7ButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="35"/>
-            <Setter Property="VerticalAlignment" Value="Stretch"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderBrush="#30FFFFFF" BorderThickness="1,0,1,1" CornerRadius="2">
-                            <TextBlock Text="{TemplateBinding Content}" FontFamily="Marlett" FontSize="12"
-                                       Foreground="{DynamicResource TextBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#25FFFFFF"/>
-                                <Setter TargetName="bd" Property="BorderBrush" Value="#55FFFFFF"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#15FFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Win 9x classic beveled button -->
-        <Style x:Key="Win9xButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="18"/>
-            <Setter Property="Height" Value="16"/>
-            <Setter Property="Margin" Value="1,0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="outer" Background="#C0C0C0" BorderThickness="1" BorderBrush="#808080">
-                            <Border BorderBrush="White" BorderThickness="1,1,0,0">
-                                <Border x:Name="inner" BorderBrush="#808080" BorderThickness="0,0,1,1">
-                                    <TextBlock Text="{TemplateBinding Content}" FontFamily="Marlett" FontSize="9"
-                                               Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                            </Border>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="outer" Property="BorderBrush" Value="White"/>
-                                <Setter TargetName="inner" Property="BorderBrush" Value="White"/>
-                                <Setter TargetName="outer" Property="Background" Value="#A8A8A8"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Windows XP Luna button style -->
-        <Style x:Key="WinXPButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="35"/>
-            <Setter Property="VerticalAlignment" Value="Stretch"/>
-            <Setter Property="Background" Value="#ECE9D8"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="outerXP" Background="#ECE9D8" BorderThickness="1" BorderBrush="#ACA899">
-                            <Border BorderBrush="#FFFFFF" BorderThickness="1,1,0,0">
-                                <Border x:Name="innerXP" BorderBrush="#ACA899" BorderThickness="0,0,1,1">
-                                    <TextBlock Text="{TemplateBinding Content}" FontFamily="Tahoma" FontSize="11"
-                                               Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                            </Border>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="outerXP" Property="Background" Value="#F5F5EE"/>
-                                <Setter TargetName="outerXP" Property="BorderBrush" Value="#0A246A"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="outerXP" Property="Background" Value="#D4C4AC"/>
-                                <Setter TargetName="innerXP" Property="BorderBrush" Value="#FFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Windows 3.1 classic button style -->
-        <Style x:Key="Win31ButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="35"/>
-            <Setter Property="VerticalAlignment" Value="Stretch"/>
-            <Setter Property="Background" Value="#C0C0C0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="outer31" Background="#C0C0C0" BorderThickness="2">
-                            <Border x:Name="top31" BorderBrush="White" BorderThickness="1,1,0,0">
-                                <Border x:Name="bottom31" BorderBrush="#808080" BorderThickness="0,0,1,1">
-                                    <TextBlock Text="{TemplateBinding Content}" FontFamily="MS Sans Serif" FontSize="11"
-                                               Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                            </Border>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="outer31" Property="Background" Value="#DFDFDF"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="top31" Property="BorderBrush" Value="#808080"/>
-                                <Setter TargetName="bottom31" Property="BorderBrush" Value="White"/>
-                                <Setter TargetName="outer31" Property="Background" Value="#A8A8A8"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </Window.Resources>
 
     <!-- Master border with gradient accent - updated by ThemeEngine -->
@@ -360,30 +244,23 @@
                 <!-- ====================================================== -->
                 <Border x:Name="TitleBarBorder" Grid.Row="0" Height="30" CornerRadius="10,10,0,0" ClipToBounds="True">
                     <Grid x:Name="TitleBarGrid">
-                        <TextBlock Text="TMM - GTA III Series"
-                                   Foreground="{DynamicResource TextBrush}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold">
-                            <TextBlock.Effect>
-                                <DropShadowEffect BlurRadius="3" ShadowDepth="0" Opacity="0.25" Color="Black"/>
-                            </TextBlock.Effect>
-                        </TextBlock>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                        <!-- macOS controls -->
-                        <StackPanel x:Name="MacControls" Orientation="Horizontal" VerticalAlignment="Center"
-                                    HorizontalAlignment="Left" Margin="20,0,0,0" Visibility="Collapsed">
-                            <Button Content="x" Width="12" Height="12" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#ED6158"
-                                    Click="BtnCloseApp_Click" Tag="Close"/>
-                            <Button Content="âˆ’" Width="12" Height="12" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FCC42D"
-                                    Click="BtnMinimize_Click"/>
-                            <Button Content="â¤¢" Width="12" Height="12" Margin="0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#5FC038"
-                                    Click="BtnMaximize_Click"/>
+                        <!-- Title: TMM accent + game name -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                    VerticalAlignment="Center" Margin="12,0,0,0">
+                            <TextBlock Text="TMM" Foreground="{DynamicResource AccentBrush}"
+                                       FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                            <TextBlock Text=" — GTA III Series" Foreground="{DynamicResource SubTextBrush}"
+                                       FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- Vanilla controls -->
-                        <StackPanel x:Name="VanillaControls" Orientation="Horizontal" Visibility="Visible">
+                        <!-- W11 Vanilla window controls -->
+                        <StackPanel x:Name="VanillaControls" Grid.Column="1"
+                                    Orientation="Horizontal" Visibility="Visible">
                             <Button Content="&#xE921;" Width="45" Height="30"
                                     Style="{StaticResource WinButtonStyle}" Click="BtnMinimize_Click"/>
                             <Button Content="&#xE922;" Width="45" Height="30"
@@ -391,103 +268,6 @@
                             <Button Content="&#xE8BB;" Width="45" Height="30"
                                     Style="{StaticResource WinCloseButtonStyle}"
                                     Click="BtnCloseApp_Click" Tag="Close"/>
-                        </StackPanel>
-
-                        <!-- Windows 8/10 inspired -->
-                        <StackPanel x:Name="Win8Controls" Orientation="Horizontal" Visibility="Collapsed" Margin="0,4,8,0">
-                            <Button Content="0" Style="{StaticResource Win7ButtonStyle}" Click="BtnMinimize_Click"/>
-                            <Button Content="1" Style="{StaticResource Win7ButtonStyle}" Click="BtnMaximize_Click"/>
-                            <Button x:Name="btnWin8Close" Click="BtnCloseApp_Click" Width="46" Height="22"
-                                    Tag="Close" Margin="3,0,0,0">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bg" CornerRadius="3" Background="Transparent">
-                                            <TextBlock Text="&#xE8BB;"
-                                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                                       FontSize="9" Foreground="#CCFFFFFF"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bg" Property="Background" Value="#E81123"/>
-                                            </Trigger>
-                                            <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="bg" Property="Background" Value="#C0121212"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                        </StackPanel>
-
-                        <!-- Windows 7 Aero inspired -->
-                        <StackPanel x:Name="Win7Controls" Orientation="Horizontal" Visibility="Collapsed" Margin="0,4,8,0">
-                            <Button Content="0" Style="{StaticResource Win7ButtonStyle}" Click="BtnMinimize_Click"/>
-                            <Button Content="1" Style="{StaticResource Win7ButtonStyle}" Click="BtnMaximize_Click"/>
-                            <Button x:Name="btnWin7Close" Click="BtnCloseApp_Click" Width="50" Height="22"
-                                    Tag="Close" Margin="4,0,0,0">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bg" CornerRadius="3" Background="Transparent">
-                                            <TextBlock x:Name="closeGlyph"
-                                                       Text="&#xE8BB;"
-                                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                                       FontSize="8" Foreground="#E8FFFFFF"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bg" Property="Background" Value="#E81123"/>
-                                            </Trigger>
-                                            <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="bg" Property="Background" Value="#C0121212"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                        </StackPanel>
-
-                        <!-- Win 9x / Classic controls -->
-                        <StackPanel x:Name="Win9xControls" Orientation="Horizontal" Visibility="Collapsed" Margin="0,4,8,0">
-                            <Button Content="0" Style="{StaticResource Win9xButtonStyle}" Click="BtnMinimize_Click"/>
-                            <Button Content="1" Style="{StaticResource Win9xButtonStyle}" Click="BtnMaximize_Click"/>
-                            <Button x:Name="btnWin9xClose" Click="BtnCloseApp_Click" Tag="Close"
-                                    Width="18" Height="16" Margin="2,0,0,0">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="outer9x" Background="#C0C0C0" BorderThickness="1" BorderBrush="#808080">
-                                            <Border BorderBrush="White" BorderThickness="1,1,0,0">
-                                                <Border x:Name="inner9x" BorderBrush="#808080" BorderThickness="0,0,1,1">
-                                                    <TextBlock Text="r" FontFamily="Marlett" FontSize="9"
-                                                               Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                            </Border>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="outer9x" Property="BorderBrush" Value="White"/>
-                                                <Setter TargetName="inner9x" Property="BorderBrush" Value="White"/>
-                                                <Setter TargetName="outer9x" Property="Background" Value="#A8A8A8"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                        </StackPanel>
-
-                        <!-- macOS Light controls -->
-                        <StackPanel x:Name="MacLightControls" Orientation="Horizontal" VerticalAlignment="Center"
-                                    HorizontalAlignment="Left" Margin="20,0,0,0" Visibility="Collapsed">
-                            <Button Content="x" Width="12" Height="12" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#EE5A52"
-                                    Click="BtnCloseApp_Click" Tag="Close"/>
-                            <Button Content="âˆ’" Width="12" Height="12" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FDC82F"
-                                    Click="BtnMinimize_Click"/>
-                            <Button Content="â¤¢" Width="12" Height="12" Margin="0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#62C554"
-                                    Click="BtnMaximize_Click"/>
                         </StackPanel>
 
                     </Grid>
@@ -550,7 +330,7 @@
                                     </Button>
                                     <TextBlock x:Name="lblDeploy" Text="Deploy" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
 
                                 <!-- Rollback -->
@@ -562,7 +342,7 @@
                                             Content="&#xE777;"/>
                                     <TextBlock x:Name="lblRollback" Text="Rollback" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
 
                                 <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="6,6,6,6" Opacity="0.3"/>
@@ -600,7 +380,7 @@
                                     </Button>
                                     <TextBlock x:Name="lblPlayIII" Text="Play III" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
 
                                 <!-- Play VC -->
@@ -636,7 +416,7 @@
                                     </Button>
                                     <TextBlock x:Name="lblPlayVC" Text="Play VC" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
 
                                 <!-- Play SA -->
@@ -672,12 +452,12 @@
                                     </Button>
                                     <TextBlock x:Name="lblPlaySA" Text="Play SA" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
 
                             </StackPanel>
 
-                            <!-- Left-pinned: back | sidebar toggle | label toggle -->
+                            <!-- Left-pinned: back | sidebar toggle -->
                             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                                 <!-- Back to Launcher -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
@@ -686,7 +466,7 @@
                                             FontSize="16" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblBack" Text="Back" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="0,6,8,6" Opacity="0.3"/>
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
@@ -695,20 +475,9 @@
                                             FontSize="20" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblSidebar" Text="Sidebar" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="0,6,8,6" Opacity="0.3"/>
-                                <!-- Italic T toggles toolbar text labels -->
-                                <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
-                                    <Button x:Name="btnToggleLabels" Click="BtnToggleLabels_Click"
-                                            ToolTip="Toggle Toolbar Labels" Width="38" Height="38"
-                                            Style="{StaticResource IconButtonStyle}" Cursor="Hand" BorderThickness="0"
-                                            FontSize="16" FontFamily="Arial" FontStyle="Italic" FontWeight="Bold">T</Button>
-                                    <TextBlock x:Name="lblToggleLabels" Text="Labels" FontSize="10"
-                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
-                                </StackPanel>
-                                <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="4,6,8,6" Opacity="0.3"/>
 
                                 <!-- Help -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
@@ -744,7 +513,7 @@
                                     </Grid>
                                     <TextBlock x:Name="lblHelp" Text="Help" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
 
                                 <!-- About -->
@@ -754,7 +523,7 @@
                                             FontSize="18" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblAbout" Text="About" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
 
                             </StackPanel>
@@ -769,7 +538,7 @@
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblInstallMod" Text="Install" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="4,6,4,6" Opacity="0.3"/>
                                 <!-- Settings -->
@@ -780,7 +549,7 @@
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblSettings" Text="Settings" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <!-- Look & Feel -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
@@ -790,35 +559,7 @@
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblTheme" Text="Themes" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
-                                </StackPanel>
-                                <!-- Random Theme -->
-                                <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
-                                    <Button x:Name="btnRollTheme" Click="BtnRollTheme_Click" ToolTip="Random Theme"
-                                            Width="38" Height="38" Cursor="Hand" BorderThickness="0">
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border x:Name="bd" Background="{DynamicResource ControlBgBrush}" CornerRadius="5"
-                                                        Padding="6">
-                                                    <TextBlock Text="&#xE89A;" FontSize="16" FontWeight="Bold"
-                                                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                                               Foreground="{DynamicResource AccentLabelBrush}"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                                    </Trigger>
-                                                    <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Button.Template>
-                                    </Button>
-                                    <TextBlock x:Name="lblRollTheme" Text="Random" FontSize="10"
-                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <!-- Refresh -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
@@ -828,7 +569,7 @@
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblRefresh" Text="Refresh" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <!-- Files -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
@@ -838,7 +579,7 @@
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblAppData" Text="Files" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <!-- DXVK -->
                                 <StackPanel VerticalAlignment="Center">
@@ -848,7 +589,7 @@
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblDxvk" Text="DXVK" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
                             </StackPanel>
 
