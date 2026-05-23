@@ -4,7 +4,24 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
-## [2.1] — 2026-05-22
+## [v0.1-alpha-2] — 2026-05-23
+
+### Changed
+- **Theme System Optimization:** Curated built-in presets from 75 → 25 themes, focusing on GTA-inspired, popular editor color schemes, synthwave variants, and light themes. Target demographic: 25–35 year old males (teals, cyans, blues, muted grays, warm tones).
+- **Theme Presets Detail:**
+  - Kept: 5 GTA-inspired (Vice City Neon, GTA III Era, San Andreas Grove, GTA Online, Dark Teal Default), 8 popular editor palettes (Dracula, Nord, Gruvbox, Catppuccin, One Dark, Monokai, Solarized Dark, GitHub Dark), 4 synthwave (Synthwave Sunset, Outrun, Retrowave, 80s Neon), 4 quality dark (Matrix, Deep Ocean, Obsidian, Slate), 4 light variants (Light Sky, Solarized Light, Nord Light, Light Teal)
+  - Removed: 50 low-usage presets (Windows XP/Vista/3.1/Mac9.0 nostalgia themes, "Unique Themes" section, nature-inspired duplicates, vibrant variants)
+- **Matrix Theme Added:** Neon green monochrome theme (`#00FF41` accent, `#0D0D0D` background) as successor to "Phosphor"
+- **Code Reduction:** ThemeManagerWindow.xaml.cs reduced by ~130 lines total (file: 841→710 lines). Presets section specifically: 237 lines → 60 lines (~170 line savings)
+- **Documentation Updated:** README.md (theme count 34+→25, descriptions), CHANGELOG.md (this entry)
+
+### Known Issues (Deferred)
+- Theme selector still only in ThemeManagerWindow dialog (pending: move to GameLauncherWindow toolbar for global access from all dashboards)
+- HSV color pickers and complement palette tools remain in ThemeManagerWindow (pending: strip advanced features, keep session-only color picker)
+
+---
+
+## [v0.1-alpha-1] — 2026-05-22 *(First Release)*
 
 ### Added
 - **Conditional Routing Sentence Builder:** "Add Custom Game" window replaces the cryptic 4-column routing DataGrid with a plain-English sentence builder — each rule reads as *"Put .asi files into plugins if plugins\ exists, otherwise ."*
@@ -23,42 +40,68 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
-## [2.0] — 2026-05-22
+## [v0.02-prealpha-2] — 2026-05-22
+
+### Changed - VFS Removal & Direct Deploy Architecture
+
+**Major Architectural Refactor:**
+- **Removed Virtual File System:** No more `TempStaging\` folder or `ModdedFolderName` concept. Mods deploy **directly to game directory** with per-extension output routing.
+- **Backup System Simplified:** Before overwriting files, create timestamped backup in `AppData\TMM\Backups\{gameKey}\{timestamp}\`. Last **3 deploys per game** retained (changed from 5-deep to 3-deep for storage efficiency).
+- **DeployManifest Tracking:** `.json` file in each backup records exactly which files changed, where they were copied from, and when.
+- **Direct Launch:** Game launch now reads from actual game directory, not virtual folder.
+
+**Code Cleanup (Dead Code Removal):**
+- Removed `DeepScanDrives()` method (~25 lines) — never called; QuickScan handles all cases
+- Removed `RecursiveSearch()` helper (~20 lines) — only used by DeepScan
+- Removed `SmartSteamLaunch()` method (~20 lines) — deferred to future Smart DLL Wizard feature
+- Removed `CopyDirectoryParallelAsync()` method (~50 lines) — sync `CopyDirectory()` sufficient for single-machine deploy
+- Removed `DebugStaging` property from AppSettings — legacy VFS debugging flag
+- Simplified `GameState.cs` from 145 lines → 9 lines:
+  - Deleted `GameStateManager` singleton class
+  - Deleted `GameDetectionState` record
+  - Kept only `ExeStatus` enum (Vanilla/Downgraded/Unknown)
+- Removed empty `ModList_SelectionChanged()` event handler in CustomGameDashboard
+- Removed `SettingsContext` enum (Full/GtaIvOnly/CustomGame) from SettingsWindow — unified to global settings only
+- Removed `SmartArchivePostProcess()` method (~55 lines) from Gta4DashboardWindow — deferred to CustomGameEditor for future implementation
+- **Total Dead Code Removed:** ~240 lines, 0 errors/0 warnings after cleanup
+
+**UI & Config Updates:**
+- **Context menu:** "Open Virtual Folder" renamed to **"Open Backup Folder"** — opens rollback backup directory
+- **`GetDriveSpaceInfo()`** updated to show total AppData size instead of VFS references
+- **`BtnLaunchModded_Click`** now launches from actual game installation directory
+- **Output mapping UI:** DataGrid (Extension / Output Folder columns) in Add Custom Game dialog
+- **Status bar in launcher:** Uses `AccentBrush` on dark background panel for readability across all themes
 
 ### Added
 - **Direct Deploy:** Mods are now copied straight into the game's actual installation directory. No virtual filesystem, no staging folder, no intermediate copies.
-- **Automatic Backup & Rollback:** Before overwriting any file, the original is backed up to `AppData\TMM\Backups\{gameKey}\{timestamp}\`. Last 5 deploys per game are retained. `DeployManifest` JSON tracks every file changed.
+- **Automatic Backup & Rollback:** Before overwriting any file, the original is backed up to `AppData\TMM\Backups\{gameKey}\{timestamp}\`. Last 3 deploys per game are retained. `DeployManifest` JSON tracks every file changed.
 - **Rollback Button:** New toolbar button (undo icon) lets you restore the last deploy for the active game. Works in both GTA dashboard and Custom Game dashboard.
-- **Custom Game Support:** Add any game with a configurable name, directory, executable, and per-extension output subdirectory routing (e.g. `.asi` -> `scripts\`, `*` -> root).
+- **Custom Game Support:** Add any game with a configurable name, directory, executable, and per-extension output subdirectory routing (e.g. `.asi` -> `plugins\`, `*` -> root).
 - **Multi-game Launcher:** New `GameLauncherWindow` home screen showing all configured games as cards. Built-in GTA III Series card + custom game cards with Edit/Delete actions.
 - **Back to Launcher Button:** Toolbar button in all dashboards to return to the launcher.
 - **Reset Button (Launcher):** Clears the download cache with a confirmation dialog.
-
-### Changed
-- **Project renamed:** TGTAMM -> TMM (Triviali's Mod Manager). AppData migrated automatically from `%APPDATA%\TGTAMM` to `%APPDATA%\TMM` on first launch.
-- **`TempStagingPath` -> `DownloadCachePath`:** Staging folder concept removed. Download cache is now only used for temporary archive downloads before extraction, not for deployment.
-- **DXVK config location:** `dxvk.conf` is now written to the actual game installation directory instead of the old virtual folder.
-- **Context menu "Open Virtual Folder"** renamed to **"Open Backup Folder"** — opens the rollback backup directory for that game.
-- **`GetDriveSpaceInfo()`** no longer references VFS; shows total AppData size.
-- **`BtnLaunchModded_Click`** now launches from the game's actual installation directory.
-- **Output mapping UI** in Add Custom Game dialog replaced with a `DataGrid` (Extension / Output Folder columns) replacing the raw textarea.
-- **Status bar in launcher** uses `AccentBrush` on a dark background panel for readability across all themes.
 
 ### Removed
 - **Virtual File System (VFS):** `CloneToVirtualAsync()`, `ModdedFolderName`, `Modded{Key}` AppData folders — all removed.
 - **TempStaging folder:** No longer created. `TempStagingPath` property removed from `BackendCore`.
 - **`WipeTempStaging()`** replaced with `WipeDownloadCache()`.
 - **mojibake characters** across all `.cs` and `.xaml` source files cleaned up (double-encoded UTF-8/Windows-1252 sequences replaced with ASCII equivalents).
+- **Per-Game Settings Context:** Unified SettingsWindow to global settings only, removed context-aware layouts.
+
+### Notes
+- **Project Renamed:** TGTAMM → TMM (Triviali's Mod Manager). AppData migrated automatically from `%APPDATA%\TGTAMM` to `%APPDATA%\TMM` on first launch.
+- **`TempStagingPath` → `DownloadCachePath`:** Staging folder concept removed. Download cache is now only used for temporary archive downloads before extraction, not for deployment.
+- **DXVK config location:** `dxvk.conf` is now written to the actual game installation directory instead of the old virtual folder.
 
 ---
 
-## [Unreleased] — 2026-05-21
+## [v0.02-prealpha-1] — 2026-05-21
 
 ### Added
 - **Toast notification system** — in-window toasts in bottom-right corner (1280x672 window). Replaces desktop overlay with in-app notifications that stack and auto-dismiss.
 - **Dice-roll theme button** — 🎲 button in toolbar applies random preset theme with success toast feedback.
 - **Accent-colored window borders** — toggleable option in Settings → Themes to apply accent color to window border (compatible with all themes including Compact).
-- **34+ theme presets** — comprehensive collection including Cyberpunk, Vaporwave, Terminal Green, Vice City Pink, San Andreas Dusk, and many more.
+- **34+ theme presets** — comprehensive collection including Cyberpunk, Vaporwave, Terminal Green, Vice City Pink, San Andreas Dusk, and many more. *(Note: later curated to 25 in v0.1-alpha-2)*
 - **Deploy-time override warnings** — when deploying with some games overridden, displays warning toast showing which games still need 1.0 executable.
 - **Override context menu access** — "⚡ Toggle Force Deploy Override" available in mod list right-click menus and empty-list context menus.
 - **Orange deploy button state** — when override is enabled, deploy button shows orange to signal "ready to deploy, but can't play yet."
@@ -81,20 +124,75 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
-## [Alpha] — 2026-04-30  *(session prior to 2026-05-02)*
+## [v0.01-prealpha-3] — 2026-05-02
 
 ### Added
-- Modular title bar with six styles: macOS Dark, macOS Light, Windows Vanilla, Windows 8/10, Windows 7 Aero, Windows 9x Classic, Compact.
-- HSV two-pane color pickers for accent and background with hex input and live preview.
-- 11 built-in theme presets plus import/export of `.mmtheme` JSON files.
-- Mica / Acrylic backdrop via DWM API (Windows 11 native; panel-transparency approximation on Windows 10).
-- One-click essential installers: DXVK, SilentPatch, ASI Loader, Widescreen Fixes, Modloader, Project 2DFX, CLEO.
-- Drag-and-drop load order reordering with visual drop-line indicator.
-- `ExeStatus.Vanilla` detection with red play button + help notification dot when a game is not downgraded.
-- Multi-hash MD5 verification (accepts all known 1.0 build variants for III, VC, SA).
-- Smart nested archive extraction — single-folder wrappers are automatically unwrapped.
-- Diagnostics console with MD5 check, Steam protocol controls, error log, cache wipe.
-- Right-click context menu: open mod folder, base game folder, virtual folder.
-- Font selector with 8 system fonts (default: Segoe UI Light).
-- F5 / keyboard shortcut support for deploy.
-- Virtual File System (VFS) modding — mods deployed to AppData virtual folder, base install untouched.
+- **Modular title bar system** — six styles: macOS Dark, macOS Light, Windows Vanilla, Windows 8/10, Windows 7 Aero, Windows 9x Classic, Compact.
+- **Multi-game GTA support** — dashboards for GTA III, Vice City, San Andreas, IV, TLaD, TBoGT with game-specific features.
+- **Exe-as-Mod downgrading** — install 1.0 executables directly as mods with auto-detection.
+- **Drag-and-drop load orders** — visual mod priority list with drop-line indicator.
+- **HSV color picker system** — two-pane 2D spectrum pickers with hex input and live preview.
+- **DWM Mica/Acrylic support** — Windows 11 native backdrop with adjustable intensity.
+- **One-Click Essentials** — auto-download DXVK, SilentPatch, and other GTA essentials.
+- **MD5 verification** — accepts all known 1.0 build variants for GTA games.
+
+### Changed
+- **Namespace:** TGTAMM throughout all `.cs` and `.xaml` files.
+- **Assembly output:** TGTAMM.dll.
+- **AppDataPath:** `%APPDATA%\TGTAMM\`.
+
+### Known Issues (Deferred)
+- Custom game toolbars missing features present in GTA dashboards
+- Theme refresh partially broken after changes in non-primary dashboards
+- "Open Mods Store" is a stub (no URL wired)
+
+---
+
+## [v0.01-prealpha-1-2] — 2026-04-30 *(Pre-Alpha Foundation)*
+
+### Added
+- **Initial WPF Framework:** Window hierarchy (TmmWindow base class), XAML structure.
+- **Basic Settings System:** AppSettings model with JSON persistence to `%APPDATA%\TGTAMM\config.json`.
+- **Game Detection:** QuickScan for GTA III Series installations (Steam, disk, portable).
+- **Mod Installation:** Manual zip/rar/7z file selection and copy to mod directory.
+- **Basic UI:** MainDashboardWindow with mod list, deploy button, simple styling.
+- **Minimal Theming:** Dark theme with basic color customization.
+
+### Notes
+- This was the absolute foundation — minimal feature set, heavy refactoring in subsequent versions.
+- Project originally named TGTAMM (GTA Trivial Archive Mod Manager).
+
+---
+
+## Summary by Version
+
+| Version | Date | Focus | Files Changed |
+|---------|------|-------|---------------|
+| v0.01-prealpha-1-2 | 2026-04-30 | Foundation | New project |
+| v0.01-prealpha-3 | 2026-05-02 | Modular UI, GTA multi-game, theming | 50+ files |
+| v0.02-prealpha-1 | 2026-05-21 | Toast notifications, themes, UI polish | 30+ files |
+| v0.02-prealpha-2 | 2026-05-22 | **VFS Removal, Direct Deploy, Custom Games, Launcher** | 45+ files |
+| v0.1-alpha-1 | 2026-05-22 | **First Release: Routing Sentence Builder, GTA IV Support** | 15+ files |
+| v0.1-alpha-2 | 2026-05-23 | **Theme Optimization, Dead Code Removal** | 3 files |
+
+---
+
+## Planned Features (Roadmap)
+
+### Short Term (v0.1-rc-1)
+- Move theme selector from ThemeManagerWindow to GameLauncherWindow toolbar
+- Strip ThemeManagerWindow: remove HSV pickers, complement tools (save ~500 lines)
+- Unify toolbar features across all three dashboards (labels, color state, rollback, backup folder)
+- Wire up Steam launch in CustomGameDashboard
+
+### Medium Term (v0.2-alpha-1)
+- Conflict resolution engine (warn on duplicate files between mods)
+- Mod profiles & loadouts (save/load preset configurations)
+- Smart DLL wizard (auto-detect proxy DLLs, suggest output directories)
+- Expanded game profiles (Skyrim, Fallout, etc.)
+
+### Long Term (v0.3+)
+- Mod store integration (one-click install from ModDB/Nexus)
+- SAMP / MTA support
+- Network mod sharing between users
+- Advanced conflict resolution with merge suggestions
