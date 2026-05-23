@@ -378,9 +378,7 @@ namespace TMM
             _core.Settings.ColorMode      = preset.ColorMode;
             _core.Settings.TitlebarTheme  = preset.TitlebarTheme;
             _core.Settings.FontFamily     = preset.FontFamily;
-            _core.Settings.TextColorMode  = preset.TextColorMode;
             _core.Settings.MicaEnabled    = preset.MicaEnabled;
-            _core.Settings.MicaIntensity  = preset.MicaIntensity;
             _core.Settings.LastPresetName = preset.Name;
             _core.SaveSettings();
 

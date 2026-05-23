@@ -25,11 +25,10 @@
 //     GetInsertionLineY() / GetInsertionIndex() .................. ~797
 //   INSTALL / DEPLOY HANDLERS
 //     BtnInstallMod_Click() ....................................... ~831
-//     Web auto-installers (Modloader/DXVK/Widescreen/...) ......... ~872
+//     Web auto-installers (Widescreen/SilentPatch/ASI/2DFX/CLEO) .. ~872
 //     BtnRefresh_Click() / BtnDeploy_Click() ..................... ~973
-//   SIMPLE BUTTON HANDLERS  (Help, Labels, About, Settings, ...) . ~1103
-//     ApplyToolbarLabels() ........................................ ~1147
-//     BtnToggleOverride_Click() ................................... ~1158
+//   SIMPLE BUTTON HANDLERS  (Help, About, Settings, ...) ........... ~1103
+//     BtnToggleOverride_Click() ................................... ~1147
 //   CONTEXT MENU  (Rename/Toggle/Delete/MoveUp/MoveDown/...) ...... ~1218
 //   STANDARD BINDINGS  (ModCheckBox, Search, Sort, Keys) ......... ~1409
 //   HELPERS  (GetActiveList, ResolveProfile, FlagDeploy) ......... ~1475
@@ -804,28 +803,6 @@ namespace TMM
 
         // ----- Web auto-installers -----
 
-        private async void BtnInstallModloader_Click(object s, RoutedEventArgs e)
-        {
-            try
-            {
-                string f = await _core.DownloadLatestGithubReleaseAsync("thelink2012", "modloader");
-                await ProcessModInstallationAsync(f, "ALL");
-                txtDiskSpace.Text = _core.GetDriveSpaceInfo();
-            }
-            catch (Exception ex) { MessageBox.Show($"Modloader Download failed: {ex.Message}"); }
-        }
-
-        private async void BtnInstallDxvk_Click(object s, RoutedEventArgs e)
-        {
-            try
-            {
-                string f = await _core.DownloadLatestGithubReleaseAsync("doitsujin", "dxvk");
-                await ProcessModInstallationAsync(f, "");
-                txtDiskSpace.Text = _core.GetDriveSpaceInfo();
-            }
-            catch (Exception ex) { MessageBox.Show($"DXVK Download failed: {ex.Message}"); }
-        }
-
         private async void BtnWidescreenFix_Click(object s, RoutedEventArgs e)
         {
             bool installFrontend = MessageBox.Show(
@@ -936,7 +913,11 @@ namespace TMM
             if (!_deployReady)
             {
                 if (_needsDowngradeHelp)
-                    new HelpWindow { Owner = this }.ShowDialog();
+                    MessageBox.Show(
+                        "This game requires a 1.0 downgraded executable to run with mods.\n\n" +
+                        "Download links can be found on the TMM GitHub page:\n" +
+                        "https://github.com/triviali/tgtamm",
+                        "Downgrade Required", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -1137,7 +1118,7 @@ namespace TMM
         }
 
         private void BtnHelp_Click(object s, RoutedEventArgs e)
-            => new HelpWindow { Owner = this }.ShowDialog();
+            => Process.Start(new ProcessStartInfo("https://github.com/triviali/tgtamm") { UseShellExecute = true });
 
         private async void MenuToggleOverride_Click(object s, RoutedEventArgs e)
         {
@@ -1216,8 +1197,6 @@ namespace TMM
 
         private void BtnOpenAppData_Click(object s, RoutedEventArgs e) => _core.OpenAppData();
 
-        private void BtnDxvk_Click(object s, RoutedEventArgs e)
-            => new DxvkSettingsWindow(_core) { Owner = this }.ShowDialog();
 
         private async void BtnOpenWizardOverlay_Click(object s, RoutedEventArgs e)
         {

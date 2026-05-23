@@ -100,8 +100,5 @@ namespace TMM
             Environment.Exit(0);
         }
 
-        private void BtnOpenConsole_Click(object sender, RoutedEventArgs e)
-            => new DebugConsoleWindow(_core) { Owner = this }.ShowDialog();
-
     }
 }

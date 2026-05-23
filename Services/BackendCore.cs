@@ -1,41 +1,20 @@
 ﻿// TABLE OF CONTENTS
 // -----------------------------------------------------------------
-//   STATE & FIELDS  (AppDataPath, Settings, Mods, HttpClient) .... ~26
-//   INIT  (BackendCore constructor) .............................. ~41
-//   LOGGING  (Log) ............................................... ~70
-//   SETTINGS  (LoadSettings, SaveSettings, FactoryReset) ......... ~86
-//   GAME PATH ACCESS  (GetVanillaPath, SetVanillaPath, IsGameReady) ~146
-//   GAME DETECTION
-//     QuickScan() ................................................. ~162
-//     ScanForExe() ................................................ ~226
+//   STATE & FIELDS  (AppDataPath, Settings, Mods, HttpClient)
+//   INIT  (BackendCore constructor)
+//   LOGGING  (Log)
+//   SETTINGS  (LoadSettings, SaveSettings, FactoryReset)
+//   GAME PATH ACCESS  (GetVanillaPath, SetVanillaPath, IsGameReady)
+//   GAME DETECTION  (QuickScan, ScanForExe)
 //   GAME STATUS & EXE VERIFICATION
-//     VerifyGameStatusAsync() ..................................... ~263
-//     HasExeModOverride() ......................................... ~296
-//     FindExeInMod() .............................................. ~306
-//     GetFileMD5Async() / GetEffectiveMd5Async() ................. ~352
-//     GetMd5DiagnosticsAsync() .................................... ~389
-//   MOD LIST LOAD/SAVE
-//     RefreshAllModListsAsync() / RefreshModListForGame() ......... ~431
-//   DOWNLOAD CACHE
-//     DownloadCachePath / WipeDownloadCache() ..................... ~490
-//     GetDriveSpaceInfo() / FormatBytes() ......................... ~501
-//   BACKUP / ROLLBACK (3-deep snapshots)
-//     BackupsPath ................................................. ~522
-//     GetRollbackManifests() ...................................... ~524
-//     RollbackDeployAsync() ....................................... ~545
-//     PruneOldBackups() ........................................... ~590
-//   DEPLOYMENT  (direct to game dir, with backup)
-//     DeployModsAsync() ........................................... ~605
-//     DeployCustomGameModsAsync() ................................. ~640
-//     DeployFilesToGameDirAsync() ................................. ~675
-//     ForceDeleteDirectory() ...................................... ~795
-//     CopyDirectory() (sync fallback) ............................ ~820
-//   ARCHIVE EXTRACTION
-//     ExtractArchiveSafeAsync() / ExtractArchiveSafe() ........... ~720
-//     ExtractEntriesWithStream() .................................. ~749
-//   DOWNLOADING
-//     DownloadFileAsync() ......................................... ~781
-//     DownloadLatestGithubReleaseAsync() .......................... ~795
+//     VerifyGameStatusAsync / HasExeModOverride / FindExeInMod
+//     GetFileMD5Async / GetEffectiveMd5Async / GetMd5DiagnosticsAsync
+//   MOD LIST LOAD/SAVE  (RefreshAllModListsAsync / RefreshModListForGame)
+//   DOWNLOAD CACHE  (DownloadCachePath / WipeDownloadCache / GetDriveSpaceInfo)
+//   BACKUP / ROLLBACK  (GetRollbackManifests / RollbackDeployAsync / PruneOldBackups)
+//   DEPLOYMENT  (DeployModsAsync / DeployCustomGameModsAsync / DeployFilesToGameDirAsync)
+//   ARCHIVE EXTRACTION  (ExtractArchiveSafeAsync)
+//   DOWNLOADING  (DownloadFileAsync)
 // -----------------------------------------------------------------
 
 using SharpCompress.Readers;
@@ -982,40 +961,6 @@ namespace TMM
             await using var dst = new FileStream(destinationPath, FileMode.Create, FileAccess.Write,
                 FileShare.None, 81920, useAsync: true);
             await src.CopyToAsync(dst, ct);
-        }
-
-        public async Task<string> DownloadLatestGithubReleaseAsync(
-            string owner, string repo, string? searchFilter = null, CancellationToken ct = default)
-        {
-            string apiUrl = $"https://api.github.com/repos/{owner}/{repo}/releases/latest";
-            string json = await HttpClient.GetStringAsync(apiUrl, ct);
-
-            using var document = JsonDocument.Parse(json);
-            var assets = document.RootElement.GetProperty("assets");
-            if (assets.GetArrayLength() == 0) throw new Exception("No assets found in the latest release.");
-
-            // Prefer .zip > .7z > .rar (extraction reliability), filtered by name match if provided.
-            var bestAsset = assets.EnumerateArray()
-                .Where(a => searchFilter == null || a.GetProperty("name").GetString()!.Contains(searchFilter, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(a =>
-                {
-                    string name = a.GetProperty("name").GetString()?.ToLower() ?? string.Empty;
-                    if (name.EndsWith(".zip")) return 0;
-                    if (name.EndsWith(".7z")) return 1;
-                    if (name.EndsWith(".rar")) return 2;
-                    return 3;
-                })
-                .FirstOrDefault();
-
-            if (bestAsset.ValueKind == JsonValueKind.Undefined)
-                throw new Exception($"No matching asset found for {repo} with filter '{searchFilter}'.");
-
-            string downloadUrl = bestAsset.GetProperty("browser_download_url").GetString()!;
-            string fileName = bestAsset.GetProperty("name").GetString()!;
-            string savePath = Path.Combine(DownloadCachePath, fileName);
-
-            await DownloadFileAsync(downloadUrl, savePath, ct);
-            return savePath;
         }
 
     }

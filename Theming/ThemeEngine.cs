@@ -15,7 +15,7 @@
 //     GetComplementPalette()  (Complementary/Triadic/...) ........ ~180
 //     SuggestAccentForBg()  - WCAG-optimised hue sweep ........... ~210
 //   CONTRAST COLOUR ALGORITHMS
-//     GetContrastColor()  (WCAG | YIQ | Invert) ................. ~250
+//     GetContrastColor()  (WCAG hardcoded) ....................... ~250
 //   HSV HELPERS  (public - shared with ThemeManagerWindow)
 //     HsvToRgb() / RgbToHsv() ................................... ~270
 //   INTERNAL HELPERS
@@ -49,19 +49,19 @@ namespace TMM
                 var bg     = (Color)ColorConverter.ConvertFromString(settings.BgColor);
                 bool isDark    = settings.ColorMode == "Dark";
                 bool mica      = settings.MicaEnabled;
-                double micaAmt = settings.MicaIntensity; // user-adjustable Mica intensity
+                const double micaAmt = 0.75;
 
                 // -- Accent ----------------------------------------------------
                 Application.Current.Resources["AccentBrush"] = new SolidColorBrush(accent);
 
                 // -- Smart text color for accent -------------------------------
                 // Calculate text color that contrasts with the accent for buttons/highlights
-                Color accentTextColor = GetContrastColor(accent, settings.TextColorMode);
+                Color accentTextColor = GetContrastColor(accent, "WCAG");
                 Application.Current.Resources["AccentTextBrush"] = new SolidColorBrush(accentTextColor);
                 Application.Current.Resources["HighlightTextBrush"] = new SolidColorBrush(accentTextColor);
 
                 // -- Smart text color -----------------------------------------
-                Color textColor    = GetContrastColor(bg, settings.TextColorMode);
+                Color textColor    = GetContrastColor(bg, "WCAG");
                 Color subTextColor = BlendColors(textColor, bg, isDark ? 0.50 : 0.42);
                 Application.Current.Resources["TextBrush"]    = new SolidColorBrush(textColor);
                 Application.Current.Resources["SubTextBrush"] = new SolidColorBrush(subTextColor);

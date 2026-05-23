@@ -7,7 +7,6 @@ namespace TMM
     public static class NotificationService
     {
         private static readonly ObservableCollection<NotificationItem> _queue = new();
-        private static readonly object _lockObj = new();
 
         public static ObservableCollection<NotificationItem> Queue => _queue;
 
@@ -21,19 +20,13 @@ namespace TMM
                 CreatedAt = DateTime.UtcNow
             };
 
-            lock (_lockObj)
-            {
-                _queue.Add(notification);
-            }
+            _queue.Add(notification);
 
             var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(durationMs) };
             timer.Tick += (s, e) =>
             {
                 timer.Stop();
-                lock (_lockObj)
-                {
-                    _queue.Remove(notification);
-                }
+                _queue.Remove(notification);
             };
             timer.Start();
         }

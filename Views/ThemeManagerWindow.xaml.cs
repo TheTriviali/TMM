@@ -92,7 +92,6 @@ namespace TMM
             SelectByTag(cmbTheme,     _core.Settings.TitlebarTheme);
             SelectByTag(cmbColor,     _core.Settings.ColorMode);
             SelectByTag(cmbFont,      _core.Settings.FontFamily);
-            SelectByTag(cmbTextColor, _core.Settings.TextColorMode);
 
             chkMica.IsChecked           = _core.Settings.MicaEnabled;
             chkAccentBorder.IsChecked   = _core.Settings.AccentBorderEnabled;
@@ -336,7 +335,6 @@ namespace TMM
             if (cmbTheme     is { SelectedItem: ComboBoxItem t }) _core.Settings.TitlebarTheme  = t.Tag.ToString()!;
             if (cmbColor     is { SelectedItem: ComboBoxItem c }) _core.Settings.ColorMode      = c.Tag.ToString()!;
             if (cmbFont      is { SelectedItem: ComboBoxItem f }) _core.Settings.FontFamily     = f.Tag.ToString()!;
-            if (cmbTextColor is { SelectedItem: ComboBoxItem x }) _core.Settings.TextColorMode  = x.Tag.ToString()!;
 
             _core.Settings.MicaEnabled         = chkMica.IsChecked == true;
             _core.Settings.AccentBorderEnabled  = chkAccentBorder.IsChecked == true;
@@ -375,9 +373,7 @@ namespace TMM
             _core.Settings.ColorMode      = preset.ColorMode;
             _core.Settings.TitlebarTheme  = preset.TitlebarTheme;
             _core.Settings.FontFamily     = preset.FontFamily;
-            _core.Settings.TextColorMode  = preset.TextColorMode;
             _core.Settings.MicaEnabled    = preset.MicaEnabled;
-            _core.Settings.MicaIntensity  = preset.MicaIntensity;
 
             // Resync all UI controls
             _isUpdating = true;
@@ -386,7 +382,6 @@ namespace TMM
             SelectByTag(cmbTheme,     preset.TitlebarTheme);
             SelectByTag(cmbColor,     preset.ColorMode);
             SelectByTag(cmbFont,      preset.FontFamily);
-            SelectByTag(cmbTextColor, preset.TextColorMode);
             chkMica.IsChecked         = preset.MicaEnabled;
             chkAccentBorder.IsChecked = false; // presets don't force-enable the accent border
             _isUpdating = false;
@@ -477,9 +472,7 @@ namespace TMM
                     ColorMode        = _core.Settings.ColorMode,
                     TitlebarTheme    = _core.Settings.TitlebarTheme,
                     FontFamily       = _core.Settings.FontFamily,
-                    TextColorMode    = _core.Settings.TextColorMode,
                     MicaEnabled      = _core.Settings.MicaEnabled,
-                    MicaIntensity    = _core.Settings.MicaIntensity,
                     ComplementColors = currentComplements
                 };
                 var json = JsonSerializer.Serialize(preset, new JsonSerializerOptions { WriteIndented = true });
@@ -617,9 +610,7 @@ namespace TMM
         public string ColorMode     { get; set; } = "Dark";
         public string TitlebarTheme { get; set; } = "Vanilla";
         public string FontFamily    { get; set; } = "Bahnschrift";
-        public string TextColorMode { get; set; } = "WCAG";
         public bool   MicaEnabled   { get; set; } = false;
-        public double MicaIntensity { get; set; } = 0.55;
 
         /// <summary>
         /// Optional: hex colours algorithmically paired with the accent.

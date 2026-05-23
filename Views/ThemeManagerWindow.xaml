@@ -201,34 +201,19 @@
                     <!-- Typography -->
                     <TextBlock Text="Typography" FontSize="12" FontWeight="SemiBold"
                                Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,8"/>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Font Family" Foreground="{DynamicResource SubTextBrush}" FontSize="12" Margin="0,0,0,3"/>
-                            <ComboBox x:Name="cmbFont" SelectionChanged="ModularSetting_Changed">
-                                <ComboBoxItem Content="Bahnschrift (Default)" Tag="Bahnschrift"/>
-                                <ComboBoxItem Content="Segoe UI" Tag="Segoe UI"/>
-                                <ComboBoxItem Content="Segoe UI Light" Tag="Segoe UI Light"/>
-                                <ComboBoxItem Content="Segoe UI Semibold" Tag="Segoe UI Semibold"/>
-                                <ComboBoxItem Content="Calibri" Tag="Calibri"/>
-                                <ComboBoxItem Content="Cambria" Tag="Cambria"/>
-                                <ComboBoxItem Content="Consolas" Tag="Consolas"/>
-                                <ComboBoxItem Content="Trebuchet MS" Tag="Trebuchet MS"/>
-                            </ComboBox>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Text Contrast Algorithm" Foreground="{DynamicResource SubTextBrush}" FontSize="12" Margin="0,0,0,3"/>
-                            <ComboBox x:Name="cmbTextColor" SelectionChanged="ModularSetting_Changed">
-                                <ComboBoxItem Content="WCAG (Accessible)" Tag="WCAG"/>
-                                <ComboBoxItem Content="YIQ (Perceptual)" Tag="YIQ"/>
-                                <ComboBoxItem Content="Invert Snap" Tag="Invert"/>
-                            </ComboBox>
-                        </StackPanel>
-                    </Grid>
+                    <StackPanel Margin="0,0,0,8">
+                        <TextBlock Text="Font Family" Foreground="{DynamicResource SubTextBrush}" FontSize="12" Margin="0,0,0,3"/>
+                        <ComboBox x:Name="cmbFont" SelectionChanged="ModularSetting_Changed">
+                            <ComboBoxItem Content="Bahnschrift (Default)" Tag="Bahnschrift"/>
+                            <ComboBoxItem Content="Segoe UI" Tag="Segoe UI"/>
+                            <ComboBoxItem Content="Segoe UI Light" Tag="Segoe UI Light"/>
+                            <ComboBoxItem Content="Segoe UI Semibold" Tag="Segoe UI Semibold"/>
+                            <ComboBoxItem Content="Calibri" Tag="Calibri"/>
+                            <ComboBoxItem Content="Cambria" Tag="Cambria"/>
+                            <ComboBoxItem Content="Consolas" Tag="Consolas"/>
+                            <ComboBoxItem Content="Trebuchet MS" Tag="Trebuchet MS"/>
+                        </ComboBox>
+                    </StackPanel>
 
                     <Border Height="1" Background="{DynamicResource SubTextBrush}" Opacity="0.2" Margin="0,0,0,10"/>
 

@@ -105,7 +105,7 @@
                     <StackPanel>
                         <TextBlock Text="Diagnostics" FontSize="13" FontWeight="SemiBold"
                                    Foreground="#FF88EE" Margin="0,0,0,8"/>
-                        <UniformGrid x:Name="gridDiagnostics" Columns="4">
+                        <UniformGrid x:Name="gridDiagnostics" Columns="3">
                             <Button x:Name="btnMd5" Content="MD5" Click="BtnMd5Check_Click"
                                     Height="26" Margin="0,0,3,0" Background="{DynamicResource PanelBrush}"
                                     Foreground="{DynamicResource AccentBrush}" BorderThickness="0" Cursor="Hand"
@@ -114,12 +114,8 @@
                                     Height="26" Margin="3,0,3,0" Background="{DynamicResource PanelBrush}"
                                     Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
                             <Button Content="Wipe Cache" Click="BtnWipeCache_Click"
-                                    Height="26" Margin="3,0,3,0" Background="{DynamicResource PanelBrush}"
-                                    Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                            <Button Content="Dev Console" Click="BtnOpenConsole_Click"
                                     Height="26" Margin="3,0,0,0" Background="{DynamicResource PanelBrush}"
-                                    Foreground="{DynamicResource AccentBrush}" BorderThickness="0" Cursor="Hand"
-                                    ToolTip="Open Developer Diagnostics Console"/>
+                                    Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
                         </UniformGrid>
                     </StackPanel>
                 </Border>

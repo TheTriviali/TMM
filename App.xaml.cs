@@ -32,8 +32,10 @@ namespace TMM
 
         private static void ShowCrashDialog(Exception ex)
         {
-            try { new CrashReportWindow(ex).ShowDialog(); }
-            catch { MessageBox.Show(ex.Message, "TMM — Unexpected Error", MessageBoxButton.OK, MessageBoxImage.Error); }
+            string report = $"Error: {ex.Message}\n\nType: {ex.GetType().FullName}\n\nStack Trace:\n{ex.StackTrace}";
+            try { System.Windows.Clipboard.SetText(report); } catch { }
+            MessageBox.Show(ex.Message + "\n\n(Details copied to clipboard)",
+                "TMM — Unexpected Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

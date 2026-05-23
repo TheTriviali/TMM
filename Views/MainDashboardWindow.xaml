@@ -581,16 +581,6 @@
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
                                                Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <!-- DXVK -->
-                                <StackPanel VerticalAlignment="Center">
-                                    <Button Content="&#xE7AC;" Click="BtnDxvk_Click" ToolTip="DXVK Config"
-                                            Style="{StaticResource IconButtonStyle}"
-                                            Width="38" Height="38" FontSize="18"
-                                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
-                                    <TextBlock x:Name="lblDxvk" Text="DXVK" FontSize="10"
-                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
-                                               Margin="0,2,0,0"/>
-                                </StackPanel>
                             </StackPanel>
 
                         </DockPanel>
@@ -707,20 +697,12 @@
                                         Opacity="0.3" Margin="10,10"/>
 
                                     <!-- Auto-installers -->
-                                    <Button Content="Modloader" Click="BtnInstallModloader_Click"
-                                        ToolTip="Download and Install Modloader"
-                                        Style="{StaticResource SidebarLinkBtnStyle}" FontSize="12"
-                                        HorizontalAlignment="Stretch" Margin="0,2"/>
                                     <Button Content="Widescreen Fix" Click="BtnWidescreenFix_Click"
                                         ToolTip="Auto-Install Widescreen Fixes Pack"
                                         Style="{StaticResource SidebarLinkBtnStyle}" FontSize="12"
                                         HorizontalAlignment="Stretch" Margin="0,2"/>
                                     <Button Content="SilentPatch" Click="BtnSilentPatch_Click"
                                         ToolTip="Auto-Install SilentPatch"
-                                        Style="{StaticResource SidebarLinkBtnStyle}" FontSize="12"
-                                        HorizontalAlignment="Stretch" Margin="0,2"/>
-                                    <Button Content="DXVK" Click="BtnInstallDxvk_Click"
-                                        ToolTip="Download and Install DXVK"
                                         Style="{StaticResource SidebarLinkBtnStyle}" FontSize="12"
                                         HorizontalAlignment="Stretch" Margin="0,2"/>
                                     <Button Content="2DFX" Click="BtnProject2DFX_Click"
