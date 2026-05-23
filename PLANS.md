@@ -347,7 +347,19 @@ private string SimulateRoute(string filePath)
 
 ---
 
+## §8 — Unified WHEN/IF/THEN Routing Rule Builder (2026-05-23)
+
+Replaces separate Output Directory Mapping + Conditional Routing sections with one rule system.
+
+**`RoutingRule` model:** `ExtensionPattern` (`.dll`, `*`) + optional `NameContains` filter + optional `CheckSubdir` IF condition + `Destination` (THEN) + `FallbackDestination` (ELSE). First-match-wins.
+
+**Migration:** `ProfileMigration` auto-converts legacy `outputDirectories`+`conditionalRoutes` JSON on first load, writes back as v1.1. `TmmGameExport` reads both v1.0 and v1.1.
+
+**UI:** WHEN/IF/THEN/ELSE rule cards with progressive disclosure. Label readability → `TextBrush`.
+
+---
+
 ## Deferred Sections
 
-Sections 3â€“10 (Smart DLL wizard, built-in game profiles, mod import, conflict resolution, loadouts UI, etc.) have been moved to [`FUTURE_ADDITIONS.md`](FUTURE_ADDITIONS.md) to keep this document focused on current shipped state.
+Sections 3â€”10 (Smart DLL wizard, built-in game profiles, mod import, conflict resolution, loadouts UI, etc.) have been moved to [`FUTURE_ADDITIONS.md`](FUTURE_ADDITIONS.md) to keep this document focused on current shipped state.
 
