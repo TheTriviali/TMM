@@ -1,20 +1,20 @@
-# TMM — Implementation Plans
-*Last updated 2026-05-23. Send this file to a new Claude session along with CODEBASE_GUIDE.md to resume work.*
+﻿# TMM â€” Implementation Plans
+*Last updated 2026-05-23. For future features and deferred concepts, see [`FUTURE_ADDITIONS.md`](FUTURE_ADDITIONS.md).*
 
-> **[2026-05-23] Haiku pass — §2.2–§2.5 + §0 gaps:**
-> - ✅ Move-up/down arrow buttons on conditional route cards (`BtnMoveRuleUp/Down_Click`)
-> - ✅ Rule conflict highlight (`HasConflict` property + DataTrigger red border)
-> - ✅ Description field, file-type quick-add chips, Author/Version metadata, Open Game Dir button
-> - ✅ NexusMods URL wired for "Open Mods Store" in GTA IV context menu
-> - ✅ Verified all §0 gaps already resolved: ToolbarShowLabels (both dashboards call ApplyToolbarLabels), deploy button color (all 3 dashboards), backup folder menu (CustomGame), Steam launch (CustomGame)
-> - ⏳ §2.4 (test routing dry-run panel) deferred to Sonnet pass
+> **[2026-05-23] Haiku pass (2nd session) â€” Â§2.4, Â§4.1, Â§4.3, Â§7.2:**
+> - âœ… Â§2.4 Test routing dry-run panel: Collapsible panel in CustomGameConfigWindow, BtnTestRouting_Click, RunTestRoute() simulation
+> - âœ… Â§4.1 Skyrim AE embedded profile: skyrim_ae.tmmgame asset, LoadBuiltInProfilesAsync(), GameLauncherWindow "Supported Games" section
+> - âœ… Â§4.3 Deploy preview panel: DeployPreviewWindow.xaml/cs, DeploymentGroup model, file grouping by destination
+> - âœ… Â§7.2 Mod loadouts foundation: ModLoadout.cs, BackendCore.SaveLoadoutAsync/LoadLoadoutAsync, storage model
+> 
+> **Advanced features (Smart DLL wizard, Minecraft, Conflict Resolution, etc.) moved to [`FUTURE_ADDITIONS.md`](FUTURE_ADDITIONS.md) â€” not actively developed.**
 
 > **Companion file:** [`SCOPE.md`](SCOPE.md) is a shorter, human-readable overview of planned features. Whenever this file is updated, also update SCOPE.md to keep both in sync.
 
 > **Session changelog:**
-> - §1 + §2.1 complete (`.tmmgame` import/export, drag-drop launcher, CustomGameConfigWindow buttons)
+> - Â§1 + Â§2.1 complete (`.tmmgame` import/export, drag-drop launcher, CustomGameConfigWindow buttons)
 > - Optimization pass complete: `ShellHelper` extracted, `GridViewColumnHeader` style centralized in App.xaml, `DashboardListItemStyle` centralized, `WindowBorderGradientBrush` dead code removed, `BtnDonate_Click` dead code removed, `ModListStyle` ItemContainerStyle de-duplicated across all three dashboards
-> - Deferred UI refactor added as §UI-R (see below); do NOT execute until explicitly resumed
+> - Deferred UI refactor added as Â§UI-R (see below); do NOT execute until explicitly resumed
 > - **VFS removal dead code cleanup complete (2026-05-23):**
 >   - Removed `DeepScanDrives()` + `RecursiveSearch()` (never called; QuickScan handles all cases)
 >   - Removed `SmartSteamLaunch()` stub (deferred to Smart DLL wizard feature)
@@ -26,47 +26,47 @@
 
 ---
 
-## 0 — Current Shipped State (as of this document)
+## 0 â€” Current Shipped State (as of this document)
 
 Everything below is **live on `master`** and working:
 
 | Area | Status |
 |------|--------|
-| Direct deploy to game dir | ✅ |
-| Backup & rollback (5-deep) | ✅ |
-| Smart archive extraction | ✅ |
-| GTA III/VC/SA full dashboard | ✅ |
-| GTA IV/TLaD/TBoGT dashboard + wizard | ✅ |
-| Multi-game launcher (GameLauncherWindow) | ✅ |
-| Custom game support (Add/Edit/Delete) | ✅ |
-| Sentence-builder routing rules + presets | ✅ |
-| Context-aware SettingsWindow (Full / GtaIvOnly / CustomGame) | ✅ |
-| Themes + dice button in all three dashboards | ✅ |
-| Edit config (pencil) button in Custom Game dashboard | ✅ |
-| CrashReportWindow with copy-to-clipboard | ✅ |
-| App icon (T on dark, multi-size .ico) | ✅ |
-| CODEBASE_GUIDE.md | ✅ |
-| WindowBorderBrush on all windows (no forced accent border) | ✅ |
-| macOS traffic-light buttons as default titlebar | ✅ |
-| OpenFolder via explorer.exe (fixes newly-created dir error) | ✅ |
-| `.tmmgame` export/import (CustomGameConfigWindow + GameLauncherWindow drag-drop) | ✅ |
-| `ShellHelper` — shared OpenFolder/OpenUrl (removed 3 local duplicate methods) | ✅ |
-| `GridViewColumnHeader` style centralized in App.xaml | ✅ |
-| `DashboardListItemStyle` centralized in App.xaml, ModListStyle BasedOn in all dashboards | ✅ |
-| `WindowBorderGradientBrush` dead resource + ThemeEngine writes removed | ✅ |
-| VFS removal dead code cleanup (DeepScan, SmartSteam, ParallelCopy, DebugStaging, GameState manager) | ✅ |
+| Direct deploy to game dir | âœ… |
+| Backup & rollback (5-deep) | âœ… |
+| Smart archive extraction | âœ… |
+| GTA III/VC/SA full dashboard | âœ… |
+| GTA IV/TLaD/TBoGT dashboard + wizard | âœ… |
+| Multi-game launcher (GameLauncherWindow) | âœ… |
+| Custom game support (Add/Edit/Delete) | âœ… |
+| Sentence-builder routing rules + presets | âœ… |
+| Context-aware SettingsWindow (Full / GtaIvOnly / CustomGame) | âœ… |
+| Themes + dice button in all three dashboards | âœ… |
+| Edit config (pencil) button in Custom Game dashboard | âœ… |
+| CrashReportWindow with copy-to-clipboard | âœ… |
+| App icon (T on dark, multi-size .ico) | âœ… |
+| CODEBASE_GUIDE.md | âœ… |
+| WindowBorderBrush on all windows (no forced accent border) | âœ… |
+| macOS traffic-light buttons as default titlebar | âœ… |
+| OpenFolder via explorer.exe (fixes newly-created dir error) | âœ… |
+| `.tmmgame` export/import (CustomGameConfigWindow + GameLauncherWindow drag-drop) | âœ… |
+| `ShellHelper` â€” shared OpenFolder/OpenUrl (removed 3 local duplicate methods) | âœ… |
+| `GridViewColumnHeader` style centralized in App.xaml | âœ… |
+| `DashboardListItemStyle` centralized in App.xaml, ModListStyle BasedOn in all dashboards | âœ… |
+| `WindowBorderGradientBrush` dead resource + ThemeEngine writes removed | âœ… |
+| VFS removal dead code cleanup (DeepScan, SmartSteam, ParallelCopy, DebugStaging, GameState manager) | âœ… |
 
-**Known gaps — status:**
-- ✅ `ToolbarShowLabels` — GTA IV and Custom both call `ApplyToolbarLabels()` on load; toggle button is in MainDashboard only (acceptable)
-- ✅ Steam protocol launch — `BtnLaunch_Click` in CustomGameDashboard already checks `SteamAppId` → `SteamLauncher.Invoke`
-- ⚠️ ThemeManagerWindow has a MainDashboard-specific callback; after theme change from IV/Custom dashboards the internal refresh is partially broken *(still open)*
-- ✅ "Open Mods Store" in GTA IV — now opens `https://www.nexusmods.com/gta4/`
-- ✅ Deploy button color state — all 3 dashboards have `UpdateDeployButton()` / `UpdateEpisodeDeployButton()`
-- ✅ Backup Folder context menu — present in CustomGameDashboard (verified)
+**Known gaps â€” status:**
+- âœ… `ToolbarShowLabels` â€” GTA IV and Custom both call `ApplyToolbarLabels()` on load; toggle button is in MainDashboard only (acceptable)
+- âœ… Steam protocol launch â€” `BtnLaunch_Click` in CustomGameDashboard already checks `SteamAppId` â†’ `SteamLauncher.Invoke`
+- âš ï¸ ThemeManagerWindow has a MainDashboard-specific callback; after theme change from IV/Custom dashboards the internal refresh is partially broken *(still open)*
+- âœ… "Open Mods Store" in GTA IV â€” now opens `https://www.nexusmods.com/gta4/`
+- âœ… Deploy button color state â€” all 3 dashboards have `UpdateDeployButton()` / `UpdateEpisodeDeployButton()`
+- âœ… Backup Folder context menu â€” present in CustomGameDashboard (verified)
 
 ---
 
-## 1 — .tmmgame Export/Import Format
+## 1 â€” .tmmgame Export/Import Format
 
 ### 1.1 File format spec
 
@@ -120,16 +120,16 @@ Encoding: UTF-8, pretty-printed
 ```
 
 **Key fields:**
-- `gameDirectory` — intentionally blank in exported files so each user fills in their own path
-- `installerHints.engineProxyNames` — list of DLL filenames that trigger engine-proxy routing (not SKSE)
-- `installerHints.dxVersionTarget` — when a DXVK archive contains multiple variants (d3d9/d3d11/d3d12), pick only the matching one
-- `installerHints.smartDllWizard` — if true, the DLL installer wizard fires for this game
-- `launcherCard` — optional; if present, a card is shown in GameLauncherWindow for this game
+- `gameDirectory` â€” intentionally blank in exported files so each user fills in their own path
+- `installerHints.engineProxyNames` â€” list of DLL filenames that trigger engine-proxy routing (not SKSE)
+- `installerHints.dxVersionTarget` â€” when a DXVK archive contains multiple variants (d3d9/d3d11/d3d12), pick only the matching one
+- `installerHints.smartDllWizard` â€” if true, the DLL installer wizard fires for this game
+- `launcherCard` â€” optional; if present, a card is shown in GameLauncherWindow for this game
 - `$schema` version allows forward-compatible parsing
 
 ### 1.2 Model changes
 
-**`CustomGameProfile.cs`** — add new fields:
+**`CustomGameProfile.cs`** â€” add new fields:
 ```csharp
 public InstallerHints? InstallerHints { get; set; }
 public LauncherCardConfig? LauncherCard { get; set; }
@@ -160,7 +160,7 @@ public record LauncherCardConfig(
 
 1. In `CustomGameConfigWindow`: add **Export** button in the footer bar (left of Save/Cancel)
 2. Opens `SaveFileDialog` with filter `"TMM Game Config (*.tmmgame)|*.tmmgame"`
-3. Serializes `CustomGameProfile` → JSON, blanks out `GameDirectory`, writes file
+3. Serializes `CustomGameProfile` â†’ JSON, blanks out `GameDirectory`, writes file
 4. Shows success toast
 
 ### 1.4 Import flow
@@ -180,7 +180,7 @@ public record LauncherCardConfig(
 
 ---
 
-## 2 — CustomGameConfigWindow Refinements
+## 2 â€” CustomGameConfigWindow Refinements
 
 ### 2.1 Import/Export buttons in the window
 
@@ -192,8 +192,8 @@ public record LauncherCardConfig(
 The existing `Cancel` and `Save` buttons stay on the right.
 
 **Code-behind:**
-- `BtnImportConfig_Click` — OpenFileDialog → parse .tmmgame → fill all fields (with dirty-check prompt)
-- `BtnExportConfig_Click` — same as §1.3 export flow but can also export a *partially configured* config (useful for creating community templates before knowing the actual game path)
+- `BtnImportConfig_Click` â€” OpenFileDialog â†’ parse .tmmgame â†’ fill all fields (with dirty-check prompt)
+- `BtnExportConfig_Click` â€” same as Â§1.3 export flow but can also export a *partially configured* config (useful for creating community templates before knowing the actual game path)
 
 ### 2.2 Rule drag-to-reorder
 
@@ -201,15 +201,15 @@ The `ItemsControl icCondRoutes` needs to become a drag-reorderable list.
 
 **Approach:** Replace with a `ListBox` that has a transparent item container style matching the current card look, plus `PreviewMouseLeftButtonDown` / `MouseMove` / `Drop` handlers (same pattern as the mod list in the dashboards).
 
-OR: Simpler — add Up/Down arrow buttons on each card next to the Remove (×) button. Arrows swap the item with the one above/below in `_condRoutes`. Less drag-drop complexity, works fine for small lists.
+OR: Simpler â€” add Up/Down arrow buttons on each card next to the Remove (Ã—) button. Arrows swap the item with the one above/below in `_condRoutes`. Less drag-drop complexity, works fine for small lists.
 
 **Recommended:** Up/Down arrow buttons for now. Drag handles can be added later.
 
 **XAML change on each card:**
 ```xml
 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-    <Button Content="▲" Click="BtnMoveRuleUp_Click" .../>
-    <Button Content="▼" Click="BtnMoveRuleDown_Click" .../>
+    <Button Content="â–²" Click="BtnMoveRuleUp_Click" .../>
+    <Button Content="â–¼" Click="BtnMoveRuleDown_Click" .../>
     <Button Content="&#xE8BB;" Click="BtnRemoveCondRouteItem_Click" .../>
 </StackPanel>
 ```
@@ -268,9 +268,9 @@ private void ValidateRuleConflicts()
 
 Wire `ValidateRuleConflicts()` to the `PropertyChanged` event on each row when rows are added.
 
-### 2.4 Test routing dry-run  ⬛ HAIKU-ELIGIBLE
+### 2.4 Test routing dry-run  â¬› HAIKU-ELIGIBLE
 
-**Decided:** Inline collapsible panel below the routing rules; "Test Routing…" button sits next to "+ Add Rule".
+**Decided:** Inline collapsible panel below the routing rules; "Test Routingâ€¦" button sits next to "+ Add Rule".
 
 **Button row:**
 ```xml
@@ -288,26 +288,26 @@ Wire `ValidateRuleConflicts()` to the `PropertyChanged` event on each row when r
             <TextBox x:Name="txtTestFile" Placeholder="Drop or browse a file..." />
             <Button Content="Browse..." Click="BtnTestRoutingBrowse_Click"/>
         </Grid>
-        <TextBlock x:Name="txtTestResult" Text="→ (nothing yet)" />
+        <TextBlock x:Name="txtTestResult" Text="â†’ (nothing yet)" />
     </StackPanel>
 </Border>
 ```
 
 **BtnTestRouting_Click:** Toggle `pnlTestRouting.Visibility`. If showing and `txtTestFile` already has a value, call `RunTestRoute()`.
 
-**BtnTestRoutingBrowse_Click:** `OpenFileDialog` (no filter) → set `txtTestFile.Text` → call `RunTestRoute()`.
+**BtnTestRoutingBrowse_Click:** `OpenFileDialog` (no filter) â†’ set `txtTestFile.Text` â†’ call `RunTestRoute()`.
 
-**RunTestRoute():** Call `SimulateRoute(txtTestFile.Text)` → set `txtTestResult.Text`.
+**RunTestRoute():** Call `SimulateRoute(txtTestFile.Text)` â†’ set `txtTestResult.Text`.
 
 **Flow:**
 1. Opens a small modal (`TestRoutingWindow`) or inline panel
 2. User picks a file (OpenFileDialog, no filter)
 3. System evaluates:
-   - Is the extension in `outputDirectories`? → show static route
+   - Is the extension in `outputDirectories`? â†’ show static route
    - Does any `conditionalRoute` match the extension?
      - If yes: check whether `CheckSubdir` exists in `GameDirectory` (if directory is set)
-     - Show result: `"→ Data\SKSE\Plugins\  (because Data\SKSE\ exists)"` or `"→ .  (Data\SKSE\ not found)"`
-4. Display result as a simple info panel within the config window (no separate dialog needed — just a collapsible result area below the routing section)
+     - Show result: `"â†’ Data\SKSE\Plugins\  (because Data\SKSE\ exists)"` or `"â†’ .  (Data\SKSE\ not found)"`
+4. Display result as a simple info panel within the config window (no separate dialog needed â€” just a collapsible result area below the routing section)
 
 **Code logic:**
 ```csharp
@@ -324,1065 +324,30 @@ private string SimulateRoute(string filePath)
                       Directory.Exists(Path.Combine(gameDir, r.CheckSubdir));
         string dest = exists ? r.RouteIfExists : r.RouteIfMissing;
         string reason = exists ? $"({r.CheckSubdir}\\ exists)" : $"({r.CheckSubdir}\\ not found)";
-        return $"→  {(dest == "." ? "(game root)" : dest)}  {reason}";
+        return $"â†’  {(dest == "." ? "(game root)" : dest)}  {reason}";
     }
 
     // Static mapping
     if (_mappings.FirstOrDefault(m => m.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase))
             is MappingRow match)
-        return $"→  {(match.OutputFolder == "." ? "(game root)" : match.OutputFolder)}  (static rule)";
+        return $"â†’  {(match.OutputFolder == "." ? "(game root)" : match.OutputFolder)}  (static rule)";
 
-    return $"→  (game root)  (no rule — default)";
+    return $"â†’  (game root)  (no rule â€” default)";
 }
 ```
 
 ### 2.5 Additional QoL (smaller items)
 
-- **Description field** — optional free-text below game name; shown as tooltip on launcher card
-- **Author/Version fields** — only shown when exporting (collapsible "Metadata" section)
-- **Recent directories** — game directory field remembers last 5 used paths (dropdown arrow)
-- **File type quick-add chips** — below the file types text box, show clickable chips for common extensions: [.zip] [.rar] [.7z] [.esp] [.dll] [.jar] — clicking appends to the field
-- **Empty-state routing hint** — already implemented; ensure the hint text updates when game name is filled (personalize it: "Mods for *{gameName}* go to the game root by default")
-- **"Open game dir" button** — small folder icon next to the Game Directory field to open it in Explorer (useful for verifying the path is right)
+- **Description field** â€” optional free-text below game name; shown as tooltip on launcher card
+- **Author/Version fields** â€” only shown when exporting (collapsible "Metadata" section)
+- **Recent directories** â€” game directory field remembers last 5 used paths (dropdown arrow)
+- **File type quick-add chips** â€” below the file types text box, show clickable chips for common extensions: [.zip] [.rar] [.7z] [.esp] [.dll] [.jar] â€” clicking appends to the field
+- **Empty-state routing hint** â€” already implemented; ensure the hint text updates when game name is filled (personalize it: "Mods for *{gameName}* go to the game root by default")
+- **"Open game dir" button** â€” small folder icon next to the Game Directory field to open it in Explorer (useful for verifying the path is right)
 
 ---
 
-## 3 — Smart DLL Installer Wizard  🔵 SONNET
+## Deferred Sections
 
-**Decided:** Fires automatically whenever a mod containing `.dll` files is installed and the game profile has `.dll` in its file types (or `smartDllWizard: true`). User sees the dialog; can dismiss.
+Sections 3â€“10 (Smart DLL wizard, built-in game profiles, mod import, conflict resolution, loadouts UI, etc.) have been moved to [`FUTURE_ADDITIONS.md`](FUTURE_ADDITIONS.md) to keep this document focused on current shipped state.
 
-Applies to **any** custom game (and built-in GTA IV / Skyrim / future games) that lists `.dll` in its supported mod file types.
-
-### 3.1 Trigger conditions
-
-The wizard fires during `BtnInstallMod_Click` (or the archive extraction completion handler) when:
-- The installed archive contains one or more `.dll` files at its root or in a single subdirectory
-- The game profile has `installerHints.smartDllWizard = true`  
-  OR the game's mod file types include `.dll`
-
-### 3.2 Wizard decision tree
-
-```
-Archive arrives containing .dll(s)
-│
-├─ Any .dll filename matches engineProxyNames?
-│   (d3d11.dll, dxgi.dll, d3d9.dll, d3d12.dll, dinput8.dll, etc.)
-│   │
-│   ├─ YES → Engine proxy route
-│   │   ├─ Multiple variants present (d3d9 + d3d11 + d3d12)?
-│   │   │   └─ Auto-select based on dxVersionTarget:
-│   │   │       "dx11" → keep d3d11.dll only
-│   │   │       "dx9"  → keep d3d9.dll only
-│   │   │       "dx12" → keep d3d12.dll only
-│   │   │       null   → ask user which variant
-│   │   └─ Route all kept files → game root (.)
-│   │       Show toast: "DXVK (d3d11.dll) installed to game root"
-│   │
-│   └─ NO → Check archive directory structure
-│       │
-│       ├─ DLLs are in an SKSE\Plugins\ subfolder in the archive?
-│       │   └─ Auto-route to Data\SKSE\Plugins\ (no prompt needed)
-│       │
-│       ├─ DLLs are in a plugins\ or scripts\ subfolder?
-│       │   └─ Route to matching output dir from conditionalRoutes
-│       │
-│       └─ DLLs are loose at archive root?
-│           └─ Show SmartDllDialog:
-│               "What kind of mod is this?"
-│               [Script Extender Plugin]  → Data\SKSE\Plugins\  (if SKSE route exists)
-│               [Engine Proxy / Injector] → game root
-│               [Other / Manual]          → pick destination
-```
-
-### 3.3 SmartDllDialog UI
-
-Simple modal (no new XAML file needed — use `AskUserWindow` pattern or inline `MessageBox` with custom buttons):
-
-```
-Installing: ENBSeries.dll
-────────────────────────────────────────────────
-What kind of mod is this?
-
-○  Script Extender Plugin  (Data\SKSE\Plugins\)
-   e.g. SkyUI, iEquip, PapyrusUtil
-
-○  Engine Proxy / Injector  (game root)
-   e.g. DXVK, ENBSeries, ReShade, SpecialK
-
-○  Let me choose the destination...
-
-[ Cancel ]                              [ Install ]
-```
-
-New file: `Views/SmartDllDialog.xaml` + `.xaml.cs`
-
-### 3.4 Engine proxy name list (built into BackendCore)
-
-```csharp
-public static readonly HashSet<string> KnownEngineProxyNames = new(StringComparer.OrdinalIgnoreCase)
-{
-    "d3d8.dll", "d3d9.dll", "d3d10.dll", "d3d11.dll", "d3d12.dll",
-    "dxgi.dll", "dinput8.dll", "dsound.dll", "winmm.dll",
-    "version.dll", "binkw32.dll"
-};
-```
-
-A game profile's `InstallerHints.EngineProxyNames` overrides/extends this list.
-
----
-
-## 4 — Built-in Game Profiles: Skyrim AE
-
-**Decided:** Skyrim ships before Minecraft. Launcher gets a dedicated "Supported Games" section between the GTA card and user custom games. First-launch with no game dir → inline expand on the card (no new window).
-
-### 4.1 Launcher card  ⬛ HAIKU-ELIGIBLE (embed + LoadBuiltInProfiles + section header)
-
-`GameLauncherWindow` currently hard-codes the GTA card and iterates `GameRegistry` for custom games. Add a new section: **built-in extended profiles** loaded from embedded `.tmmgame` resource files.
-
-**Implementation:**
-1. Add folder `Assets/GameProfiles/` 
-2. Add `skyrim_ae.tmmgame` as an `EmbeddedResource` in the .csproj
-3. On `GameRegistry.InitializeAsync()`, load all embedded profiles as "built-in custom games" (same `CustomGameProfile` model, flagged `IsBuiltIn = true`)
-4. Launcher shows them in a dedicated "Supported Games" section between the GTA card and user-added custom games
-
-`IsBuiltIn` flag prevents Delete from appearing on the card (Edit is still allowed to set the game directory).
-
-**skyrim_ae.tmmgame** (embed in Assets/GameProfiles/):
-```json
-{
-  "$schema": "tmm-game/1.0",
-  "gameName": "Skyrim Anniversary Edition",
-  "exePath": "SkyrimSE.exe",
-  "steamAppId": "489830",
-  "modFileTypes": ".zip, .rar, .7z, .esp, .esm, .esl, .dll, .bsa, .ba2, .ini, .json, .pex, .psc",
-  "outputDirectories": {
-    ".esp":  "Data",
-    ".esm":  "Data",
-    ".esl":  "Data",
-    ".bsa":  "Data",
-    ".ba2":  "Data",
-    ".pex":  "Data\\Scripts",
-    ".psc":  "Data\\Scripts\\Source"
-  },
-  "conditionalRoutes": [
-    {
-      "extension": ".dll",
-      "checkSubdir": "Data\\SKSE",
-      "routeIfExists": "Data\\SKSE\\Plugins",
-      "routeIfMissing": "."
-    }
-  ],
-  "installerHints": {
-    "engineProxyNames": ["d3d11.dll","d3d9.dll","dxgi.dll","d3d12.dll","dinput8.dll"],
-    "dxVersionTarget": "dx11",
-    "smartDllWizard": true
-  },
-  "launcherCard": {
-    "displayName": "Skyrim AE",
-    "subtitle": "Anniversary Edition",
-    "iconGlyph": "&#xE7FC;",
-    "accentColor": null
-  },
-  "description": "Built-in support for Skyrim Anniversary Edition (v1.6+). Routes ESP/ESM to Data\\, SKSE plugins to Data\\SKSE\\Plugins\\, and detects engine proxies (DXVK, ENB, ReShade) automatically.",
-  "version": "1.0"
-}
-```
-
-### 4.2 First-use setup (inline card expand)  🔵 SONNET
-
-**Decided:** When the user clicks the Skyrim card and `GameDirectory` is empty, the card expands inline (no new window) to show:
-- A path text field
-- A Browse button (OpenFolderDialog)
-- An Open/Confirm button that saves the path and opens the dashboard
-
-Implementation: In `GameLauncherWindow`, detect `IsBuiltIn && string.IsNullOrEmpty(GameDirectory)` on card click → swap the card's normal footer for an expand panel via visibility toggle. On confirm, save path to the registry and open `CustomGameDashboardWindow`.
-
-### 4.3 Deploy verification panel  ⬛ HAIKU-ELIGIBLE
-
-At deploy time, before writing files, show a summary:
-```
-Deploying 12 files to Skyrim AE:
-  4 files  →  Data\          (.esp, .esm)
-  6 files  →  Data\SKSE\Plugins\   (.dll)
-  1 file   →  game root      (d3d11.dll — DXVK)
-  1 file   →  Data\Scripts\  (.pex)
-                    [ Deploy ]  [ Cancel ]
-```
-
-This is the **deploy preview panel** — show it when `_hasPendingChanges` is true and user hits Deploy, for any game with `installerHints` set. After confirmation deploy proceeds as normal.
-
-**Implementation:** `DeployPreviewWindow.xaml` — simple modal listing destination groups. Passes `IEnumerable<(string dest, int count, string exts)>` from a new `BackendCore.SimulateDeployAsync()` method.
-
----
-
-## 5 — Built-in Game Profiles: Minecraft  🔵 SONNET
-
-### 5.1 Java version table (for UI display)
-
-| Label in TMM | Java version | Minecraft versions | Notes |
-|---|---|---|---|
-| Classic / Legacy | Java 8 | 1.0 – 1.16.5 | Old Forge mods |
-| Modern | Java 17 | 1.17 – 1.20.4 | Most active modpacks |
-| Current | Java 21 | 1.20.5 – 1.21.x | Fabric/NeoForge today |
-| Future | Java 25 | 1.22+ | EA at time of writing |
-
-TMM does not need to manage Java itself — just display the version requirement as a note next to the selected MC version.
-
-### 5.2 minecraft.tmmgame (embed in Assets/GameProfiles/)
-
-```json
-{
-  "$schema": "tmm-game/1.0",
-  "gameName": "Minecraft Java Edition",
-  "gameDirectory": "",
-  "exePath": null,
-  "steamAppId": null,
-  "modFileTypes": ".zip, .jar, .json",
-  "outputDirectories": {
-    ".jar":  "mods",
-    ".zip":  "resourcepacks"
-  },
-  "conditionalRoutes": [],
-  "installerHints": {
-    "smartDllWizard": false,
-    "minecraftMode": true
-  },
-  "launcherCard": {
-    "displayName": "Minecraft",
-    "subtitle": "Java Edition",
-    "iconGlyph": "&#xE7BE;",
-    "accentColor": "#5DA832"
-  },
-  "description": "Built-in support for Minecraft Java Edition. Routes .jar mods to mods\\, resource packs to resourcepacks\\, shader packs to shaderpacks\\. Datapacks require world selection at install time.",
-  "version": "1.0"
-}
-```
-
-### 5.3 Minecraft-specific launcher card behavior
-
-The Minecraft card in `GameLauncherWindow`:
-- Shows a **MC version selector** (text field or dropdown) below the card title: "MC Version: [1.21.1]" → shows required Java version
-- Shows a link button: `"Use Prism Launcher ↗"` → opens `https://prismlauncher.org`
-- Default game directory: `%APPDATA%\.minecraft`
-- If custom directory selected, TMM stores it as `GameDirectory` in the profile (same as any other game)
-
-### 5.4 Datapack install flow (special case)
-
-**Trigger:** User installs a mod archive that contains a `pack.mcmeta` file at its root → it's a datapack.
-
-**Flow:**
-1. Detect `pack.mcmeta` in archive root during extraction
-2. Open `MinecraftWorldPickerDialog`:
-   - Lists subdirectories of `saves\` in the game directory
-   - Each row shows world name + icon (if `icon.png` exists in the save)
-   - Checkboxes for multi-world install
-   - "Install to all worlds" button
-3. For each selected world: extract datapack to `saves\{worldName}\datapacks\{packName}\`
-
-**`MinecraftWorldPickerDialog.xaml`** — new file, similar to `SmartDllDialog`
-
-### 5.5 Mod loader detection
-
-Before deploying `.jar` files, check:
-```csharp
-bool modsFolder = Directory.Exists(Path.Combine(gameDir, "mods"));
-bool fabricJson  = File.Exists(Path.Combine(gameDir, "fabric.json")); // rough check
-bool forgeInst   = Directory.GetFiles(gameDir, "forge-*.jar").Any();
-```
-
-If `mods\` doesn't exist, warn: *"No mod loader detected. Install Fabric or Forge first, then deploy."*  
-Do not block deploy — just warn.
-
-### 5.6 Shader pack detection
-
-Archive containing a `shaders\` folder at root → it's a shader pack → route to `shaderpacks\` automatically (no `.zip` static mapping needed, use archive-content sniffing instead).
-
-This requires peeking inside the archive before extraction. `SharpCompress` can list entries without extracting; add a `PeekArchiveType(string archivePath)` helper to `BackendCore`:
-```csharp
-public static ArchiveContentType PeekArchiveType(string archivePath)
-{
-    // Returns: Datapack, ShaderPack, ResourcePack, JarMod, Generic
-}
-```
-
----
-
-## 6 — Mod Import from Existing Game Installations  🔵 SONNET
-
-### 6.1 Entry point
-
-Each game dashboard gets an **"Import from Game"** toolbar button (icon `&#xE8B6;` — Download/Import arrow):
-- GTA III/VC/SA: in `MainDashboardWindow` per-column header area
-- GTA IV: in `Gta4DashboardWindow` per-column header
-- Custom Game: in `CustomGameDashboardWindow` toolbar
-
-### 6.2 Scan strategies per game
-
-**GTA San Andreas:**
-```
-{gameDir}\modloader\           → each subfolder = one ModItem (name = folder name)
-{gameDir}\CLEO\               → group .cs/.cleo by filename stem = one ModItem each
-{gameDir}\scripts\            → each .asi = one ModItem
-{gameDir}\moonloader\scripts\ → each .lua = one ModItem (if Moonloader present)
-```
-
-**GTA III / Vice City:**
-```
-{gameDir}\scripts\  → each .cs (CLEO) = one ModItem
-{gameDir}\CLEO\     → same
-Root *.asi files    → each = one ModItem
-```
-
-**GTA IV:**
-```
-{gameDir}\scripts\  → each .asi/.dll = one ModItem
-{gameDir}\plugins\  → each .asi = one ModItem
-{gameDir}\EFLC\scripts\ → same for TLaD/TBoGT
-```
-
-**Custom games (generic reverse-routing):**
-For each configured `OutputDirectory` mapping (e.g. `.dll → Data\SKSE\Plugins`):
-- Scan `{gameDir}\{outputFolder}\` for files matching the extension
-- Group by logical name (filename without ext) or parent subfolder
-
-### 6.3 Import UI flow
-
-**Step 1 — Scan:**
-New window `ModImportWindow.xaml`:
-- Title: "Import from [Game Name]"
-- Runs scan async with progress indicator
-- Shows a `ListView` of detected items: `[✓] ModName | Type | Size | Source folder`
-- "Select All" / "Select None" buttons
-- Filter bar (search by name)
-
-**Step 2 — Preview:**
-At bottom: "Importing X mods will copy Y MB to TMM storage. Original files are not moved."
-
-**Step 3 — Import:**
-On confirm:
-```csharp
-foreach (var item in selected)
-{
-    string dest = Path.Combine(_core.AppDataPath, profile.RawFolderName, item.Name);
-    Directory.CreateDirectory(dest);
-    // Copy source files into dest
-    foreach (var file in item.SourceFiles)
-        File.Copy(file, Path.Combine(dest, Path.GetFileName(file)), overwrite: true);
-    // Create ModItem and add to _mods
-    var mod = new ModItem { Name = item.Name, LoadOrder = _mods.Count, IsImported = true };
-    _mods.Add(mod);
-}
-SaveModsToJson();
-```
-
-**Step 4 — Result:**
-Toast: "Imported 14 mods. Review load order, then deploy to apply."
-Imported mods get an `[Imported]` badge in the mod list (yellow chip).
-
-**`ModItem` change:** Add `bool IsImported` property (serialized to JSON).
-
----
-
-## 7 — Remaining Planned Features
-
-### 7.1 Conflict resolution engine
-
-**Trigger:** At deploy time, before any file is written.
-
-**Logic:**
-1. Build a `Dictionary<string, string>` of `{relativeFilePath → modName}` for all enabled mods in load order
-2. When two mods map to the same relative path, the higher load-order mod wins but both are flagged
-3. Show conflict list: `"SkyUI.esp overrides SkyUI_SE.esp → Data\SkyUI.esp (SkyUI wins)"`
-
-**UI:** Non-blocking warning panel above the deploy button, or a modal with "Deploy anyway" option.
-
-**New field on `DeployManifest`:** `ConflictedFiles: List<ConflictEntry>` where `ConflictEntry` holds winning mod, losing mod, relative file path.
-
-### 7.2 Mod profiles / loadouts  ⬛ HAIKU-ELIGIBLE (storage model + toolbar dropdown)
-
-**Decided:** Loadout dropdown lives in the right side of each dashboard toolbar, next to disk-space label.
-
-```
-Toolbar: [ Install ] [ Deploy ] [ Rollback ] ...   Loadout: [Default ▾]   128 GB free
-```
-
-- Save current enabled/disabled state + load order as a named loadout
-- Stored as `{AppData}\{game}\loadouts\{name}.json`
-- UI: `ComboBox` at toolbar right-side (before disk space TextBlock), DataTemplate shows loadout name
-- Dropdown items: list of saved loadout names + separator + "Save Current..." + "Delete..."
-- Switching loadouts restores enable state + load order, marks changes pending
-- Saving: prompt for a name (simple InputDialog), write JSON, refresh ComboBox
-
-### 7.3 Community game library (future, not to implement yet)
-
-- `https://raw.githubusercontent.com/...` or a dedicated endpoint serving `.tmmgame` files
-- Launcher shows a "Browse game configs" button → fetches index → displays community cards
-- One-click import populates the Add Custom Game form
-
-### 7.4 Cover art
-
-- Local picker: drag-and-drop image or Browse button on launcher card
-- Stored as `{AppData}\GameArt\{key}.png` (resized to 460×215)
-- SteamGridDB: if `SteamAppId` is set, fetch via `https://www.steamgriddb.com/api/v2` (user provides API key in Settings)
-- Shown as background image on launcher card (overlay with gradient for text legibility)
-
-### 7.5 Deploy status indicator for all dashboards
-
-MainDashboard has a grey/accent/orange deploy button based on `_hasPendingChanges`. Replicate to GTA IV and Custom dashboards:
-- Grey: `ControlBgBrush` — nothing to deploy
-- Accent: pending mods  
-- Orange: pending + override active
-
-Requires subscribing to `_mods.CollectionChanged` and tracking a `_hasPendingChanges` bool in each dashboard (same pattern as `CustomGameDashboardWindow._hasPendingChanges`).
-
----
-
-## 8 — File Structure Changes Summary
-
-```
-Assets/
-  GameProfiles/               ← NEW
-    skyrim_ae.tmmgame         ← NEW (EmbeddedResource)
-    minecraft.tmmgame         ← NEW (EmbeddedResource)
-
-Models/
-  CustomGameProfile.cs        ← add InstallerHints, LauncherCardConfig, IsBuiltIn, Description, Author, Version
-  ModItem.cs                  ← add IsImported bool
-
-Services/
-  GameRegistry.cs             ← add LoadBuiltInProfiles(), ExportAsync(), ImportAsync(), IsBuiltIn flag
-  BackendCore.cs              ← add PeekArchiveType(), SimulateDeployAsync(), SmartDllRouter
-
-Views/
-  CustomGameConfigWindow.xaml     ← Import/Export buttons, move-up/down on routes, conflict highlight, test routing panel
-  CustomGameConfigWindow.xaml.cs  ← all new handlers
-  SmartDllDialog.xaml + .cs       ← NEW
-  DeployPreviewWindow.xaml + .cs  ← NEW
-  MinecraftWorldPickerDialog.xaml + .cs  ← NEW
-  ModImportWindow.xaml + .cs      ← NEW
-  GameLauncherWindow.xaml         ← drag-drop import, built-in profile section
-  GameLauncherWindow.xaml.cs      ← import handler, built-in card rendering
-```
-
----
-
-## 9 — Implementation Order
-
-Legend: ✅ done · ⬛ Haiku-eligible · 🔵 Sonnet · ⚠️ Sonnet-then-Haiku-finishes
-
-1. ~~**Fix known gaps** (§0)~~ ✅ **VERIFIED/FIXED 2026-05-23**
-2. ~~**`.tmmgame` Import/Export** (§1 + §2.1)~~ ✅ **DONE**
-3. **CustomGameConfigWindow QoL** (§2.2–§2.5)
-   - ✅ §2.2 Move-up/down arrows
-   - ✅ §2.3 Rule conflict highlight
-   - ✅ §2.5 File-type chips, description, metadata, Open Game Dir
-   - ⬛ §2.4 Test routing dry-run panel ← **next Haiku task** (fully spec'd)
-4. ⬛ **Skyrim AE embed + LoadBuiltInProfiles** (§4.1, file embed only) — Haiku
-5. 🔵 **Skyrim first-launch inline expand + launcher section** (§4.1–§4.2) — Sonnet
-6. ⬛ **Deploy preview panel** (§4.3) — Haiku (`DeployPreviewWindow` + `SimulateDeployAsync`)
-7. 🔵 **Smart DLL wizard** (§3) — Sonnet (`SmartDllDialog`, engine proxy detection)
-8. ⬛ **Mod loadouts storage + toolbar dropdown** (§7.2) — Haiku
-9. 🔵 **Mod import from existing installs** (§6) — Sonnet
-10. 🔵 **Minecraft built-in profile** (§5) — Sonnet (world picker, archive sniffing)
-11. 🔵 **Conflict resolution — data model + deploy pipeline** (§10.1–§10.3) — Sonnet
-12. 🔵 **Conflict resolution — UI** (§10.4–§10.6) — Sonnet
-
----
-
-## UI-R — Deferred UI Refactor (DO NOT EXECUTE until explicitly resumed)
-
-**Goal:** Make GTA IV and Custom Game dashboards visually consistent with GTA III (MainDashboardWindow), which is the reference UI.
-
-### What GTA III has that IV/Custom should adopt:
-
-1. **Full titlebar theme system** — macOS / Win7 / Win9x / WinXP / Win31 / Compact titlebar styles, all switchable via ThemeEngine. GTA IV/Custom currently only have a basic titlebar with no theme variants.
-2. **DockPanel toolbar layout** — Left group (game icon + title), center group (toolbar actions), right group (window controls). IV/Custom use a Grid-based layout.
-3. **Window chrome** — 1px `WindowBorderBrush` border, `CornerRadius="10"` on outer border. IV currently matches this; Custom Game does too — verify both haven't drifted.
-4. **Traffic-light buttons** (macOS default) — `TitleBarMac` panel with red/yellow/green circles. Should be default on all dashboards. IV/Custom have macOS buttons but the full theme system (Win7, Win9x, etc.) is missing.
-5. **Sidebar** — MainDashboard has a dedicated sidebar with links/actions; IV/Custom don't (intentional for now — add only if the feature list grows).
-
-### Checklist when executing this refactor:
-- [ ] Extract titlebar theme XAML from MainDashboardWindow into a shared `TitleBarTheme.xaml` ResourceDictionary (or duplicate+adapt per-window)
-- [ ] Wire ThemeEngine's `ApplyTitlebarStyle()` call in `Gta4DashboardWindow.xaml.cs` and `CustomGameDashboardWindow.xaml.cs` (currently only MainDashboard calls it)
-- [ ] Match DockPanel toolbar structure in Gta4DashboardWindow and CustomGameDashboardWindow
-- [ ] Confirm CornerRadius/BorderThickness match GTA III in all three windows
-- [ ] Verify all theme variants render correctly on each dashboard (run through all 6 themes)
-- [ ] Run SANITYCHECK.md verification after completing
-
----
-
-## 10 — Advanced Overwrite & Conflict Resolution  🔵 SONNET
-
-**Decided:** Start with data model + deploy pipeline (§10.1 + §10.2 + §10.3) before any UI work.
-
-Design goal: simpler than Vortex's VFS, but gives the user full per-file control.
-No virtual filesystem — TMM still deploys directly. Conflict resolution is a layer
-*on top of* the existing deploy pipeline, not a replacement of it.
-
----
-
-### 10.1 Core data model
-
-#### File Version Store
-
-For every file overwritten by any mod, TMM keeps that mod's version in a persistent
-store. Storage layout:
-
-```
-AppData\TMM\FileVersions\
-  {gameKey}\
-    {sanitized_relative_path}\       e.g.  "Data__SKSE__Plugins__SkyUI.dll"
-      _original.bak                  ← game's original file (captured once, never overwritten)
-      SkyUI-5.2.bin                  ← SkyUI mod's version (updated when mod changes)
-      SkyUI-5.3.bin                  ← if user updates SkyUI, previous version stays
-      SkyUI_SE-4.1.bin               ← competing mod's version
-```
-
-Path sanitisation: replace `\` and `/` with `__`, strip leading dots.
-
-#### File Ownership Registry
-
-One JSON file per game:
-```
-AppData\TMM\{gameKey}_fileregistry.json
-```
-
-Structure:
-```json
-{
-  "version": 1,
-  "entries": {
-    "Data\\SKSE\\Plugins\\SkyUI.dll": {
-      "owner": "SkyUI",
-      "pinnedTo": null,
-      "claimedBy": ["SkyUI", "SkyUI_SE"],
-      "originalCaptured": true
-    },
-    "d3d11.dll": {
-      "owner": "DXVK",
-      "pinnedTo": null,
-      "claimedBy": ["DXVK"],
-      "originalCaptured": true
-    }
-  }
-}
-```
-
-Fields:
-- `owner` — which mod currently has its version deployed (last-write wins by load order, unless overridden)
-- `pinnedTo` — if non-null, this mod's version is always used regardless of load order
-- `claimedBy` — all mods that have ever written this file (conflict = `claimedBy.Count > 1`)
-- `originalCaptured` — whether we have `_original.bak` for this path
-
-#### Model changes
-
-New class `Models/FileVersionStore.cs`:
-```csharp
-public record FileRegistryEntry(
-    string Owner,
-    string? PinnedTo,
-    List<string> ClaimedBy,
-    bool OriginalCaptured
-);
-
-public class FileVersionStore
-{
-    public int Version { get; set; } = 1;
-    public Dictionary<string, FileRegistryEntry> Entries { get; set; } = new();
-}
-```
-
----
-
-### 10.2 Deploy pipeline changes (BackendCore)
-
-Current deploy flow:
-```
-foreach mod → foreach file → backup original → copy to game dir
-```
-
-New deploy flow:
-```
-foreach mod (in load order):
-  foreach file in mod:
-    relativePath = file relative to game dir
-
-    // 1. Capture original if not already done
-    if registry[relativePath].originalCaptured == false:
-      copy game file → FileVersions/{gameKey}/{sanitized}/original.bak
-      registry[relativePath].originalCaptured = true
-
-    // 2. Store this mod's version
-    copy mod file → FileVersions/{gameKey}/{sanitized}/{modName}.bin
-
-    // 3. Register claim
-    registry[relativePath].claimedBy.Add(modName)  // if not already present
-
-    // 4. Determine winner
-    winner = registry[relativePath].pinnedTo ?? modName   // pin overrides load order
-
-    // 5. Deploy winner's version
-    source = pinnedTo != null
-        ? FileVersions/{gameKey}/{sanitized}/{pinnedTo}.bin
-        : mod file (in-memory, already extracted)
-    copy source → gameDir/relativePath
-
-    registry[relativePath].owner = winner
-
-// Save registry
-```
-
-Key point: if a file is `pinnedTo` a mod that has a lower load order, the pinned
-version is still deployed. Load order continues to control non-conflicted files.
-
----
-
-### 10.3 New BackendCore methods
-
-```csharp
-// Returns all conflicted files (claimedBy.Count > 1) for a game
-public List<(string RelativePath, FileRegistryEntry Entry)> GetConflicts(GameProfile profile);
-
-// Returns all versions stored for a given file path
-public List<(string ModName, string VersionPath, DateTime LastModified)>
-    GetVersionsForFile(GameProfile profile, string relativePath);
-
-// Pin a specific file to a specific mod's version (persists to registry)
-// Pass null to unpin (revert to load-order-wins)
-public void PinFileVersion(GameProfile profile, string relativePath, string? modName);
-
-// Get the stored original (pre-all-mods) version path for a file
-public string? GetOriginalVersionPath(GameProfile profile, string relativePath);
-
-// Open a stored version in a temp location for preview
-public string ExtractVersionToTemp(string versionPath);
-```
-
----
-
-### 10.4 Conflict Resolver — UI
-
-New window: `Views/ConflictResolverWindow.xaml`
-
-Opened from:
-- A "Conflicts" toolbar button in each dashboard (shows the count badge: `Conflicts (3)`)
-- Automatically after deploy if new conflicts are introduced ("Deploy complete — 3 new conflicts found. Review now?")
-
-#### Layout (two-panel)
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  TMM — Conflict Resolver — Skyrim AE                        [×]     │
-├──────────────────┬──────────────────────────────────────────────────┤
-│  CONFLICT LIST   │  FILE VERSIONS                                    │
-│  ─────────────── │  ─────────────────────────────────────────────── │
-│  ● 3 conflicts   │  Data\SKSE\Plugins\SkyUI.dll                      │
-│                  │                                                    │
-│  Data\SKSE\Pl... │  ┌─ Versions ─────────────────────────────────┐  │
-│    SkyUI  ←win   │  │ ◉ SkyUI v5.2        127 KB   [Preview]     │  │
-│    SkyUI_SE      │  │   SkyUI_SE v4.1     118 KB   [Preview]     │  │
-│                  │  │   Original           96 KB   [Preview]     │  │
-│  Data\meshes\... │  └────────────────────────────────────────────┘  │
-│    ModA  ←win    │                                                    │
-│    ModB          │  Pinned to:  SkyUI  [Change ▾]  [Clear Pin]       │
-│                  │                                                    │
-│  scripts\main... │  Load order winner would be: SkyUI_SE             │
-│    ModC  ←win    │  Current deployed version:   SkyUI (pinned)       │
-│    ModD          │                                                    │
-│                  │  [Browse File Explorer →]                         │
-│  ─────────────── │                                                    │
-│  ◉ = pinned      │                                                    │
-│  ← = current win │                                                    │
-├──────────────────┴──────────────────────────────────────────────────┤
-│                    [ Redeploy to apply changes ]   [ Close ]        │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-Left panel: `ListView` of conflicted files grouped by directory.
-Each item shows competing mods; `←win` marks current winner; `◉` marks a pinned file.
-
-Right panel: Selected file's version list. Each row: mod name, size, last modified, Preview button.
-
-**Preview button:** copies the `.bin` to a temp path with the correct extension and opens it with `ShellExecute` (lets user open `.esp` in xEdit, `.dll` in Dependencies, etc.).
-
-**Change ▾ dropdown:** picks which mod to pin to (or "Load order winner").
-
-**Clear Pin:** removes the pin; load order resumes control on next deploy.
-
----
-
-### 10.5 File Explorer — UI
-
-Opened from "Browse File Explorer →" button in the Conflict Resolver, or from a toolbar button in each dashboard.
-
-New window: `Views/FileExplorerWindow.xaml`
-
-#### Layout
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  TMM — File Explorer — Skyrim AE                     [×]    │
-├─────────────────────┬───────────────────────────────────────┤
-│  DIRECTORY TREE     │  FILES IN:  Data\SKSE\Plugins\        │
-│                     │  ─────────────────────────────────    │
-│  ▶ (game root)      │  ● SkyUI.dll        127 KB   [2 mods] │
-│  ▼ Data             │  ◆ hudframework.dll   94 KB   [1 mod]  │
-│    ▼ SKSE           │  ○ PapyrusUtil.dll    61 KB   [clean] │
-│      ▼ Plugins  ← │                                        │
-│    ▼ Scripts        │                                        │
-│    ▶ meshes         │                                        │
-│    ▶ textures       │                                        │
-│  ▶ scripts\         │                                        │
-├─────────────────────┴───────────────────────────────────────┤
-│  Legend:  ● conflict   ◆ 1 mod   ○ original/clean          │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Tree:** `TreeView` built by scanning the game directory. Directories with any
-conflicted descendants are highlighted.
-
-**File list:** `ListView` for the selected directory. Each row:
-- Dot colour: ● red = conflict, ◆ yellow = 1 mod owns it, ○ green = no mod touches it
-- Badge: `[2 mods]` is clickable and jumps to that file in the Conflict Resolver
-
-**Implementation note:** The tree is built lazily (expand-on-demand) to avoid
-scanning the entire game dir upfront. Files are cross-referenced against the
-`FileVersionStore` registry to determine their dot colour.
-
----
-
-### 10.6 Conflict badge in dashboards
-
-Each dashboard toolbar shows a conflict indicator:
-
-```
-[⚠ 3 conflicts]  ← orange button, click opens ConflictResolverWindow
-```
-
-or when clean:
-
-```
-[✓ No conflicts]  ← grey, still clickable (opens resolver showing "all clear")
-```
-
-Badge count = `GetConflicts(profile).Count`.
-
-Updated after every deploy and when mods are added/removed.
-
-**XAML element name:** `btnConflicts` (same pattern as `btnDeploy`).
-**Handler:** `BtnConflicts_Click` → `new ConflictResolverWindow(_core, _profile) { Owner = this }.ShowDialog()`.
-
----
-
-### 10.7 Storage management
-
-The FileVersionStore can grow large over time. Add a housekeeping pass:
-
-**Triggered:** When a mod is deleted from TMM (context menu → Delete Mod).
-
-**Action:** Remove that mod's `.bin` files from `FileVersions\{gameKey}\{paths}\`.
-If `claimedBy` becomes empty after removal, delete the entire path folder.
-Update the registry entries accordingly.
-
-**Manual cleanup:** Settings → Diagnostics → "Wipe File Version Cache" (with warning
-that per-file pinning will be lost and rollback capability reduced).
-
----
-
-### 10.8 Implementation order within this feature
-
-1. `FileVersionStore` model + `fileregistry.json` persistence
-2. `BackendCore` deploy pipeline changes (capture originals, store mod versions, apply pins)
-3. New `BackendCore` methods (GetConflicts, GetVersionsForFile, PinFileVersion)
-4. `ConflictResolverWindow` (list panel + version panel + pin controls)
-5. Conflict badge in all dashboard toolbars
-6. `FileExplorerWindow` (directory tree + file list with dot indicators)
-7. Preview button (temp-extract + ShellExecute)
-8. Housekeeping on mod delete
-
-Estimated: ~2 sessions total.
-
----
-
-## UI-R — Modularization: Split GTA III Series as Plugin (DEFERRED)
-
-**Status:** Concept only. Hold until core feature set (§1-10) is stable.
-
-**Rationale:**
-- Currently `MainDashboardWindow` handles III/VC/SA in a single window with a game selector
-- These could be split into separate windows that follow the same pattern as `Gta4DashboardWindow`
-- Becomes a template for converting built-in games to a plugin/module pattern
-- Opens path to: loadable game DLLs, community-contributed game support, reduced core binary size
-
-**Architecture:**
-- Keep sidebars + toolbar structure from current MainDashboard
-- Each game (III, VC, SA) becomes its own window (MainDashboardWindow_III, etc.)
-- Adapt them to use CustomGameProfile pattern (making built-in games just special cases)
-- BackendCore treats III/VC/SA same as custom games internally
-- GameRegistry learns to load built-in game definitions from embedded configs
-
-**Tradeoffs:**
-- **Pro:** Massive code reduction (MainDashboard drops from 1750→~600 lines)
-- **Pro:** Entire built-in game logic becomes reusable for custom games
-- **Pro:** Future: game plugins loaded at runtime
-- **Con:** Adds small amount of per-window boilerplate
-- **Con:** Late refactor (risky if core feature bugs appear)
-
-**Estimated effort:** 1-2 sessions after §1-10 shipped and stable.
-
----
-
----
-
-## BACKLOG — Optimizations & Features (Post-Core)
-
-### B1 — Theme System Refinement
-
-**Current state:** 69 presets in ThemeManagerWindow, complex selection UI  
-**Target state:** 25 curated presets (keep Matrix, dark/light/retro variants), color picker for accent override, stored in session
-
-**Changes:**
-- Move theme selection to `GameLauncherWindow` (top toolbar next to Settings)
-- Theme applies globally across all open windows
-- Remove ThemeManagerWindow as separate dialog
-- Strip 40% of preset list (keep variety, remove clutter)
-- Estimated savings: ~500 lines (ThemeManagerWindow + redundant presets)
-
-**Why:** User reported UI inconsistency issues with full theme browser; better discoverability in launcher.
-
----
-
-### B2 — Settings Window: Remove Per-Game Context
-
-**Current state:** 141 lines with 3 layout modes (Full/GtaIvOnly/CustomGame)  
-**Target state:** Single universal layout with only global settings (theme, font, Mica, Accent, etc.)
-
-**Removed:**
-- GTA III / GTA IV / Custom Game path setup from Settings
-- All per-game toggles
-- Estimated savings: ~60-80 lines
-
-**Why:** Path setup belongs in GameLauncherWindow or InitialSetupWindow; consolidates logic.
-
----
-
-### B3 — Backup System: 3-Deep Rollback
-
-**Current state:** 5-deep backup snapshots  
-**Target state:** 3-deep snapshots (keep last 3 deploys)
-
-**Changes:**
-- Adjust `PruneOldBackups(keepCount = 3)` instead of `5`
-- Estimated savings: ~10-15 lines of comments/docs
-
-**Why:** Balances safety (keep recovery options) vs storage (most users won't need 5 undos).
-
----
-
-### B4 — Smart Archive Extraction: Documentation & Deferral
-
-**Current state:** `SmartArchivePostProcess` in `Gta4DashboardWindow` auto-detects game structure (plugins/, modloader/, etc.)  
-**Target state:** Documented as planned for CustomGameEditor; stripped from main dashboards
-
-**SmartArchivePostProcess algorithm (for re-implementation):**
-
-```csharp
-Input: stagingDir (extracted archive contents), archivePath (source .rar/.zip/.7z)
-
-1. Single-root unwrap:
-   if (stagingDir contains exactly 1 subdirectory)
-     move all contents of that subdirectory up to stagingDir
-     delete empty subdirectory
-   end if
-
-2. Known folder detection:
-   known_folders = ["plugins", "scripts", "modloader", "bin"]
-   has_known = any(os.path.exists(stagingDir / folder) for folder in known_folders)
-
-3. README auto-open (only if no known folders):
-   if not has_known:
-     readme_files = find all "readme*" files in stagingDir (recursive)
-     if readme_files:
-       if (file_size > 1MB OR archive_is_solid_7z):
-         show warning "large readme / solid archive"
-         if user clicks "Yes":
-           shell_open(first_readme_file)
-       else:
-         shell_open(first_readme_file)
-     end if
-   end if
-```
-
-**Implementation in CustomGameEditor (future):**
-- Add "Extract preview" button that shows file tree + known folders detected
-- Let user manually organize before confirming install
-- Store extraction preferences per game (auto-unwrap: yes/no, known folders, custom folder hints)
-
-**Removed from:**
-- `Gta4DashboardWindow.SmartArchivePostProcess()` (~80 lines)
-- All calls to SmartArchivePostProcess in BtnInstallMod_Click handlers
-
-**When restored:** Implement in CustomGameEditor with full control per game  
-**Estimated savings: ~120 lines now, re-added later in CustomGameEditor**
-
-**Why:** User wants all custom extraction logic in one place (CustomGameEditor) with full game-aware control.
-
----
-
-### B5 — Properties Window Expansion + Context Menu Explorer
-
-**Current state:** Properties shows Name, Enabled, LoadOrder (basic)  
-**Target state:** Show more metadata; add directory explorer to context menu
-
-**Add to Properties:**
-- File count in mod
-- Total size
-- Creation date
-- Last modified date
-- Description (if stored in modinfo.txt)
-
-**Add to Context Menu:**
-- "Open in Explorer" option (opens containing folder, highlights mod folder)
-- Alternative to "Open Mod Folder" or as primary action
-
-**Implementation:** Later, after core features stable.
-
----
-
-### B6 — UI Modernization: Traditional Menu Bar + Responsive Layout
-
-**Current state:** 
-- Icon-based toolbar (Back, Install, Refresh, Settings, Themes, Random, Deploy, Rollback)
-- Large empty mod list areas
-- Min window size: 1280x672 (optimized for 1080p displays)
-- Toolbar positioned at top-left
-
-**Target state:**
-- **Menu bar option:** Traditional File/Edit/View menu with TMM logo in title area
-  - File: Install Mod, Export Config, Exit
-  - Edit: Settings, Preferences
-  - View: Toggle Toolbar/Menu, Labels, Theme, Help
-  - Logo/brand area before "File" with app icon + version
-  - Toggle button to switch between menu bar ↔ toolbar (Settings → UI)
-- **Responsive layout:**
-  - Center toolbar in window for better visual balance
-  - Increase button size (38×38 → 44×44) for better readability
-  - Increase font sizes in mod list (12px → 13-14px)
-  - Decrease mod list row height from 28px → 24px
-  - Adjust column widths (Load Order column narrower)
-- **Window sizing:**
-  - Min window: 900x500 (instead of 1280x672)
-  - Default window: 1100x650 (more compact, traditional app feel)
-  - Dashboard padding reduced 16px → 12px
-  - Grid gaps reduced 12px → 8px
-- **Theme compatibility:**
-  - Menu bar inherits theme colors (titlebar theme applies)
-  - Button sizes scale with DPI
-  - All themes updated to support both toolbar and menu bar layouts
-  - No color or style breakage
-
-**Why:** 
-- Modern apps increasingly offer menu bar option (power users like traditional UIs)
-- Smaller min window size makes app fit on smaller displays
-- Better visual balance with centered toolbar
-- Increased readability for extended use
-- More compact layout matches traditional mod managers (MO2, Vortex)
-
-**Estimated scope:**
-- New MenuBar control (~120 lines XAML + 80 lines code-behind)
-- Toolbar layout adjustments (~40 lines XAML changes)
-- Window sizing updates (~20 lines property changes)
-- Settings UI toggle (~30 lines)
-- Theme adjustments (~50 lines ThemeEngine updates)
-- **Total: ~240 lines added, ~30 lines removed (net +210)**
-
-**Implementation approach:**
-1. Add Settings → UI tab with "Use Menu Bar" toggle
-2. Create MenuBar.xaml with File/Edit/View structure
-3. Update Dashboard windows with conditional MenuBar ↔ Toolbar rendering
-4. Adjust spacing, padding, font sizes per layout mode
-5. Test theme compatibility (all 25 themes)
-6. Update min/default window sizes in code-behind
-
-**Testing checklist:**
-- Menu bar displays correctly in all 25 themes
-- Toolbar layout recenters without text wrapping
-- Font sizes readable at 96/120/144 DPI
-- Window resizable below 900x500 (locks at min)
-- Toggle between menu/toolbar persists across restart
-- No style breakage in macOS/Win7/Win9x themes
-
----
-
-### B7 — File Path Settings Separation & Refinement
-
-**Current state:**
-- Game directory paths scattered across GameLauncherWindow, CustomGameDashboardWindow, InitialSetupWindow
-- SettingsWindow has path fields but only in context-aware modes (Full/GtaIvOnly/CustomGame)
-- No unified "Manage Game Paths" interface
-
-**Target state:**
-- New dedicated "Game Paths" tab in SettingsWindow
-- List all configured games (built-in + custom) with current paths
-- Inline edit buttons: click path row → `BrowseForFolder` dialog
-- Visual indicator when path is missing or invalid
-- Quick actions: "Set all paths", "Auto-detect" (per game)
-- Path auto-complete dropdown (recently used, common locations like Steam, ModOrganizer2 paths)
-
-**Why:** Consolidates game management logic in one place. Currently scattered across multiple windows and dialog contexts.
-
-**Estimated scope:** ~80 lines XAML, ~60 lines code-behind
-
----
-
-### B8 — Steam Integration Re-implementation for GTA III
-
-**Current state:**
-- CustomGameProfile supports `SteamAppId` field
-- Field is stored but never used (steam:// protocol launch not wired up)
-
-**Target state:**
-- Play button in GTA III dashboard checks `SteamAppId`
-- If set and game hasn't been customized, launch via `steam://run/{id}`
-- Fallback to direct exe launch if custom game or no Steam ID
-- Configuration in GameLauncherWindow to set/clear SteamAppId
-- Works alongside built-in GTA III support
-
-**Why:** Users who own GTA on Steam can organize mod management without breaking Steam achievements/validation. Part of modular custom game vision.
-
-**Estimated scope:** ~40 lines (protocol handler + launch logic)
-
----
-
-### B9 — Advanced Custom Game File Detection & Auto-ID
-
-**Current state:**
-- Custom games rely entirely on explicit file routing rules
-- No content sniffing or intelligent mod identification
-- Can't detect mod version changes if filenames stay same
-
-**Target state:**
-Phase 1 — Smart file type detection:
-- When `.dll` is found, peek for import tables → detect proxy DLLs vs plugin DLLs
-- When `.esp`/`.esm` found, read TES4 header → detect Skyrim vs Oblivion
-- When `.jar` found, check `MANIFEST.MF` → identify mod loader type (Fabric/Forge)
-
-Phase 2 — Mod identification across updates:
-- Store file hash + metadata (name, version, author) for each mod folder
-- On deploy, if folder hash changes but directory structure matches → flag as "updated" not "new"
-- Suggest updating load order or rechecking routing if structure diverged
-
-Phase 3 — Automatic routing suggestions:
-- After import, analyze mod contents
-- Suggest routing rules if pattern detected (e.g. "all `.dll`s in `plugins\`" → auto-create rule)
-- Show preview: "Would route to Data\SKSE\Plugins\" before confirming
-
-**Implementation:** New `FileAnalyzer` service in BackendCore with per-file-type sniffers.
-
-**Why:** Reduces manual routing configuration. Handles mod updates elegantly. Enables "fire and forget" mod installation for advanced users.
-
-**Estimated scope:** ~200 lines (sniffers + hashing + UI hints)
-
----
-
-*End of plans. Commit hash when created: see `git log --oneline -1`.*

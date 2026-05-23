@@ -4,6 +4,31 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [v0.1-alpha-3] — 2026-05-23 *(Documentation & Core Features Pass)*
+
+### Added
+- **Test Routing Dry-Run Panel:** CustomGameConfigWindow now includes an inline collapsible "Test Routing..." panel that simulates file routing. Users can browse for a test file and see where it would be deployed (including conditional route evaluation with directory existence checks).
+- **Skyrim Anniversary Edition Built-in Profile:** Embedded `skyrim_ae.tmmgame` asset auto-loaded via GameRegistry. Sets up routing for ESP/ESM → Data, DLLs → Data\SKSE\Plugins\ (conditional on SKSE directory), scripts → Data\Scripts\. Appears in GameLauncherWindow under "Supported Games" section with read-only profile.
+- **Deploy Preview Window:** Modal window shown before deployment that summarizes which mods are being deployed, groups files by destination directory, and shows extension types. Users can review and confirm or cancel before deploy proceeds.
+- **Mod Loadouts Foundation:** ModLoadout.cs model and BackendCore persistence layer (SaveLoadoutAsync, LoadLoadoutAsync, DeleteLoadoutAsync) for saving named mod configurations (enable state + load order per game).
+- **GameRegistry Built-in Profile Support:** LoadBuiltInProfilesAsync() method uses reflection to load embedded `.tmmgame` files from assembly resources. GetBuiltInCustomGames() returns only built-in profiles; GetCustomGames() excludes them. GameLauncherWindow displays separate "Supported Games" and "Your Games" sections.
+- **Future Additions Documentation:** Created `FUTURE_ADDITIONS.md` containing comprehensive specs for deferred features: Smart DLL Wizard (§3), Built-in Profiles (Skyrim/Minecraft, §4), Mod Import (§5), Conflict Resolution Engine (§6), Loadouts UI (§7), Advanced File Detection (§10), and backlog items (§B1–§B6).
+
+### Changed
+- **PLANS.md Reorganization:** Moved all future/deferred features (Smart DLL Wizard, additional built-in games, conflict resolution, advanced loadouts UI, file detection) to `FUTURE_ADDITIONS.md`. PLANS.md now focuses exclusively on shipped features and their implementation status. Updated header to reference `FUTURE_ADDITIONS.md` and removed ~1050 lines of archived content.
+- **GameLauncherWindow Sections:** Now displays "Supported Games" header (for built-in profiles) and "Your Games" header (for user-created games) with appropriate visibility logic. Built-in game cards show "Manage" button only (no Edit/Delete).
+- **CustomGameConfigWindow Edit Buttons:** IsBuiltIn profiles conditionally hide Edit and Delete buttons, only exposing Manage functionality.
+
+### Fixed
+- **GTA4DashboardWindow Menu Type Errors:** Fixed switch statement cases comparing string profile keys against GameProfile enum objects. Changed cases from `GameProfile.IV` to string literals `"IV"`, `"TLaD"`, `"TBoGT"`.
+
+### Documentation
+- **PLANS.md:** Updated to reference FUTURE_ADDITIONS.md and removed archived sections. Now 353 lines (focused on shipped state).
+- **SCOPE.md:** Companion human-readable feature overview (unchanged, both kept in sync).
+- **FUTURE_ADDITIONS.md:** New comprehensive 340-line document covering all deferred features with full specs, JSON examples, UI mockups, and implementation notes.
+
+---
+
 ## [v0.1-alpha-2] — 2026-05-23
 
 ### Changed

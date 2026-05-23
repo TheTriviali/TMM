@@ -2,7 +2,7 @@
 
 A lightweight, cross-game mod manager for classic and modern games. Built for simplicity — no scripts, no manifests, no intermediate virtual filesystems. Just a clean GUI with direct-deploy mod installation, automatic backups, and instant rollback.
 
-**Currently ships with:** GTA III Series (III, Vice City, San Andreas, IV, TLaD, TBoGT)  
+**Currently ships with:** GTA III Series (III, Vice City, San Andreas, IV, TLaD, TBoGT) + Skyrim Anniversary Edition  
 **Extensible to:** Any game via custom game profiles with per-filetype output directory routing
 
 ## Alpha Notice
@@ -83,6 +83,8 @@ Custom game configs are saved as `.tmmgame` files and can be exported/imported t
 * **Smart Nested Archive Extraction:** Archives wrapping content in a single subdirectory are automatically unwrapped.
 * **Drag-and-Drop Load Orders:** Visual priority list with drop-line indicator. Bottom overrides top (0 loads first).
 * **Per-Game Search:** Each game's mod list has independent search box with live filtering.
+* **Test Routing Panel:** Before deploying, simulate file routing within CustomGameConfigWindow. Browse a test file and see exactly where it would be installed based on your routing rules.
+* **Deploy Preview Window:** Review deployment summary (total files, destination folders, file types) before deployment proceeds. Cancel or confirm from the preview dialog.
 
 ### GTA-Specific Features
 
@@ -189,10 +191,11 @@ Check your exe hash via **Settings → Diagnostics → MD5 Check**.
 
 ## Planned Features
 
-* **Conflict Resolution:** Warn when two mods overwrite the same file.
-* **Mod Profiles & Loadouts:** Save/load preset mod configurations.
-* **Smart DLL Wizard:** Auto-detect proxy DLLs (d3d11, d3d9, etc.) and suggest output directories.
-* **Expanded Game Support:** More built-in profiles beyond GTA (Skyrim, Fallout, etc.).
+* **Mod Profiles & Loadouts (Foundations In):** Backend persistence for saving/loading preset mod configurations (enable/disable state + load order) is implemented. UI integration pending.
+* **Conflict Resolution:** Warn when two mods overwrite the same file. Full design with file versioning registry and pinning UI is in `FUTURE_ADDITIONS.md`.
+* **Smart DLL Wizard:** Auto-detect proxy DLLs (d3d11, d3d9, etc.) and suggest output directories. Full decision tree and SmartDllDialog UI spec documented in `FUTURE_ADDITIONS.md`.
+* **Expanded Game Support:** Minecraft Java Edition (mod loader detection, world picker) and additional profiles (Baldur's Gate 3, Starfield, Oblivion, Morrowind) — designs in `FUTURE_ADDITIONS.md`.
+* **Advanced File Detection:** Phase 1 (import table scanning, ESP header detection) through Phase 3 (auto-routing suggestions) documented in `FUTURE_ADDITIONS.md`.
 * **Mod Store Integration:** One-click install from ModDB/Nexus (future).
 
 ---
@@ -231,6 +234,13 @@ All source files include a **Table of Contents** block at the top. Key files:
 | `Models/ModItem.cs` | Single mod entry with property change notifications |
 
 Full architecture documented in `CODEBASE_GUIDE.md`.
+
+### Documentation
+
+* `CODEBASE_GUIDE.md` — Pseudocode table of contents and AI search index for all windows, services, models, and conventions
+* `PLANS.md` — Detailed implementation roadmap with shipped features, known gaps, and near-term work
+* `FUTURE_ADDITIONS.md` — Comprehensive specs for deferred features: Smart DLL Wizard, additional built-in profiles (Minecraft, Baldur's Gate 3, etc.), conflict resolution engine, mod import, advanced file detection, and backlog items
+* `SCOPE.md` — Human-readable feature overview
 
 ---
 
