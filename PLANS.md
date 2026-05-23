@@ -1,6 +1,8 @@
 # TMM — Implementation Plans
 *Last updated 2026-05-23. Send this file to a new Claude session along with CODEBASE_GUIDE.md to resume work.*
 
+> **Companion file:** [`SCOPE.md`](SCOPE.md) is a shorter, human-readable overview of planned features. Whenever this file is updated, also update SCOPE.md to keep both in sync.
+
 > **Session changelog:**
 > - §1 + §2.1 complete (`.tmmgame` import/export, drag-drop launcher, CustomGameConfigWindow buttons)
 > - Optimization pass complete: `ShellHelper` extracted, `GridViewColumnHeader` style centralized in App.xaml, `DashboardListItemStyle` centralized, `WindowBorderGradientBrush` dead code removed, `BtnDonate_Click` dead code removed, `ModListStyle` ItemContainerStyle de-duplicated across all three dashboards
