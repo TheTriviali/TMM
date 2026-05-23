@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class SettingsWindow : Window
     {
@@ -15,9 +15,13 @@ namespace TGTAMM
         {
             _core = core;
             InitializeComponent();
-            rowIII.ShowActions = false; rowIII.Bind(_core, GameProfile.III);
-            rowVC.ShowActions  = false; rowVC.Bind(_core,  GameProfile.VC);
-            rowSA.ShowActions  = false; rowSA.Bind(_core,  GameProfile.SA);
+
+            rowIII.ShowActions   = false; rowIII.Bind(_core,   GameProfile.III);
+            rowVC.ShowActions    = false; rowVC.Bind(_core,    GameProfile.VC);
+            rowSA.ShowActions    = false; rowSA.Bind(_core,    GameProfile.SA);
+            rowIV.ShowActions    = false; rowIV.Bind(_core,    GameProfile.IV);
+            rowTLaD.ShowActions  = false; rowTLaD.Bind(_core,  GameProfile.TLaD);
+            rowTBoGT.ShowActions = false; rowTBoGT.Bind(_core, GameProfile.TBoGT);
         }
 
         private void BtnRerunSetup_Click(object sender, RoutedEventArgs e)
@@ -26,6 +30,9 @@ namespace TGTAMM
             _ = rowIII.RefreshAsync();
             _ = rowVC.RefreshAsync();
             _ = rowSA.RefreshAsync();
+            _ = rowIV.RefreshAsync();
+            _ = rowTLaD.RefreshAsync();
+            _ = rowTBoGT.RefreshAsync();
         }
 
         private void BtnSteamAction_Click(object sender, RoutedEventArgs e)
@@ -44,13 +51,13 @@ namespace TGTAMM
             if (profile == null) return;
 
             string result = await _core.GetMd5DiagnosticsAsync(profile);
-            MessageBox.Show(result, $"MD5 Check — {profile.DisplayName}",
+            MessageBox.Show(result, $"MD5 Check - {profile.DisplayName}",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnOpenLog_Click(object sender, RoutedEventArgs e)
         {
-            string logPath = Path.Combine(_core.AppDataPath, "tgtamm.log");
+            string logPath = Path.Combine(_core.AppDataPath, "TMM.log");
             if (File.Exists(logPath))
                 Process.Start(new ProcessStartInfo(logPath) { UseShellExecute = true });
             else
@@ -60,20 +67,17 @@ namespace TGTAMM
 
         private void BtnWipeCache_Click(object sender, RoutedEventArgs e)
         {
-            _core.Log("User initiated manual TempStaging cache wipe.");
+            _core.Log("User initiated manual download cache wipe.");
             try
             {
-                if (Directory.Exists(_core.TempStagingPath))
-                    Directory.Delete(_core.TempStagingPath, true);
-                Directory.CreateDirectory(_core.TempStagingPath);
-                MessageBox.Show("Temporary Cache wiped successfully.", "Success",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                _core.WipeDownloadCache();
+                Directory.CreateDirectory(_core.DownloadCachePath);
+                NotificationService.ShowSuccess("Temporary cache wiped successfully");
             }
             catch (Exception ex)
             {
                 _core.Log($"Cache wipe failed: {ex.Message}");
-                MessageBox.Show("Files are currently in use. Close any open mod folders and try again.",
-                    "Cache Wipe Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Cache wipe failed - close any open mod folders and try again");
             }
         }
 

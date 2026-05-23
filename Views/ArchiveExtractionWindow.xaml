@@ -1,4 +1,4 @@
-<Window x:Class="TGTAMM.ArchiveExtractionWindow"
+﻿<Window x:Class="TMM.ArchiveExtractionWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Mod Installation Wizard" Height="310" Width="560"
@@ -21,7 +21,7 @@
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="bg" Background="Transparent" CornerRadius="0,8,0,0">
-                                <TextBlock Text="✕" Foreground="{DynamicResource SubTextBrush}"
+                                <TextBlock Text="x" Foreground="{DynamicResource SubTextBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
                             </Border>
                             <ControlTemplate.Triggers>

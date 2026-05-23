@@ -5,12 +5,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace TGTAMM
+namespace TMM
 {
     /// <summary>
     /// One-stop UI block for displaying and configuring the path / status of
-    /// a single game. Used by both InitialSetupWindow (full action set) and
-    /// SettingsWindow (display-only via ShowActions=false).
+    /// a single game. Used by InitialSetupWindow, SettingsWindow, and setup dialogs.
     /// </summary>
     public partial class GameSetupRow : UserControl
     {
@@ -29,6 +28,12 @@ namespace TGTAMM
             _core = core;
             _profile = profile;
             lblTitle.Text = profile.DisplayName;
+
+            // Hide the Steam button for games that have no Steam AppId
+            // (e.g. TLaD and TBoGT are part of the IV install, no separate app).
+            if (string.IsNullOrEmpty(profile.SteamAppId))
+                btnSteam.Visibility = Visibility.Collapsed;
+
             _ = RefreshAsync();
         }
 
@@ -44,14 +49,23 @@ namespace TGTAMM
                 var vis = value ? Visibility.Visible : Visibility.Collapsed;
                 btnQuickScan.Visibility = vis;
                 btnBrowse.Visibility = vis;
-                btnSteam.Visibility = vis;
+                // Steam button only visible when actions are shown AND profile has a Steam AppId.
+                btnSteam.Visibility = (value && !string.IsNullOrEmpty(_profile?.SteamAppId))
+                    ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
         /// <summary>Fired after the user changes the path (browse / scan).</summary>
         public event EventHandler? PathChanged;
 
-        /// <summary>Refreshes the displayed path, status text, and clone button visibility.</summary>
+        /// <summary>
+        /// Fired when this row's path change caused sibling game paths to be
+        /// auto-derived (IV browse → TLaD / TBoGT). Parent windows can use this
+        /// to refresh adjacent rows without a full re-scan.
+        /// </summary>
+        public event EventHandler? LinkedPathsChanged;
+
+        /// <summary>Refreshes the displayed path, status text, and status colour.</summary>
         public async Task RefreshAsync()
         {
             if (_core == null || _profile == null) return;
@@ -68,15 +82,23 @@ namespace TGTAMM
 
             if (!Directory.Exists(path) || Directory.GetFileSystemEntries(path).Length == 0)
             {
-                lblStatus.Text = "⚠️ Ghost Install: Folder is missing or empty!";
+                lblStatus.Text = "Ghost Install: Folder is missing or empty!";
                 lblStatus.Foreground = Brushes.Red;
+                return;
+            }
+
+            // IV-family games have no vanilla MD5 — skip the downgrade check entirely.
+            if (!_profile.HasExeCheck)
+            {
+                lblStatus.Text = "Ready for Modding";
+                lblStatus.Foreground = new SolidColorBrush(Color.FromRgb(78, 201, 176));
                 return;
             }
 
             var state = await _core.VerifyGameStatusAsync(_profile);
             if (state == ExeStatus.Vanilla)
             {
-                lblStatus.Text = "Steam API Detected (1.0 Downgrade Required for Virtual Mode)";
+                lblStatus.Text = "Steam API Detected (1.0 Downgrade Required)";
                 lblStatus.Foreground = new SolidColorBrush(Color.FromRgb(216, 163, 26));
             }
             else
@@ -84,10 +106,9 @@ namespace TGTAMM
                 lblStatus.Text = "Ready for Modding";
                 lblStatus.Foreground = new SolidColorBrush(Color.FromRgb(78, 201, 176));
             }
-
         }
 
-        // ---------- Action handlers ----------
+        // ── Action handlers ───────────────────────────────────────────────────
 
         private async void BtnQuickScan_Click(object sender, RoutedEventArgs e)
         {
@@ -99,25 +120,37 @@ namespace TGTAMM
             await Task.Run(() => _core.QuickScan());
             await RefreshAsync();
             PathChanged?.Invoke(this, EventArgs.Empty);
+
+            // IV quick-scan may have auto-derived TLaD/TBoGT
+            if (GameProfile.IvFamilyKeys.Contains(_profile.Key))
+                LinkedPathsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private async void BtnBrowse_Click(object sender, RoutedEventArgs e)
         {
             if (_core == null || _profile == null) return;
 
+            string filter = string.IsNullOrEmpty(_profile.ExeName)
+                ? "Executable|*.exe"
+                : $"Executable|{_profile.ExeName}";
+
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = $"Executable|{_profile.ExeName}",
-                Title = $"Locate {_profile.ExeName}"
+                Filter = filter,
+                Title = $"Locate {_profile.DisplayName} — select the game executable"
             };
             if (dialog.ShowDialog() != true) return;
 
             string? folder = Path.GetDirectoryName(dialog.FileName);
             if (string.IsNullOrEmpty(folder)) return;
 
+            // SetVanillaPath auto-derives TLaD/TBoGT when profile is IV.
             _core.SetVanillaPath(_profile, folder);
             await RefreshAsync();
             PathChanged?.Invoke(this, EventArgs.Empty);
+
+            if (_profile.Key == "IV")
+                LinkedPathsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void BtnSteam_Click(object sender, RoutedEventArgs e)
@@ -136,6 +169,5 @@ namespace TGTAMM
 
             SteamLauncher.Invoke(action, _profile.SteamAppId, _core.Log);
         }
-
     }
 }

@@ -1,4 +1,4 @@
-<Window x:Class="TGTAMM.ModPropertiesWindow"
+﻿<Window x:Class="TMM.ModPropertiesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Mod Properties" Height="460" Width="500"
@@ -21,7 +21,7 @@
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="bg" Background="Transparent" CornerRadius="0,10,0,0">
-                                <TextBlock Text="✕" Foreground="{DynamicResource SubTextBrush}"
+                                <TextBlock Text="x" Foreground="{DynamicResource SubTextBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
                             </Border>
                             <ControlTemplate.Triggers>

@@ -1,4 +1,4 @@
-namespace TGTAMM
+﻿namespace TMM
 {
     /// <summary>
     /// Progress payload reported by long-running deploy/clone operations.

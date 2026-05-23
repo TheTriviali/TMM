@@ -1,9 +1,9 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class ModPropertiesWindow : Window
     {
@@ -23,7 +23,7 @@ namespace TGTAMM
             {
                 var rootNode = new TreeViewItem
                 {
-                    Header = "📁 " + mod.Name,
+                    Header = mod.Name,
                     IsExpanded = true,
                     Foreground = Brushes.LightSkyBlue
                 };
@@ -48,7 +48,7 @@ namespace TGTAMM
                 {
                     var node = new TreeViewItem
                     {
-                        Header = "📁 " + Path.GetFileName(d),
+                        Header = Path.GetFileName(d),
                         Foreground = Brushes.Wheat
                     };
                     parentNode.Items.Add(node);
@@ -59,7 +59,7 @@ namespace TGTAMM
                 {
                     parentNode.Items.Add(new TreeViewItem
                     {
-                        Header = "📄 " + Path.GetFileName(f),
+                        Header = Path.GetFileName(f),
                         Foreground = Brushes.White
                     });
                 }

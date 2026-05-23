@@ -1,4 +1,4 @@
-<Window x:Class="TGTAMM.ThemeManagerWindow"
+﻿<Window x:Class="TMM.ThemeManagerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Look &amp; Feel" Height="560" Width="430"
@@ -6,7 +6,7 @@
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
 
     <Window.Resources>
-        <!-- Fixed dark colors for ComboBox popup — always visible regardless of accent/bg settings. -->
+        <!-- Fixed dark colors for ComboBox popup - always visible regardless of accent/bg settings. -->
         <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}"        Color="#2A2A2E"/>
         <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}"     Color="White"/>
         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"      Color="#3D6B60"/>
@@ -125,7 +125,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Title bar — drag target only; NOT the outer Border to avoid hijacking canvas mouse events -->
+            <!-- Title bar - drag target only; NOT the outer Border to avoid hijacking canvas mouse events -->
             <Grid Grid.Row="0" Background="#1A000000" MouseLeftButtonDown="TitleBar_MouseDown">
                 <TextBlock Text="Look &amp; Feel Preferences" Foreground="{DynamicResource SubTextBrush}"
                            VerticalAlignment="Center" Margin="15,0,0,0" FontSize="13" FontWeight="SemiBold"/>
@@ -133,7 +133,7 @@
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="bg" Background="Transparent" CornerRadius="0,10,0,0">
-                                <TextBlock x:Name="closeGlyph" Text="✕" Foreground="{DynamicResource SubTextBrush}"
+                                <TextBlock x:Name="closeGlyph" Text="x" Foreground="{DynamicResource SubTextBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
                             </Border>
                             <ControlTemplate.Triggers>
@@ -147,7 +147,7 @@
                 </Button>
             </Grid>
 
-            <!-- Two-column body — no scrolling required -->
+            <!-- Two-column body - no scrolling required -->
             <Grid Grid.Row="1" Margin="16,12,16,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -155,9 +155,9 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
                 <!-- LEFT COLUMN: Settings                                     -->
-                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
                 <ScrollViewer Grid.Column="0"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
@@ -170,7 +170,7 @@
                               Margin="0,0,0,6"/>
 
                     <!-- Advanced toggle -->
-                    <Button x:Name="btnAdvanced" Content="🎨  Custom Colors  ▾" Click="BtnAdvanced_Click"
+                    <Button x:Name="btnAdvanced" Content="Custom Colors  v" Click="BtnAdvanced_Click"
                             Height="28" BorderThickness="1" Cursor="Hand" Margin="0,0,0,10"
                             BorderBrush="{DynamicResource AccentBrush}"
                             Background="{DynamicResource ControlBgBrush}"
@@ -259,16 +259,19 @@
                     <CheckBox x:Name="chkMica" Content="Mica / Acrylic  (Win11 native, approximated on Win10)"
                               Foreground="{DynamicResource TextBrush}" FontSize="12" Margin="0,0,0,6"
                               Checked="ModularSetting_Changed" Unchecked="ModularSetting_Changed"/>
+                    <CheckBox x:Name="chkAccentBorder" Content="Accent-colored window border"
+                              Foreground="{DynamicResource TextBrush}" FontSize="12" Margin="0,0,0,6"
+                              Checked="ModularSetting_Changed" Unchecked="ModularSetting_Changed"/>
 
                 </StackPanel>
                 </ScrollViewer>
 
-                <!-- gap column — only visible when right panel is shown -->
+                <!-- gap column - only visible when right panel is shown -->
                 <Border x:Name="RightGapBorder" Grid.Column="1" Width="14" Visibility="Collapsed"/>
 
-                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
                 <!-- RIGHT COLUMN: HSV Color Pickers (hidden by default)      -->
-                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
                 <ScrollViewer x:Name="RightPickerPanel" Grid.Column="2" Width="350" Visibility="Collapsed"
                               VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
@@ -456,7 +459,7 @@
                             </Grid>
                         </StackPanel>
                     </Border>
-                    <!-- ── Complement Colour Palette ──────────────────────────── -->
+                    <!-- Complement Colour Palette -->
                     <Border Margin="0,10,0,0" BorderBrush="{DynamicResource SubTextBrush}"
                             BorderThickness="1.5" CornerRadius="6" Padding="8"
                             Background="{DynamicResource PanelBrush}">
@@ -483,14 +486,14 @@
                                         Background="{DynamicResource PanelBrush}"
                                         Foreground="{DynamicResource TextBrush}"
                                         BorderThickness="0" Cursor="Hand" Padding="10,0" FontSize="11"/>
-                                <Button Grid.Column="4" Content="✨ Suggest Accent" Height="28"
+                                <Button Grid.Column="4" Content="âœ¨ Suggest Accent" Height="28"
                                         Click="BtnSuggestAccent_Click"
                                         Background="{DynamicResource AccentBrush}"
                                         Foreground="{DynamicResource AccentTextBrush}" FontWeight="SemiBold"
                                         BorderThickness="0" Cursor="Hand" Padding="10,0" FontSize="11"
                                         ToolTip="Auto-pick the best accent colour for this background"/>
                             </Grid>
-                            <!-- Swatch row — populated at runtime -->
+                            <!-- Swatch row - populated at runtime -->
                             <StackPanel x:Name="lstComplement" Orientation="Horizontal" MinHeight="38"/>
                             <TextBlock Text="Click a swatch to apply it as your accent colour."
                                        Foreground="{DynamicResource SubTextBrush}"

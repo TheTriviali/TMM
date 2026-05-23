@@ -1,4 +1,47 @@
-using SevenZipExtractor;
+﻿// TABLE OF CONTENTS
+// -----------------------------------------------------------------
+//   STATE & FIELDS  (AppDataPath, Settings, Mods, HttpClient) .... ~26
+//   INIT  (BackendCore constructor) .............................. ~41
+//   LOGGING  (Log) ............................................... ~70
+//   SETTINGS  (LoadSettings, SaveSettings, FactoryReset) ......... ~86
+//   GAME PATH ACCESS  (GetVanillaPath, SetVanillaPath, IsGameReady) ~146
+//   GAME DETECTION
+//     QuickScan() ................................................. ~162
+//     DeepScanDrives() ............................................ ~198
+//     ScanForExe() ................................................ ~226
+//   GAME STATUS & EXE VERIFICATION
+//     VerifyGameStatusAsync() ..................................... ~263
+//     HasExeModOverride() ......................................... ~296
+//     FindExeInMod() .............................................. ~306
+//     SmartSteamLaunch() .......................................... ~330
+//     GetFileMD5Async() / GetEffectiveMd5Async() ................. ~352
+//     GetMd5DiagnosticsAsync() .................................... ~389
+//   MOD LIST LOAD/SAVE
+//     RefreshAllModListsAsync() / RefreshModListForGame() ......... ~431
+//   DOWNLOAD CACHE
+//     DownloadCachePath / WipeDownloadCache() ..................... ~490
+//     GetDriveSpaceInfo() / FormatBytes() ......................... ~501
+//   BACKUP / ROLLBACK
+//     BackupsPath ................................................. ~522
+//     GetRollbackManifests() ...................................... ~524
+//     RollbackDeployAsync() ....................................... ~545
+//     PruneOldBackups() ........................................... ~590
+//   DEPLOYMENT  (direct to game dir, with backup)
+//     DeployModsAsync() ........................................... ~605
+//     DeployCustomGameModsAsync() ................................. ~640
+//     DeployFilesToGameDirAsync() ................................. ~675
+//     CopyDirectoryParallelAsync() ................................ ~740
+//     ForceDeleteDirectory() ...................................... ~795
+//     CopyDirectory() (sync fallback) ............................ ~820
+//   ARCHIVE EXTRACTION
+//     ExtractArchiveSafeAsync() / ExtractArchiveSafe() ........... ~720
+//     ExtractEntriesWithStream() .................................. ~749
+//   DOWNLOADING
+//     DownloadFileAsync() ......................................... ~781
+//     DownloadLatestGithubReleaseAsync() .......................... ~795
+// -----------------------------------------------------------------
+
+using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,7 +55,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace TGTAMM
+namespace TMM
 {
     /// <summary>
     /// Core backend. Owns persisted settings, mod lists per game, and the
@@ -26,10 +69,12 @@ namespace TGTAMM
 
         public string AppDataPath { get; }
         public AppSettings Settings { get; private set; } = new();
-        public string Version { get; } = "1.2";
+        public string Version { get; } = "2.0";
 
         // Per-game mod lists, looked up by GameProfile.Key.
-        public IReadOnlyDictionary<string, ObservableCollection<ModItem>> Mods { get; }
+        // Exposed as read-only; mutated internally via _modsDict.
+        private readonly Dictionary<string, ObservableCollection<ModItem>> _modsDict = new();
+        public IReadOnlyDictionary<string, ObservableCollection<ModItem>> Mods => _modsDict;
 
         private static readonly HttpClient HttpClient = new();
         private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
@@ -42,25 +87,62 @@ namespace TGTAMM
         {
             AppDataPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "TGTAMM");
-            Directory.CreateDirectory(AppDataPath);
+                "TMM");
 
-            Mods = GameProfile.All.ToDictionary(
-                p => p.Key,
-                _ => new ObservableCollection<ModItem>());
+            // Migrate existing TGTAMM data if the old folder exists and TMM doesn't yet
+            string oldPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "TGTAMM");
+            if (Directory.Exists(oldPath) && !Directory.Exists(AppDataPath))
+            {
+                try { Directory.Move(oldPath, AppDataPath); }
+                catch { Directory.CreateDirectory(AppDataPath); }
+            }
+            else
+            {
+                Directory.CreateDirectory(AppDataPath);
+            }
 
             LoadSettings();
-            WipeTempStaging();
 
+            // Seed mod lists and raw folders for built-in games
             foreach (var profile in GameProfile.All)
             {
+                _modsDict[profile.Key] = new ObservableCollection<ModItem>();
                 Directory.CreateDirectory(Path.Combine(AppDataPath, profile.RawFolderName));
-                Directory.CreateDirectory(Path.Combine(AppDataPath, profile.ModdedFolderName));
             }
-            Directory.CreateDirectory(Path.Combine(AppDataPath, "TempStaging"));
+            Directory.CreateDirectory(DownloadCachePath);
+            Directory.CreateDirectory(BackupsPath);
 
             if (!HttpClient.DefaultRequestHeaders.Contains("User-Agent"))
-                HttpClient.DefaultRequestHeaders.Add("User-Agent", "TGTAMM-Mod-Manager");
+                HttpClient.DefaultRequestHeaders.Add("User-Agent", "TMM-Mod-Manager");
+        }
+
+        /// <summary>
+        /// Async initialization: loads GameRegistry (custom games) and wires up their mod lists.
+        /// Safe to call multiple times — registry re-init is idempotent.
+        /// </summary>
+        public async Task InitializeAsync()
+        {
+            var registry = GameRegistry.Instance;
+            await registry.InitializeAsync(AppDataPath);
+
+            foreach (var profile in registry.GetAllGames())
+            {
+                if (!_modsDict.ContainsKey(profile.Key))
+                    _modsDict[profile.Key] = new ObservableCollection<ModItem>();
+
+                Directory.CreateDirectory(Path.Combine(AppDataPath, profile.RawFolderName));
+            }
+
+            // Sync settings dictionaries with custom game keys from registry
+            foreach (var (key, _) in registry.GetCustomGames())
+            {
+                Settings.GamePaths.TryAdd(key, null);
+                Settings.DeployOverrides.TryAdd(key, false);
+                if (!Settings.CustomGameKeys.Contains(key))
+                    Settings.CustomGameKeys.Add(key);
+            }
         }
 
         // ==========================================================
@@ -73,7 +155,7 @@ namespace TGTAMM
             {
                 if (!Directory.Exists(AppDataPath)) Directory.CreateDirectory(AppDataPath);
                 File.AppendAllText(
-                    Path.Combine(AppDataPath, "tgtamm.log"),
+                    Path.Combine(AppDataPath, "TMM.log"),
                     $"[{DateTime.Now:HH:mm:ss}] {message}\n");
             }
             catch { /* never crash on log failure */ }
@@ -113,7 +195,7 @@ namespace TGTAMM
 
         public void FactoryReset()
         {
-            // Log before deleting — after this the log file is gone.
+            // Log before deleting - after this the log file is gone.
             Log("FactoryReset: wiping AppData directory.");
             try
             {
@@ -124,7 +206,7 @@ namespace TGTAMM
                         ForceDeleteDirectory(dir);
                     foreach (var file in Directory.GetFiles(AppDataPath))
                     {
-                        if (Path.GetFileName(file).Equals("tgtamm.log", StringComparison.OrdinalIgnoreCase))
+                        if (Path.GetFileName(file).Equals("TMM.log", StringComparison.OrdinalIgnoreCase))
                             continue;
                         try { File.Delete(file); } catch { /* skip locked */ }
                     }
@@ -132,7 +214,7 @@ namespace TGTAMM
             }
             catch (Exception ex)
             {
-                // Non-fatal — settings are gone, remaining files are harmless on next launch.
+                // Non-fatal - settings are gone, remaining files are harmless on next launch.
                 try { Log($"FactoryReset partial failure: {ex.Message}"); } catch { }
             }
         }
@@ -149,6 +231,23 @@ namespace TGTAMM
         public void SetVanillaPath(GameProfile profile, string? path)
         {
             Settings.GamePaths[profile.Key] = path;
+
+            // When the IV base path is set, auto-derive TLaD and TBoGT from it.
+            // Standard layout: [IV dir]\TLAD\  and  [IV dir]\EFLC\
+            // Also check alternate names: TLAD/TLaD and EFLC/TBoGT
+            if (profile.Key == "IV" && !string.IsNullOrEmpty(path))
+            {
+                var tladPath = Path.Combine(path, "TLAD");
+                if (!Directory.Exists(tladPath)) tladPath = Path.Combine(path, "TLaD");
+                if (Directory.Exists(tladPath))
+                    Settings.GamePaths[GameProfile.TLaD.Key] = tladPath;
+
+                var tbogtPath = Path.Combine(path, "EFLC");
+                if (!Directory.Exists(tbogtPath)) tbogtPath = Path.Combine(path, "TBoGT");
+                if (Directory.Exists(tbogtPath))
+                    Settings.GamePaths[GameProfile.TBoGT.Key] = tbogtPath;
+            }
+
             SaveSettings();
         }
 
@@ -169,23 +268,52 @@ namespace TGTAMM
                 {
                     if (!string.IsNullOrEmpty(GetVanillaPath(profile))) continue;
 
-                    string[] commonRoots =
-                    {
-                        Path.Combine(drive.Name, "SteamLibrary", "Steam", "steamapps", "common"),
-                        Path.Combine(drive.Name, "SteamLibrary", "steamapps", "common"),
-                        Path.Combine(drive.Name, "Program Files (x86)", "Steam", "steamapps", "common"),
-                        Path.Combine(drive.Name, "Games"),
-                        Path.Combine(drive.Name, "Rockstar Games")
-                    };
+                    // IV episodes are nested inside GTAIV\ so include that sub-folder too
+                    bool isIvFamily = GameProfile.IvFamilyKeys.Contains(profile.Key);
+                    string[] commonRoots = isIvFamily
+                        ? new[]
+                        {
+                            Path.Combine(drive.Name, "SteamLibrary", "Steam", "steamapps", "common", "Grand Theft Auto IV", "GTAIV"),
+                            Path.Combine(drive.Name, "SteamLibrary", "steamapps", "common", "Grand Theft Auto IV", "GTAIV"),
+                            Path.Combine(drive.Name, "Program Files (x86)", "Steam", "steamapps", "common", "Grand Theft Auto IV", "GTAIV"),
+                            Path.Combine(drive.Name, "Games", "Grand Theft Auto IV", "GTAIV"),
+                            Path.Combine(drive.Name, "Rockstar Games", "Grand Theft Auto IV", "GTAIV"),
+                        }
+                        : new[]
+                        {
+                            Path.Combine(drive.Name, "SteamLibrary", "Steam", "steamapps", "common"),
+                            Path.Combine(drive.Name, "SteamLibrary", "steamapps", "common"),
+                            Path.Combine(drive.Name, "Program Files (x86)", "Steam", "steamapps", "common"),
+                            Path.Combine(drive.Name, "Games"),
+                            Path.Combine(drive.Name, "Rockstar Games")
+                        };
 
                     foreach (var root in commonRoots.Where(Directory.Exists))
                     {
                         Log($"[QUICK] Checking: {root}");
-                        string found = ScanForExe(root, profile.ExeName);
+                        string found = "";
+                        if (isIvFamily)
+                        {
+                            // For IV/TLaD/TBoGT, check in root and in episode subdirectories
+                            if (File.Exists(Path.Combine(root, profile.ExeName)))
+                                found = root;
+                            else if (profile.Key == "TLaD" && File.Exists(Path.Combine(root, "TLaD", profile.ExeName)))
+                                found = Path.Combine(root, "TLaD");
+                            else if (profile.Key == "TLaD" && File.Exists(Path.Combine(root, "TLAD", profile.ExeName)))
+                                found = Path.Combine(root, "TLAD");
+                            else if (profile.Key == "TBoGT" && File.Exists(Path.Combine(root, "TBoGT", profile.ExeName)))
+                                found = Path.Combine(root, "TBoGT");
+                            else if (profile.Key == "TBoGT" && File.Exists(Path.Combine(root, "EFLC", profile.ExeName)))
+                                found = Path.Combine(root, "EFLC");
+                        }
+                        else
+                            found = ScanForExe(root, profile.ExeName);
+
                         if (!string.IsNullOrEmpty(found))
                         {
                             Log($"[SUCCESS] Found {profile.Key} in {found}");
-                            Settings.GamePaths[profile.Key] = found;
+                            // Use SetVanillaPath so IV auto-derives TLaD/TBoGT paths.
+                            SetVanillaPath(profile, found);
                             break;
                         }
                     }
@@ -263,7 +391,7 @@ namespace TGTAMM
         public async Task<ExeStatus> VerifyGameStatusAsync(GameProfile profile)
         {
             // If an enabled mod in the modlist contains the game exe, use that
-            // for verification — it means the user has installed a downgraded exe
+            // for verification - it means the user has installed a downgraded exe
             // as a mod, which is fully valid.
             var list = Mods[profile.Key];
             var exeMod = list
@@ -290,13 +418,26 @@ namespace TGTAMM
 
         /// <summary>
         /// Returns true if the game can be deployed even if the vanilla path is
-        /// a Steam install — as long as an enabled exe mod is in the modlist
-        /// (the exe mod provides the 1.0 binary that bypasses Steam DRM).
+        /// a Steam install. True when either:
+        ///   (a) an enabled exe mod is in the modlist (provides the 1.0 binary), or
+        ///   (b) the user has explicitly toggled the per-game DeployOverride flag.
         /// </summary>
         public bool HasExeModOverride(GameProfile profile)
         {
+            if (Settings.DeployOverrides.TryGetValue(profile.Key, out bool forced) && forced)
+                return true;
+
             var list = Mods[profile.Key];
             return list.Any(m => m.IsEnabled && FindExeInMod(m.RawFolderPath, profile.ExeName) != null);
+        }
+
+        /// <summary>Toggles the per-game force-deploy override and persists settings.</summary>
+        public bool ToggleDeployOverride(GameProfile profile)
+        {
+            Settings.DeployOverrides.TryAdd(profile.Key, false);
+            Settings.DeployOverrides[profile.Key] = !Settings.DeployOverrides[profile.Key];
+            SaveSettings();
+            return Settings.DeployOverrides[profile.Key];
         }
 
         /// <summary>
@@ -336,7 +477,7 @@ namespace TGTAMM
             if (isGhost)
             {
                 var result = MessageBox.Show(
-                    $"TGTAMM detected a 'Ghost Install' for {profile.DisplayName}.\n\n" +
+                    $"TMM detected a 'Ghost Install' for {profile.DisplayName}.\n\n" +
                     "Steam thinks the game is installed, but the folder is missing or empty. " +
                     "Would you like to launch Steam Validation to fix the directory?",
                     "Ghost Install Detected", MessageBoxButton.YesNo, MessageBoxImage.Warning);
@@ -394,7 +535,7 @@ namespace TGTAMM
         public async Task<string> GetMd5DiagnosticsAsync(GameProfile profile)
         {
             var lines = new System.Text.StringBuilder();
-            lines.AppendLine($"── {profile.DisplayName} MD5 Diagnostics ──");
+            lines.AppendLine($"-- {profile.DisplayName} MD5 Diagnostics --");
             // Show all accepted hashes so the user can verify their downgrader variant
             foreach (var h in profile.AllValidMd5s)
                 lines.AppendLine($"  Accepted 1.0 MD5 : {h}");
@@ -403,7 +544,7 @@ namespace TGTAMM
             lines.AppendLine($"  Active exe MD5   : {effective}");
 
             bool match = profile.IsValidMd5(effective);
-            lines.AppendLine($"  Status           : {(match ? "✅ MATCH — ready for VFS" : "❌ MISMATCH — Steam or unknown build")}");
+            lines.AppendLine($"  Status           : {(match ? "[OK] MATCH - ready for direct deploy" : "[FAIL] MISMATCH - Steam or unknown build")}");
 
             // Show which mod is providing the exe (if any).
             var list = Mods[profile.Key];
@@ -430,7 +571,8 @@ namespace TGTAMM
 
         public async Task RefreshAllModListsAsync()
         {
-            await Task.WhenAll(GameProfile.All.Select(p => Task.Run(() => RefreshModListForGame(p))));
+            var allGames = GameRegistry.Instance.GetAllGames();
+            await Task.WhenAll(allGames.Select(p => Task.Run(() => RefreshModListForGame(p))));
         }
 
         private void RefreshModListForGame(GameProfile profile)
@@ -484,17 +626,17 @@ namespace TGTAMM
         }
 
         // ==========================================================
-        // STAGING / TEMP
+        // DOWNLOAD CACHE
         // ==========================================================
 
-        public string TempStagingPath => Path.Combine(AppDataPath, "TempStaging");
+        public string DownloadCachePath => Path.Combine(AppDataPath, "DownloadCache");
 
-        public void WipeTempStaging()
+        public void WipeDownloadCache()
         {
-            string staging = TempStagingPath;
-            if (!Directory.Exists(staging)) return;
+            string cache = DownloadCachePath;
+            if (!Directory.Exists(cache)) return;
 
-            try { Directory.Delete(staging, true); }
+            try { Directory.Delete(cache, true); }
             catch { /* files might be locked - retry on next launch */ }
         }
 
@@ -506,11 +648,11 @@ namespace TGTAMM
                 var drive = new DriveInfo(driveLetter);
                 double freeGB = drive.AvailableFreeSpace / (1024.0 * 1024.0 * 1024.0);
 
-                long stagingSize = new DirectoryInfo(AppDataPath).Exists
+                long appDataSize = new DirectoryInfo(AppDataPath).Exists
                     ? new DirectoryInfo(AppDataPath).EnumerateFiles("*", SearchOption.AllDirectories).Sum(fi => fi.Length)
                     : 0;
 
-                return $"App Data (VFS): {FormatBytes(stagingSize)}\nFree Space: {freeGB:F1} GB";
+                return $"App Data: {FormatBytes(appDataSize)}\nFree Space: {freeGB:F1} GB";
             }
             catch
             {
@@ -528,36 +670,96 @@ namespace TGTAMM
         }
 
         // ==========================================================
-        // DEPLOYMENT (fully async, parallel I/O)
+        // BACKUP / ROLLBACK
         // ==========================================================
 
-        /// <summary>
-        /// Wipes the Modded* folder and copies vanilla files into it.
-        /// Used by initial setup - prepares a clean playground without any mods.
-        /// </summary>
-        public async Task CloneToVirtualAsync(
-            GameProfile profile,
+        public string BackupsPath => Path.Combine(AppDataPath, "Backups");
+
+        public List<DeployManifest> GetRollbackManifests(string gameKey)
+        {
+            string gameBackupDir = Path.Combine(BackupsPath, gameKey);
+            if (!Directory.Exists(gameBackupDir)) return new List<DeployManifest>();
+
+            var manifests = new List<DeployManifest>();
+            foreach (var dir in Directory.GetDirectories(gameBackupDir).OrderByDescending(d => d))
+            {
+                string mPath = Path.Combine(dir, "manifest.json");
+                if (!File.Exists(mPath)) continue;
+                try
+                {
+                    var m = JsonSerializer.Deserialize<DeployManifest>(File.ReadAllText(mPath));
+                    if (m != null) manifests.Add(m);
+                }
+                catch { /* skip corrupt manifest */ }
+            }
+            return manifests;
+        }
+
+        public async Task RollbackDeployAsync(
+            DeployManifest manifest,
             IProgress<DeploymentProgress>? progress = null,
             CancellationToken ct = default)
         {
-            string? vanillaPath = GetVanillaPath(profile);
-            if (string.IsNullOrEmpty(vanillaPath) || !Directory.Exists(vanillaPath))
-                throw new InvalidOperationException($"Vanilla path for {profile.DisplayName} is missing.");
+            int total = manifest.Entries.Count, done = 0;
+            Log($"[Rollback:{manifest.GameKey}] Restoring {total} entries from {manifest.Timestamp}");
 
-            string target = Path.Combine(AppDataPath, profile.ModdedFolderName);
+            foreach (var entry in manifest.Entries)
+            {
+                ct.ThrowIfCancellationRequested();
+                string destFile = Path.Combine(manifest.GameDirectory, entry.RelativePath);
 
-            progress?.Report(new("Clearing virtual folder...", 0, 0));
-            await Task.Run(() => ForceDeleteDirectory(target), ct);
-            Directory.CreateDirectory(target);
+                if (entry.BackupFilePath != null && File.Exists(entry.BackupFilePath))
+                {
+                    // Restore the backed-up original.
+                    string? destDir = Path.GetDirectoryName(destFile);
+                    if (!string.IsNullOrEmpty(destDir)) Directory.CreateDirectory(destDir);
+                    try { File.SetAttributes(destFile, FileAttributes.Normal); } catch { }
+                    await Task.Run(() => File.Copy(entry.BackupFilePath, destFile, overwrite: true), ct);
+                }
+                else if (entry.BackupFilePath == null && File.Exists(destFile))
+                {
+                    // File was newly added by deploy — remove it on rollback.
+                    try
+                    {
+                        File.SetAttributes(destFile, FileAttributes.Normal);
+                        File.Delete(destFile);
+                    }
+                    catch { /* best effort */ }
+                }
 
-            progress?.Report(new($"Cloning {profile.DisplayName}...", 0, 0));
-            await CopyDirectoryParallelAsync(vanillaPath, target, overwrite: false, progress, ct);
+                done++;
+                if (done % 10 == 0 || done == total)
+                    progress?.Report(new($"Restoring {done}/{total}", done, total));
+            }
+
+            Log($"[Rollback:{manifest.GameKey}] Done.");
         }
 
+        private void PruneOldBackups(string gameKey, int keepCount = 5)
+        {
+            string gameBackupDir = Path.Combine(BackupsPath, gameKey);
+            if (!Directory.Exists(gameBackupDir)) return;
+
+            var toDelete = Directory.GetDirectories(gameBackupDir)
+                                    .OrderByDescending(d => d)
+                                    .Skip(keepCount)
+                                    .ToList();
+
+            foreach (var dir in toDelete)
+            {
+                try { ForceDeleteDirectory(dir); }
+                catch { /* skip if locked */ }
+            }
+        }
+
+        // ==========================================================
+        // DEPLOYMENT  (direct to game directory, with backup)
+        // ==========================================================
+
         /// <summary>
-        /// Full deploy: nuke virtual, recopy vanilla, layer enabled mods in load order.
-        /// Each mod overwrites the previous. Mods with higher LoadOrder win.
-        /// Disabled mods are skipped entirely — the virtual folder reflects only enabled mods.
+        /// Deploy enabled mods in load order directly to the game's installation
+        /// directory. Files that would be overwritten are backed up first so the
+        /// deploy can be rolled back. Higher LoadOrder wins on conflict.
         /// </summary>
         public async Task DeployModsAsync(
             GameProfile profile,
@@ -565,43 +767,181 @@ namespace TGTAMM
             IProgress<DeploymentProgress>? progress = null,
             CancellationToken ct = default)
         {
-            string? vanillaPath = GetVanillaPath(profile);
-            if (string.IsNullOrEmpty(vanillaPath) || !Directory.Exists(vanillaPath))
-                throw new InvalidOperationException($"Vanilla path for {profile.DisplayName} is missing.");
+            string? gameDir = GetVanillaPath(profile);
+            if (string.IsNullOrEmpty(gameDir) || !Directory.Exists(gameDir))
+                throw new InvalidOperationException($"Game directory for {profile.DisplayName} is missing.");
 
-            string target = Path.Combine(AppDataPath, profile.ModdedFolderName);
+            var allMods = mods.ToList();
+            var enabled = allMods.Where(m => m.IsEnabled).OrderBy(m => m.LoadOrder).ToList();
+            var disabled = allMods.Where(m => !m.IsEnabled).ToList();
 
-            var allMods   = mods.ToList();
-            var enabled   = allMods.Where(m =>  m.IsEnabled).OrderBy(m => m.LoadOrder).ToList();
-            var disabled  = allMods.Where(m => !m.IsEnabled).ToList();
-
-            Log($"[Deploy:{profile.Key}] Starting — {enabled.Count} enabled, {disabled.Count} disabled");
+            Log($"[Deploy:{profile.Key}] Starting - {enabled.Count} enabled, {disabled.Count} disabled");
             foreach (var m in disabled)
                 Log($"[Deploy:{profile.Key}]   SKIP (disabled) [{m.LoadOrder}] {m.Name}");
 
-            progress?.Report(new("Clearing virtual folder...", 0, 0));
-            await Task.Run(() => ForceDeleteDirectory(target), ct);
-            Directory.CreateDirectory(target);
-
-            progress?.Report(new($"Cloning vanilla {profile.DisplayName}...", 0, 0));
-            Log($"[Deploy:{profile.Key}] Cloning vanilla → {target}");
-            await CopyDirectoryParallelAsync(vanillaPath, target, overwrite: false, progress, ct);
-
-            for (int i = 0; i < enabled.Count; i++)
+            // Build flat file map: relative game-dir path -> winning source file.
+            // ConditionalRoutes on the profile are applied here (e.g. .asi → plugins\).
+            var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var mod in enabled)
             {
-                var mod = enabled[i];
                 if (!Directory.Exists(mod.RawFolderPath))
                 {
                     Log($"[Deploy:{profile.Key}]   WARN: folder missing for [{mod.LoadOrder}] {mod.Name}");
                     continue;
                 }
-
-                progress?.Report(new($"Applying mod {i + 1}/{enabled.Count}: {mod.Name}", i + 1, enabled.Count));
-                Log($"[Deploy:{profile.Key}]   APPLY [{mod.LoadOrder}] {mod.Name}");
-                await CopyDirectoryParallelAsync(mod.RawFolderPath, target, overwrite: true, progress, ct);
+                foreach (var file in Directory.EnumerateFiles(mod.RawFolderPath, "*", SearchOption.AllDirectories))
+                {
+                    string rel = Path.GetRelativePath(mod.RawFolderPath, file);
+                    rel = ApplyConditionalRoutes(profile.ConditionalRoutes, gameDir, rel);
+                    fileMap[rel] = file;
+                }
             }
 
-            Log($"[Deploy:{profile.Key}] Done.");
+            await DeployFilesToGameDirAsync(profile.Key, gameDir, fileMap,
+                enabled.Select(m => m.Name).ToList(), progress, ct);
+        }
+
+        /// <summary>
+        /// Deploy enabled mods for a custom game directly to the game directory,
+        /// applying per-extension output subdirectory routing from the game config.
+        /// ConditionalRoutes in the config take priority over static OutputDirectories.
+        /// </summary>
+        public async Task DeployCustomGameModsAsync(
+            GameProfile profile,
+            CustomGameProfile config,
+            IEnumerable<ModItem> mods,
+            IProgress<DeploymentProgress>? progress = null,
+            CancellationToken ct = default)
+        {
+            // Prefer the profile's vanilla path (for built-in IV family games), fall
+            // back to config.GameDirectory (for pure custom games).
+            string? vanilla = GetVanillaPath(profile);
+            string gameDir = !string.IsNullOrEmpty(vanilla) ? vanilla : config.GameDirectory;
+            if (string.IsNullOrEmpty(gameDir) || !Directory.Exists(gameDir))
+                throw new InvalidOperationException($"Game directory for '{config.GameName}' is missing or not set.");
+
+            var allMods = mods.ToList();
+            var enabled = allMods.Where(m => m.IsEnabled).OrderBy(m => m.LoadOrder).ToList();
+            var disabled = allMods.Where(m => !m.IsEnabled).ToList();
+
+            Log($"[CustomDeploy:{profile.Key}] Starting - {enabled.Count} enabled, {disabled.Count} disabled");
+
+            // Build file map with extension-based output routing (conditional first).
+            var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var mod in enabled)
+            {
+                if (!Directory.Exists(mod.RawFolderPath)) continue;
+                foreach (var file in Directory.EnumerateFiles(mod.RawFolderPath, "*", SearchOption.AllDirectories))
+                {
+                    string ext = Path.GetExtension(file).ToLowerInvariant();
+                    // ResolveOutputDirectory checks ConditionalRoutes first,
+                    // then falls back to the static OutputDirectories map.
+                    string outSubDir = config.ResolveOutputDirectory(ext, gameDir);
+                    string fileName = Path.GetFileName(file);
+                    string rel = outSubDir == "." ? fileName : Path.Combine(outSubDir, fileName);
+                    fileMap[rel] = file;
+                }
+            }
+
+            await DeployFilesToGameDirAsync(profile.Key, gameDir, fileMap,
+                enabled.Select(m => m.Name).ToList(), progress, ct);
+        }
+
+        /// <summary>
+        /// Applies profile-level ConditionalRoutes to a relative file path.
+        /// If the target extension matches a rule, the output path is re-routed
+        /// based on whether the specified sub-directory exists in the game dir.
+        /// </summary>
+        private static string ApplyConditionalRoutes(
+            IReadOnlyList<ConditionalRoute>? routes,
+            string gameDir,
+            string relPath)
+        {
+            if (routes == null || routes.Count == 0) return relPath;
+            string ext = Path.GetExtension(relPath).ToLowerInvariant();
+            foreach (var cond in routes)
+            {
+                if (!cond.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase)) continue;
+                string check = Path.Combine(gameDir, cond.CheckSubdir);
+                string routeTo = Directory.Exists(check) ? cond.RouteIfExists : cond.RouteIfMissing;
+                string fileName = Path.GetFileName(relPath);
+                return routeTo == "." ? fileName : Path.Combine(routeTo, fileName);
+            }
+            return relPath;
+        }
+
+        /// <summary>
+        /// Shared deploy core: backs up files that will be overwritten, writes
+        /// new files, saves a rollback manifest, and prunes old backups.
+        /// fileMap key = path relative to gameDir, value = absolute source path.
+        /// </summary>
+        private async Task DeployFilesToGameDirAsync(
+            string gameKey,
+            string gameDir,
+            Dictionary<string, string> fileMap,
+            List<string> modNames,
+            IProgress<DeploymentProgress>? progress = null,
+            CancellationToken ct = default)
+        {
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string backupDir = Path.Combine(BackupsPath, gameKey, timestamp);
+            Directory.CreateDirectory(backupDir);
+
+            var entries = new List<BackupEntry>();
+            int total = fileMap.Count, done = 0;
+
+            progress?.Report(new($"Deploying {total} files...", 0, total));
+
+            foreach (var (rel, srcFile) in fileMap)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                string destFile = Path.Combine(gameDir, rel);
+                string? destSubDir = Path.GetDirectoryName(destFile);
+                if (!string.IsNullOrEmpty(destSubDir)) Directory.CreateDirectory(destSubDir);
+
+                string? backupFilePath = null;
+                if (File.Exists(destFile))
+                {
+                    string backupFile = Path.Combine(backupDir, rel);
+                    string? backupSubDir = Path.GetDirectoryName(backupFile);
+                    if (!string.IsNullOrEmpty(backupSubDir)) Directory.CreateDirectory(backupSubDir);
+
+                    try
+                    {
+                        File.Copy(destFile, backupFile, overwrite: true);
+                        backupFilePath = backupFile;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"[Deploy:{gameKey}] WARN: backup failed for {rel}: {ex.Message}");
+                    }
+
+                    try { File.SetAttributes(destFile, FileAttributes.Normal); } catch { }
+                }
+
+                await using var src = new FileStream(srcFile, FileMode.Open, FileAccess.Read,
+                    FileShare.Read, 81920, useAsync: true);
+                await using var dst = new FileStream(destFile, FileMode.Create, FileAccess.Write,
+                    FileShare.None, 81920, useAsync: true);
+                await src.CopyToAsync(dst, ct);
+
+                long originalSize = backupFilePath != null ? new FileInfo(backupFilePath).Length : 0;
+                entries.Add(new BackupEntry(rel, backupFilePath, originalSize));
+
+                done++;
+                if (done % 10 == 0 || done == total)
+                    progress?.Report(new($"Writing file {done}/{total}", done, total));
+            }
+
+            var manifest = new DeployManifest(timestamp, gameKey, gameDir, modNames, entries);
+            File.WriteAllText(
+                Path.Combine(backupDir, "manifest.json"),
+                JsonSerializer.Serialize(manifest, JsonOpts));
+
+            PruneOldBackups(gameKey);
+            int backedUp = entries.Count(e => e.BackupFilePath != null);
+            Log($"[Deploy:{gameKey}] Done - {done} files written, {backedUp} backed up, manifest saved.");
         }
 
         /// <summary>
@@ -709,63 +1049,40 @@ namespace TGTAMM
         // ARCHIVE EXTRACTION
         // ==========================================================
 
-        /// <summary>
-        /// Async-safe wrapper around <see cref="ExtractArchiveSafe"/>.
-        /// The underlying SevenZipExtractor library is synchronous, so this
-        /// just hops onto a background thread to avoid blocking the UI.
-        /// </summary>
-        public static Task ExtractArchiveSafeAsync(string archivePath, string destinationPath, CancellationToken ct = default)
-            => Task.Run(() => ExtractArchiveSafe(archivePath, destinationPath), ct);
-
-        public static void ExtractArchiveSafe(string archivePath, string destinationPath)
+        public static async Task ExtractArchiveSafeAsync(string archivePath, string destinationPath, CancellationToken ct = default)
         {
             if (Directory.Exists(destinationPath)) ForceDeleteDirectory(destinationPath);
             Directory.CreateDirectory(destinationPath);
 
             try
             {
-                using (var archive = new ArchiveFile(archivePath))
-                    ExtractEntriesWithStream(archive, destinationPath);
-
-                // Some archives (e.g. .tar.gz from GitHub) extract to an inner .tar that needs a second pass.
-                var tarFiles = Directory.GetFiles(destinationPath, "*.tar", SearchOption.TopDirectoryOnly);
-                if (tarFiles.Length > 0)
+                using var stream = File.OpenRead(archivePath);
+                await using var reader = await ReaderFactory.OpenAsyncReader(stream);
+                while (await reader.MoveToNextEntryAsync())
                 {
-                    using (var tar = new ArchiveFile(tarFiles[0]))
-                        ExtractEntriesWithStream(tar, destinationPath);
-                    File.Delete(tarFiles[0]);
+                    ct.ThrowIfCancellationRequested();
+                    if (string.IsNullOrWhiteSpace(reader.Entry.Key)) continue;
+
+                    string fullPath = Path.Combine(destinationPath, reader.Entry.Key);
+
+                    if (reader.Entry.IsDirectory)
+                    {
+                        Directory.CreateDirectory(fullPath);
+                    }
+                    else
+                    {
+                        string? parent = Path.GetDirectoryName(fullPath);
+                        if (!string.IsNullOrEmpty(parent)) Directory.CreateDirectory(parent);
+
+                        await using var fileStream = File.Create(fullPath);
+                        await using var es = await reader.OpenEntryStreamAsync();
+                        await es.CopyToAsync(fileStream, ct);
+                    }
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 throw new Exception($"Extraction failed: {ex.Message}", ex);
-            }
-        }
-
-        /// <summary>
-        /// Streams each entry to disk. Bypasses Win32 FileTime metadata crashes
-        /// that happen with older mod archives carrying invalid timestamps.
-        /// </summary>
-        private static void ExtractEntriesWithStream(ArchiveFile archive, string destinationDir)
-        {
-            foreach (var entry in archive.Entries)
-            {
-                if (string.IsNullOrWhiteSpace(entry.FileName)) continue;
-
-                string fullPath = Path.Combine(destinationDir, entry.FileName);
-
-                if (entry.IsFolder)
-                {
-                    Directory.CreateDirectory(fullPath);
-                }
-                else
-                {
-                    string? parent = Path.GetDirectoryName(fullPath);
-                    if (!string.IsNullOrEmpty(parent)) Directory.CreateDirectory(parent);
-
-                    using var fileStream = File.Create(fullPath);
-                    entry.Extract(fileStream);
-                }
             }
         }
 
@@ -775,7 +1092,7 @@ namespace TGTAMM
 
         /// <summary>
         /// Streams a URL straight to disk. Previously this called
-        /// <c>GetByteArrayAsync</c> which loaded the whole file into RAM —
+        /// <c>GetByteArrayAsync</c> which loaded the whole file into RAM -
         /// bad for big bundles like Project2DFX.
         /// </summary>
         public async Task DownloadFileAsync(string fileUrl, string destinationPath, CancellationToken ct = default)
@@ -820,7 +1137,7 @@ namespace TGTAMM
 
             string downloadUrl = bestAsset.GetProperty("browser_download_url").GetString()!;
             string fileName = bestAsset.GetProperty("name").GetString()!;
-            string savePath = Path.Combine(TempStagingPath, fileName);
+            string savePath = Path.Combine(DownloadCachePath, fileName);
 
             await DownloadFileAsync(downloadUrl, savePath, ct);
             return savePath;

@@ -1,0 +1,582 @@
+<Window x:Class="TMM.Gta4DashboardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TMM &#x2014; GTA IV Series"
+        Icon="{StaticResource AppIcon}"
+        Height="680" Width="1180" MinHeight="540" MinWidth="960"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded" StateChanged="Window_StateChanged">
+
+    <Window.Resources>
+
+        <!-- Column header style -->
+        <Style TargetType="{x:Type GridViewColumnHeader}">
+            <Setter Property="Background"      Value="{DynamicResource HeaderBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="Padding"         Value="8,4"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="BorderBrush"     Value="#22FFFFFF"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Shared mod list template -->
+        <ControlTemplate x:Key="ModListTemplate" TargetType="ListView">
+            <Border Background="{DynamicResource PanelBrush}" BorderThickness="0" CornerRadius="4" Opacity="0.95">
+                <Grid>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.14">
+                        <TextBlock Text="Drop Mods Here" Foreground="{DynamicResource TextBrush}"
+                                   FontSize="15" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Bottom overrides Top  (0 loads first)"
+                                   Foreground="{DynamicResource TextBrush}"
+                                   FontSize="10" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                    </StackPanel>
+                    <ScrollViewer Style="{DynamicResource {x:Static GridView.GridViewScrollViewerStyleKey}}">
+                        <ItemsPresenter/>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </ControlTemplate>
+
+        <!-- Context menu for mod items -->
+        <ContextMenu x:Key="ModContextMenu">
+            <MenuItem Header="Rename (F2)"           Click="MenuRename_Click"/>
+            <MenuItem Header="Set Load Order..."     Click="MenuSetLoadOrder_Click" FontWeight="Bold"/>
+            <MenuItem Header="Toggle Disabled (Space)" Click="MenuToggle_Click"/>
+            <Separator/>
+            <MenuItem Header="Open Mod Folder"       Click="MenuOpenFolder_Click"/>
+            <MenuItem Header="Open Game Folder"      Click="MenuOpenGameFolder_Click"/>
+            <MenuItem Header="Open Mods Store"       Click="MenuOpenModsStore_Click"/>
+            <Separator/>
+            <MenuItem Header="Move Up (Ctrl+&#x2191;)"   Click="MenuMoveUp_Click"/>
+            <MenuItem Header="Move Down (Ctrl+&#x2193;)" Click="MenuMoveDown_Click"/>
+            <Separator/>
+            <MenuItem Header="Properties..."         Click="MenuProperties_Click" Foreground="{DynamicResource AccentBrush}"/>
+            <MenuItem Header="Delete Mod(s) (Del)"   Click="MenuDelete_Click"     Foreground="#FF5555"/>
+        </ContextMenu>
+
+        <ContextMenu x:Key="EmptyListContextMenu">
+            <MenuItem Header="+ Install Mod Here..." Click="BtnInstallMod_Click"/>
+            <MenuItem Header="Refresh"               Click="BtnRefresh_Click"/>
+            <Separator/>
+            <MenuItem Header="Open Game Folder"  Click="MenuOpenGameFolder_Click"/>
+            <MenuItem Header="Open Mods Store"   Click="MenuOpenModsStore_Click"/>
+        </ContextMenu>
+
+        <!-- Shared mod list style -->
+        <Style x:Key="ModListStyle" TargetType="ListView">
+            <Setter Property="Background"       Value="Transparent"/>
+            <Setter Property="Foreground"       Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderThickness"  Value="0"/>
+            <Setter Property="AllowDrop"        Value="True"/>
+            <Setter Property="AlternationCount" Value="2"/>
+            <Setter Property="Template"         Value="{StaticResource ModListTemplate}"/>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="ContextMenu"               Value="{StaticResource ModContextMenu}"/>
+                        <Setter Property="Background"                Value="Transparent"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Style.Triggers>
+                            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                <Setter Property="Background" Value="{DynamicResource CheckeredRowBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#3D3D3D"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#2A2A2A"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Column action button -->
+        <Style x:Key="ColActionBtn" TargetType="Button">
+            <Setter Property="Height"          Value="26"/>
+            <Setter Property="FontSize"        Value="11"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Padding"         Value="10,0"/>
+            <Setter Property="Background"      Value="{DynamicResource ControlBgBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextBrush}"/>
+        </Style>
+
+        <!-- Small icon button for toolbar -->
+        <Style x:Key="ToolIconBtn" TargetType="Button">
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Padding"         Value="7,4"/>
+            <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="FontFamily"      Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+            <Setter Property="FontSize"        Value="13"/>
+        </Style>
+
+    </Window.Resources>
+
+    <Border x:Name="OuterBorder" CornerRadius="10" BorderThickness="1"
+            BorderBrush="{DynamicResource AccentBrush}"
+            Background="{DynamicResource BgBrush}" ClipToBounds="True">
+        <DockPanel>
+
+            <!-- ── Title bar ───────────────────────────────────────────────────── -->
+            <Grid DockPanel.Dock="Top" Height="36" Background="{DynamicResource HeaderBrush}"
+                  MouseLeftButtonDown="TitleBar_MouseDown">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
+                    <TextBlock Text="TMM" FontSize="13" FontWeight="Bold"
+                               Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text=" &#x2014; GTA IV Series" FontSize="12"
+                               Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="&#xE921;" Width="36" Height="36"
+                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="9"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{DynamicResource SubTextBrush}"
+                            Click="BtnMinimize_Click"/>
+                    <Button Content="&#xE922;" Width="36" Height="36"
+                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="9"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{DynamicResource SubTextBrush}"
+                            Click="BtnMaxRestore_Click" x:Name="btnMaxRestore"/>
+                    <Button Content="&#xE8BB;" Width="36" Height="36"
+                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{DynamicResource SubTextBrush}"
+                            Click="BtnClose_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ── Status bar ──────────────────────────────────────────────────── -->
+            <Grid DockPanel.Dock="Bottom" Background="{DynamicResource HeaderBrush}" Height="28">
+                <TextBlock x:Name="txtStatus" Text="Ready" FontSize="11"
+                           Foreground="{DynamicResource SubTextBrush}"
+                           VerticalAlignment="Center" Margin="12,0"/>
+                <TextBlock x:Name="txtDiskSpace" Text="" FontSize="10"
+                           Foreground="{DynamicResource SubTextBrush}" Opacity="0.6"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            </Grid>
+
+            <!-- ── Toolbar ─────────────────────────────────────────────────────── -->
+            <Grid DockPanel.Dock="Top" Background="{DynamicResource HeaderBrush}"
+                  Height="44" Margin="0,0,0,1">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+
+                    <!-- Back -->
+                    <Button Background="Transparent" BorderThickness="0"
+                            Padding="8,4" Cursor="Hand" Click="BtnClose_Click" ToolTip="Back to Launcher">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       FontSize="12" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SubTextBrush}"/>
+                            <TextBlock Text=" Back" FontSize="11" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SubTextBrush}" Margin="2,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Separator Width="1" Height="20" Background="#33FFFFFF" Margin="4,0"/>
+
+                    <!-- Install Mod -->
+                    <Button Content="&#xE8F4;" ToolTip="Install Mod..."
+                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
+                            Click="BtnInstallMod_Click"/>
+
+                    <!-- Refresh -->
+                    <Button Content="&#xE72C;" ToolTip="Refresh mod lists"
+                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
+                            Click="BtnRefresh_Click"/>
+
+                    <!-- Rescan Paths -->
+                    <Button Content="&#xE721;" ToolTip="Rescan game paths"
+                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
+                            Click="BtnRescanPaths_Click"/>
+
+                    <Separator Width="1" Height="20" Background="#33FFFFFF" Margin="4,0"/>
+
+                    <!-- Deploy All -->
+                    <Button x:Name="btnDeployAll" Content="&#xE896;"
+                            ToolTip="Deploy all IV episodes (F5)"
+                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
+                            Click="BtnDeployAll_Click"/>
+
+                    <Separator Width="1" Height="20" Background="#33FFFFFF" Margin="4,0"/>
+
+                    <!-- App Data -->
+                    <Button Content="&#xEC50;" ToolTip="Open TMM data folder"
+                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
+                            Click="BtnOpenAppData_Click"/>
+
+                    <!-- Settings -->
+                    <Button Content="&#xE713;" ToolTip="Settings"
+                            Style="{StaticResource ToolIconBtn}" Margin="2,0"
+                            Click="BtnSettings_Click"/>
+
+                </StackPanel>
+
+                <!-- Right side: disk space label -->
+                <TextBlock x:Name="txtToolbarDisk" HorizontalAlignment="Right"
+                           Foreground="{DynamicResource SubTextBrush}" FontSize="10" Opacity="0.6"
+                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+            </Grid>
+
+            <!-- ── Three-column mod lists ────────────────────────────────────────── -->
+            <UniformGrid Columns="3" Margin="8,8,8,8">
+
+                <!-- ═══ GTA IV ═══ -->
+                <Border Margin="4" BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
+                        CornerRadius="6" Background="{DynamicResource PanelBrush}">
+                    <DockPanel Margin="6">
+
+                        <!-- Column header -->
+                        <Grid DockPanel.Dock="Top" Margin="0,4,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse x:Name="dotIV" Width="8" Height="8" Margin="2,0,5,0"
+                                         VerticalAlignment="Center">
+                                    <Ellipse.Fill><SolidColorBrush Color="#A03C3C"/></Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="GTA IV"
+                                           Foreground="{DynamicResource AccentLabelBrush}"
+                                           FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Path row -->
+                        <Grid DockPanel.Dock="Top" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="txtPathIV" Grid.Column="0"
+                                       Foreground="{DynamicResource SubTextBrush}" FontSize="9"
+                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center" Margin="2,0,4,0" Opacity="0.7" Text="—"/>
+                            <Button x:Name="btnBrowseIV" Grid.Column="1"
+                                    Content="&#xE838;" ToolTip="Browse for GTA IV directory"
+                                    Style="{StaticResource ToolIconBtn}" FontSize="11" Padding="4,2"
+                                    Click="BtnBrowse_Click" Tag="IV"/>
+                        </Grid>
+
+                        <!-- Search -->
+                        <Grid DockPanel.Dock="Top" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="txtSearchIV" Grid.Column="0"
+                                     Background="{DynamicResource ControlBgBrush}"
+                                     Foreground="{DynamicResource TextBrush}"
+                                     BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1"
+                                     Padding="6,3" FontSize="11" ToolTip="Filter mods..."
+                                     TextChanged="TxtSearch_TextChanged" Tag="IV"/>
+                            <Button Grid.Column="1" Content="&#x2715;" Margin="3,0,0,0"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="{DynamicResource SubTextBrush}"
+                                    Cursor="Hand" Padding="5,3" FontSize="10"
+                                    Click="BtnClearSearch_Click" Tag="IV"/>
+                        </Grid>
+
+                        <!-- Column footer buttons -->
+                        <Grid DockPanel.Dock="Bottom" Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="btnDeployIV" Content="Deploy IV" Grid.Column="0"
+                                    Style="{StaticResource ColActionBtn}"
+                                    Background="{DynamicResource AccentBrush}"
+                                    Foreground="{DynamicResource AccentTextBrush}"
+                                    Click="BtnDeploy_Click" Tag="IV"/>
+                            <Button x:Name="btnLaunchIV" Grid.Column="1"
+                                    Content="&#xE7B5;" ToolTip="Launch GTA IV"
+                                    Style="{StaticResource ToolIconBtn}" FontSize="12" Padding="6,0"
+                                    Margin="3,0,0,0" Click="BtnLaunch_Click" Tag="IV" Visibility="Collapsed"/>
+                            <Button x:Name="btnRollbackIV" Content="&#xE777;" ToolTip="Rollback"
+                                    Grid.Column="2" Style="{StaticResource ToolIconBtn}" FontSize="12"
+                                    Padding="6,0" Margin="3,0,0,0"
+                                    Click="BtnRollback_Click" Tag="IV"/>
+                        </Grid>
+
+                        <!-- Mod list + drop indicator overlay -->
+                        <Grid>
+                            <ListView x:Name="listIV" Style="{StaticResource ModListStyle}"
+                                      SelectionMode="Extended" Tag="IV"
+                                      ContextMenu="{StaticResource EmptyListContextMenu}"
+                                      Drop="List_Drop"
+                                      PreviewMouseLeftButtonDown="List_PreviewMouseLeftButtonDown"
+                                      MouseMove="List_MouseMove"
+                                      DragOver="List_DragOver" DragLeave="List_DragLeave"
+                                      KeyDown="List_KeyDown"
+                                      GotFocus="List_GotFocus">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="#"   Width="28" DisplayMemberBinding="{Binding LoadOrder}"/>
+                                        <GridViewColumn Header=""    Width="28">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                              Click="ModCheckBox_Click"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="Mod Name" Width="155" DisplayMemberBinding="{Binding Name}"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                            <Canvas IsHitTestVisible="False">
+                                <Rectangle x:Name="DropLineIV" Height="2" Fill="{DynamicResource AccentBrush}"
+                                           Visibility="Collapsed" Width="300"/>
+                            </Canvas>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+
+                <!-- ═══ TLaD ═══ -->
+                <Border Margin="4" BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
+                        CornerRadius="6" Background="{DynamicResource PanelBrush}">
+                    <DockPanel Margin="6">
+
+                        <!-- Column header -->
+                        <Grid DockPanel.Dock="Top" Margin="0,4,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse x:Name="dotTLaD" Width="8" Height="8" Margin="2,0,5,0"
+                                         VerticalAlignment="Center">
+                                    <Ellipse.Fill><SolidColorBrush Color="#A03C3C"/></Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="The Lost and Damned"
+                                           Foreground="{DynamicResource AccentLabelBrush}"
+                                           FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Path row -->
+                        <Grid DockPanel.Dock="Top" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="txtPathTLaD" Grid.Column="0"
+                                       Foreground="{DynamicResource SubTextBrush}" FontSize="9"
+                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center" Margin="2,0,4,0" Opacity="0.7" Text="—"/>
+                            <Button x:Name="btnBrowseTLaD" Grid.Column="1"
+                                    Content="&#xE838;" ToolTip="Browse for TLaD directory"
+                                    Style="{StaticResource ToolIconBtn}" FontSize="11" Padding="4,2"
+                                    Click="BtnBrowse_Click" Tag="TLaD"/>
+                        </Grid>
+
+                        <!-- Search -->
+                        <Grid DockPanel.Dock="Top" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="txtSearchTLaD" Grid.Column="0"
+                                     Background="{DynamicResource ControlBgBrush}"
+                                     Foreground="{DynamicResource TextBrush}"
+                                     BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1"
+                                     Padding="6,3" FontSize="11" ToolTip="Filter mods..."
+                                     TextChanged="TxtSearch_TextChanged" Tag="TLaD"/>
+                            <Button Grid.Column="1" Content="&#x2715;" Margin="3,0,0,0"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="{DynamicResource SubTextBrush}"
+                                    Cursor="Hand" Padding="5,3" FontSize="10"
+                                    Click="BtnClearSearch_Click" Tag="TLaD"/>
+                        </Grid>
+
+                        <!-- Column footer buttons -->
+                        <Grid DockPanel.Dock="Bottom" Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="btnDeployTLaD" Content="Deploy TLaD" Grid.Column="0"
+                                    Style="{StaticResource ColActionBtn}"
+                                    Background="{DynamicResource AccentBrush}"
+                                    Foreground="{DynamicResource AccentTextBrush}"
+                                    Click="BtnDeploy_Click" Tag="TLaD"/>
+                            <Button x:Name="btnLaunchTLaD" Grid.Column="1"
+                                    Content="&#xE7B5;" ToolTip="Launch TLaD"
+                                    Style="{StaticResource ToolIconBtn}" FontSize="12" Padding="6,0"
+                                    Margin="3,0,0,0" Click="BtnLaunch_Click" Tag="TLaD" Visibility="Collapsed"/>
+                            <Button x:Name="btnRollbackTLaD" Content="&#xE777;" ToolTip="Rollback"
+                                    Grid.Column="2" Style="{StaticResource ToolIconBtn}" FontSize="12"
+                                    Padding="6,0" Margin="3,0,0,0"
+                                    Click="BtnRollback_Click" Tag="TLaD"/>
+                        </Grid>
+
+                        <!-- Mod list + drop indicator overlay -->
+                        <Grid>
+                            <ListView x:Name="listTLaD" Style="{StaticResource ModListStyle}"
+                                      SelectionMode="Extended" Tag="TLaD"
+                                      ContextMenu="{StaticResource EmptyListContextMenu}"
+                                      Drop="List_Drop"
+                                      PreviewMouseLeftButtonDown="List_PreviewMouseLeftButtonDown"
+                                      MouseMove="List_MouseMove"
+                                      DragOver="List_DragOver" DragLeave="List_DragLeave"
+                                      KeyDown="List_KeyDown"
+                                      GotFocus="List_GotFocus">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="#"   Width="28" DisplayMemberBinding="{Binding LoadOrder}"/>
+                                        <GridViewColumn Header=""    Width="28">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                              Click="ModCheckBox_Click"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="Mod Name" Width="155" DisplayMemberBinding="{Binding Name}"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                            <Canvas IsHitTestVisible="False">
+                                <Rectangle x:Name="DropLineTLaD" Height="2" Fill="{DynamicResource AccentBrush}"
+                                           Visibility="Collapsed" Width="300"/>
+                            </Canvas>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+
+                <!-- ═══ TBoGT ═══ -->
+                <Border Margin="4" BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
+                        CornerRadius="6" Background="{DynamicResource PanelBrush}">
+                    <DockPanel Margin="6">
+
+                        <!-- Column header -->
+                        <Grid DockPanel.Dock="Top" Margin="0,4,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse x:Name="dotTBoGT" Width="8" Height="8" Margin="2,0,5,0"
+                                         VerticalAlignment="Center">
+                                    <Ellipse.Fill><SolidColorBrush Color="#A03C3C"/></Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="The Ballad of Gay Tony"
+                                           Foreground="{DynamicResource AccentLabelBrush}"
+                                           FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Path row -->
+                        <Grid DockPanel.Dock="Top" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="txtPathTBoGT" Grid.Column="0"
+                                       Foreground="{DynamicResource SubTextBrush}" FontSize="9"
+                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center" Margin="2,0,4,0" Opacity="0.7" Text="—"/>
+                            <Button x:Name="btnBrowseTBoGT" Grid.Column="1"
+                                    Content="&#xE838;" ToolTip="Browse for TBoGT directory"
+                                    Style="{StaticResource ToolIconBtn}" FontSize="11" Padding="4,2"
+                                    Click="BtnBrowse_Click" Tag="TBoGT"/>
+                        </Grid>
+
+                        <!-- Search -->
+                        <Grid DockPanel.Dock="Top" Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="txtSearchTBoGT" Grid.Column="0"
+                                     Background="{DynamicResource ControlBgBrush}"
+                                     Foreground="{DynamicResource TextBrush}"
+                                     BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1"
+                                     Padding="6,3" FontSize="11" ToolTip="Filter mods..."
+                                     TextChanged="TxtSearch_TextChanged" Tag="TBoGT"/>
+                            <Button Grid.Column="1" Content="&#x2715;" Margin="3,0,0,0"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="{DynamicResource SubTextBrush}"
+                                    Cursor="Hand" Padding="5,3" FontSize="10"
+                                    Click="BtnClearSearch_Click" Tag="TBoGT"/>
+                        </Grid>
+
+                        <!-- Column footer buttons -->
+                        <Grid DockPanel.Dock="Bottom" Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="btnDeployTBoGT" Content="Deploy TBoGT" Grid.Column="0"
+                                    Style="{StaticResource ColActionBtn}"
+                                    Background="{DynamicResource AccentBrush}"
+                                    Foreground="{DynamicResource AccentTextBrush}"
+                                    Click="BtnDeploy_Click" Tag="TBoGT"/>
+                            <Button x:Name="btnLaunchTBoGT" Grid.Column="1"
+                                    Content="&#xE7B5;" ToolTip="Launch TBoGT"
+                                    Style="{StaticResource ToolIconBtn}" FontSize="12" Padding="6,0"
+                                    Margin="3,0,0,0" Click="BtnLaunch_Click" Tag="TBoGT" Visibility="Collapsed"/>
+                            <Button x:Name="btnRollbackTBoGT" Content="&#xE777;" ToolTip="Rollback"
+                                    Grid.Column="2" Style="{StaticResource ToolIconBtn}" FontSize="12"
+                                    Padding="6,0" Margin="3,0,0,0"
+                                    Click="BtnRollback_Click" Tag="TBoGT"/>
+                        </Grid>
+
+                        <!-- Mod list + drop indicator overlay -->
+                        <Grid>
+                            <ListView x:Name="listTBoGT" Style="{StaticResource ModListStyle}"
+                                      SelectionMode="Extended" Tag="TBoGT"
+                                      ContextMenu="{StaticResource EmptyListContextMenu}"
+                                      Drop="List_Drop"
+                                      PreviewMouseLeftButtonDown="List_PreviewMouseLeftButtonDown"
+                                      MouseMove="List_MouseMove"
+                                      DragOver="List_DragOver" DragLeave="List_DragLeave"
+                                      KeyDown="List_KeyDown"
+                                      GotFocus="List_GotFocus">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="#"   Width="28" DisplayMemberBinding="{Binding LoadOrder}"/>
+                                        <GridViewColumn Header=""    Width="28">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                              Click="ModCheckBox_Click"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="Mod Name" Width="155" DisplayMemberBinding="{Binding Name}"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                            <Canvas IsHitTestVisible="False">
+                                <Rectangle x:Name="DropLineTBoGT" Height="2" Fill="{DynamicResource AccentBrush}"
+                                           Visibility="Collapsed" Width="300"/>
+                            </Canvas>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+
+            </UniformGrid>
+        </DockPanel>
+    </Border>
+</Window>

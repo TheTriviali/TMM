@@ -1,27 +1,64 @@
 # Changelog
 
-All notable changes to TGTAMM are listed here, newest first.
+All notable changes to TMM are listed here, newest first.
 
 ---
 
-## [Unreleased] — 2026-05-02
+## [2.0] — 2026-05-22
 
 ### Added
-- **Per-game search boxes** — each game column (III / VC / SA) now has its own search box between the title and the mod list, replacing the single shared search bar.
-- **Toolbar label toggle** — italic *T* button in the toolbar left section shows/hides text labels beneath each centered tool icon. State persists across sessions via `AppSettings.ToolbarShowLabels`.
-- **Deploy button downgrade routing** — when deploy is greyed out and a vanilla (non-downgraded) executable is detected, hovering shows "Can't deploy — one or more games need a 1.0 downgrade. Click for help." Clicking opens the Help & Troubleshooting window directly.
-- `ToolbarShowLabels` property added to `AppSettings`.
+- **Direct Deploy:** Mods are now copied straight into the game's actual installation directory. No virtual filesystem, no staging folder, no intermediate copies.
+- **Automatic Backup & Rollback:** Before overwriting any file, the original is backed up to `AppData\TMM\Backups\{gameKey}\{timestamp}\`. Last 5 deploys per game are retained. `DeployManifest` JSON tracks every file changed.
+- **Rollback Button:** New toolbar button (undo icon) lets you restore the last deploy for the active game. Works in both GTA dashboard and Custom Game dashboard.
+- **Custom Game Support:** Add any game with a configurable name, directory, executable, and per-extension output subdirectory routing (e.g. `.asi` -> `scripts\`, `*` -> root).
+- **Multi-game Launcher:** New `GameLauncherWindow` home screen showing all configured games as cards. Built-in GTA III Series card + custom game cards with Edit/Delete actions.
+- **Back to Launcher Button:** Toolbar button in all dashboards to return to the launcher.
+- **Reset Button (Launcher):** Clears the download cache with a confirmation dialog.
 
 ### Changed
-- **Toolbar is now full-window width** — moved above the sidebar/modlist split so it always spans the entire window regardless of sidebar state.
-- **Centered toolbar icon group** — the Install Mod → DXVK icon group is now centered between the left-pinned sidebar toggle and the right-pinned deploy/play/help buttons.
-- **Sidebar opens next to modlists only** — the toolbar remains fixed at the top; toggling the sidebar only affects the content area below it.
-- **Deploy button stays enabled** — the button is always clickable; when blocked by a downgrade requirement it routes to Help instead of being unresponsive.
-- **Win7 / Win8 / Win10 close button** — removed the styled pill/border at rest state. The × glyph now appears borderless and only gains a red background on hover, consistent with the other title bar styles.
+- **Project renamed:** TGTAMM -> TMM (Triviali's Mod Manager). AppData migrated automatically from `%APPDATA%\TGTAMM` to `%APPDATA%\TMM` on first launch.
+- **`TempStagingPath` -> `DownloadCachePath`:** Staging folder concept removed. Download cache is now only used for temporary archive downloads before extraction, not for deployment.
+- **DXVK config location:** `dxvk.conf` is now written to the actual game installation directory instead of the old virtual folder.
+- **Context menu "Open Virtual Folder"** renamed to **"Open Backup Folder"** — opens the rollback backup directory for that game.
+- **`GetDriveSpaceInfo()`** no longer references VFS; shows total AppData size.
+- **`BtnLaunchModded_Click`** now launches from the game's actual installation directory.
+- **Output mapping UI** in Add Custom Game dialog replaced with a `DataGrid` (Extension / Output Folder columns) replacing the raw textarea.
+- **Status bar in launcher** uses `AccentBrush` on a dark background panel for readability across all themes.
 
 ### Removed
-- **Clone Game button from Initial Setup** — cloning to the virtual folder happens automatically on first deployment, so the manual Clone button in the setup window was removed.
-- Single shared search bar (replaced by per-game search boxes).
+- **Virtual File System (VFS):** `CloneToVirtualAsync()`, `ModdedFolderName`, `Modded{Key}` AppData folders — all removed.
+- **TempStaging folder:** No longer created. `TempStagingPath` property removed from `BackendCore`.
+- **`WipeTempStaging()`** replaced with `WipeDownloadCache()`.
+- **mojibake characters** across all `.cs` and `.xaml` source files cleaned up (double-encoded UTF-8/Windows-1252 sequences replaced with ASCII equivalents).
+
+---
+
+## [Unreleased] — 2026-05-21
+
+### Added
+- **Toast notification system** — in-window toasts in bottom-right corner (1280x672 window). Replaces desktop overlay with in-app notifications that stack and auto-dismiss.
+- **Dice-roll theme button** — 🎲 button in toolbar applies random preset theme with success toast feedback.
+- **Accent-colored window borders** — toggleable option in Settings → Themes to apply accent color to window border (compatible with all themes including Compact).
+- **34+ theme presets** — comprehensive collection including Cyberpunk, Vaporwave, Terminal Green, Vice City Pink, San Andreas Dusk, and many more.
+- **Deploy-time override warnings** — when deploying with some games overridden, displays warning toast showing which games still need 1.0 executable.
+- **Override context menu access** — "⚡ Toggle Force Deploy Override" available in mod list right-click menus and empty-list context menus.
+- **Orange deploy button state** — when override is enabled, deploy button shows orange to signal "ready to deploy, but can't play yet."
+- **Error code documentation** — updated all references to "Application Load Error 5:0000065434" for clarity.
+
+### Changed
+- **Main window dimensions** — locked to 1280x672 (optimized for 1280x720 displays with 48px taskbar at 100% scaling).
+- **Notification architecture** — moved from separate desktop overlay window to integrated bottom-right corner panel within MainDashboardWindow.
+- **Toolbar button sizing** — standardized to 38×38px for secondary buttons, 42×42px for primary deploy/play buttons.
+- **Mica backdrop intensity** — made configurable per-theme (improved visibility on dark themes).
+- **Panel color calculations** — simplified color theory with consistent lift values for better theme consistency.
+- **Help window** — clarified distinction between deploy override (enables VFS deployment) vs. 1.0 executable requirement (needed for gameplay).
+
+### Fixed
+- **Toolbar icon visibility** — fixed color inconsistencies across themes (AccentBrush/AccentTextBrush theming).
+- **Dice button visibility** — now uses AccentLabelBrush for consistent visibility on all themes.
+- **Notification stacking** — toasts now properly stack and move within window bounds, disappearing cleanly as timers expire.
+- **Corner rounding** — improved window border-radius consistency (10px outer, 9px inner clipping).
+- **Win 7/8/9x button styling** — refined appearance and hover states to match theme intent.
 
 ---
 

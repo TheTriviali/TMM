@@ -1,9 +1,9 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class AboutWindow : Window
     {

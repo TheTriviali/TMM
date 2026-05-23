@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,11 +8,11 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class ThemeManagerWindow : Window
     {
-        // ── State ─────────────────────────────────────────────────────────────
+        // -- State -------------------------------------------------------------
         private readonly BackendCore _core;
         private bool _isUpdating = false;
 
@@ -25,10 +25,10 @@ namespace TGTAMM
         private bool _bgSpecCapture     = false;
         private bool _bgHueCapture      = false;
 
-        // ── Built-in presets ──────────────────────────────────────────────────
-        private static readonly List<ThemePreset> BuiltInPresets = new()
+        // -- Built-in presets --------------------------------------------------
+        internal static readonly List<ThemePreset> BuiltInPresets = new()
         {
-            // ─ Dark themes ─────────────────────────────────────────────────
+            // - Dark themes -------------------------------------------------
             new() { Name = "Dark Teal (Default)",   AccentColor = "#4EC9B0", BgColor = "#1E1E1E",
                     ColorMode = "Dark",  TitlebarTheme = "Win7",      FontFamily = "Bahnschrift",
                     TitlebarPersonalize = true },
@@ -50,7 +50,7 @@ namespace TGTAMM
                     TitlebarPersonalize = true },
             new() { Name = "Stealth",               AccentColor = "#778899", BgColor = "#111214",
                     ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Consolas" },
-            // ─ GTA-inspired ────────────────────────────────────────────────
+            // - GTA-inspired ------------------------------------------------
             new() { Name = "Los Santos Sunset",     AccentColor = "#FF8C00", BgColor = "#1A1208",
                     ColorMode = "Dark",  TitlebarTheme = "macOS",     FontFamily = "Trebuchet MS",
                     TitlebarPersonalize = true },
@@ -63,7 +63,7 @@ namespace TGTAMM
             new() { Name = "GTA Online",            AccentColor = "#00CFDD", BgColor = "#0D1117",
                     ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Bahnschrift",
                     TitlebarPersonalize = true },
-            // ─ Popular editor themes ────────────────────────────────────────
+            // - Popular editor themes ----------------------------------------
             new() { Name = "Dracula",               AccentColor = "#BD93F9", BgColor = "#282A36",
                     ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Segoe UI",
                     TitlebarPersonalize = true },
@@ -79,7 +79,7 @@ namespace TGTAMM
             new() { Name = "One Dark",              AccentColor = "#61AFEF", BgColor = "#282C34",
                     ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Segoe UI",
                     TitlebarPersonalize = false },
-            // ─ Other dark themes ────────────────────────────────────────────
+            // - Other dark themes --------------------------------------------
             new() { Name = "Phosphor",              AccentColor = "#00FF41", BgColor = "#0D0D0D",
                     ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Consolas" },
             new() { Name = "Golden Hour",           AccentColor = "#FFD700", BgColor = "#1A1500",
@@ -94,7 +94,7 @@ namespace TGTAMM
             new() { Name = "Deep Ocean",            AccentColor = "#00B4D8", BgColor = "#03060F",
                     ColorMode = "Dark",  TitlebarTheme = "Win7",      FontFamily = "Segoe UI Light",
                     TitlebarPersonalize = true },
-            // ─ Light themes ────────────────────────────────────────────────
+            // - Light themes ------------------------------------------------
             new() { Name = "Light Sky",             AccentColor = "#0078D4", BgColor = "#EFF3F8",
                     ColorMode = "Light", TitlebarTheme = "macOSLight",FontFamily = "Segoe UI",
                     TitlebarPersonalize = false },
@@ -113,21 +113,170 @@ namespace TGTAMM
             new() { Name = "Nord Light",            AccentColor = "#5E81AC", BgColor = "#ECEFF4",
                     ColorMode = "Light", TitlebarTheme = "Vanilla",   FontFamily = "Segoe UI Light",
                     TitlebarPersonalize = false },
+            // - GTA-era classic themes ----------------------------------------
+            new() { Name = "Vice City Pink",        AccentColor = "#FF3CAC", BgColor = "#0A0012",
+                    ColorMode = "Dark",  TitlebarTheme = "Win9x",     FontFamily = "Trebuchet MS",
+                    TitlebarPersonalize = true },
+            new() { Name = "San Andreas Dusk",      AccentColor = "#FF6B35", BgColor = "#13060A",
+                    ColorMode = "Dark",  TitlebarTheme = "macOS",     FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            new() { Name = "Liberty City Rain",     AccentColor = "#4A9EBF", BgColor = "#090E14",
+                    ColorMode = "Dark",  TitlebarTheme = "Win7",      FontFamily = "Segoe UI Light",
+                    TitlebarPersonalize = true },
+            new() { Name = "Grove Street",          AccentColor = "#4BDA3A", BgColor = "#0A1208",
+                    ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            // - Extra dark themes ---------------------------------------------
+            new() { Name = "Cyberpunk",             AccentColor = "#FFE600", BgColor = "#0A0015",
+                    ColorMode = "Dark",  TitlebarTheme = "macOS",     FontFamily = "Consolas",
+                    TitlebarPersonalize = true },
+            new() { Name = "Vaporwave",             AccentColor = "#FF71CE", BgColor = "#09001F",
+                    ColorMode = "Dark",  TitlebarTheme = "Win9x",     FontFamily = "Trebuchet MS",
+                    TitlebarPersonalize = true },
+            new() { Name = "Terminal Green",        AccentColor = "#00FF88", BgColor = "#050F05",
+                    ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Consolas",
+                    TitlebarPersonalize = true },
+            new() { Name = "Blood Moon",            AccentColor = "#FF1744", BgColor = "#0E0003",
+                    ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            new() { Name = "Obsidian",              AccentColor = "#6C8EBF", BgColor = "#080A0C",
+                    ColorMode = "Dark",  TitlebarTheme = "Win7",      FontFamily = "Segoe UI",
+                    TitlebarPersonalize = false },
+            new() { Name = "Neon Coral",            AccentColor = "#FF6B9D", BgColor = "#0F0810",
+                    ColorMode = "Dark",  TitlebarTheme = "macOS",     FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            new() { Name = "Ocean Depths",          AccentColor = "#0BC5EA", BgColor = "#020B18",
+                    ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Segoe UI Light",
+                    TitlebarPersonalize = true },
+            new() { Name = "Toxic",                 AccentColor = "#A8FF3E", BgColor = "#080E02",
+                    ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Consolas",
+                    TitlebarPersonalize = true },
+            new() { Name = "Retro Amber",           AccentColor = "#FFB300", BgColor = "#0E0900",
+                    ColorMode = "Dark",  TitlebarTheme = "Win9x",     FontFamily = "Consolas",
+                    TitlebarPersonalize = false },
+            new() { Name = "Sapphire",              AccentColor = "#1E90FF", BgColor = "#05080F",
+                    ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Segoe UI Light",
+                    TitlebarPersonalize = true },
+            // - Extra light themes ---------------------------------------------
+            new() { Name = "Light Lavender",        AccentColor = "#7C3AED", BgColor = "#F8F5FF",
+                    ColorMode = "Light", TitlebarTheme = "macOSLight",FontFamily = "Segoe UI Light",
+                    TitlebarPersonalize = true },
+            new() { Name = "Light Slate",           AccentColor = "#475569", BgColor = "#F1F5F9",
+                    ColorMode = "Light", TitlebarTheme = "Vanilla",   FontFamily = "Segoe UI",
+                    TitlebarPersonalize = false },
+            new() { Name = "Parchment",             AccentColor = "#8B5E3C", BgColor = "#FBF5E6",
+                    ColorMode = "Light", TitlebarTheme = "Win7",      FontFamily = "Calibri",
+                    TitlebarPersonalize = true },
+            // - Retro/Synthwave themes ------------------------------------------
+            new() { Name = "Synthwave Sunset",       AccentColor = "#FF10F0", BgColor = "#0F0620",
+                    ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            new() { Name = "Outrun",                 AccentColor = "#00FFFF", BgColor = "#110033",
+                    ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Trebuchet MS",
+                    TitlebarPersonalize = true },
+            new() { Name = "Retrowave",              AccentColor = "#FF006E", BgColor = "#0D001F",
+                    ColorMode = "Dark",  TitlebarTheme = "Win9x",     FontFamily = "Consolas",
+                    TitlebarPersonalize = true },
+            new() { Name = "80s Neon",               AccentColor = "#39FF14", BgColor = "#0A0A1A",
+                    ColorMode = "Dark",  TitlebarTheme = "macOS",     FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            // - Minimalist themes -----------------------------------------------
+            new() { Name = "Stark",                  AccentColor = "#FFFFFF", BgColor = "#1A1A1A",
+                    ColorMode = "Dark",  TitlebarTheme = "Vanilla",   FontFamily = "Segoe UI",
+                    TitlebarPersonalize = false },
+            new() { Name = "Minimal Gray",           AccentColor = "#888888", BgColor = "#212121",
+                    ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Segoe UI Light",
+                    TitlebarPersonalize = false },
+            new() { Name = "Pure Black",             AccentColor = "#00FFFF", BgColor = "#000000",
+                    ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Consolas",
+                    TitlebarPersonalize = false },
+            // - Nature-inspired themes ------------------------------------------
+            new() { Name = "Forest",                 AccentColor = "#2D5016", BgColor = "#0E1410",
+                    ColorMode = "Dark",  TitlebarTheme = "Win7",      FontFamily = "Segoe UI Light",
+                    TitlebarPersonalize = true },
+            new() { Name = "Sunset Blaze",           AccentColor = "#FF6B5B", BgColor = "#1A0A05",
+                    ColorMode = "Dark",  TitlebarTheme = "macOS",     FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            new() { Name = "Midnight Lake",          AccentColor = "#1E90FF", BgColor = "#0A0D15",
+                    ColorMode = "Dark",  TitlebarTheme = "Win9x",     FontFamily = "Segoe UI",
+                    TitlebarPersonalize = true },
+            new() { Name = "Aurora",                 AccentColor = "#00FF7F", BgColor = "#0B1428",
+                    ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            // - Editor themes ---------------------------------------------------
+            new() { Name = "Monokai",                AccentColor = "#F92672", BgColor = "#272822",
+                    ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Consolas",
+                    TitlebarPersonalize = true },
+            new() { Name = "Solarized Dark",         AccentColor = "#268BD2", BgColor = "#002B36",
+                    ColorMode = "Dark",  TitlebarTheme = "Win7",      FontFamily = "Segoe UI",
+                    TitlebarPersonalize = false },
+            new() { Name = "Material",               AccentColor = "#BB86FC", BgColor = "#121212",
+                    ColorMode = "Dark",  TitlebarTheme = "Vanilla",   FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            new() { Name = "GitHub Dark",            AccentColor = "#58A6FF", BgColor = "#0D1117",
+                    ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Segoe UI",
+                    TitlebarPersonalize = false },
+            // - Vibrant/Colorful themes ----------------------------------------
+            new() { Name = "Electric Violet",        AccentColor = "#BC13FE", BgColor = "#0F0318",
+                    ColorMode = "Dark",  TitlebarTheme = "macOS",     FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            new() { Name = "Magenta Dream",          AccentColor = "#FF00FF", BgColor = "#1A001A",
+                    ColorMode = "Dark",  TitlebarTheme = "Win9x",     FontFamily = "Trebuchet MS",
+                    TitlebarPersonalize = true },
+            new() { Name = "Cyan Pulse",             AccentColor = "#00FFFF", BgColor = "#001515",
+                    ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Consolas",
+                    TitlebarPersonalize = true },
+            new() { Name = "Sunset Orange",          AccentColor = "#FF9500", BgColor = "#1A0800",
+                    ColorMode = "Dark",  TitlebarTheme = "Win7",      FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            new() { Name = "Lime Spark",             AccentColor = "#CCFF00", BgColor = "#0A0E00",
+                    ColorMode = "Dark",  TitlebarTheme = "Win8",      FontFamily = "Consolas",
+                    TitlebarPersonalize = true },
+            // - Additional light themes -----------------------------------------
+            new() { Name = "Light Coral",            AccentColor = "#FF6B6B", BgColor = "#FDF8F8",
+                    ColorMode = "Light", TitlebarTheme = "Win7",      FontFamily = "Bahnschrift",
+                    TitlebarPersonalize = true },
+            new() { Name = "Light Teal",             AccentColor = "#20B2AA", BgColor = "#F0FFFE",
+                    ColorMode = "Light", TitlebarTheme = "macOSLight",FontFamily = "Segoe UI Light",
+                    TitlebarPersonalize = true },
+            new() { Name = "Light Peach",            AccentColor = "#FFDAB9", BgColor = "#FFF8F5",
+                    ColorMode = "Light", TitlebarTheme = "Vanilla",   FontFamily = "Calibri",
+                    TitlebarPersonalize = true },
+            new() { Name = "Light Forest",           AccentColor = "#228B22", BgColor = "#F5FFF5",
+                    ColorMode = "Light", TitlebarTheme = "Win8",      FontFamily = "Segoe UI",
+                    TitlebarPersonalize = true },
+            // - Special retro OS themes ----------------------------------------
+            // - Unique Themes (retro OS) ---------------------------------------
+            new() { Name = "â•â•â• UNIQUE THEMES â•â•â•", AccentColor = "#000000", BgColor = "#1E1E1E",
+                    ColorMode = "Dark",  TitlebarTheme = "Compact",   FontFamily = "Segoe UI",
+                    TitlebarPersonalize = false },
+            new() { Name = "* Windows 3.1",          AccentColor = "#000080", BgColor = "#C0C0C0",
+                    ColorMode = "Dark",  TitlebarTheme = "Win31",     FontFamily = "MS Sans Serif",
+                    TitlebarPersonalize = true },
+            new() { Name = "* Windows XP",           AccentColor = "#0078D4", BgColor = "#ECE9D8",
+                    ColorMode = "Light", TitlebarTheme = "WinXP",     FontFamily = "Tahoma",
+                    TitlebarPersonalize = true },
+            new() { Name = "* Windows Vista",        AccentColor = "#1F497D", BgColor = "#F0F0F0",
+                    ColorMode = "Light", TitlebarTheme = "Win7",      FontFamily = "Segoe UI",
+                    TitlebarPersonalize = true },
+            new() { Name = "* Classic Mac (9.0)",    AccentColor = "#000000", BgColor = "#F0F0F0",
+                    ColorMode = "Light", TitlebarTheme = "MacOS9",    FontFamily = "Chicago",
+                    TitlebarPersonalize = true },
         };
 
-        // ── Constructor ───────────────────────────────────────────────────────
+        // -- Constructor -------------------------------------------------------
         public ThemeManagerWindow(BackendCore core)
         {
             // Both _core AND _isUpdating must be set BEFORE InitializeComponent().
             // XAML init fires SelectionChanged / ValueChanged on every ComboBox and Slider
             // as they are created. If _isUpdating is false at that point, the handlers
-            // call TriggerThemeUpdate() before txtAccent / txtBg exist → NullRef.
+            // call TriggerThemeUpdate() before txtAccent / txtBg exist -> NullRef.
             _core = core;
             _isUpdating = true;
             InitializeComponent();
 
             // Populate presets combo
-            cmbPresets.Items.Add("— Built-in Presets —");
+            cmbPresets.Items.Add("- Built-in Presets -");
             foreach (var p in BuiltInPresets) cmbPresets.Items.Add(p.Name);
             cmbPresets.SelectedIndex = 0;
 
@@ -142,10 +291,11 @@ namespace TGTAMM
             SelectByTag(cmbFont,      _core.Settings.FontFamily);
             SelectByTag(cmbTextColor, _core.Settings.TextColorMode);
 
-            chkPersonalize.IsChecked = _core.Settings.TitlebarPersonalize;
-            chkMica.IsChecked        = _core.Settings.MicaEnabled;
+            chkPersonalize.IsChecked    = _core.Settings.TitlebarPersonalize;
+            chkMica.IsChecked           = _core.Settings.MicaEnabled;
+            chkAccentBorder.IsChecked   = _core.Settings.AccentBorderEnabled;
 
-            // Restore last selected preset (without firing ApplyPreset — settings already loaded)
+            // Restore last selected preset (without firing ApplyPreset - settings already loaded)
             if (!string.IsNullOrEmpty(_core.Settings.LastPresetName))
             {
                 int idx = BuiltInPresets.FindIndex(p => p.Name == _core.Settings.LastPresetName);
@@ -161,7 +311,7 @@ namespace TGTAMM
 
             // ContentRendered fires after the first layout + render pass, ensuring
             // ActualWidth/Height are non-zero when we place the picker cursors.
-            // (Loaded fires before layout measurement completes — ActualWidth is 0 there.)
+            // (Loaded fires before layout measurement completes - ActualWidth is 0 there.)
             ContentRendered += (_, _) =>
             {
                 UpdateAccentCursorFromHsv();
@@ -175,7 +325,7 @@ namespace TGTAMM
             };
         }
 
-        // ── HSV ↔ RGB — delegates to ThemeEngine (no duplication) ──────────────
+        // -- HSV <-> RGB - delegates to ThemeEngine (no duplication) --------------
 
         private static Color HsvToRgb(double h, double s, double v) =>
             ThemeEngine.HsvToRgb(h, s, v);
@@ -195,7 +345,7 @@ namespace TGTAMM
             catch { }
         }
 
-        // ── Cursor position updaters ──────────────────────────────────────────
+        // -- Cursor position updaters ------------------------------------------
 
         private void UpdateAccentCursorFromHsv()
         {
@@ -235,7 +385,7 @@ namespace TGTAMM
             _isUpdating = false;
         }
 
-        // ── Accent spectrum mouse ─────────────────────────────────────────────
+        // -- Accent spectrum mouse ---------------------------------------------
 
         private void AccentSpec_MouseDown(object s, MouseButtonEventArgs e)
         {
@@ -263,7 +413,7 @@ namespace TGTAMM
             TriggerThemeUpdate();
         }
 
-        // ── Accent hue mouse ──────────────────────────────────────────────────
+        // -- Accent hue mouse --------------------------------------------------
 
         private void AccentHue_MouseDown(object s, MouseButtonEventArgs e)
         {
@@ -289,7 +439,7 @@ namespace TGTAMM
             TriggerThemeUpdate();
         }
 
-        // ── BG spectrum mouse ─────────────────────────────────────────────────
+        // -- BG spectrum mouse -------------------------------------------------
 
         private void BgSpec_MouseDown(object s, MouseButtonEventArgs e)
         {
@@ -317,7 +467,7 @@ namespace TGTAMM
             TriggerThemeUpdate();
         }
 
-        // ── BG hue mouse ──────────────────────────────────────────────────────
+        // -- BG hue mouse ------------------------------------------------------
 
         private void BgHue_MouseDown(object s, MouseButtonEventArgs e)
         {
@@ -343,7 +493,7 @@ namespace TGTAMM
             TriggerThemeUpdate();
         }
 
-        // ── Manual hex input ──────────────────────────────────────────────────
+        // -- Manual hex input --------------------------------------------------
 
         private void TxtAccentHex_Changed(object s, TextChangedEventArgs e)
         {
@@ -375,7 +525,7 @@ namespace TGTAMM
             catch { }
         }
 
-        // ── Titlebar / general settings ───────────────────────────────────────
+        // -- Titlebar / general settings ---------------------------------------
 
         private void ModularSetting_Changed(object sender, RoutedEventArgs e)
         {
@@ -387,13 +537,14 @@ namespace TGTAMM
             if (cmbFont      is { SelectedItem: ComboBoxItem f }) _core.Settings.FontFamily          = f.Tag.ToString()!;
             if (cmbTextColor is { SelectedItem: ComboBoxItem x }) _core.Settings.TextColorMode       = x.Tag.ToString()!;
 
-            _core.Settings.TitlebarPersonalize = chkPersonalize.IsChecked == true;
-            _core.Settings.MicaEnabled         = chkMica.IsChecked == true;
+            _core.Settings.TitlebarPersonalize  = chkPersonalize.IsChecked == true;
+            _core.Settings.MicaEnabled          = chkMica.IsChecked == true;
+            _core.Settings.AccentBorderEnabled  = chkAccentBorder.IsChecked == true;
 
             TriggerThemeUpdate();
         }
 
-        // ── Presets ───────────────────────────────────────────────────────────
+        // -- Presets -----------------------------------------------------------
 
         private void CmbPresets_Changed(object s, SelectionChangedEventArgs e)
         {
@@ -440,8 +591,9 @@ namespace TGTAMM
             SelectByTag(cmbColor,     preset.ColorMode);
             SelectByTag(cmbFont,      preset.FontFamily);
             SelectByTag(cmbTextColor, preset.TextColorMode);
-            chkPersonalize.IsChecked = preset.TitlebarPersonalize;
-            chkMica.IsChecked        = preset.MicaEnabled;
+            chkPersonalize.IsChecked   = preset.TitlebarPersonalize;
+            chkMica.IsChecked          = preset.MicaEnabled;
+            chkAccentBorder.IsChecked  = false; // presets don't force-enable the accent border
             _isUpdating = false;
 
             UpdateAccentCursorFromHsv();
@@ -465,8 +617,8 @@ namespace TGTAMM
                 if (preset == null) throw new Exception("Empty or invalid preset file.");
                 if (preset.Version < 2)
                     MessageBox.Show(
-                        $"This preset was saved with an older version of TGTAMM (v{preset.Version})." +
-                        "It will still be applied — some newer fields will use defaults.",
+                        $"This preset was saved with an older version of TMM (v{preset.Version})." +
+                        "It will still be applied - some newer fields will use defaults.",
                         "Older Preset Format", MessageBoxButton.OK, MessageBoxImage.Information);
                 ApplyPreset(preset);
                 MessageBox.Show($"Loaded preset: {preset.Name}", "Import OK",
@@ -495,7 +647,7 @@ namespace TGTAMM
                     File.WriteAllText(dest, JsonSerializer.Serialize(preset, opts));
                 }
             }
-            catch { /* non-fatal — theme files are optional convenience exports */ }
+            catch { /* non-fatal - theme files are optional convenience exports */ }
         }
 
         private void BtnExportPreset_Click(object s, RoutedEventArgs e)
@@ -550,7 +702,7 @@ namespace TGTAMM
             }
         }
 
-        // ── Core helpers ──────────────────────────────────────────────────────
+        // -- Core helpers ------------------------------------------------------
 
         private void TriggerThemeUpdate()
         {
@@ -582,7 +734,7 @@ namespace TGTAMM
             if (e.ChangedButton == MouseButton.Left) DragMove();
         }
 
-        // ── Complementary colour suggestions ─────────────────────────────────
+        // -- Complementary colour suggestions ---------------------------------
 
         private void BtnSuggestAccent_Click(object sender, RoutedEventArgs e)
         {
@@ -650,7 +802,7 @@ namespace TGTAMM
             bool showing = RightPickerPanel.Visibility == Visibility.Visible;
             RightPickerPanel.Visibility = showing ? Visibility.Collapsed : Visibility.Visible;
             RightGapBorder.Visibility   = RightPickerPanel.Visibility;
-            btnAdvanced.Content = showing ? "🎨  Custom Colors  ▾" : "🎨  Custom Colors  ▴";
+            btnAdvanced.Content = showing ? "Custom Colors  v" : "Custom Colors  ^";
             // Resize window: compact (430) when closed, expanded (800) when open
             this.Width = showing ? 430 : 800;
             if (!showing)
@@ -663,7 +815,7 @@ namespace TGTAMM
         private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
     }
 
-    // ── Preset DTO ────────────────────────────────────────────────────────────
+    // -- Preset DTO ------------------------------------------------------------
 
     /// <summary>
     /// Serialized to/from .mmtheme (JSON) files for sharing.

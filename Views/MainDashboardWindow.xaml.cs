@@ -1,3 +1,40 @@
+﻿// TABLE OF CONTENTS
+// -----------------------------------------------------------------
+//   STATE  (_core, _activeProfile, drag state, flags) ............ ~23
+//   INIT  (constructor, Window_Loaded) ........................... ~42
+//   UI REFRESH  (RefreshUIAsync) ................................. ~76
+//   TITLEBAR THEMING
+//     ApplyTitlebarStyle() ........................................ ~134
+//     UpdateControlLayout() (static helper) ...................... ~236
+//   INSTALLATION & DOWNLOADS
+//     ProcessDownloadsBatchAsync() ................................ ~270
+//     ProcessExeInstallation() .................................... ~315
+//     ProcessModInstallationAsync() ............................... ~351
+//     ProcessDxvkArchiveAsync() ................................... ~464
+//     CleanModloaderFolder() (static) ............................ ~545
+//   JSON PERSISTENCE
+//     LoadModsFromJson() .......................................... ~582
+//     SaveMods() .................................................. ~604
+//     SyncModInfoToFolder() (static) ............................. ~621
+//     ShowExtractionDebug() ....................................... ~633
+//   DRAG & DROP / REORDERING
+//     List_Drop() ................................................. ~662
+//     List_PreviewMouseLeftButtonDown() / List_MouseMove() ........ ~745
+//     List_DragOver() / List_DragLeave() ......................... ~765
+//     GetDropLine() / HideDropLine() ............................. ~783
+//     GetInsertionLineY() / GetInsertionIndex() .................. ~797
+//   INSTALL / DEPLOY HANDLERS
+//     BtnInstallMod_Click() ....................................... ~831
+//     Web auto-installers (Modloader/DXVK/Widescreen/...) ......... ~872
+//     BtnRefresh_Click() / BtnDeploy_Click() ..................... ~973
+//   SIMPLE BUTTON HANDLERS  (Help, Labels, About, Settings, ...) . ~1103
+//     ApplyToolbarLabels() ........................................ ~1147
+//     BtnToggleOverride_Click() ................................... ~1158
+//   CONTEXT MENU  (Rename/Toggle/Delete/MoveUp/MoveDown/...) ...... ~1218
+//   STANDARD BINDINGS  (ModCheckBox, Search, Sort, Keys) ......... ~1409
+//   HELPERS  (GetActiveList, ResolveProfile, FlagDeploy) ......... ~1475
+// -----------------------------------------------------------------
+
 using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
@@ -13,7 +50,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace TGTAMM
+namespace TMM
 {
     public partial class MainDashboardWindow : Window
     {
@@ -29,9 +66,10 @@ namespace TGTAMM
         private bool _isSortedByLoadOrder = true;
         private Point _startPoint;
         private ModItem? _draggedItem;
-        private bool _hasPendingChanges = true; // true on startup: virtual folder may be out of sync
+        private bool _hasPendingChanges = true; // true on startup: game dir may not reflect current mod list
         private bool _needsDowngradeHelp = false;
         private bool _deployReady = false;
+        private bool _exitConfirmationShown = false; // Track if user has been asked about exit
 
         private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
 
@@ -39,9 +77,9 @@ namespace TGTAMM
         // INIT
         // ==========================================================
 
-        public MainDashboardWindow()
+        public MainDashboardWindow(BackendCore core)
         {
-            _core = new BackendCore();
+            _core = core;
             InitializeComponent();
 
             // Bind each list directly to the per-profile ObservableCollection.
@@ -54,10 +92,25 @@ namespace TGTAMM
 
         private async void Window_Loaded(object s, RoutedEventArgs e)
         {
+            // Initialize GameRegistry and custom games
+            await _core.InitializeAsync();
+
             // Application.Current is guaranteed non-null from here onward.
             ThemeEngine.ApplyTheme(_core.Settings);
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+
+            // Restore window position and size
+            if (_core.Settings.WindowLeft > 0 && _core.Settings.WindowTop > 0)
+            {
+                Left = _core.Settings.WindowLeft;
+                Top = _core.Settings.WindowTop;
+            }
+            if (_core.Settings.WindowWidth > 800 && _core.Settings.WindowHeight > 600)
+            {
+                Width = _core.Settings.WindowWidth;
+                Height = _core.Settings.WindowHeight;
+            }
 
             if (_core.Settings.FirstLaunch)
             {
@@ -92,20 +145,26 @@ namespace TGTAMM
 
             foreach (var profile in GameProfile.All)
             {
-                bool isReady = _core.IsGameReady(profile);
-                var status = await _core.VerifyGameStatusAsync(profile);
-                if (status == ExeStatus.Vanilla) needsDowngradeHelp = true;
+                bool isReady    = _core.IsGameReady(profile);
+                var  status     = await _core.VerifyGameStatusAsync(profile);
+                bool hasOverride = _core.HasExeModOverride(profile);
+
+                // Only flag as needing help if vanilla AND no override active
+                if (status == ExeStatus.Vanilla && !hasOverride) needsDowngradeHelp = true;
 
                 if (FindName($"OverlayCol{profile.Key}") is Button col)
                     col.Visibility = isReady ? Visibility.Collapsed : Visibility.Visible;
 
                 if (FindName($"btnPlay{profile.Key}") is Button playBtn)
                 {
-                    // Default: AccentBrush (bound in XAML) — only override for warning states.
                     if (!isReady)
                         playBtn.Background = new SolidColorBrush(Color.FromRgb(70, 70, 70));
-                    else if (status == ExeStatus.Vanilla)
+                    else if (status == ExeStatus.Vanilla && !hasOverride)
+                        // Red = vanilla exe, no override - deploy works but game won't launch
                         playBtn.Background = new SolidColorBrush(Color.FromRgb(180, 45, 45));
+                    else if (status == ExeStatus.Vanilla && hasOverride)
+                        // Orange = vanilla but override enabled - can deploy, game launch will still need 1.0 exe
+                        playBtn.Background = new SolidColorBrush(Color.FromRgb(200, 110, 20));
                     else
                         playBtn.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "AccentBrush");
                 }
@@ -114,7 +173,6 @@ namespace TGTAMM
             _needsDowngradeHelp = needsDowngradeHelp;
             HelpNotificationDot.Visibility = needsDowngradeHelp ? Visibility.Visible : Visibility.Collapsed;
 
-            // Deploy button: always enabled so click can route to HelpWindow when needed.
             bool anyReady = GameProfile.All.Any(_core.IsGameReady);
             _deployReady = anyReady && _hasPendingChanges;
             if (_deployReady)
@@ -122,9 +180,7 @@ namespace TGTAMM
             else
                 btnDeploy.Background = new SolidColorBrush(Color.FromRgb(70, 70, 70));
 
-            btnDeploy.ToolTip = !_deployReady && _needsDowngradeHelp
-                ? "Can't deploy — one or more games need a 1.0 downgrade. Click for help."
-                : _deployReady ? "Deploy Mods (F5)" : "No pending changes to deploy";
+            btnDeploy.ToolTip = _deployReady ? "Deploy Mods (F5)" : "No pending changes to deploy";
         }
 
         // ==========================================================
@@ -141,9 +197,9 @@ namespace TGTAMM
             TitleBarBorder.Visibility = Visibility.Visible;
             TitleBarBorder.Background = Brushes.Transparent;
 
-            // Win9x and maximized both use square corners.
-            bool isWin9x    = _core.Settings.TitlebarTheme == "Win9x";
-            bool squarify   = isWin9x || WindowState == WindowState.Maximized;
+            // Win9x, Win31, and maximized both use square corners.
+            bool isSquare   = _core.Settings.TitlebarTheme == "Win9x" || _core.Settings.TitlebarTheme == "Win31";
+            bool squarify   = isSquare || WindowState == WindowState.Maximized;
             MainWindowBorder.CornerRadius = squarify ? new CornerRadius(0) : new CornerRadius(12);
             TitleBarBorder.CornerRadius   = squarify ? new CornerRadius(0) : new CornerRadius(12, 12, 0, 0);
             if (MainWindowBorder.Child is Border innerBorder)
@@ -181,7 +237,7 @@ namespace TGTAMM
                 case "macOS":
                     MacControls.Visibility = Visibility.Visible;
                     TitleBarBorder.Background = (Brush)Application.Current.Resources["MacTitleBrush"];
-                    TitleBarBorder.Opacity = 1.0;  // User confirmed macOS Dark looks perfect — no change
+                    TitleBarBorder.Opacity = 1.0;  // User confirmed macOS Dark looks perfect - no change
                     break;
 
                 case "macOSLight":
@@ -209,7 +265,7 @@ namespace TGTAMM
 
                 case "Win9x":
                     Win9xControls.Visibility = Visibility.Visible;
-                    // Gradient brush is built inline — ThemeEngine exposes the two endpoint colors
+                    // Gradient brush is built inline - ThemeEngine exposes the two endpoint colors
                     var win9xBrush = new LinearGradientBrush
                     {
                         StartPoint = new System.Windows.Point(0, 0),
@@ -221,6 +277,28 @@ namespace TGTAMM
                         (Color)Application.Current.Resources["Win9xTitleEndColor"], 1));
                     TitleBarBorder.Background = win9xBrush;
                     TitleBarBorder.Opacity = 1.0;  // Classic Win9x has no transparency
+                    break;
+
+                case "Win31":
+                    VanillaControls.Visibility = Visibility.Visible;
+                    TitleBarBorder.Background = (Brush)Application.Current.Resources["Win31TitleBrush"];
+                    TitleBarBorder.Opacity = 1.0;
+                    MainWindowBorder.CornerRadius = new CornerRadius(0);
+                    TitleBarBorder.CornerRadius = new CornerRadius(0);
+                    break;
+
+                case "WinXP":
+                    VanillaControls.Visibility = Visibility.Visible;
+                    TitleBarBorder.Background = (Brush)Application.Current.Resources["WinXPTitleBrush"];
+                    TitleBarBorder.Opacity = 1.0;
+                    MainWindowBorder.CornerRadius = new CornerRadius(4);
+                    TitleBarBorder.CornerRadius = new CornerRadius(4, 4, 0, 0);
+                    break;
+
+                case "MacOS9":
+                    MacLightControls.Visibility = Visibility.Visible;
+                    TitleBarBorder.Background = (Brush)Application.Current.Resources["MacOS9TitleBrush"];
+                    TitleBarBorder.Opacity = 1.0;
                     break;
 
                 case "Compact":
@@ -255,7 +333,7 @@ namespace TGTAMM
                 if (close != null) panel.Children.Add(close);
             }
 
-            if (panel.Name == "MacControls" || panel.Name == "CompactControls")
+            if (panel.Name == "MacControls" || panel.Name == "MacLightControls" || panel.Name == "CompactControls")
             {
                 int spacing = panel.Name == "CompactControls" ? 5 : 8;
                 foreach (var child in panel.Children.OfType<Button>())
@@ -290,7 +368,7 @@ namespace TGTAMM
             {
                 foreach (var item in batch)
                 {
-                    string path = Path.Combine(_core.TempStagingPath, Path.GetFileName(new Uri(item.url).LocalPath));
+                    string path = Path.Combine(_core.DownloadCachePath, Path.GetFileName(new Uri(item.url).LocalPath));
                     await _core.DownloadFileAsync(item.url, path);
                     downloaded.Add((path, item.hintKey));
                 }
@@ -351,7 +429,7 @@ namespace TGTAMM
         private async Task ProcessModInstallationAsync(string filePath, string hintKey = "")
         {
             string staging = Path.Combine(
-                _core.TempStagingPath,
+                _core.DownloadCachePath,
                 Path.GetFileNameWithoutExtension(filePath).Replace(".tar", "", StringComparison.OrdinalIgnoreCase));
             Directory.CreateDirectory(staging);
 
@@ -494,8 +572,8 @@ namespace TGTAMM
 
             MessageBox.Show(
                 "DXVK Installation Note:\n\n" +
-                "• GTA SA: Uses d3d9.dll (Vulkan translation)\n" +
-                "• GTA III/VC: Uses d3d8.dll (DXVK utilizes a proxy for legacy titles)",
+                "* GTA SA: Uses d3d9.dll (Vulkan translation)\n" +
+                "* GTA III/VC: Uses d3d8.dll (DXVK utilizes a proxy for legacy titles)",
                 "DXVK Deployment", MessageBoxButton.OK, MessageBoxImage.Information);
 
             var wizard = new ArchiveExtractionWindow(_core, filePath, staging, hintKey) { Owner = this };
@@ -539,7 +617,7 @@ namespace TGTAMM
         /// <summary>
         /// Post-install fixup for Modloader archives.
         /// SA: modloader.asi stays at the mod root (game root on deploy).
-        /// III/VC: modloader.asi must be inside a scripts/ subdirectory — Ultimate ASI
+        /// III/VC: modloader.asi must be inside a scripts/ subdirectory - Ultimate ASI
         ///         Loader picks it up from there. The modloader/ data folder stays at root.
         /// </summary>
         private static void CleanModloaderFolder(string target, string profileKey)
@@ -960,7 +1038,7 @@ namespace TGTAMM
         {
             try
             {
-                string p = Path.Combine(_core.TempStagingPath, Path.GetFileName(new Uri(url).LocalPath));
+                string p = Path.Combine(_core.DownloadCachePath, Path.GetFileName(new Uri(url).LocalPath));
                 await _core.DownloadFileAsync(url, p);
                 await ProcessModInstallationAsync(p, hintKey);
                 txtDiskSpace.Text = _core.GetDriveSpaceInfo();
@@ -1023,7 +1101,7 @@ namespace TGTAMM
             txtDeployCount.Text          = "";
 
             var deployed = new List<string>();
-            var skipped  = new List<string>();
+            var vanillaExeWarnings = new List<string>();
 
             var progress = new Progress<DeploymentProgress>(p =>
             {
@@ -1047,24 +1125,27 @@ namespace TGTAMM
                 {
                     if (string.IsNullOrEmpty(_core.GetVanillaPath(profile))) continue;
 
-                    var gameState = await _core.VerifyGameStatusAsync(profile);
-                    if (gameState == ExeStatus.Vanilla && !_core.HasExeModOverride(profile))
-                    {
-                        skipped.Add(profile.Key);
-                        continue;
-                    }
-
                     txtDeployStage.Text = $"Deploying {profile.Key}...";
                     await _core.DeployModsAsync(profile, _core.Mods[profile.Key], progress);
                     deployed.Add(profile.Key);
+
+                    // Warn (don't block) if exe is still vanilla — mods deploy fine but game won't launch.
+                    var exeStatus = await _core.VerifyGameStatusAsync(profile);
+                    if (exeStatus == ExeStatus.Vanilla)
+                        vanillaExeWarnings.Add(profile.Key);
                 }
 
                 if (deployed.Count > 0) _hasPendingChanges = false;
+
                 string summary = "";
-                if (deployed.Count > 0) summary += $"✅ Successfully deployed: {string.Join(", ", deployed)}\n";
-                if (skipped.Count > 0) summary += $"⚠️ Skipped (Vanilla/Steam): {string.Join(", ", skipped)}";
-                if (!string.IsNullOrEmpty(summary))
-                    MessageBox.Show(summary, "Deployment Complete");
+                if (deployed.Count > 0) summary += $"[OK] Deployed: {string.Join(", ", deployed)}\n";
+                if (vanillaExeWarnings.Count > 0)
+                    summary += $"\nWarning - {string.Join(", ", vanillaExeWarnings)}:\n" +
+                               "Mods deployed, but the game exe is still a Steam/Vanilla build.\n" +
+                               "The game will fail to launch (Application Load Error 5:0000065434).\n" +
+                               "Install a 1.0 downgraded exe as a mod to fix this.";
+                if (!string.IsNullOrEmpty(summary.Trim()))
+                    MessageBox.Show(summary.Trim(), "Deployment Complete");
             }
             catch (Exception ex)
             {
@@ -1078,6 +1159,69 @@ namespace TGTAMM
                 pbDeploy.IsIndeterminate       = true;
                 pbDeploy.Value                 = 0;
                 await RefreshUIAsync();
+            }
+        }
+
+        private async void BtnRollback_Click(object s, RoutedEventArgs e)
+        {
+            var manifests = _core.GetRollbackManifests(_activeProfile.Key);
+            if (manifests.Count == 0)
+            {
+                MessageBox.Show($"No rollback points found for {_activeProfile.DisplayName}.\n\nDeploy mods first to create a backup.",
+                    "Rollback", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var latest = manifests[0];
+            string modList = latest.ModNames.Count > 0
+                ? string.Join(", ", latest.ModNames)
+                : "(no mods)";
+
+            var choice = MessageBox.Show(
+                $"Rollback {_activeProfile.DisplayName} to its state before the last deploy?\n\n" +
+                $"Restore point: {latest.Timestamp}\n" +
+                $"Mods that were applied: {modList}\n\n" +
+                $"Files changed: {latest.Entries.Count}",
+                "Confirm Rollback", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (choice != MessageBoxResult.Yes) return;
+
+            this.IsEnabled = false;
+            DialogOverlay.Visibility = Visibility.Visible;
+            DeployProgressPanel.Visibility = Visibility.Visible;
+            pbDeploy.IsIndeterminate = true;
+            txtDeployStage.Text = "Rolling back...";
+            txtDeployCount.Text = "";
+
+            try
+            {
+                var progress = new Progress<DeploymentProgress>(p =>
+                {
+                    txtDeployStage.Text = p.Stage;
+                    if (p.Total > 0)
+                    {
+                        pbDeploy.IsIndeterminate = false;
+                        pbDeploy.Value = (double)p.Current / p.Total * 100;
+                        txtDeployCount.Text = $"{p.Current} / {p.Total}";
+                    }
+                });
+
+                await _core.RollbackDeployAsync(latest, progress);
+                MessageBox.Show($"Rollback complete for {_activeProfile.DisplayName}.",
+                    "Rollback", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Rollback failed:\n{ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                this.IsEnabled = true;
+                DeployProgressPanel.Visibility = Visibility.Collapsed;
+                DialogOverlay.Visibility = Visibility.Collapsed;
+                pbDeploy.IsIndeterminate = true;
+                pbDeploy.Value = 0;
             }
         }
 
@@ -1116,17 +1260,23 @@ namespace TGTAMM
             var profile = GameProfile.ByKey(key);
             if (profile == null) return;
 
-            string targetPath = Path.Combine(_core.AppDataPath, profile.ModdedFolderName);
-            string exe = Path.Combine(targetPath, profile.ExeName);
-
-            if (!File.Exists(exe))
+            string? gameDir = _core.GetVanillaPath(profile);
+            if (string.IsNullOrEmpty(gameDir) || !Directory.Exists(gameDir))
             {
-                MessageBox.Show("Game not deployed. Please click 'Deploy Mods' first.",
+                MessageBox.Show("Game directory is not set or missing.",
                     "Launch Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            Process.Start(new ProcessStartInfo(exe) { WorkingDirectory = targetPath });
+            string exe = Path.Combine(gameDir, profile.ExeName);
+            if (!File.Exists(exe))
+            {
+                MessageBox.Show($"{profile.ExeName} not found in the game directory.",
+                    "Launch Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo(exe) { WorkingDirectory = gameDir });
         }
 
         private void BtnHelp_Click(object s, RoutedEventArgs e)
@@ -1140,9 +1290,10 @@ namespace TGTAMM
         }
 
         private static readonly string[] _toolbarLabelNames =
-            { "lblSidebar", "lblToggleLabels",
-              "lblInstallMod", "lblSettings", "lblTheme", "lblRefresh", "lblAppData", "lblDxvk",
-              "lblDeploy", "lblHelp", "lblAbout" };
+            { "lblBack", "lblSidebar", "lblToggleLabels",
+              "lblInstallMod", "lblSettings", "lblTheme", "lblRollTheme", "lblRefresh", "lblAppData", "lblDxvk",
+              "lblDeploy", "lblRollback", "lblPlayIII", "lblPlayVC", "lblPlaySA",
+              "lblHelp", "lblAbout" };
 
         private void ApplyToolbarLabels()
         {
@@ -1155,6 +1306,73 @@ namespace TGTAMM
                 btn.Opacity = _core.Settings.ToolbarShowLabels ? 1.0 : 0.5;
         }
 
+        private async void MenuToggleOverride_Click(object s, RoutedEventArgs e)
+        {
+            if (s is not MenuItem mi || mi.Tag is not string key) return;
+            var profile = GameProfile.ByKey(key);
+            if (profile == null) return;
+
+            bool isNowOn = _core.ToggleDeployOverride(profile);
+
+            string state = isNowOn ? "ENABLED" : "DISABLED";
+            string msg = isNowOn
+                ? $"Force Deploy Override ENABLED for GTA {key}.\n\n" +
+                  "Mods will deploy even though the exe is Vanilla/Steam.\n" +
+                  "Right-click the play button again to turn this off."
+                : $"Force Deploy Override DISABLED for GTA {key}.\n\n" +
+                  "A downgraded 1.0 exe is now required to deploy mods.";
+
+            MessageBox.Show(msg, $"Override {state}", MessageBoxButton.OK,
+                isNowOn ? MessageBoxImage.Warning : MessageBoxImage.Information);
+
+            await RefreshUIAsync();
+        }
+
+        private void BtnRollTheme_Click(object s, RoutedEventArgs e)
+        {
+            var presets = ThemeManagerWindow.BuiltInPresets;
+            if (presets.Count == 0) return;
+            var rnd    = new Random();
+            var preset = presets[rnd.Next(presets.Count)];
+
+            _core.Settings.AccentColor         = preset.AccentColor;
+            _core.Settings.BgColor             = preset.BgColor;
+            _core.Settings.ColorMode           = preset.ColorMode;
+            _core.Settings.TitlebarTheme       = preset.TitlebarTheme;
+            _core.Settings.TitlebarAlignment   = preset.TitlebarAlignment;
+            _core.Settings.TitlebarPersonalize = preset.TitlebarPersonalize;
+            _core.Settings.TitlebarOpacity     = preset.TitlebarOpacity;
+            _core.Settings.FontFamily          = preset.FontFamily;
+            _core.Settings.TextColorMode       = preset.TextColorMode;
+            _core.Settings.MicaEnabled         = preset.MicaEnabled;
+            _core.Settings.MicaIntensity       = preset.MicaIntensity;
+            _core.Settings.LastPresetName      = preset.Name;
+            _core.SaveSettings();
+
+            ThemeEngine.ApplyTheme(_core.Settings);
+            ThemeEngine.ApplyFont(this, _core.Settings);
+            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            ApplyTitlebarStyle();
+
+            NotificationService.ShowSuccess($"{preset.Name}");
+        }
+
+        private async void MenuToggleOverrideList_Click(object s, RoutedEventArgs e)
+        {
+            var profile = ResolveProfileFromContextMenu(e);
+            bool isNowOn = _core.ToggleDeployOverride(profile);
+            string state = isNowOn ? "ENABLED" : "DISABLED";
+            string msg = isNowOn
+                ? $"Force Deploy Override ENABLED for GTA {profile.Key}.\n\n" +
+                  "Mods will deploy even though the exe is Vanilla/Steam.\n" +
+                  "Note: the game will still fail to launch without a 1.0 downgraded exe."
+                : $"Force Deploy Override DISABLED for GTA {profile.Key}.\n\n" +
+                  "A downgraded 1.0 exe is now required to deploy mods.";
+            MessageBox.Show(msg, $"Override {state}", MessageBoxButton.OK,
+                isNowOn ? MessageBoxImage.Warning : MessageBoxImage.Information);
+            await RefreshUIAsync();
+        }
+
         private void BtnAbout_Click(object s, RoutedEventArgs e)
             => new AboutWindow(_core) { Owner = this }.ShowDialog();
 
@@ -1162,9 +1380,9 @@ namespace TGTAMM
         {
             bool maximized = WindowState == WindowState.Maximized;
             bool isWin9x   = _core.Settings.TitlebarTheme == "Win9x";
-            var corners = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(12);
+            var corners = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(10);
             MainWindowBorder.CornerRadius   = corners;
-            TitleBarBorder.CornerRadius     = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(12, 12, 0, 0);
+            TitleBarBorder.CornerRadius     = (maximized || isWin9x) ? new CornerRadius(0) : new CornerRadius(10, 10, 0, 0);
             if (MainWindowBorder.Child is Border inner)
             {
                 var vb = inner.OpacityMask as System.Windows.Media.VisualBrush;
@@ -1207,6 +1425,7 @@ namespace TGTAMM
             await RefreshUIAsync();
         }
 
+        private void BtnBackToLauncher_Click(object s, RoutedEventArgs e) => Close();
         private void BtnCloseApp_Click(object s, RoutedEventArgs e) => Application.Current.Shutdown();
         private void BtnMinimize_Click(object s, RoutedEventArgs e) => WindowState = WindowState.Minimized;
         private void BtnMaximize_Click(object s, RoutedEventArgs e)
@@ -1374,12 +1593,9 @@ namespace TGTAMM
         private void MenuOpenVirtualFolder_Click(object s, RoutedEventArgs e)
         {
             var profile = ResolveProfileFromContextMenu(e);
-            string vPath = Path.Combine(_core.AppDataPath, profile.ModdedFolderName);
-            if (Directory.Exists(vPath) && Directory.GetFileSystemEntries(vPath).Length > 0)
-                OpenFolder(vPath);
-            else
-                MessageBox.Show($"Virtual folder for {profile.DisplayName} hasn't been cloned yet. Deploy mods first.",
-                    "Not Cloned", MessageBoxButton.OK, MessageBoxImage.Information);
+            string backupDir = Path.Combine(_core.BackupsPath, profile.Key);
+            Directory.CreateDirectory(backupDir);
+            OpenFolder(backupDir);
         }
 
         private void MenuOpenModsFolder_Click(object s, RoutedEventArgs e)
@@ -1453,6 +1669,55 @@ namespace TGTAMM
         private void TitleBar_MouseDown(object s, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left) DragMove();
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            // Show exit confirmation on first close attempt (unless user disabled it)
+            if (!_exitConfirmationShown && !_core.Settings.SkipExitConfirmation)
+            {
+                _exitConfirmationShown = true;
+
+                var dlg = new ExitConfirmationDialog();
+                if (dlg.ShowDialog() != true)
+                {
+                    e.Cancel = true;
+                    _exitConfirmationShown = false;
+                    return;
+                }
+
+                // Save user preference if they toggled "don't ask again"
+                if (dlg.DontAskAgain)
+                    _core.Settings.SkipExitConfirmation = true;
+            }
+
+            // Save window position and size (only if not maximized/minimized)
+            if (WindowState == WindowState.Normal)
+            {
+                _core.Settings.WindowLeft = Left;
+                _core.Settings.WindowTop = Top;
+                _core.Settings.WindowWidth = Width;
+                _core.Settings.WindowHeight = Height;
+            }
+
+            base.OnClosing(e);
+        }
+
+        private void Toast_Close(object sender, MouseButtonEventArgs e)
+        {
+            if (e.OriginalSource is FrameworkElement elem && elem.DataContext is NotificationItem notif)
+            {
+                NotificationService.Queue.Remove(notif);
+            }
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is NotificationItem notif)
+            {
+                NotificationService.Queue.Remove(notif);
+            }
+            e.Handled = true;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)

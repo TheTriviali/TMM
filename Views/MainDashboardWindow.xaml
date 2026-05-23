@@ -1,8 +1,9 @@
-<Window x:Class="TGTAMM.MainDashboardWindow"
+﻿<Window x:Class="TMM.MainDashboardWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Triviali's GTA Mod Manager (BETA)"
-        MinHeight="700" MinWidth="1050" Height="750" Width="1050"
+        xmlns:local="clr-namespace:TMM"
+        Title="TMM — GTA III Series"
+        MinHeight="700" MinWidth="1050" Height="672" Width="1280"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterScreen" Loaded="Window_Loaded"
         StateChanged="Window_StateChanged">
@@ -11,6 +12,13 @@
         <!-- Force native scrollbars to use dark colors. -->
         <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#2D2D30"/>
         <SolidColorBrush x:Key="{x:Static SystemColors.ControlLightBrushKey}" Color="#3E3E42"/>
+
+        <!-- Window border gradient (updated by ThemeEngine at startup) -->
+        <LinearGradientBrush x:Key="WindowBorderGradientBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#4EC9B0" Offset="0"/>
+            <GradientStop Color="#2A8B80" Offset="0.5"/>
+            <GradientStop Color="#4EC9B0" Offset="1"/>
+        </LinearGradientBrush>
 
         <!-- ========================================================== -->
         <!-- General styles & templates                                 -->
@@ -48,24 +56,28 @@
             <MenuItem Header="Toggle Disable (Space)" Click="MenuToggle_Click"/>
             <Separator/>
             <MenuItem Header="Install Mod to All Games" Click="MenuInstallToAll_Click"/>
-            <MenuItem Header="📁 Open Mod Folder" Click="MenuOpenFolder_Click"/>
-            <MenuItem Header="🎮 Open Game Folder" Click="MenuOpenBaseFolder_Click"/>
-            <MenuItem Header="🚀 Open Virtual Folder" Click="MenuOpenVirtualFolder_Click"/>
+            <MenuItem Header="Open Mod Folder" Click="MenuOpenFolder_Click"/>
+            <MenuItem Header="Open Game Folder" Click="MenuOpenBaseFolder_Click"/>
+            <MenuItem Header="Open Backup Folder" Click="MenuOpenVirtualFolder_Click"/>
             <Separator/>
             <MenuItem Header="Move Up (Ctrl+Up)" Click="MenuMoveUp_Click"/>
             <MenuItem Header="Move Down (Ctrl+Down)" Click="MenuMoveDown_Click"/>
+            <Separator/>
+            <MenuItem Header="Toggle Force Deploy Override" Click="MenuToggleOverrideList_Click"/>
             <Separator/>
             <MenuItem Header="Properties..." Click="MenuProperties_Click" Foreground="{DynamicResource AccentBrush}"/>
             <MenuItem Header="Delete Mod(s) (Del)" Click="MenuDelete_Click" Foreground="#FF5555"/>
         </ContextMenu>
 
         <ContextMenu x:Key="EmptyListContextMenu">
-            <MenuItem Header="➕ Install Mod(s) Here..." Click="BtnInstallMod_Click"/>
-            <MenuItem Header="🔄 Refresh List" Click="BtnRefresh_Click"/>
+            <MenuItem Header="Install Mod(s) Here..." Click="BtnInstallMod_Click"/>
+            <MenuItem Header="Refresh List" Click="BtnRefresh_Click"/>
             <Separator/>
-            <MenuItem Header="🎮 Open Game Folder"      Click="MenuOpenBaseFolder_Click"/>
-            <MenuItem Header="🚀 Open Virtual Folder"   Click="MenuOpenVirtualFolder_Click"/>
-            <MenuItem Header="📂 Open Mods Folder"      Click="MenuOpenModsFolder_Click"/>
+            <MenuItem Header="Open Game Folder"      Click="MenuOpenBaseFolder_Click"/>
+            <MenuItem Header="Open Backup Folder"   Click="MenuOpenVirtualFolder_Click"/>
+            <MenuItem Header="Open Mods Folder"      Click="MenuOpenModsFolder_Click"/>
+            <Separator/>
+            <MenuItem Header="Toggle Force Deploy Override" Click="MenuToggleOverrideList_Click"/>
         </ContextMenu>
 
         <!-- ========================================================== -->
@@ -250,7 +262,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderBrush="#30FFFFFF" BorderThickness="1,0,1,1">
+                                BorderBrush="#30FFFFFF" BorderThickness="1,0,1,1" CornerRadius="2">
                             <TextBlock Text="{TemplateBinding Content}" FontFamily="Marlett" FontSize="12"
                                        Foreground="{DynamicResource TextBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -296,11 +308,73 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Windows XP Luna button style -->
+        <Style x:Key="WinXPButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="35"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="#ECE9D8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="outerXP" Background="#ECE9D8" BorderThickness="1" BorderBrush="#ACA899">
+                            <Border BorderBrush="#FFFFFF" BorderThickness="1,1,0,0">
+                                <Border x:Name="innerXP" BorderBrush="#ACA899" BorderThickness="0,0,1,1">
+                                    <TextBlock Text="{TemplateBinding Content}" FontFamily="Tahoma" FontSize="11"
+                                               Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Border>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="outerXP" Property="Background" Value="#F5F5EE"/>
+                                <Setter TargetName="outerXP" Property="BorderBrush" Value="#0A246A"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="outerXP" Property="Background" Value="#D4C4AC"/>
+                                <Setter TargetName="innerXP" Property="BorderBrush" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Windows 3.1 classic button style -->
+        <Style x:Key="Win31ButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="35"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="#C0C0C0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="outer31" Background="#C0C0C0" BorderThickness="2">
+                            <Border x:Name="top31" BorderBrush="White" BorderThickness="1,1,0,0">
+                                <Border x:Name="bottom31" BorderBrush="#808080" BorderThickness="0,0,1,1">
+                                    <TextBlock Text="{TemplateBinding Content}" FontFamily="MS Sans Serif" FontSize="11"
+                                               Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Border>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="outer31" Property="Background" Value="#DFDFDF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="top31" Property="BorderBrush" Value="#808080"/>
+                                <Setter TargetName="bottom31" Property="BorderBrush" Value="White"/>
+                                <Setter TargetName="outer31" Property="Background" Value="#A8A8A8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <!-- Master border for 12px window rounding -->
-    <Border x:Name="MainWindowBorder" Background="{DynamicResource BgBrush}" CornerRadius="12"
-            BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
+    <!-- Master border with gradient accent - updated by ThemeEngine -->
+    <Border x:Name="MainWindowBorder" Background="{DynamicResource BgBrush}" CornerRadius="10"
+            BorderBrush="{DynamicResource WindowBorderGradientBrush}" BorderThickness="4"
             MouseLeftButtonDown="TitleBar_MouseDown">
 
         <!-- Opacity-mask trick to clip children to the rounded corners -->
@@ -308,7 +382,7 @@
             <Border.OpacityMask>
                 <VisualBrush>
                     <VisualBrush.Visual>
-                        <Border Background="White" CornerRadius="11"
+                        <Border Background="White" CornerRadius="6"
                                 Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Border}}"
                                 Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Border}}"/>
                     </VisualBrush.Visual>
@@ -324,9 +398,9 @@
                 <!-- ====================================================== -->
                 <!-- Custom modular title bar                               -->
                 <!-- ====================================================== -->
-                <Border x:Name="TitleBarBorder" Grid.Row="0" Height="30" CornerRadius="12,12,0,0" ClipToBounds="True">
+                <Border x:Name="TitleBarBorder" Grid.Row="0" Height="30" CornerRadius="10,10,0,0" ClipToBounds="True">
                     <Grid x:Name="TitleBarGrid">
-                        <TextBlock Text="Triviali's GTA Mod Manager (BETA)"
+                        <TextBlock Text="TMM - GTA III Series"
                                    Foreground="{DynamicResource TextBrush}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold">
                             <TextBlock.Effect>
@@ -336,15 +410,15 @@
 
                         <!-- macOS controls -->
                         <StackPanel x:Name="MacControls" Orientation="Horizontal" VerticalAlignment="Center"
-                                    Margin="12,0,12,0" Visibility="Collapsed">
-                            <Button Content="✕" Width="14" Height="14" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FF5F56"
+                                    HorizontalAlignment="Left" Margin="20,0,0,0" Visibility="Collapsed">
+                            <Button Content="x" Width="12" Height="12" Margin="0,0,8,0"
+                                    Style="{StaticResource MacButtonStyle}" Background="#ED6158"
                                     Click="BtnCloseApp_Click" Tag="Close"/>
-                            <Button Content="−" Width="14" Height="14" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FFBD2E"
+                            <Button Content="âˆ’" Width="12" Height="12" Margin="0,0,8,0"
+                                    Style="{StaticResource MacButtonStyle}" Background="#FCC42D"
                                     Click="BtnMinimize_Click"/>
-                            <Button Content="⤢" Width="14" Height="14"
-                                    Style="{StaticResource MacButtonStyle}" Background="#27C93F"
+                            <Button Content="â¤¢" Width="12" Height="12" Margin="0"
+                                    Style="{StaticResource MacButtonStyle}" Background="#5FC038"
                                     Click="BtnMaximize_Click"/>
                         </StackPanel>
 
@@ -444,15 +518,15 @@
 
                         <!-- macOS Light controls -->
                         <StackPanel x:Name="MacLightControls" Orientation="Horizontal" VerticalAlignment="Center"
-                                    Margin="12,0,12,0" Visibility="Collapsed">
-                            <Button Content="✕" Width="14" Height="14" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FC5753"
+                                    HorizontalAlignment="Left" Margin="20,0,0,0" Visibility="Collapsed">
+                            <Button Content="x" Width="12" Height="12" Margin="0,0,8,0"
+                                    Style="{StaticResource MacButtonStyle}" Background="#EE5A52"
                                     Click="BtnCloseApp_Click" Tag="Close"/>
-                            <Button Content="−" Width="14" Height="14" Margin="0,0,8,0"
-                                    Style="{StaticResource MacButtonStyle}" Background="#FDBC40"
+                            <Button Content="âˆ’" Width="12" Height="12" Margin="0,0,8,0"
+                                    Style="{StaticResource MacButtonStyle}" Background="#FDC82F"
                                     Click="BtnMinimize_Click"/>
-                            <Button Content="⤢" Width="14" Height="14"
-                                    Style="{StaticResource MacButtonStyle}" Background="#34C84A"
+                            <Button Content="â¤¢" Width="12" Height="12" Margin="0"
+                                    Style="{StaticResource MacButtonStyle}" Background="#62C554"
                                     Click="BtnMaximize_Click"/>
                         </StackPanel>
 
@@ -469,28 +543,28 @@
                     </Grid.RowDefinitions>
 
                     <!-- ====================================================== -->
-                    <!-- Toolbar — full window width, always on top             -->
+                    <!-- Toolbar - full window width, always on top             -->
                     <!-- ====================================================== -->
                     <Border x:Name="ToolbarBorder" Grid.Row="0"
                             Background="{DynamicResource HeaderBrush}" Opacity="0.98" Padding="8,6">
                         <DockPanel LastChildFill="True">
 
-                            <!-- Compact window controls — right-docked, hidden unless Compact mode -->
+                            <!-- Compact window controls - right-docked, hidden unless Compact mode -->
                             <StackPanel x:Name="CompactControls" Orientation="Horizontal"
                                         VerticalAlignment="Center" Visibility="Collapsed"
-                                        DockPanel.Dock="Right" Margin="8,0,0,0">
-                                <Button Content="−" Width="20" Height="20" Margin="0,0,5,0"
-                                        Style="{StaticResource MacButtonStyle}" Background="#FFBD2E"
+                                        DockPanel.Dock="Right" Margin="0,0,8,0">
+                                <Button Content="âˆ’" Width="12" Height="12" Margin="0,0,8,0"
+                                        Style="{StaticResource MacButtonStyle}" Background="#FCC42D"
                                         Click="BtnMinimize_Click"/>
-                                <Button Content="⤢" Width="20" Height="20" Margin="0,0,5,0"
-                                        Style="{StaticResource MacButtonStyle}" Background="#27C93F"
+                                <Button Content="â¤¢" Width="12" Height="12" Margin="0,0,8,0"
+                                        Style="{StaticResource MacButtonStyle}" Background="#5FC038"
                                         Click="BtnMaximize_Click"/>
-                                <Button Content="✕" Width="20" Height="20"
-                                        Style="{StaticResource MacButtonStyle}" Background="#FF5F56"
+                                <Button Content="x" Width="12" Height="12" Margin="0"
+                                        Style="{StaticResource MacButtonStyle}" Background="#ED6158"
                                         Click="BtnCloseApp_Click" Tag="Close"/>
                             </StackPanel>
 
-                            <!-- Right-pinned group: Deploy · | · III · VC · SA · | · Help · About -->
+                            <!-- Right-pinned group: Deploy . | . III . VC . SA . | . Help . About -->
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
 
                                 <!-- Deploy -->
@@ -519,13 +593,32 @@
                                                Margin="0,2,0,0" Visibility="Visible"/>
                                 </StackPanel>
 
+                                <!-- Rollback -->
+                                <StackPanel Margin="4,0,0,0" VerticalAlignment="Center">
+                                    <Button x:Name="btnRollback" Click="BtnRollback_Click"
+                                            ToolTip="Rollback Last Deploy" Width="38" Height="38"
+                                            Style="{StaticResource IconButtonStyle}" FontSize="16"
+                                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                            Content="&#xE777;"/>
+                                    <TextBlock x:Name="lblRollback" Text="Rollback" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                </StackPanel>
+
                                 <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="6,6,6,6" Opacity="0.3"/>
 
                                 <!-- Play III -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnPlayIII" Click="BtnLaunchModded_Click" Tag="III"
                                             Width="42" Height="42" Cursor="Hand" BorderThickness="0"
-                                            ToolTip="Play GTA III" Background="{DynamicResource AccentBrush}">
+                                            ToolTip="Play GTA III (right-click for override options)"
+                                            Background="{DynamicResource AccentBrush}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem x:Name="menuOverrideIII" Header="Force Deploy Override (Ignore Vanilla EXE)"
+                                                          Click="MenuToggleOverride_Click" Tag="III"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5">
@@ -538,20 +631,30 @@
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
-                                        <TextBlock Text="III" Foreground="{DynamicResource TextBrush}"
+                                        <TextBlock Text="III" Foreground="{DynamicResource AccentTextBrush}"
                                                    FontSize="16" FontWeight="Bold" FontFamily="Times New Roman">
                                             <TextBlock.Effect>
                                                 <DropShadowEffect BlurRadius="3" ShadowDepth="0" Opacity="0.5" Color="Black"/>
                                             </TextBlock.Effect>
                                         </TextBlock>
                                     </Button>
+                                    <TextBlock x:Name="lblPlayIII" Text="Play III" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
                                 </StackPanel>
 
                                 <!-- Play VC -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnPlayVC" Click="BtnLaunchModded_Click" Tag="VC"
                                             Width="42" Height="42" Cursor="Hand" BorderThickness="0"
-                                            ToolTip="Play GTA Vice City" Background="{DynamicResource AccentBrush}">
+                                            ToolTip="Play GTA Vice City (right-click for override options)"
+                                            Background="{DynamicResource AccentBrush}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem x:Name="menuOverrideVC" Header="Force Deploy Override (Ignore Vanilla EXE)"
+                                                          Click="MenuToggleOverride_Click" Tag="VC"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5">
@@ -564,20 +667,30 @@
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
-                                        <TextBlock Text="VC" Foreground="{DynamicResource TextBrush}"
+                                        <TextBlock Text="VC" Foreground="{DynamicResource AccentTextBrush}"
                                                    FontSize="17" FontWeight="Bold" FontFamily="Arial">
                                             <TextBlock.Effect>
                                                 <DropShadowEffect BlurRadius="3" ShadowDepth="0" Opacity="0.5" Color="Black"/>
                                             </TextBlock.Effect>
                                         </TextBlock>
                                     </Button>
+                                    <TextBlock x:Name="lblPlayVC" Text="Play VC" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
                                 </StackPanel>
 
                                 <!-- Play SA -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnPlaySA" Click="BtnLaunchModded_Click" Tag="SA"
                                             Width="42" Height="42" Cursor="Hand" BorderThickness="0"
-                                            ToolTip="Play GTA San Andreas" Background="{DynamicResource AccentBrush}">
+                                            ToolTip="Play GTA San Andreas (right-click for override options)"
+                                            Background="{DynamicResource AccentBrush}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem x:Name="menuOverrideSA" Header="Force Deploy Override (Ignore Vanilla EXE)"
+                                                          Click="MenuToggleOverride_Click" Tag="SA"/>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5">
@@ -590,19 +703,32 @@
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
                                         </Button.Template>
-                                        <TextBlock Text="SA" Foreground="{DynamicResource TextBrush}"
+                                        <TextBlock Text="SA" Foreground="{DynamicResource AccentTextBrush}"
                                                    FontSize="17" FontWeight="Bold" FontFamily="Old English Text MT, Impact">
                                             <TextBlock.Effect>
                                                 <DropShadowEffect BlurRadius="3" ShadowDepth="0" Opacity="0.5" Color="Black"/>
                                             </TextBlock.Effect>
                                         </TextBlock>
                                     </Button>
+                                    <TextBlock x:Name="lblPlaySA" Text="Play SA" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
                                 </StackPanel>
 
                             </StackPanel>
 
-                            <!-- Left-pinned: sidebar toggle | label toggle -->
+                            <!-- Left-pinned: back | sidebar toggle | label toggle -->
                             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Back to Launcher -->
+                                <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <Button Content="&#xE72B;" Click="BtnBackToLauncher_Click" ToolTip="Back to Game Launcher"
+                                            Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
+                                            FontSize="16" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                                    <TextBlock x:Name="lblBack" Text="Back" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                </StackPanel>
+                                <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="0,6,8,6" Opacity="0.3"/>
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button Content="&#xE700;" Click="BtnToggleSidebar_Click" ToolTip="Toggle Sidebar"
                                             Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
@@ -615,28 +741,9 @@
                                 <!-- Italic T toggles toolbar text labels -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnToggleLabels" Click="BtnToggleLabels_Click"
-                                            ToolTip="Toggle Toolbar Labels" Width="30" Height="30"
-                                            Cursor="Hand" BorderThickness="0">
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border x:Name="bd" Background="{DynamicResource ControlBgBrush}" CornerRadius="4" Padding="2">
-                                                    <TextBlock Text="T" FontStyle="Italic" FontWeight="Bold" FontSize="16"
-                                                               Foreground="{DynamicResource AccentBrush}"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                               x:Name="lbl"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                                        <Setter TargetName="lbl" Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
-                                                    </Trigger>
-                                                    <Trigger Property="IsPressed" Value="True">
-                                                        <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Button.Template>
-                                    </Button>
+                                            ToolTip="Toggle Toolbar Labels" Width="38" Height="38"
+                                            Style="{StaticResource IconButtonStyle}" Cursor="Hand" BorderThickness="0"
+                                            FontSize="16" FontFamily="Arial" FontStyle="Italic" FontWeight="Bold">T</Button>
                                     <TextBlock x:Name="lblToggleLabels" Text="Labels" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
                                                Margin="0,2,0,0" Visibility="Visible"/>
@@ -645,8 +752,8 @@
 
                                 <!-- Help -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
-                                    <Grid Width="42" Height="42" ToolTip="Help &amp; Troubleshooting">
-                                        <Button Click="BtnHelp_Click" Width="42" Height="42" Cursor="Hand"
+                                    <Grid Width="38" Height="38" ToolTip="Help &amp; Troubleshooting">
+                                        <Button Click="BtnHelp_Click" Width="38" Height="38" Cursor="Hand"
                                                 BorderThickness="0">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
@@ -682,9 +789,9 @@
 
                                 <!-- About -->
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,4,0">
-                                    <Button Content="&#xE946;" Click="BtnAbout_Click" ToolTip="About TGTAMM"
-                                            Style="{StaticResource IconButtonStyle}" Width="42" Height="42"
-                                            FontSize="20" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                                    <Button Content="&#xE946;" Click="BtnAbout_Click" ToolTip="About TMM"
+                                            Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
+                                            FontSize="18" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblAbout" Text="About" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
                                                Margin="0,2,0,0" Visibility="Visible"/>
@@ -692,13 +799,13 @@
 
                             </StackPanel>
 
-                            <!-- Centered tool group — Install · | · Settings · Themes · Refresh · Files · DXVK -->
+                            <!-- Centered tool group - Install . | . Settings . Themes . Refresh . Files . DXVK -->
                             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" VerticalAlignment="Center">
                                 <!-- Install Mod -->
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button x:Name="btnInstallMod" Content="&#xE710;" Click="BtnInstallMod_Click"
                                             ToolTip="Install Mod" Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblInstallMod" Text="Install" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
@@ -706,10 +813,10 @@
                                 </StackPanel>
                                 <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="4,6,4,6" Opacity="0.3"/>
                                 <!-- Settings -->
-                                <StackPanel Margin="4,0,4,0" VerticalAlignment="Center">
+                                <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button Content="&#xE713;" Click="BtnSettings_Click"
                                             ToolTip="Settings" Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblSettings" Text="Settings" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
@@ -719,9 +826,36 @@
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button Content="&#xE790;" Click="BtnTheme_Click" ToolTip="Look &amp; Feel"
                                             Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblTheme" Text="Themes" FontSize="10"
+                                               Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
+                                               Margin="0,2,0,0" Visibility="Visible"/>
+                                </StackPanel>
+                                <!-- Random Theme -->
+                                <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <Button x:Name="btnRollTheme" Click="BtnRollTheme_Click" ToolTip="Random Theme"
+                                            Width="38" Height="38" Cursor="Hand" BorderThickness="0">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{DynamicResource ControlBgBrush}" CornerRadius="5"
+                                                        Padding="6">
+                                                    <TextBlock Text="&#xF4A6;" FontSize="16" FontWeight="Bold"
+                                                               Foreground="{DynamicResource AccentLabelBrush}"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                    <TextBlock x:Name="lblRollTheme" Text="Random" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
                                                Margin="0,2,0,0" Visibility="Visible"/>
                                 </StackPanel>
@@ -729,7 +863,7 @@
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button Content="&#xE72C;" Click="BtnRefresh_Click" ToolTip="Refresh Mod List"
                                             Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblRefresh" Text="Refresh" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
@@ -739,7 +873,7 @@
                                 <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                                     <Button Content="&#xE8B7;" Click="BtnOpenAppData_Click" ToolTip="Open Mod Directory"
                                             Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblAppData" Text="Files" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
@@ -749,7 +883,7 @@
                                 <StackPanel VerticalAlignment="Center">
                                     <Button Content="&#xE7AC;" Click="BtnDxvk_Click" ToolTip="DXVK Config"
                                             Style="{StaticResource IconButtonStyle}"
-                                            Width="42" Height="42" FontSize="20"
+                                            Width="38" Height="38" FontSize="18"
                                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                                     <TextBlock x:Name="lblDxvk" Text="DXVK" FontSize="10"
                                                Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center"
@@ -762,137 +896,184 @@
 
                     <!-- Content row: sidebar + modlists -->
                     <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                    <Grid x:Name="DialogOverlay" Grid.ColumnSpan="2"
+                        <Grid x:Name="DialogOverlay" Grid.ColumnSpan="2"
                           Background="Black" Opacity="0.6" Visibility="Collapsed" Panel.ZIndex="100"/>
 
-                    <!-- Deploy progress card — shown on top of the dark overlay -->
-                    <Grid x:Name="DeployProgressPanel" Grid.ColumnSpan="2"
+                        <!-- Deploy progress card - shown on top of the dark overlay -->
+                        <Grid x:Name="DeployProgressPanel" Grid.ColumnSpan="2"
                           Visibility="Collapsed" Panel.ZIndex="101"
                           HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource PanelBrush}" CornerRadius="10"
+                            <Border Background="{DynamicResource PanelBrush}" CornerRadius="10"
                                 BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"
                                 Padding="36,28" MinWidth="360">
-                            <StackPanel>
-                                <TextBlock Text="🚀  Deploying Mods" FontSize="17" FontWeight="Bold"
+                                <StackPanel>
+                                    <TextBlock Text="Deploying Mods" FontSize="17" FontWeight="Bold"
                                            Foreground="{DynamicResource TextBrush}"
                                            HorizontalAlignment="Center" Margin="0,0,0,14"/>
-                                <TextBlock x:Name="txtDeployStage" Text="Preparing..." FontSize="13"
+                                    <TextBlock x:Name="txtDeployStage" Text="Preparing..." FontSize="13"
                                            Foreground="{DynamicResource SubTextBrush}"
                                            HorizontalAlignment="Center" Margin="0,0,0,10" TextWrapping="Wrap"/>
-                                <ProgressBar x:Name="pbDeploy" Height="9" Minimum="0" Maximum="100"
+                                    <ProgressBar x:Name="pbDeploy" Height="9" Minimum="0" Maximum="100"
                                              IsIndeterminate="True" Margin="0,0,0,10"
                                              Foreground="{DynamicResource AccentBrush}" BorderThickness="0"/>
-                                <TextBlock x:Name="txtDeployCount" Text="" FontSize="11"
+                                    <TextBlock x:Name="txtDeployCount" Text="" FontSize="11"
                                            Foreground="{DynamicResource SubTextBrush}"
                                            HorizontalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
 
-                    <!-- Sidebar -->
-                    <Border x:Name="SidebarBorder" Grid.Column="0"
+                        <!-- Notification toasts - bottom-right corner -->
+                        <StackPanel Grid.ColumnSpan="2" Orientation="Vertical" VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                                Margin="0,0,16,16" Width="360" Panel.ZIndex="99" IsHitTestVisible="False">
+                            <ItemsControl ItemsSource="{Binding Source={x:Static local:NotificationService.Queue}}"
+                                      IsHitTestVisible="False">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource PanelBrush}" CornerRadius="6"
+                                            BorderThickness="1" BorderBrush="{DynamicResource AccentBrush}"
+                                            Padding="12,10" Margin="0,0,0,8" MinHeight="40"
+                                            IsHitTestVisible="True" MouseLeftButtonUp="Toast_Close">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Icon -->
+                                                <TextBlock Grid.Column="0"
+                                                       Text="{Binding Type, Converter={StaticResource NotificationTypeIconConverter}}"
+                                                       FontSize="14" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource AccentLabelBrush}"/>
+
+                                                <!-- Message -->
+                                                <TextBlock Grid.Column="1" Text="{Binding Message}"
+                                                       Foreground="{DynamicResource TextBrush}" FontSize="12"
+                                                       TextWrapping="Wrap" VerticalAlignment="Center" Margin="10,0,0,0"/>
+
+                                                <!-- Close Button -->
+                                                <Button Grid.Column="2" Content="x" Width="20" Height="20"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Foreground="{DynamicResource SubTextBrush}" FontSize="10"
+                                                    Click="CloseButton_Click" Cursor="Hand"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <!-- Sidebar -->
+                        <Border x:Name="SidebarBorder" Grid.Column="0"
                             Background="{DynamicResource PanelBrush}" Width="220" Visibility="Visible">
-                        <DockPanel Margin="10">
+                            <DockPanel Margin="10">
 
-                            <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
-                                <TextBlock Text="ESSENTIALS" Foreground="{DynamicResource AccentLabelBrush}"
+                                <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+                                    <TextBlock Text="ESSENTIALS" Foreground="{DynamicResource AccentLabelBrush}"
                                            FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" Margin="0,10,0,10"/>
 
-                                <!-- Downgrader links -->
-                                <Button Content="⬇ III 1.0 Downgrader" Click="BtnLink_Click"
+                                    <!-- Downgrader links -->
+                                    <Button Content="III 1.0 Downgrader" Click="BtnLink_Click"
                                         Tag="https://www.moddb.com/downloads/grand-theft-auto-3-original-10-exe-for-steam"
                                         ToolTip="GTA III 1.0 Exe (ModDB)"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                <Button Content="⬇ VC 1.0 Downgrader" Click="BtnLink_Click"
+                                    <Button Content="VC 1.0 Downgrader" Click="BtnLink_Click"
                                         Tag="https://www.moddb.com/downloads/grand-theft-auto-vice-city-original-10-exe"
                                         ToolTip="GTA Vice City 1.0 Exe (ModDB)"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                <Button Content="⬇ SA Downgrader" Click="BtnLink_Click"
+                                    <Button Content="SA Downgrader" Click="BtnLink_Click"
                                         Tag="https://services.rockstarnexus.com/sadowngrade/latest.exe"
                                         ToolTip="GTA San Andreas Downgrader (RockstarNexus)"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
 
-                                <Border Height="1" Background="{DynamicResource SubTextBrush}"
+                                    <Border Height="1" Background="{DynamicResource SubTextBrush}"
                                         Opacity="0.3" Margin="10,10"/>
 
-                                <!-- Auto-installers -->
-                                <Button Content="📂 Modloader" Click="BtnInstallModloader_Click"
+                                    <!-- Auto-installers -->
+                                    <Button Content="Modloader" Click="BtnInstallModloader_Click"
                                         ToolTip="Download and Install Modloader"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                <Button Content="🎮 Widescreen Fix" Click="BtnWidescreenFix_Click"
+                                    <Button Content="Widescreen Fix" Click="BtnWidescreenFix_Click"
                                         ToolTip="Auto-Install Widescreen Fixes Pack"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                <Button Content="⚙️ SilentPatch" Click="BtnSilentPatch_Click"
+                                    <Button Content="SilentPatch" Click="BtnSilentPatch_Click"
                                         ToolTip="Auto-Install SilentPatch"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                <Button Content="🛠 DXVK" Click="BtnInstallDxvk_Click"
+                                    <Button Content="DXVK" Click="BtnInstallDxvk_Click"
                                         ToolTip="Download and Install DXVK"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                <Button Content="🌃 2DFX" Click="BtnProject2DFX_Click"
+                                    <Button Content="2DFX" Click="BtnProject2DFX_Click"
                                         ToolTip="Auto-Install Project2DFX"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                <Button Content="🔌 ASI Loader" Click="BtnASILoader_Click"
+                                    <Button Content="ASI Loader" Click="BtnASILoader_Click"
                                         ToolTip="Auto-Install Ultimate ASI Loader"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                <Button Content="📜 CLEO" Click="BtnCleo_Click"
+                                    <Button Content="CLEO" Click="BtnCleo_Click"
                                         ToolTip="Auto-Install CLEO Library (III/VC/SA)"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
 
-                                <Border Height="1" Background="{DynamicResource SubTextBrush}"
+                                    <Border Height="1" Background="{DynamicResource SubTextBrush}"
                                         Opacity="0.3" Margin="10,15"/>
-                            </StackPanel>
+                                </StackPanel>
 
-                            <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
-                                <!-- Reworded: only shown when one or more games still need a path. -->
-                                <TextBlock x:Name="txtInstallWarning"
-                                           Text="⚠ One or more games are unmapped. Open Settings to locate them."
-                                           Foreground="#E7FF2F" FontSize="11" FontWeight="SemiBold"
+                                <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
+                                    <!-- Reworded: only shown when one or more games still need a path. -->
+                                    <TextBlock x:Name="txtInstallWarning"
+                                           Text="One or more games are unmapped. Open Settings to locate them."
+                                           Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="SemiBold"
                                            TextWrapping="Wrap" TextAlignment="Center"
                                            Visibility="Collapsed" Margin="0,0,0,10"/>
 
-                                <TextBlock x:Name="txtDiskSpace" Text="💾 Calculating space..."
+                                    <TextBlock x:Name="txtDiskSpace" Text="Calculating space..."
                                            Foreground="{DynamicResource SubTextBrush}" FontSize="11"
                                            TextAlignment="Center" Margin="0,5,0,0"/>
-                            </StackPanel>
-                        </DockPanel>
-                    </Border>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
 
-                    <!-- Workspace (modlists only) -->
-                    <Grid Grid.Column="1">
-                        <!-- Triple-column mod lists -->
-                        <Grid Margin="10">
-                            <UniformGrid x:Name="PowerViewGrid" Columns="3" Visibility="Visible" Margin="10">
+                        <!-- Workspace (modlists only) -->
+                        <Grid Grid.Column="1">
+                            <!-- Triple-column mod lists -->
+                            <Grid Margin="10">
+                                <UniformGrid x:Name="PowerViewGrid" Columns="3" Visibility="Visible" Margin="10">
 
-                                <Border BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
+                                    <Border BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
                                         Margin="5" Background="{DynamicResource PanelBrush}"
                                         CornerRadius="5" Opacity="0.95">
-                                    <DockPanel Margin="5">
-                                        <TextBlock DockPanel.Dock="Top" Text="GTA III"
+                                        <DockPanel Margin="5">
+                                            <TextBlock DockPanel.Dock="Top" Text="GTA III"
                                                    Foreground="{DynamicResource AccentLabelBrush}"
                                                    FontSize="16" FontWeight="Bold"
                                                    HorizontalAlignment="Center" Margin="0,5"/>
-                                        <TextBox DockPanel.Dock="Top" x:Name="txtSearchIII"
+                                            <TextBox DockPanel.Dock="Top" x:Name="txtSearchIII"
                                                  Height="25" Margin="5,0,5,5" Padding="5,3"
                                                  Background="{DynamicResource ControlBgBrush}"
                                                  Foreground="{DynamicResource TextBrush}" BorderThickness="0"
                                                  TextChanged="TxtSearchIII_TextChanged" Opacity="0.9"/>
-                                        <Grid>
-                                            <ListView x:Name="PListIII"
+                                            <Grid>
+                                                <ListView x:Name="PListIII"
                                                       ContextMenu="{StaticResource EmptyListContextMenu}"
                                                       Style="{StaticResource ModListStyle}"
                                                       Template="{StaticResource WatermarkIII}"
@@ -901,52 +1082,52 @@
                                                       MouseMove="List_MouseMove"
                                                       DragOver="List_DragOver" DragLeave="List_DragLeave"
                                                       GridViewColumnHeader.Click="GridViewColumnHeaderClicked">
-                                                <ListView.View>
-                                                    <GridView>
-                                                        <GridViewColumn Header="#" Width="35"
+                                                    <ListView.View>
+                                                        <GridView>
+                                                            <GridViewColumn Header="#" Width="35"
                                                                         DisplayMemberBinding="{Binding LoadOrder}"/>
-                                                        <GridViewColumn Header="On" Width="35">
-                                                            <GridViewColumn.CellTemplate>
-                                                                <DataTemplate>
-                                                                    <CheckBox IsChecked="{Binding IsEnabled}"
+                                                            <GridViewColumn Header="On" Width="35">
+                                                                <GridViewColumn.CellTemplate>
+                                                                    <DataTemplate>
+                                                                        <CheckBox IsChecked="{Binding IsEnabled}"
                                                                               Checked="ModCheckBox_Changed"
                                                                               Unchecked="ModCheckBox_Changed"/>
-                                                                </DataTemplate>
-                                                            </GridViewColumn.CellTemplate>
-                                                        </GridViewColumn>
-                                                        <GridViewColumn Header="Name" Width="180"
+                                                                    </DataTemplate>
+                                                                </GridViewColumn.CellTemplate>
+                                                            </GridViewColumn>
+                                                            <GridViewColumn Header="Name" Width="180"
                                                                         DisplayMemberBinding="{Binding Name}"/>
-                                                    </GridView>
-                                                </ListView.View>
-                                            </ListView>
-                                            <Button x:Name="OverlayColIII" Content="⚙️ Setup Required"
+                                                        </GridView>
+                                                    </ListView.View>
+                                                </ListView>
+                                                <Button x:Name="OverlayColIII" Content="Setup Required"
                                                     Click="BtnOpenWizardOverlay_Click" Tag="III"
                                                     Style="{StaticResource OverlayButtonStyle}"
                                                     Visibility="Collapsed"/>
-                                            <Canvas x:Name="DropCanvasIII" IsHitTestVisible="False" Panel.ZIndex="5">
-                                                <Rectangle x:Name="DropLineIII" Height="2"
+                                                <Canvas x:Name="DropCanvasIII" IsHitTestVisible="False" Panel.ZIndex="5">
+                                                    <Rectangle x:Name="DropLineIII" Height="2"
                                                            Fill="{DynamicResource AccentBrush}"
                                                            Visibility="Collapsed"/>
-                                            </Canvas>
-                                        </Grid>
-                                    </DockPanel>
-                                </Border>
+                                                </Canvas>
+                                            </Grid>
+                                        </DockPanel>
+                                    </Border>
 
-                                <Border BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
+                                    <Border BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
                                         Margin="5" Background="{DynamicResource PanelBrush}"
                                         CornerRadius="5" Opacity="0.95">
-                                    <DockPanel Margin="5">
-                                        <TextBlock DockPanel.Dock="Top" Text="GTA Vice City"
+                                        <DockPanel Margin="5">
+                                            <TextBlock DockPanel.Dock="Top" Text="GTA Vice City"
                                                    Foreground="{DynamicResource AccentLabelBrush}"
                                                    FontSize="16" FontWeight="Bold"
                                                    HorizontalAlignment="Center" Margin="0,5"/>
-                                        <TextBox DockPanel.Dock="Top" x:Name="txtSearchVC"
+                                            <TextBox DockPanel.Dock="Top" x:Name="txtSearchVC"
                                                  Height="25" Margin="5,0,5,5" Padding="5,3"
                                                  Background="{DynamicResource ControlBgBrush}"
                                                  Foreground="{DynamicResource TextBrush}" BorderThickness="0"
                                                  TextChanged="TxtSearchVC_TextChanged" Opacity="0.9"/>
-                                        <Grid>
-                                            <ListView x:Name="PListVC"
+                                            <Grid>
+                                                <ListView x:Name="PListVC"
                                                       Style="{StaticResource ModListStyle}"
                                                       Template="{StaticResource WatermarkVC}"
                                                       ContextMenu="{StaticResource EmptyListContextMenu}"
@@ -955,52 +1136,52 @@
                                                       MouseMove="List_MouseMove"
                                                       DragOver="List_DragOver" DragLeave="List_DragLeave"
                                                       GridViewColumnHeader.Click="GridViewColumnHeaderClicked">
-                                                <ListView.View>
-                                                    <GridView>
-                                                        <GridViewColumn Header="#" Width="35"
+                                                    <ListView.View>
+                                                        <GridView>
+                                                            <GridViewColumn Header="#" Width="35"
                                                                         DisplayMemberBinding="{Binding LoadOrder}"/>
-                                                        <GridViewColumn Header="On" Width="35">
-                                                            <GridViewColumn.CellTemplate>
-                                                                <DataTemplate>
-                                                                    <CheckBox IsChecked="{Binding IsEnabled}"
+                                                            <GridViewColumn Header="On" Width="35">
+                                                                <GridViewColumn.CellTemplate>
+                                                                    <DataTemplate>
+                                                                        <CheckBox IsChecked="{Binding IsEnabled}"
                                                                               Checked="ModCheckBox_Changed"
                                                                               Unchecked="ModCheckBox_Changed"/>
-                                                                </DataTemplate>
-                                                            </GridViewColumn.CellTemplate>
-                                                        </GridViewColumn>
-                                                        <GridViewColumn Header="Name" Width="180"
+                                                                    </DataTemplate>
+                                                                </GridViewColumn.CellTemplate>
+                                                            </GridViewColumn>
+                                                            <GridViewColumn Header="Name" Width="180"
                                                                         DisplayMemberBinding="{Binding Name}"/>
-                                                    </GridView>
-                                                </ListView.View>
-                                            </ListView>
-                                            <Button x:Name="OverlayColVC" Content="⚙️ Setup Required"
+                                                        </GridView>
+                                                    </ListView.View>
+                                                </ListView>
+                                                <Button x:Name="OverlayColVC" Content="Setup Required"
                                                     Click="BtnOpenWizardOverlay_Click" Tag="VC"
                                                     Style="{StaticResource OverlayButtonStyle}"
                                                     Visibility="Collapsed"/>
-                                            <Canvas x:Name="DropCanvasVC" IsHitTestVisible="False" Panel.ZIndex="5">
-                                                <Rectangle x:Name="DropLineVC" Height="2"
+                                                <Canvas x:Name="DropCanvasVC" IsHitTestVisible="False" Panel.ZIndex="5">
+                                                    <Rectangle x:Name="DropLineVC" Height="2"
                                                            Fill="{DynamicResource AccentBrush}"
                                                            Visibility="Collapsed"/>
-                                            </Canvas>
-                                        </Grid>
-                                    </DockPanel>
-                                </Border>
+                                                </Canvas>
+                                            </Grid>
+                                        </DockPanel>
+                                    </Border>
 
-                                <Border BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
+                                    <Border BorderBrush="{DynamicResource HeaderBrush}" BorderThickness="1"
                                         Margin="5" Background="{DynamicResource PanelBrush}"
                                         CornerRadius="5" Opacity="0.95">
-                                    <DockPanel Margin="5">
-                                        <TextBlock DockPanel.Dock="Top" Text="GTA San Andreas"
+                                        <DockPanel Margin="5">
+                                            <TextBlock DockPanel.Dock="Top" Text="GTA San Andreas"
                                                    Foreground="{DynamicResource AccentLabelBrush}"
                                                    FontSize="16" FontWeight="Bold"
                                                    HorizontalAlignment="Center" Margin="0,5"/>
-                                        <TextBox DockPanel.Dock="Top" x:Name="txtSearchSA"
+                                            <TextBox DockPanel.Dock="Top" x:Name="txtSearchSA"
                                                  Height="25" Margin="5,0,5,5" Padding="5,3"
                                                  Background="{DynamicResource ControlBgBrush}"
                                                  Foreground="{DynamicResource TextBrush}" BorderThickness="0"
                                                  TextChanged="TxtSearchSA_TextChanged" Opacity="0.9"/>
-                                        <Grid>
-                                            <ListView x:Name="PListSA"
+                                            <Grid>
+                                                <ListView x:Name="PListSA"
                                                       Style="{StaticResource ModListStyle}"
                                                       Template="{StaticResource WatermarkSA}"
                                                       ContextMenu="{StaticResource EmptyListContextMenu}"
@@ -1009,40 +1190,40 @@
                                                       MouseMove="List_MouseMove"
                                                       DragOver="List_DragOver" DragLeave="List_DragLeave"
                                                       GridViewColumnHeader.Click="GridViewColumnHeaderClicked">
-                                                <ListView.View>
-                                                    <GridView>
-                                                        <GridViewColumn Header="#" Width="35"
+                                                    <ListView.View>
+                                                        <GridView>
+                                                            <GridViewColumn Header="#" Width="35"
                                                                         DisplayMemberBinding="{Binding LoadOrder}"/>
-                                                        <GridViewColumn Header="On" Width="35">
-                                                            <GridViewColumn.CellTemplate>
-                                                                <DataTemplate>
-                                                                    <CheckBox IsChecked="{Binding IsEnabled}"
+                                                            <GridViewColumn Header="On" Width="35">
+                                                                <GridViewColumn.CellTemplate>
+                                                                    <DataTemplate>
+                                                                        <CheckBox IsChecked="{Binding IsEnabled}"
                                                                               Checked="ModCheckBox_Changed"
                                                                               Unchecked="ModCheckBox_Changed"/>
-                                                                </DataTemplate>
-                                                            </GridViewColumn.CellTemplate>
-                                                        </GridViewColumn>
-                                                        <GridViewColumn Header="Name" Width="180"
+                                                                    </DataTemplate>
+                                                                </GridViewColumn.CellTemplate>
+                                                            </GridViewColumn>
+                                                            <GridViewColumn Header="Name" Width="180"
                                                                         DisplayMemberBinding="{Binding Name}"/>
-                                                    </GridView>
-                                                </ListView.View>
-                                            </ListView>
-                                            <Button x:Name="OverlayColSA" Content="⚙️ Setup Required"
+                                                        </GridView>
+                                                    </ListView.View>
+                                                </ListView>
+                                                <Button x:Name="OverlayColSA" Content="Setup Required"
                                                     Click="BtnOpenWizardOverlay_Click" Tag="SA"
                                                     Style="{StaticResource OverlayButtonStyle}"
                                                     Visibility="Collapsed"/>
-                                            <Canvas x:Name="DropCanvasSA" IsHitTestVisible="False" Panel.ZIndex="5">
-                                                <Rectangle x:Name="DropLineSA" Height="2"
+                                                <Canvas x:Name="DropCanvasSA" IsHitTestVisible="False" Panel.ZIndex="5">
+                                                    <Rectangle x:Name="DropLineSA" Height="2"
                                                            Fill="{DynamicResource AccentBrush}"
                                                            Visibility="Collapsed"/>
-                                            </Canvas>
-                                        </Grid>
-                                    </DockPanel>
-                                </Border>
+                                                </Canvas>
+                                            </Grid>
+                                        </DockPanel>
+                                    </Border>
 
-                            </UniformGrid>
+                                </UniformGrid>
+                            </Grid>
                         </Grid>
-                    </Grid>
                     </Grid>
                 </Grid>
 

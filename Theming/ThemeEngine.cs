@@ -1,3 +1,27 @@
+﻿// TABLE OF CONTENTS
+// -----------------------------------------------------------------
+//   DWM P/INVOKE  (DwmSetWindowAttribute) ........................ ~13
+//   PUBLIC ENTRY POINTS
+//     ApplyTheme()  - updates all dynamic brushes ................ ~18
+//       . Accent + AccentTextBrush + AccentLabelBrush ............. ~30
+//       . TextBrush + SubTextBrush ................................ ~39
+//       . BgBrush (with Mica alpha) ............................... ~60
+//       . PanelBrush + HeaderBrush (simplified, consistent) ....... ~64
+//       . ControlBgBrush + CheckeredRowBrush ...................... ~95
+//       . Titlebar brushes (Win8, macOS, Aero7, Win9x dark/light) ~120
+//     ApplyFont() ................................................. ~210
+//     TryApplyMica()  - DWM Mica/Acrylic backdrop ............... ~220
+//   COMPLEMENTARY COLOUR GENERATION
+//     GetComplementPalette()  (Complementary/Triadic/...) ........ ~260
+//     SuggestAccentForBg()  - WCAG-optimised hue sweep ........... ~290
+//   CONTRAST COLOUR ALGORITHMS
+//     GetContrastColor()  (WCAG | YIQ | Invert) ................. ~330
+//   HSV HELPERS  (public - shared with ThemeManagerWindow)
+//     HsvToRgb() / RgbToHsv() ................................... ~355
+//   INTERNAL HELPERS
+//     RelativeLuminance() / BlendColors() ........................ ~385
+// -----------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -5,15 +29,15 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 
-namespace TGTAMM
+namespace TMM
 {
     public static class ThemeEngine
     {
-        // ── DWM P/Invoke ─────────────────────────────────────────────────────
+        // -- DWM P/Invoke -----------------------------------------------------
         [DllImport("dwmapi.dll", PreserveSig = false)]
         private static extern void DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int pvAttr, int cbAttr);
 
-        // ── Public entry points ───────────────────────────────────────────────
+        // -- Public entry points -----------------------------------------------
 
         public static void ApplyTheme(AppSettings settings)
         {
@@ -25,24 +49,24 @@ namespace TGTAMM
                 var bg     = (Color)ColorConverter.ConvertFromString(settings.BgColor);
                 bool isDark    = settings.ColorMode == "Dark";
                 bool mica      = settings.MicaEnabled;
-                double micaAmt = 0.42; // fixed moderate intensity — not user-adjustable
+                double micaAmt = settings.MicaIntensity; // user-adjustable Mica intensity
 
-                // ── Accent ────────────────────────────────────────────────────
+                // -- Accent ----------------------------------------------------
                 Application.Current.Resources["AccentBrush"] = new SolidColorBrush(accent);
 
-                // ── Smart text color for accent ───────────────────────────────
+                // -- Smart text color for accent -------------------------------
                 // Calculate text color that contrasts with the accent for buttons/highlights
                 Color accentTextColor = GetContrastColor(accent, settings.TextColorMode);
                 Application.Current.Resources["AccentTextBrush"] = new SolidColorBrush(accentTextColor);
                 Application.Current.Resources["HighlightTextBrush"] = new SolidColorBrush(accentTextColor);
 
-                // ── Smart text color ─────────────────────────────────────────
+                // -- Smart text color -----------------------------------------
                 Color textColor    = GetContrastColor(bg, settings.TextColorMode);
                 Color subTextColor = BlendColors(textColor, bg, isDark ? 0.50 : 0.42);
                 Application.Current.Resources["TextBrush"]    = new SolidColorBrush(textColor);
                 Application.Current.Resources["SubTextBrush"] = new SolidColorBrush(subTextColor);
 
-                // ── Accent label color ────────────────────────────────────────
+                // -- Accent label color ----------------------------------------
                 // A readable version of accent that maintains hue but ensures contrast with panel background
                 // Convert to HSV, reduce saturation/value for better readability, then convert back
                 var (h, s, v) = RgbToHsv(accent);
@@ -55,54 +79,56 @@ namespace TGTAMM
                 Color accentLabelColor = HsvToRgb(h, newSat, newVal);
                 Application.Current.Resources["AccentLabelBrush"] = new SolidColorBrush(accentLabelColor);
 
-                // ── Background ───────────────────────────────────────────────
+                // -- Background -----------------------------------------------
                 // When Mica is enabled, make the main bg semi-transparent so the
                 // DWM backdrop (Mica/Acrylic) bleeds through the window border.
-                byte bgAlpha = mica ? (byte)Math.Round(255 * (0.55 - micaAmt * 0.40)) : (byte)255;
+                byte bgAlpha = mica ? (byte)Math.Round(255 * Math.Max(0.45, 0.75 - micaAmt * 0.25)) : (byte)255;
                 Application.Current.Resources["BgBrush"] =
                     new SolidColorBrush(Color.FromArgb(bgAlpha, bg.R, bg.G, bg.B));
 
-                // ── Panels ────────────────────────────────────────────────────
+                // -- Panels ----------------------------------------------------
                 if (isDark)
                 {
                     if (mica)
                     {
-                        // Strong Mica: highly translucent panels, subtle accent tint
-                        // micaAmt drives opacity — higher = more see-through
-                        byte pa = (byte)Math.Round(255 * (0.50 - micaAmt * 0.42));
-                        byte pr = (byte)Math.Round(bg.R * 0.92 + accent.R * 0.08);
-                        byte pg = (byte)Math.Round(bg.G * 0.92 + accent.G * 0.08);
-                        byte pb = (byte)Math.Round(bg.B * 0.92 + accent.B * 0.08);
+                        // Mica: more opaque for better visibility of backdrop effect
+                        byte pa = (byte)Math.Round(255 * Math.Max(0.55, 0.80 - micaAmt * 0.20));
+                        byte pr = (byte)Math.Round(bg.R * 0.95 + accent.R * 0.05);
+                        byte pg = (byte)Math.Round(bg.G * 0.95 + accent.G * 0.05);
+                        byte pb = (byte)Math.Round(bg.B * 0.95 + accent.B * 0.05);
                         Application.Current.Resources["PanelBrush"] =
                             new SolidColorBrush(Color.FromArgb(pa, pr, pg, pb));
 
-                        byte ha = (byte)Math.Round(255 * (0.45 - micaAmt * 0.38));
-                        byte hr = (byte)Math.Round(28 + accent.R * 0.06);
-                        byte hg = (byte)Math.Round(29 + accent.G * 0.06);
-                        byte hb = (byte)Math.Round(33 + accent.B * 0.06);
+                        byte ha = (byte)Math.Round(255 * Math.Max(0.50, 0.80 - micaAmt * 0.20));
                         Application.Current.Resources["HeaderBrush"] =
                             new SolidColorBrush(Color.FromArgb(ha,
-                                Math.Min(hr, (byte)255), Math.Min(hg, (byte)255), Math.Min(hb, (byte)255)));
+                                (byte)Math.Min(255, bg.R + 12),
+                                (byte)Math.Min(255, bg.G + 12),
+                                (byte)Math.Min(255, bg.B + 12)));
                     }
                     else
                     {
-                        // Crisp dark panels with subtle elevation via alpha
-                        byte elev = (byte)Math.Round(Math.Min(255.0, bg.R + 14));
+                        // Crisp dark panels: lighten bg by consistent amount
+                        int lift = 16;
                         Application.Current.Resources["PanelBrush"] =
-                            new SolidColorBrush(Color.FromArgb(230, elev, elev,
-                                (byte)Math.Round(Math.Min(255.0, bg.B + 16))));
+                            new SolidColorBrush(Color.FromArgb(230,
+                                (byte)Math.Min(255, bg.R + lift),
+                                (byte)Math.Min(255, bg.G + lift),
+                                (byte)Math.Min(255, bg.B + lift)));
                         Application.Current.Resources["HeaderBrush"] =
                             new SolidColorBrush(Color.FromArgb(255,
-                                (byte)Math.Round(Math.Min(255.0, bg.R + 20)),
-                                (byte)Math.Round(Math.Min(255.0, bg.G + 20)),
-                                (byte)Math.Round(Math.Min(255.0, bg.B + 24))));
+                                (byte)Math.Min(255, bg.R + lift + 8),
+                                (byte)Math.Min(255, bg.G + lift + 8),
+                                (byte)Math.Min(255, bg.B + lift + 8)));
                     }
 
+                    // ControlBg: even lighter for interactive elements
+                    int controlLift = mica ? 20 : 28;
                     Application.Current.Resources["ControlBgBrush"] =
                         new SolidColorBrush(Color.FromArgb(mica ? (byte)160 : (byte)255,
-                            (byte)Math.Round(Math.Min(255.0, bg.R + 28)),
-                            (byte)Math.Round(Math.Min(255.0, bg.G + 28)),
-                            (byte)Math.Round(Math.Min(255.0, bg.B + 32))));
+                            (byte)Math.Min(255, bg.R + controlLift),
+                            (byte)Math.Min(255, bg.G + controlLift),
+                            (byte)Math.Min(255, bg.B + controlLift)));
                     Application.Current.Resources["CheckeredRowBrush"] =
                         new SolidColorBrush(Color.FromArgb(18, 255, 255, 255));
                 }
@@ -134,7 +160,7 @@ namespace TGTAMM
                         new SolidColorBrush(Color.FromRgb(72, 82, 100));
                 }
 
-                // ── Titlebar brushes ──────────────────────────────────────────
+                // -- Titlebar brushes ------------------------------------------
                 if (settings.TitlebarPersonalize)
                 {
                     // Win8: accent-tinted, raised opacity for visibility
@@ -159,7 +185,7 @@ namespace TGTAMM
                             : Color.FromArgb(238, 238, 238, 242));
                 }
 
-                // Win7 Aero — gradient-like frosted glass. If personalize is on,
+                // Win7 Aero - gradient-like frosted glass. If personalize is on,
                 // tint with accent at low saturation for a subtle coloured glass look.
                 if (settings.TitlebarPersonalize)
                 {
@@ -179,11 +205,97 @@ namespace TGTAMM
                 Application.Current.Resources["MacLightTitleBrush"] =
                     new SolidColorBrush(Color.FromArgb(255, 236, 236, 238));
 
-                // Win9x
-                Application.Current.Resources["Win9xTitleStartColor"] = Color.FromRgb(10, 36, 106);
-                Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(166, 202, 240);
+                // -- Window border -------------------------------------------------
+                Application.Current.Resources["WindowBorderBrush"] = settings.AccentBorderEnabled
+                    ? new SolidColorBrush(accent)
+                    : new SolidColorBrush(isDark
+                        ? Color.FromArgb(60, 255, 255, 255)
+                        : Color.FromArgb(80, 0, 0, 0));
+
+                // Border gradient: accent color to darker shade and back
+                if (settings.AccentBorderEnabled)
+                {
+                    var gradient = new LinearGradientBrush();
+                    gradient.StartPoint = new Point(0, 0);
+                    gradient.EndPoint = new Point(1, 1);
+                    gradient.GradientStops.Add(new GradientStop(accent, 0));
+
+                    // Darker middle stop (reduce brightness by ~40%)
+                    var darkAccent = Color.FromArgb(accent.A,
+                        (byte)(accent.R * 0.6),
+                        (byte)(accent.G * 0.6),
+                        (byte)(accent.B * 0.6));
+                    gradient.GradientStops.Add(new GradientStop(darkAccent, 0.5));
+                    gradient.GradientStops.Add(new GradientStop(accent, 1));
+
+                    Application.Current.Resources["WindowBorderGradientBrush"] = gradient;
+                }
+                else
+                {
+                    // Use same color for non-accent border
+                    var solidBrush = isDark
+                        ? new SolidColorBrush(Color.FromArgb(60, 255, 255, 255))
+                        : new SolidColorBrush(Color.FromArgb(80, 0, 0, 0));
+                    Application.Current.Resources["WindowBorderGradientBrush"] = solidBrush;
+                }
+
+                // Win9x: classic gradient, adapted to dark/light mode
+                if (isDark)
+                {
+                    // Dark mode: deep blue gradient
+                    Application.Current.Resources["Win9xTitleStartColor"] = Color.FromRgb(10, 36, 106);
+                    Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(166, 202, 240);
+                }
+                else
+                {
+                    // Light mode: lighter blue gradient for visibility
+                    Application.Current.Resources["Win9xTitleStartColor"] = Color.FromRgb(50, 100, 180);
+                    Application.Current.Resources["Win9xTitleEndColor"]   = Color.FromRgb(220, 230, 245);
+                }
+
+                // Windows XP Luna: blue gradient titlebar
+                if (settings.TitlebarPersonalize)
+                {
+                    // Luna blue with accent influence
+                    byte r = (byte)(0 * 0.7 + accent.R * 0.3);
+                    byte g = (byte)(120 * 0.7 + accent.G * 0.3);
+                    byte b = (byte)(215 * 0.7 + accent.B * 0.3);
+                    Application.Current.Resources["WinXPTitleBrush"] = new SolidColorBrush(Color.FromRgb(r, g, b));
+                }
+                else
+                {
+                    Application.Current.Resources["WinXPTitleBrush"] = new SolidColorBrush(Color.FromRgb(0, 120, 215));
+                }
+
+                // Windows 3.1: teal base, accent can influence hue
+                if (settings.TitlebarPersonalize)
+                {
+                    // Blend accent with classic teal
+                    byte r = (byte)(0 * 0.7 + accent.R * 0.3);
+                    byte g = (byte)(128 * 0.7 + accent.G * 0.3);
+                    byte b = (byte)(128 * 0.7 + accent.B * 0.3);
+                    Application.Current.Resources["Win31TitleBrush"] = new SolidColorBrush(Color.FromRgb(r, g, b));
+                }
+                else
+                {
+                    Application.Current.Resources["Win31TitleBrush"] = new SolidColorBrush(Color.FromRgb(0, 128, 128));
+                }
+
+                // Classic Mac OS 9: gray base, accent can influence tone
+                if (settings.TitlebarPersonalize)
+                {
+                    // Blend accent with classic gray
+                    byte r = (byte)(192 * 0.7 + accent.R * 0.3);
+                    byte g = (byte)(192 * 0.7 + accent.G * 0.3);
+                    byte b = (byte)(192 * 0.7 + accent.B * 0.3);
+                    Application.Current.Resources["MacOS9TitleBrush"] = new SolidColorBrush(Color.FromRgb(r, g, b));
+                }
+                else
+                {
+                    Application.Current.Resources["MacOS9TitleBrush"] = new SolidColorBrush(Color.FromRgb(192, 192, 192));
+                }
             }
-            catch { /* invalid hex — keep previous theme */ }
+            catch { /* invalid hex - keep previous theme */ }
         }
 
         public static void ApplyFont(Window window, AppSettings settings)
@@ -210,10 +322,10 @@ namespace TGTAMM
                 return;
             }
 
-            // Dark mode title bar text — makes Win11 caption text white
+            // Dark mode title bar text - makes Win11 caption text white
             try { int v = 1; DwmSetWindowAttribute(hwnd, 20, ref v, sizeof(int)); } catch { }
 
-            // Method 1: DWMWA_SYSTEMBACKDROP_TYPE (38) — Win11 22H2+
+            // Method 1: DWMWA_SYSTEMBACKDROP_TYPE (38) - Win11 22H2+
             // 2 = Mica, 3 = Acrylic, 4 = MicaAlt (more saturated, best with coloured themes)
             bool method1 = false;
             try
@@ -226,12 +338,12 @@ namespace TGTAMM
 
             if (!method1)
             {
-                // Method 2: undocumented DWMWA_MICA_EFFECT (1029) — Win11 RTM
+                // Method 2: undocumented DWMWA_MICA_EFFECT (1029) - Win11 RTM
                 try { int v = 1; DwmSetWindowAttribute(hwnd, 1029, ref v, sizeof(int)); } catch { }
             }
         }
 
-        // ── Complementary colour generation ───────────────────────────────────
+        // -- Complementary colour generation -----------------------------------
 
         /// <summary>
         /// Returns a palette of algorithmically derived companion colours
@@ -275,7 +387,7 @@ namespace TGTAMM
             double bestScore = -1;
             Color best = Colors.Cyan;
 
-            // Sweep 36 hues × 3 saturation levels × 3 value levels
+            // Sweep 36 hues Ã— 3 saturation levels Ã— 3 value levels
             for (int hi = 0; hi < 36; hi++)
             {
                 double hue = hi * 10.0;
@@ -307,7 +419,7 @@ namespace TGTAMM
             return $"#{best.R:X2}{best.G:X2}{best.B:X2}";
         }
 
-        // ── Contrast colour algorithms ────────────────────────────────────────
+        // -- Contrast colour algorithms ----------------------------------------
 
         public static Color GetContrastColor(Color bg, string mode)
         {
@@ -332,7 +444,7 @@ namespace TGTAMM
             }
         }
 
-        // ── HSV helpers (public so ThemeManagerWindow can share them) ─────────
+        // -- HSV helpers (public so ThemeManagerWindow can share them) ---------
 
         public static Color HsvToRgb(double h, double s, double v)
         {
@@ -363,7 +475,7 @@ namespace TGTAMM
             return (h, s, v);
         }
 
-        // ── Internal helpers ──────────────────────────────────────────────────
+        // -- Internal helpers --------------------------------------------------
 
         public static double RelativeLuminance(Color c)
         {
