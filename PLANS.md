@@ -1271,4 +1271,75 @@ Input: stagingDir (extracted archive contents), archivePath (source .rar/.zip/.7
 
 ---
 
+### B7 — File Path Settings Separation & Refinement
+
+**Current state:**
+- Game directory paths scattered across GameLauncherWindow, CustomGameDashboardWindow, InitialSetupWindow
+- SettingsWindow has path fields but only in context-aware modes (Full/GtaIvOnly/CustomGame)
+- No unified "Manage Game Paths" interface
+
+**Target state:**
+- New dedicated "Game Paths" tab in SettingsWindow
+- List all configured games (built-in + custom) with current paths
+- Inline edit buttons: click path row → `BrowseForFolder` dialog
+- Visual indicator when path is missing or invalid
+- Quick actions: "Set all paths", "Auto-detect" (per game)
+- Path auto-complete dropdown (recently used, common locations like Steam, ModOrganizer2 paths)
+
+**Why:** Consolidates game management logic in one place. Currently scattered across multiple windows and dialog contexts.
+
+**Estimated scope:** ~80 lines XAML, ~60 lines code-behind
+
+---
+
+### B8 — Steam Integration Re-implementation for GTA III
+
+**Current state:**
+- CustomGameProfile supports `SteamAppId` field
+- Field is stored but never used (steam:// protocol launch not wired up)
+
+**Target state:**
+- Play button in GTA III dashboard checks `SteamAppId`
+- If set and game hasn't been customized, launch via `steam://run/{id}`
+- Fallback to direct exe launch if custom game or no Steam ID
+- Configuration in GameLauncherWindow to set/clear SteamAppId
+- Works alongside built-in GTA III support
+
+**Why:** Users who own GTA on Steam can organize mod management without breaking Steam achievements/validation. Part of modular custom game vision.
+
+**Estimated scope:** ~40 lines (protocol handler + launch logic)
+
+---
+
+### B9 — Advanced Custom Game File Detection & Auto-ID
+
+**Current state:**
+- Custom games rely entirely on explicit file routing rules
+- No content sniffing or intelligent mod identification
+- Can't detect mod version changes if filenames stay same
+
+**Target state:**
+Phase 1 — Smart file type detection:
+- When `.dll` is found, peek for import tables → detect proxy DLLs vs plugin DLLs
+- When `.esp`/`.esm` found, read TES4 header → detect Skyrim vs Oblivion
+- When `.jar` found, check `MANIFEST.MF` → identify mod loader type (Fabric/Forge)
+
+Phase 2 — Mod identification across updates:
+- Store file hash + metadata (name, version, author) for each mod folder
+- On deploy, if folder hash changes but directory structure matches → flag as "updated" not "new"
+- Suggest updating load order or rechecking routing if structure diverged
+
+Phase 3 — Automatic routing suggestions:
+- After import, analyze mod contents
+- Suggest routing rules if pattern detected (e.g. "all `.dll`s in `plugins\`" → auto-create rule)
+- Show preview: "Would route to Data\SKSE\Plugins\" before confirming
+
+**Implementation:** New `FileAnalyzer` service in BackendCore with per-file-type sniffers.
+
+**Why:** Reduces manual routing configuration. Handles mod updates elegantly. Enables "fire and forget" mod installation for advanced users.
+
+**Estimated scope:** ~200 lines (sniffers + hashing + UI hints)
+
+---
+
 *End of plans. Commit hash when created: see `git log --oneline -1`.*

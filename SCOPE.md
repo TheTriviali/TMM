@@ -115,6 +115,35 @@ When two mods write the same file:
 - Smaller window minimum (1280x672 → 900×500)
 - Full theme compatibility testing
 
+### B7. **File Path Settings Consolidation** (~1 week)
+- New "Game Paths" tab in Settings window
+- Manage all game paths in one place (built-in + custom)
+- Path validation with visual indicators
+- Auto-complete for common locations (Steam, ModOrganizer2, etc.)
+- Inline edit with folder browser
+
+### B8. **Steam Integration for GTA III** (~1 week)
+- Re-implement `steam://run/` protocol launching
+- Optional SteamAppId configuration per game
+- Launch via Steam when available, fallback to direct exe
+- Preserves Steam features (achievements, validation) for modded GTA
+
+### B9. **Advanced Custom Game File Detection** (~2 weeks)
+Phase 1: Smart file type detection
+- Peek into `.dll` files → distinguish proxy DLLs from plugins
+- Read TES4/ESM headers → auto-detect game version
+- Inspect `.jar` manifests → identify mod loader type
+
+Phase 2: Mod identification across updates
+- Store file hashes + metadata for each mod
+- Detect when mods update (hash changes, same directory structure)
+- Suggest routing rule improvements based on mod contents
+
+Phase 3: Automatic routing suggestions
+- After import, analyze mod structure
+- Suggest applicable routing rules
+- Preview routing before confirming install
+
 ---
 
 ## Future Roadmap (Post-Core, Unscheduled)
