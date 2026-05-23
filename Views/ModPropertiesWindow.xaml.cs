@@ -23,7 +23,7 @@ namespace TMM
             {
                 var rootNode = new TreeViewItem
                 {
-                    Header = "ðŸ“ " + mod.Name,
+                    Header = mod.Name,
                     IsExpanded = true,
                     Foreground = Brushes.LightSkyBlue
                 };
@@ -48,7 +48,7 @@ namespace TMM
                 {
                     var node = new TreeViewItem
                     {
-                        Header = "ðŸ“ " + Path.GetFileName(d),
+                        Header = Path.GetFileName(d),
                         Foreground = Brushes.Wheat
                     };
                     parentNode.Items.Add(node);
@@ -59,7 +59,7 @@ namespace TMM
                 {
                     parentNode.Items.Add(new TreeViewItem
                     {
-                        Header = "ðŸ“„ " + Path.GetFileName(f),
+                        Header = Path.GetFileName(f),
                         Foreground = Brushes.White
                     });
                 }

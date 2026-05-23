@@ -56,28 +56,28 @@
             <MenuItem Header="Toggle Disable (Space)" Click="MenuToggle_Click"/>
             <Separator/>
             <MenuItem Header="Install Mod to All Games" Click="MenuInstallToAll_Click"/>
-            <MenuItem Header="ðŸ“ Open Mod Folder" Click="MenuOpenFolder_Click"/>
-            <MenuItem Header="ðŸŽ® Open Game Folder" Click="MenuOpenBaseFolder_Click"/>
+            <MenuItem Header="Open Mod Folder" Click="MenuOpenFolder_Click"/>
+            <MenuItem Header="Open Game Folder" Click="MenuOpenBaseFolder_Click"/>
             <MenuItem Header="Open Backup Folder" Click="MenuOpenVirtualFolder_Click"/>
             <Separator/>
             <MenuItem Header="Move Up (Ctrl+Up)" Click="MenuMoveUp_Click"/>
             <MenuItem Header="Move Down (Ctrl+Down)" Click="MenuMoveDown_Click"/>
             <Separator/>
-            <MenuItem Header="âš¡ Toggle Force Deploy Override" Click="MenuToggleOverrideList_Click"/>
+            <MenuItem Header="Toggle Force Deploy Override" Click="MenuToggleOverrideList_Click"/>
             <Separator/>
             <MenuItem Header="Properties..." Click="MenuProperties_Click" Foreground="{DynamicResource AccentBrush}"/>
             <MenuItem Header="Delete Mod(s) (Del)" Click="MenuDelete_Click" Foreground="#FF5555"/>
         </ContextMenu>
 
         <ContextMenu x:Key="EmptyListContextMenu">
-            <MenuItem Header="âž• Install Mod(s) Here..." Click="BtnInstallMod_Click"/>
-            <MenuItem Header="ðŸ”„ Refresh List" Click="BtnRefresh_Click"/>
+            <MenuItem Header="Install Mod(s) Here..." Click="BtnInstallMod_Click"/>
+            <MenuItem Header="Refresh List" Click="BtnRefresh_Click"/>
             <Separator/>
-            <MenuItem Header="ðŸŽ® Open Game Folder"      Click="MenuOpenBaseFolder_Click"/>
+            <MenuItem Header="Open Game Folder"      Click="MenuOpenBaseFolder_Click"/>
             <MenuItem Header="Open Backup Folder"   Click="MenuOpenVirtualFolder_Click"/>
-            <MenuItem Header="ðŸ“‚ Open Mods Folder"      Click="MenuOpenModsFolder_Click"/>
+            <MenuItem Header="Open Mods Folder"      Click="MenuOpenModsFolder_Click"/>
             <Separator/>
-            <MenuItem Header="âš¡ Toggle Force Deploy Override" Click="MenuToggleOverrideList_Click"/>
+            <MenuItem Header="Toggle Force Deploy Override" Click="MenuToggleOverrideList_Click"/>
         </ContextMenu>
 
         <!-- ========================================================== -->
@@ -400,7 +400,7 @@
                 <!-- ====================================================== -->
                 <Border x:Name="TitleBarBorder" Grid.Row="0" Height="30" CornerRadius="10,10,0,0" ClipToBounds="True">
                     <Grid x:Name="TitleBarGrid">
-                        <TextBlock Text="Triviali's GTA Mod Manager (BETA)"
+                        <TextBlock Text="TMM - GTA III Series"
                                    Foreground="{DynamicResource TextBrush}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold">
                             <TextBlock.Effect>
@@ -615,7 +615,7 @@
                                             Background="{DynamicResource AccentBrush}">
                                         <Button.ContextMenu>
                                             <ContextMenu>
-                                                <MenuItem x:Name="menuOverrideIII" Header="âš¡ Force Deploy Override (Ignore Vanilla EXE)"
+                                                <MenuItem x:Name="menuOverrideIII" Header="Force Deploy Override (Ignore Vanilla EXE)"
                                                           Click="MenuToggleOverride_Click" Tag="III"/>
                                             </ContextMenu>
                                         </Button.ContextMenu>
@@ -651,7 +651,7 @@
                                             Background="{DynamicResource AccentBrush}">
                                         <Button.ContextMenu>
                                             <ContextMenu>
-                                                <MenuItem x:Name="menuOverrideVC" Header="âš¡ Force Deploy Override (Ignore Vanilla EXE)"
+                                                <MenuItem x:Name="menuOverrideVC" Header="Force Deploy Override (Ignore Vanilla EXE)"
                                                           Click="MenuToggleOverride_Click" Tag="VC"/>
                                             </ContextMenu>
                                         </Button.ContextMenu>
@@ -687,7 +687,7 @@
                                             Background="{DynamicResource AccentBrush}">
                                         <Button.ContextMenu>
                                             <ContextMenu>
-                                                <MenuItem x:Name="menuOverrideSA" Header="âš¡ Force Deploy Override (Ignore Vanilla EXE)"
+                                                <MenuItem x:Name="menuOverrideSA" Header="Force Deploy Override (Ignore Vanilla EXE)"
                                                           Click="MenuToggleOverride_Click" Tag="SA"/>
                                             </ContextMenu>
                                         </Button.ContextMenu>
@@ -840,7 +840,7 @@
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="bd" Background="{DynamicResource ControlBgBrush}" CornerRadius="5"
                                                         Padding="6">
-                                                    <TextBlock Text="ðŸŽ²" FontSize="16" FontWeight="Bold"
+                                                    <TextBlock Text="&#xF4A6;" FontSize="16" FontWeight="Bold"
                                                                Foreground="{DynamicResource AccentLabelBrush}"
                                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
@@ -912,7 +912,7 @@
                                 BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"
                                 Padding="36,28" MinWidth="360">
                                 <StackPanel>
-                                    <TextBlock Text="ðŸš€  Deploying Mods" FontSize="17" FontWeight="Bold"
+                                    <TextBlock Text="Deploying Mods" FontSize="17" FontWeight="Bold"
                                            Foreground="{DynamicResource TextBrush}"
                                            HorizontalAlignment="Center" Margin="0,0,0,14"/>
                                     <TextBlock x:Name="txtDeployStage" Text="Preparing..." FontSize="13"
@@ -985,17 +985,17 @@
                                            FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" Margin="0,10,0,10"/>
 
                                     <!-- Downgrader links -->
-                                    <Button Content="â¬‡ III 1.0 Downgrader" Click="BtnLink_Click"
+                                    <Button Content="III 1.0 Downgrader" Click="BtnLink_Click"
                                         Tag="https://www.moddb.com/downloads/grand-theft-auto-3-original-10-exe-for-steam"
                                         ToolTip="GTA III 1.0 Exe (ModDB)"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                    <Button Content="â¬‡ VC 1.0 Downgrader" Click="BtnLink_Click"
+                                    <Button Content="VC 1.0 Downgrader" Click="BtnLink_Click"
                                         Tag="https://www.moddb.com/downloads/grand-theft-auto-vice-city-original-10-exe"
                                         ToolTip="GTA Vice City 1.0 Exe (ModDB)"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                    <Button Content="â¬‡ SA Downgrader" Click="BtnLink_Click"
+                                    <Button Content="SA Downgrader" Click="BtnLink_Click"
                                         Tag="https://services.rockstarnexus.com/sadowngrade/latest.exe"
                                         ToolTip="GTA San Andreas Downgrader (RockstarNexus)"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
@@ -1005,31 +1005,31 @@
                                         Opacity="0.3" Margin="10,10"/>
 
                                     <!-- Auto-installers -->
-                                    <Button Content="ðŸ“‚ Modloader" Click="BtnInstallModloader_Click"
+                                    <Button Content="Modloader" Click="BtnInstallModloader_Click"
                                         ToolTip="Download and Install Modloader"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                    <Button Content="ðŸŽ® Widescreen Fix" Click="BtnWidescreenFix_Click"
+                                    <Button Content="Widescreen Fix" Click="BtnWidescreenFix_Click"
                                         ToolTip="Auto-Install Widescreen Fixes Pack"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                    <Button Content="âš™ï¸ SilentPatch" Click="BtnSilentPatch_Click"
+                                    <Button Content="SilentPatch" Click="BtnSilentPatch_Click"
                                         ToolTip="Auto-Install SilentPatch"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                    <Button Content="ðŸ›  DXVK" Click="BtnInstallDxvk_Click"
+                                    <Button Content="DXVK" Click="BtnInstallDxvk_Click"
                                         ToolTip="Download and Install DXVK"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                    <Button Content="ðŸŒƒ 2DFX" Click="BtnProject2DFX_Click"
+                                    <Button Content="2DFX" Click="BtnProject2DFX_Click"
                                         ToolTip="Auto-Install Project2DFX"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                    <Button Content="ðŸ”Œ ASI Loader" Click="BtnASILoader_Click"
+                                    <Button Content="ASI Loader" Click="BtnASILoader_Click"
                                         ToolTip="Auto-Install Ultimate ASI Loader"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
-                                    <Button Content="ðŸ“œ CLEO" Click="BtnCleo_Click"
+                                    <Button Content="CLEO" Click="BtnCleo_Click"
                                         ToolTip="Auto-Install CLEO Library (III/VC/SA)"
                                         Style="{StaticResource IconButtonStyle}" FontSize="13"
                                         HorizontalAlignment="Center" Margin="0,4"/>
@@ -1041,12 +1041,12 @@
                                 <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
                                     <!-- Reworded: only shown when one or more games still need a path. -->
                                     <TextBlock x:Name="txtInstallWarning"
-                                           Text="â„¹ One or more games are unmapped. Open Settings to locate them."
+                                           Text="One or more games are unmapped. Open Settings to locate them."
                                            Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="SemiBold"
                                            TextWrapping="Wrap" TextAlignment="Center"
                                            Visibility="Collapsed" Margin="0,0,0,10"/>
 
-                                    <TextBlock x:Name="txtDiskSpace" Text="ðŸ’¾ Calculating space..."
+                                    <TextBlock x:Name="txtDiskSpace" Text="Calculating space..."
                                            Foreground="{DynamicResource SubTextBrush}" FontSize="11"
                                            TextAlignment="Center" Margin="0,5,0,0"/>
                                 </StackPanel>
@@ -1100,7 +1100,7 @@
                                                         </GridView>
                                                     </ListView.View>
                                                 </ListView>
-                                                <Button x:Name="OverlayColIII" Content="âš™ï¸ Setup Required"
+                                                <Button x:Name="OverlayColIII" Content="Setup Required"
                                                     Click="BtnOpenWizardOverlay_Click" Tag="III"
                                                     Style="{StaticResource OverlayButtonStyle}"
                                                     Visibility="Collapsed"/>
@@ -1154,7 +1154,7 @@
                                                         </GridView>
                                                     </ListView.View>
                                                 </ListView>
-                                                <Button x:Name="OverlayColVC" Content="âš™ï¸ Setup Required"
+                                                <Button x:Name="OverlayColVC" Content="Setup Required"
                                                     Click="BtnOpenWizardOverlay_Click" Tag="VC"
                                                     Style="{StaticResource OverlayButtonStyle}"
                                                     Visibility="Collapsed"/>
@@ -1208,7 +1208,7 @@
                                                         </GridView>
                                                     </ListView.View>
                                                 </ListView>
-                                                <Button x:Name="OverlayColSA" Content="âš™ï¸ Setup Required"
+                                                <Button x:Name="OverlayColSA" Content="Setup Required"
                                                     Click="BtnOpenWizardOverlay_Click" Tag="SA"
                                                     Style="{StaticResource OverlayButtonStyle}"
                                                     Visibility="Collapsed"/>

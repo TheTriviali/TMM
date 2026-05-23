@@ -125,10 +125,8 @@
 
     <!-- Outer chrome border -->
     <Border x:Name="OuterBorder" CornerRadius="10" BorderThickness="1"
-            BorderBrush="{DynamicResource AccentBrush}">
-        <Border.Background>
-            <SolidColorBrush x:Name="OuterBg" Color="#1C1C1E"/>
-        </Border.Background>
+            BorderBrush="{DynamicResource AccentBrush}"
+            Background="{DynamicResource BgBrush}">
 
         <Grid>
             <Grid.RowDefinitions>
@@ -201,8 +199,9 @@
                 </ScrollViewer>
 
                 <!-- Footer status bar -->
-                <Border Grid.Row="2" Background="#2A2A2A"
-                        CornerRadius="4" Padding="10,5" Margin="0,8,0,0" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                <Border Grid.Row="2" Background="{DynamicResource HeaderBrush}"
+                        CornerRadius="4" Padding="10,5" Margin="0,8,0,0"
+                        BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
                     <TextBlock x:Name="txtStatus" Text="Loading games..."
                                Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="SemiBold"/>
                 </Border>

@@ -9,6 +9,7 @@
 
         <!-- Core brushes (replaced live by ThemeEngine.ApplyTheme at startup) -->
         <SolidColorBrush x:Key="AccentBrush" Color="#4EC9B0"/>
+        <SolidColorBrush x:Key="AccentTextBrush" Color="#000000"/>
         <SolidColorBrush x:Key="AccentLabelBrush" Color="#4EC9B0"/>
         <SolidColorBrush x:Key="BgBrush" Color="#1E1E1E"/>
         <SolidColorBrush x:Key="PanelBrush" Color="#252526"/>

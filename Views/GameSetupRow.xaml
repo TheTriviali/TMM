@@ -60,17 +60,17 @@
             </StackPanel>
 
             <!-- Action buttons: icon-only for compactness -->
-            <Button x:Name="btnQuickScan" Grid.Column="1" Content="ðŸ”"
+            <Button x:Name="btnQuickScan" Grid.Column="1" Content="&#xE721;"
                     ToolTip="Quick Scan - auto-detect game path"
                     Style="{StaticResource IconActionButton}"
                     Margin="6,0,0,0" Click="BtnQuickScan_Click"/>
 
-            <Button x:Name="btnBrowse" Grid.Column="2" Content="ðŸ“"
+            <Button x:Name="btnBrowse" Grid.Column="2" Content="..."
                     ToolTip="Browse - locate game executable manually"
                     Style="{StaticResource IconActionButton}"
                     Margin="4,0,0,0" Click="BtnBrowse_Click"/>
 
-            <Button x:Name="btnSteam" Grid.Column="3" Content="âš™ â–¾"
+            <Button x:Name="btnSteam" Grid.Column="3" Content="⚙ ▾"
                     ToolTip="Steam Actions"
                     Width="40" Height="26" Margin="4,0,0,0"
                     Background="#2A2A2A" Foreground="#FF88EE"

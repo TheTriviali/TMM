@@ -802,7 +802,7 @@ namespace TMM
             bool showing = RightPickerPanel.Visibility == Visibility.Visible;
             RightPickerPanel.Visibility = showing ? Visibility.Collapsed : Visibility.Visible;
             RightGapBorder.Visibility   = RightPickerPanel.Visibility;
-            btnAdvanced.Content = showing ? "ðŸŽ¨  Custom Colors  â–¾" : "ðŸŽ¨  Custom Colors  â–´";
+            btnAdvanced.Content = showing ? "Custom Colors  v" : "Custom Colors  ^";
             // Resize window: compact (430) when closed, expanded (800) when open
             this.Width = showing ? 430 : 800;
             if (!showing)

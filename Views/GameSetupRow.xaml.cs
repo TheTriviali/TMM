@@ -76,7 +76,7 @@ namespace TMM
             var state = await _core.VerifyGameStatusAsync(_profile);
             if (state == ExeStatus.Vanilla)
             {
-                lblStatus.Text = "Steam API Detected (1.0 Downgrade Required for Virtual Mode)";
+                lblStatus.Text = "Steam API Detected (1.0 Downgrade Required)";
                 lblStatus.Foreground = new SolidColorBrush(Color.FromRgb(216, 163, 26));
             }
             else

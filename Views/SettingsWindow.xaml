@@ -45,7 +45,7 @@
                 <local:GameSetupRow x:Name="rowIII"/>
                 <local:GameSetupRow x:Name="rowVC"/>
                 <local:GameSetupRow x:Name="rowSA"/>
-                <Button Content="âš™ Run Initial Setup Wizard" Click="BtnRerunSetup_Click"
+                <Button Content="Run Initial Setup Wizard" Click="BtnRerunSetup_Click"
                         Height="28" Background="{DynamicResource PanelBrush}"
                         Foreground="{DynamicResource AccentBrush}"
                         BorderThickness="0" Cursor="Hand" Margin="0,2,0,10" FontSize="12"/>
@@ -75,10 +75,10 @@
                                     Height="26" Margin="0,0,3,0" Background="{DynamicResource PanelBrush}"
                                     Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"
                                     ToolTip="Force Steam to verify file integrity"/>
-                            <Button Content="â¬‡ Install" Click="BtnSteamAction_Click" Tag="install"
+                            <Button Content="Install" Click="BtnSteamAction_Click" Tag="install"
                                     Height="26" Margin="3,0,3,0" Background="{DynamicResource PanelBrush}"
                                     Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                            <Button Content="ðŸ—‘ Uninstall" Click="BtnSteamAction_Click" Tag="uninstall"
+                            <Button Content="Uninstall" Click="BtnSteamAction_Click" Tag="uninstall"
                                     Height="26" Margin="3,0,0,0" Background="#442222"
                                     Foreground="#FF5555" BorderThickness="0" Cursor="Hand"/>
                         </UniformGrid>
@@ -92,17 +92,17 @@
                         <TextBlock Text="Diagnostics" FontSize="13" FontWeight="SemiBold"
                                    Foreground="#FF88EE" Margin="0,0,0,8"/>
                         <UniformGrid Columns="4">
-                            <Button Content="ðŸ”¬ MD5" Click="BtnMd5Check_Click"
+                            <Button Content="MD5" Click="BtnMd5Check_Click"
                                     Height="26" Margin="0,0,3,0" Background="{DynamicResource PanelBrush}"
                                     Foreground="{DynamicResource AccentBrush}" BorderThickness="0" Cursor="Hand"
                                     ToolTip="Check exe MD5 - modlist exe mod overrides vanilla if present"/>
-                            <Button Content="ðŸ“„ Error Log" Click="BtnOpenLog_Click"
+                            <Button Content="Error Log" Click="BtnOpenLog_Click"
                                     Height="26" Margin="3,0,3,0" Background="{DynamicResource PanelBrush}"
                                     Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                            <Button Content="ðŸ§¹ Wipe Cache" Click="BtnWipeCache_Click"
+                            <Button Content="Wipe Cache" Click="BtnWipeCache_Click"
                                     Height="26" Margin="3,0,3,0" Background="{DynamicResource PanelBrush}"
                                     Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                            <Button Content="ðŸ–¥ Dev Console" Click="BtnOpenConsole_Click"
+                            <Button Content="Dev Console" Click="BtnOpenConsole_Click"
                                     Height="26" Margin="3,0,0,0" Background="{DynamicResource PanelBrush}"
                                     Foreground="{DynamicResource AccentBrush}" BorderThickness="0" Cursor="Hand"
                                     ToolTip="Open Developer Diagnostics Console"/>

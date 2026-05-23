@@ -148,9 +148,9 @@ namespace TMM
             card.Child = sp;
             card.MouseDown += (_, e) => { if (e.ChangedButton == MouseButton.Left) AddCustomGame(); };
 
-            // Hover effect
+            // Hover effect — neutral grey tint works on both light and dark themes
             card.MouseEnter += (_, _) =>
-                card.Background = new SolidColorBrush(Color.FromArgb(20, 255, 255, 255));
+                card.Background = new SolidColorBrush(Color.FromArgb(30, 128, 128, 128));
             card.MouseLeave += (_, _) =>
                 card.Background = Brushes.Transparent;
 
@@ -218,14 +218,15 @@ namespace TMM
                     ? new SolidColorBrush(Color.FromRgb(80, 200, 100))
                     : new SolidColorBrush(Color.FromRgb(160, 60, 60))
             });
-            sp.Children.Add(new TextBlock
+            var lbl = new TextBlock
             {
                 Text = ready ? "Configured" : "Not configured",
                 FontSize = 10,
                 Opacity = 0.7,
-                Foreground = Brushes.Gray,
                 VerticalAlignment = VerticalAlignment.Center
-            });
+            };
+            lbl.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            sp.Children.Add(lbl);
             return sp;
         }
 

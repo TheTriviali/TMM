@@ -170,7 +170,7 @@
                               Margin="0,0,0,6"/>
 
                     <!-- Advanced toggle -->
-                    <Button x:Name="btnAdvanced" Content="ðŸŽ¨  Custom Colors  â–¾" Click="BtnAdvanced_Click"
+                    <Button x:Name="btnAdvanced" Content="Custom Colors  v" Click="BtnAdvanced_Click"
                             Height="28" BorderThickness="1" Cursor="Hand" Margin="0,0,0,10"
                             BorderBrush="{DynamicResource AccentBrush}"
                             Background="{DynamicResource ControlBgBrush}"
