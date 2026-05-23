@@ -4,6 +4,25 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [2.1] — 2026-05-22
+
+### Added
+- **Conditional Routing Sentence Builder:** "Add Custom Game" window replaces the cryptic 4-column routing DataGrid with a plain-English sentence builder — each rule reads as *"Put .asi files into plugins if plugins\ exists, otherwise ."*
+- **Routing Preset Templates:** One-click presets for ASI Loader, Source Engine, Script Extender (SKSE/FOSE), and CLEO. Applying a preset fills in the routing rules automatically.
+- **Empty-state hint:** When no routing rules are defined, a helper message explains that most games need no rules at all.
+- **App icon:** Simple dark/teal icon across all windows and taskbar.
+- **GTA IV crash handler:** Global `DispatcherUnhandledException` handler shows a friendly error message instead of silently closing.
+- **GTA IV setup wizard:** Opening GTA IV with no paths configured now shows `InitialSetupWindow` first.
+- **TBoGT alternate path detection:** Recognises both `EFLC\` and `TBoGT\` subfolder names when auto-deriving paths from the IV install directory.
+- **`CODEBASE_GUIDE.md`:** Full pseudocode table of contents and AI search index for all windows, services, models, and conventions.
+
+### Changed
+- **Custom Game Config window** enlarged to 800 × 800 (was 520 × 560).
+- **Output Directory Mapping** column header now reads *"Output Folder  (. = game root)"* for clarity.
+- **Error dialogs** show a concise one-line message instead of raw exception stack traces.
+
+---
+
 ## [2.0] — 2026-05-22
 
 ### Added

@@ -54,15 +54,16 @@ namespace TMM
     {
         public CustomGameProfile? Result { get; private set; }
         private readonly bool _isEdit;
-        private readonly ObservableCollection<MappingRow>   _mappings  = new();
+        private readonly ObservableCollection<MappingRow>   _mappings   = new();
         private readonly ObservableCollection<CondRouteRow> _condRoutes = new();
 
         public CustomGameConfigWindow(CustomGameProfile? existing)
         {
             _isEdit = existing != null;
             InitializeComponent();
-            dgMappings.ItemsSource   = _mappings;
-            dgCondRoutes.ItemsSource = _condRoutes;
+            dgMappings.ItemsSource    = _mappings;
+            icCondRoutes.ItemsSource  = _condRoutes;
+            _condRoutes.CollectionChanged += (_, _) => UpdateEmptyState();
 
             if (_isEdit && existing != null)
             {
@@ -91,6 +92,15 @@ namespace TMM
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             ThemeEngine.ApplyTheme(((App)Application.Current).Core.Settings);
+            UpdateEmptyState();
+        }
+
+        private void UpdateEmptyState()
+        {
+            if (pnlRoutingEmpty != null)
+                pnlRoutingEmpty.Visibility = _condRoutes.Count == 0
+                    ? System.Windows.Visibility.Visible
+                    : System.Windows.Visibility.Collapsed;
         }
 
         // ── Browse buttons ────────────────────────────────────────────────────────
@@ -153,22 +163,55 @@ namespace TMM
                 _mappings.Remove(row);
         }
 
-        // ── Conditional routes DataGrid ───────────────────────────────────────────
+        // ── Conditional routes (sentence builder) ────────────────────────────────
 
         private void BtnAddCondRoute_Click(object sender, RoutedEventArgs e)
         {
-            var row = new CondRouteRow();
-            _condRoutes.Add(row);
-            dgCondRoutes.ScrollIntoView(row);
-            dgCondRoutes.SelectedItem = row;
-            dgCondRoutes.CurrentCell  = new System.Windows.Controls.DataGridCellInfo(row, dgCondRoutes.Columns[0]);
-            dgCondRoutes.BeginEdit();
+            _condRoutes.Add(new CondRouteRow());
         }
 
-        private void BtnRemoveCondRoute_Click(object sender, RoutedEventArgs e)
+        private void BtnRemoveCondRouteItem_Click(object sender, RoutedEventArgs e)
         {
-            if (dgCondRoutes.SelectedItem is CondRouteRow row)
+            if (sender is System.Windows.Controls.Button btn && btn.DataContext is CondRouteRow row)
                 _condRoutes.Remove(row);
+        }
+
+        // ── Preset templates ──────────────────────────────────────────────────────
+
+        private void BtnApplyPreset_Click(object sender, RoutedEventArgs e)
+        {
+            if (cmbPresets.SelectedItem is not System.Windows.Controls.ComboBoxItem item) return;
+            string tag = item.Tag as string ?? "";
+
+            var rules = tag switch
+            {
+                "asi" => new[]
+                {
+                    new CondRouteRow { Extension = ".asi", CheckSubdir = "plugins", RouteIfExists = "plugins", RouteIfMissing = "." }
+                },
+                "source" => new[]
+                {
+                    new CondRouteRow { Extension = ".vpk", CheckSubdir = "custom",  RouteIfExists = "custom",  RouteIfMissing = "." },
+                    new CondRouteRow { Extension = ".cfg", CheckSubdir = "cfg",     RouteIfExists = "cfg",     RouteIfMissing = "." }
+                },
+                "skse" => new[]
+                {
+                    new CondRouteRow { Extension = ".dll", CheckSubdir = "SKSE\\Plugins", RouteIfExists = "SKSE\\Plugins", RouteIfMissing = "." },
+                    new CondRouteRow { Extension = ".pex", CheckSubdir = "Data\\Scripts",  RouteIfExists = "Data\\Scripts",  RouteIfMissing = "." }
+                },
+                "cleo" => new[]
+                {
+                    new CondRouteRow { Extension = ".cs",   CheckSubdir = "CLEO", RouteIfExists = "CLEO", RouteIfMissing = "." },
+                    new CondRouteRow { Extension = ".cleo", CheckSubdir = "CLEO", RouteIfExists = "CLEO", RouteIfMissing = "." },
+                    new CondRouteRow { Extension = ".fxt",  CheckSubdir = "CLEO", RouteIfExists = "CLEO", RouteIfMissing = "." }
+                },
+                "clear" => Array.Empty<CondRouteRow>(),
+                _ => null
+            };
+
+            if (rules == null) return;
+            _condRoutes.Clear();
+            foreach (var r in rules) _condRoutes.Add(r);
         }
 
         // ── Save / Cancel ─────────────────────────────────────────────────────────
@@ -176,7 +219,6 @@ namespace TMM
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             dgMappings.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
-            dgCondRoutes.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
 
             string name = txtGameName.Text.Trim();
             string dir  = txtGameDir.Text.Trim();

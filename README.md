@@ -12,7 +12,7 @@ TMM is currently in **Alpha**. Expect bugs, unpolished edge cases, and missing f
 ### Modding
 * **Direct Deploy:** Mods are copied straight into your game's installation directory. No virtual filesystem staging, no intermediate copies. Fast and straightforward.
 * **Automatic Backup & Rollback:** Before any file is overwritten, the original is backed up to `AppData\TMM\Backups\`. The last 5 deploys per game are retained. Click the **Rollback** button to restore a game to its pre-deploy state.
-* **Custom Game Support:** Add any game via "Add Custom Game". Configure the game directory, executable, and per-extension output subdirectory routing (e.g. `.asi` -> `scripts`, `*` -> root).
+* **Custom Game Support:** Add any game via "Add Custom Game". Configure the game directory, executable, and per-extension output subdirectory routing. Conditional routing rules use a plain-English sentence builder (*"Put .asi files into plugins if plugins\ exists, otherwise game root"*) with one-click presets for ASI Loader, Source Engine, SKSE, and CLEO.
 * **Exe-as-Mod Downgrading (GTA):** Install a 1.0 `gta3.exe` / `gta-vc.exe` / `gta-sa.exe` directly as a mod. The manager auto-detects the game, assigns load order 0, and unlocks deployment even on Steam installs.
 * **Force Deploy Override (GTA):** Right-click any play button or the mod list to toggle Force Deploy Override for games where the exe check would block deployment.
 * **Smart Nested Archive Extraction:** Archives that wrap content in a single subdirectory are automatically unwrapped.
