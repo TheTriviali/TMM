@@ -83,7 +83,7 @@
 
     </Window.Resources>
 
-    <Border CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource AccentBrush}">
+    <Border CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource WindowBorderBrush}">
         <Border.Background><SolidColorBrush Color="#1C1C1E"/></Border.Background>
         <Grid>
             <Grid.RowDefinitions>

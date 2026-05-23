@@ -4,7 +4,7 @@
         Title="Mod Installation Wizard" Height="310" Width="560"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="{DynamicResource BgBrush}" WindowStyle="None" AllowsTransparency="True">
-    <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"
+    <Border BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
             CornerRadius="10" Background="{DynamicResource BgBrush}" ClipToBounds="True">
         <Grid>
             <Grid.RowDefinitions>

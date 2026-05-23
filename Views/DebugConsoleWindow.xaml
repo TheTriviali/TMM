@@ -4,7 +4,7 @@
         Title="Developer Diagnostics" Height="420" Width="520"
         Background="{DynamicResource BgBrush}" WindowStartupLocation="CenterOwner"
         WindowStyle="None" AllowsTransparency="True">
-    <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"
+    <Border BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
             CornerRadius="12" Background="{DynamicResource BgBrush}" ClipToBounds="True">
         <Grid>
             <Grid.RowDefinitions>

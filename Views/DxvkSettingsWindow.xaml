@@ -4,7 +4,7 @@
         Title="DXVK Configurator" Height="380" Width="420"
         WindowStartupLocation="CenterOwner" Background="{DynamicResource BgBrush}"
         WindowStyle="None" AllowsTransparency="True">
-    <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"
+    <Border BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
             CornerRadius="12" Background="{DynamicResource BgBrush}" ClipToBounds="True">
         <Grid>
             <Grid.RowDefinitions>

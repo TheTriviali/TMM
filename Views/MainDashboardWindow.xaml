@@ -840,7 +840,7 @@
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="bd" Background="{DynamicResource ControlBgBrush}" CornerRadius="5"
                                                         Padding="6">
-                                                    <TextBlock Text="&#xF4A6;" FontSize="16" FontWeight="Bold"
+                                                    <TextBlock Text="&#xE89A;" FontSize="16" FontWeight="Bold"
                                                                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                                                Foreground="{DynamicResource AccentLabelBrush}"
                                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>

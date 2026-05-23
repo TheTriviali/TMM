@@ -5,7 +5,7 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <Border CornerRadius="10" Background="{DynamicResource BgBrush}"
-            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
             ClipToBounds="True">
         <Grid>
             <Grid.RowDefinitions>

@@ -698,7 +698,10 @@ namespace TMM
             }
         }
 
-        private static void OpenFolder(string path) =>
-            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true, Verb = "open" });
+        private static void OpenFolder(string path)
+        {
+            Directory.CreateDirectory(path);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true });
+        }
     }
 }

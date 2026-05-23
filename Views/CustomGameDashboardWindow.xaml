@@ -102,7 +102,7 @@
 
     <!-- Outer border -->
     <Border x:Name="OuterBorder" CornerRadius="10" BorderThickness="1"
-            BorderBrush="{DynamicResource AccentBrush}">
+            BorderBrush="{DynamicResource WindowBorderBrush}">
         <Border.Background>
             <SolidColorBrush x:Name="WindowBg" Color="#1C1C1E"/>
         </Border.Background>
@@ -207,7 +207,7 @@
                             Click="BtnTheme_Click"/>
 
                     <!-- Random Theme (dice) -->
-                    <Button Content="&#xF4A6;" ToolTip="Random theme"
+                    <Button Content="&#xE89A;" ToolTip="Random theme"
                             Style="{DynamicResource IconButtonStyle}" Padding="7,4" Margin="2,0"
                             Click="BtnRollTheme_Click"/>
 

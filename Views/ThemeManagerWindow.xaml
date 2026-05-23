@@ -116,7 +116,7 @@
     </Window.Resources>
 
     <Border CornerRadius="12" Background="{DynamicResource BgBrush}"
-            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
             Margin="6" ClipToBounds="True">
         <Grid>
             <Grid.RowDefinitions>

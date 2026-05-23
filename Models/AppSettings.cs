@@ -38,7 +38,7 @@ namespace TMM
         public string TextColorMode { get; set; } = "WCAG";
 
         // ── Titlebar ─────────────────────────────────────────────────────────
-        public string TitlebarTheme     { get; set; } = "Compact";
+        public string TitlebarTheme     { get; set; } = "macOS";
         public string TitlebarAlignment { get; set; } = "Left";
         public bool   TitlebarPersonalize { get; set; } = true;
         public double TitlebarOpacity   { get; set; } = 0.88;
