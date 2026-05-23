@@ -39,11 +39,13 @@ namespace TMM
         private string _checkSubdir = "plugins";
         private string _routeIfExists = "plugins";
         private string _routeIfMissing = ".";
+        private bool _hasConflict = false;
 
         public string Extension     { get => _extension;     set { _extension     = value; OnPropertyChanged(nameof(Extension)); } }
         public string CheckSubdir   { get => _checkSubdir;   set { _checkSubdir   = value; OnPropertyChanged(nameof(CheckSubdir)); } }
         public string RouteIfExists { get => _routeIfExists; set { _routeIfExists = value; OnPropertyChanged(nameof(RouteIfExists)); } }
         public string RouteIfMissing{ get => _routeIfMissing;set { _routeIfMissing= value; OnPropertyChanged(nameof(RouteIfMissing)); } }
+        public bool HasConflict     { get => _hasConflict;   set { _hasConflict   = value; OnPropertyChanged(nameof(HasConflict)); } }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -81,6 +83,9 @@ namespace TMM
             txtExePath.Text    = config.ExePath ?? "";
             txtFileTypes.Text  = config.ModFileTypes;
             txtSteamAppId.Text = config.SteamAppId ?? "";
+            txtDescription.Text= config.Description ?? "";
+            txtAuthor.Text     = config.Author ?? "";
+            txtVersion.Text    = config.Version ?? "";
             _mappings.Clear();
             _condRoutes.Clear();
 
@@ -88,13 +93,18 @@ namespace TMM
                 _mappings.Add(new MappingRow { Extension = kvp.Key, OutputFolder = kvp.Value });
 
             foreach (var cr in config.ConditionalRoutes)
-                _condRoutes.Add(new CondRouteRow
+            {
+                var row = new CondRouteRow
                 {
                     Extension      = cr.Extension,
                     CheckSubdir    = cr.CheckSubdir,
                     RouteIfExists  = cr.RouteIfExists,
                     RouteIfMissing = cr.RouteIfMissing
-                });
+                };
+                row.PropertyChanged += (_, _) => ValidateRuleConflicts();
+                _condRoutes.Add(row);
+            }
+            ValidateRuleConflicts();
         }
 
         private CustomGameProfile? BuildCurrentProfile()
@@ -132,7 +142,10 @@ namespace TMM
                 SteamAppId        = string.IsNullOrWhiteSpace(txtSteamAppId.Text) ? null : txtSteamAppId.Text.Trim(),
                 ModFileTypes      = string.IsNullOrWhiteSpace(txtFileTypes.Text) ? ".zip, .rar, .7z" : txtFileTypes.Text.Trim(),
                 OutputDirectories = outputDirs,
-                ConditionalRoutes = condRoutes
+                ConditionalRoutes = condRoutes,
+                Description       = string.IsNullOrWhiteSpace(txtDescription.Text) ? null : txtDescription.Text.Trim(),
+                Author            = string.IsNullOrWhiteSpace(txtAuthor.Text) ? null : txtAuthor.Text.Trim(),
+                Version           = string.IsNullOrWhiteSpace(txtVersion.Text) ? null : txtVersion.Text.Trim()
             };
         }
 
@@ -150,7 +163,31 @@ namespace TMM
                     : System.Windows.Visibility.Collapsed;
         }
 
+        private void ValidateRuleConflicts()
+        {
+            var seen = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var r in _condRoutes) r.HasConflict = false;
+            foreach (var r in _condRoutes)
+            {
+                string ext = r.Extension.Trim().ToLowerInvariant();
+                if (string.IsNullOrEmpty(ext)) continue;
+                if (seen.ContainsKey(ext))
+                {
+                    r.HasConflict = true;
+                    _condRoutes[seen[ext]].HasConflict = true;
+                }
+                else seen[ext] = _condRoutes.IndexOf(r);
+            }
+        }
+
         // ── Browse buttons ────────────────────────────────────────────────────────
+
+        private void BtnOpenGameDir_Click(object sender, RoutedEventArgs e)
+        {
+            string gameDir = txtGameDir.Text.Trim();
+            if (!string.IsNullOrEmpty(gameDir) && System.IO.Directory.Exists(gameDir))
+                ShellHelper.OpenFolder(gameDir);
+        }
 
         private void BtnBrowseDir_Click(object sender, RoutedEventArgs e)
         {
@@ -192,6 +229,18 @@ namespace TMM
             }
         }
 
+        private void BtnQuickAddFileType_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Button btn && btn.Tag is string ext)
+            {
+                string current = txtFileTypes.Text.Trim();
+                if (string.IsNullOrEmpty(current))
+                    txtFileTypes.Text = ext;
+                else if (!current.Contains(ext, StringComparison.OrdinalIgnoreCase))
+                    txtFileTypes.Text = current + ", " + ext;
+            }
+        }
+
         // ── Static mapping DataGrid ───────────────────────────────────────────────
 
         private void BtnAddMapping_Click(object sender, RoutedEventArgs e)
@@ -214,13 +263,34 @@ namespace TMM
 
         private void BtnAddCondRoute_Click(object sender, RoutedEventArgs e)
         {
-            _condRoutes.Add(new CondRouteRow());
+            var row = new CondRouteRow();
+            row.PropertyChanged += (_, _) => ValidateRuleConflicts();
+            _condRoutes.Add(row);
+            ValidateRuleConflicts();
         }
 
         private void BtnRemoveCondRouteItem_Click(object sender, RoutedEventArgs e)
         {
             if (sender is System.Windows.Controls.Button btn && btn.DataContext is CondRouteRow row)
                 _condRoutes.Remove(row);
+        }
+
+        private void BtnMoveRuleUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Button btn && btn.DataContext is CondRouteRow row)
+            {
+                int idx = _condRoutes.IndexOf(row);
+                if (idx > 0) _condRoutes.Move(idx, idx - 1);
+            }
+        }
+
+        private void BtnMoveRuleDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Button btn && btn.DataContext is CondRouteRow row)
+            {
+                int idx = _condRoutes.IndexOf(row);
+                if (idx < _condRoutes.Count - 1) _condRoutes.Move(idx, idx + 1);
+            }
         }
 
         // ── Preset templates ──────────────────────────────────────────────────────
@@ -258,7 +328,12 @@ namespace TMM
 
             if (rules == null) return;
             _condRoutes.Clear();
-            foreach (var r in rules) _condRoutes.Add(r);
+            foreach (var r in rules)
+            {
+                r.PropertyChanged += (_, _) => ValidateRuleConflicts();
+                _condRoutes.Add(r);
+            }
+            ValidateRuleConflicts();
         }
 
         // ── Import / Export ───────────────────────────────────────────────────────
@@ -423,11 +498,71 @@ namespace TMM
                 SteamAppId        = steamAppId,
                 ModFileTypes      = fileTypes,
                 OutputDirectories = outputDirs,
-                ConditionalRoutes = condRoutes
+                ConditionalRoutes = condRoutes,
+                Description       = string.IsNullOrWhiteSpace(txtDescription.Text) ? null : txtDescription.Text.Trim(),
+                Author            = string.IsNullOrWhiteSpace(txtAuthor.Text) ? null : txtAuthor.Text.Trim(),
+                Version           = string.IsNullOrWhiteSpace(txtVersion.Text) ? null : txtVersion.Text.Trim()
             };
 
             DialogResult = true;
             Close();
+        }
+
+        private void BtnTestRouting_Click(object sender, RoutedEventArgs e)
+        {
+            if (pnlTestRouting.Visibility == Visibility.Collapsed)
+            {
+                pnlTestRouting.Visibility = Visibility.Visible;
+                if (!string.IsNullOrEmpty(txtTestFile.Text))
+                    RunTestRoute();
+            }
+            else
+            {
+                pnlTestRouting.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void BtnTestRoutingBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            var ofd = new OpenFileDialog { Title = "Select a file to test routing" };
+            if (ofd.ShowDialog() == true)
+            {
+                txtTestFile.Text = ofd.FileName;
+                RunTestRoute();
+            }
+        }
+
+        private void RunTestRoute()
+        {
+            string filePath = txtTestFile.Text.Trim();
+            if (string.IsNullOrEmpty(filePath))
+            {
+                txtTestResult.Text = "→ (no file selected)";
+                return;
+            }
+
+            string ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+            string gameDir = txtGameDir.Text.Trim();
+
+            foreach (var r in _condRoutes)
+            {
+                if (!r.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase)) continue;
+                bool exists = !string.IsNullOrEmpty(gameDir) &&
+                              System.IO.Directory.Exists(System.IO.Path.Combine(gameDir, r.CheckSubdir));
+                string dest = exists ? r.RouteIfExists : r.RouteIfMissing;
+                string reason = exists ? $"({r.CheckSubdir}\\ exists)" : $"({r.CheckSubdir}\\ not found)";
+                txtTestResult.Text = $"→  {(dest == "." ? "(game root)" : dest)}  {reason}";
+                return;
+            }
+
+            if (_mappings.FirstOrDefault(m => m.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase))
+                    is MappingRow match)
+            {
+                txtTestResult.Text = $"→  {(match.OutputFolder == "." ? "(game root)" : match.OutputFolder)}  (static rule)";
+                return;
+            }
+
+            txtTestResult.Text = "→  (game root)  (no rule — default)";
         }
 
         private void BtnCancel_Click(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }

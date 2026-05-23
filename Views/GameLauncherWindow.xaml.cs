@@ -38,8 +38,21 @@ namespace TMM
             GameCardsPanel.Children.Add(BuildBuiltInCard());
             GameCardsPanel.Children.Add(BuildIvCard());
 
-            foreach (var (key, config) in GameRegistry.Instance.GetCustomGames())
-                GameCardsPanel.Children.Add(BuildCustomCard(key, config));
+            var builtInCustomGames = GameRegistry.Instance.GetBuiltInCustomGames();
+            if (builtInCustomGames.Count > 0)
+            {
+                GameCardsPanel.Children.Add(MakeSectionHeader("Supported Games"));
+                foreach (var (key, config) in builtInCustomGames)
+                    GameCardsPanel.Children.Add(BuildCustomCard(key, config));
+            }
+
+            var userCustomGames = GameRegistry.Instance.GetCustomGames();
+            if (userCustomGames.Count > 0)
+            {
+                GameCardsPanel.Children.Add(MakeSectionHeader("Your Games"));
+                foreach (var (key, config) in userCustomGames)
+                    GameCardsPanel.Children.Add(BuildCustomCard(key, config));
+            }
 
             GameCardsPanel.Children.Add(BuildAddCard());
         }
@@ -116,6 +129,10 @@ namespace TMM
             Grid.SetColumn(manageBtn, 0);
             row.Children.Add(manageBtn);
 
+            // Only show Edit + Delete for user-created games, not built-in profiles
+            if (!config.IsBuiltIn)
+            {
+
             var editBtn = MakeIconButton("", "Edit game settings");
             editBtn.Click += (_, _) => EditCustomGame(capturedKey);
             Grid.SetColumn(editBtn, 1);
@@ -126,6 +143,7 @@ namespace TMM
             delBtn.Click += (_, _) => DeleteCustomGame(capturedKey);
             Grid.SetColumn(delBtn, 2);
             row.Children.Add(delBtn);
+            }
 
             sp.Children.Add(row);
             card.Child = sp;
@@ -285,6 +303,21 @@ namespace TMM
             else
                 btn.SetResourceReference(Button.ForegroundProperty, "SubTextBrush");
             return btn;
+        }
+
+        private TextBlock MakeSectionHeader(string text)
+        {
+            var tb = new TextBlock
+            {
+                Text = text,
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                Opacity = 0.6,
+                Margin = new Thickness(6, 16, 0, 8),
+                VerticalAlignment = VerticalAlignment.Top
+            };
+            tb.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            return tb;
         }
 
         // ── Actions ───────────────────────────────────────────────────────────────

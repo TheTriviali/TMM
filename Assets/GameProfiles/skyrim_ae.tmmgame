@@ -1,0 +1,38 @@
+{
+  "$schema": "tmm-game/1.0",
+  "gameName": "Skyrim Anniversary Edition",
+  "gameDirectory": "",
+  "exePath": "SkyrimSE.exe",
+  "steamAppId": "489830",
+  "modFileTypes": ".zip, .rar, .7z, .esp, .esm, .esl, .dll, .bsa, .ba2, .ini, .json, .pex, .psc",
+  "outputDirectories": {
+    ".esp": "Data",
+    ".esm": "Data",
+    ".esl": "Data",
+    ".bsa": "Data",
+    ".ba2": "Data",
+    ".pex": "Data\\Scripts",
+    ".psc": "Data\\Scripts\\Source"
+  },
+  "conditionalRoutes": [
+    {
+      "extension": ".dll",
+      "checkSubdir": "Data\\SKSE",
+      "routeIfExists": "Data\\SKSE\\Plugins",
+      "routeIfMissing": "."
+    }
+  ],
+  "installerHints": {
+    "engineProxyNames": ["d3d11.dll", "d3d9.dll", "dxgi.dll", "d3d12.dll", "dinput8.dll"],
+    "dxVersionTarget": "dx11",
+    "smartDllWizard": true
+  },
+  "launcherCard": {
+    "displayName": "Skyrim AE",
+    "subtitle": "Anniversary Edition",
+    "iconGlyph": "&#xE7FC;",
+    "accentColor": null
+  },
+  "description": "Built-in support for Skyrim Anniversary Edition (v1.6+). Routes ESP/ESM to Data\\, SKSE plugins to Data\\SKSE\\Plugins\\, and detects engine proxies (DXVK, ENB, ReShade) automatically.",
+  "version": "1.0"
+}

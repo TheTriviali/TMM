@@ -122,17 +122,29 @@
                     <TextBlock Text="Game Name *" Style="{StaticResource FieldLabelStyle}"/>
                     <TextBox x:Name="txtGameName" Style="{StaticResource FieldBoxStyle}"/>
 
+                    <TextBlock Text="Description (optional)" Style="{StaticResource FieldLabelStyle}"/>
+                    <TextBox x:Name="txtDescription" Style="{StaticResource FieldBoxStyle}"
+                             TextWrapping="Wrap" Height="60" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                             ToolTip="Optional description shown as tooltip on launcher card"/>
+
                     <TextBlock Text="Game Directory *" Style="{StaticResource FieldLabelStyle}"/>
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="txtGameDir" Grid.Column="0"
                                  Style="{StaticResource FieldBoxStyle}" Margin="0"
                                  ToolTip="The root folder of your game installation"/>
-                        <Button Grid.Column="1" Content="Browse..."
-                                Style="{StaticResource BrowseBtnStyle}"
+                        <Button Grid.Column="1" Content="&#xE8B7;"
+                                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                                Width="34" Height="34" Margin="6,0,0,0"
+                                Style="{StaticResource BrowseBtnStyle}" Padding="0"
+                                ToolTip="Open game directory in Explorer"
+                                Click="BtnOpenGameDir_Click"/>
+                        <Button Grid.Column="2" Content="Browse..."
+                                Style="{StaticResource BrowseBtnStyle}" Margin="6,0,0,0"
                                 Click="BtnBrowseDir_Click"/>
                     </Grid>
 
@@ -158,11 +170,34 @@
                                Text="Comma-separated extensions. Archives (.zip .rar .7z) are extracted automatically."/>
                     <TextBox x:Name="txtFileTypes" Style="{StaticResource FieldBoxStyle}"/>
 
+                    <WrapPanel Margin="0,-8,0,12">
+                        <Button Content=".zip"  Click="BtnQuickAddFileType_Click" Tag=".zip"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
+                        <Button Content=".rar"  Click="BtnQuickAddFileType_Click" Tag=".rar"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
+                        <Button Content=".7z"   Click="BtnQuickAddFileType_Click" Tag=".7z"   Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
+                        <Button Content=".esp"  Click="BtnQuickAddFileType_Click" Tag=".esp"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
+                        <Button Content=".dll"  Click="BtnQuickAddFileType_Click" Tag=".dll"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
+                        <Button Content=".jar"  Click="BtnQuickAddFileType_Click" Tag=".jar"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" Margin="0,0,4,0" FontSize="10"/>
+                        <Button Content=".ini"  Click="BtnQuickAddFileType_Click" Tag=".ini"  Style="{StaticResource BrowseBtnStyle}" Padding="8,3" FontSize="10"/>
+                    </WrapPanel>
+
                     <TextBlock Text="Steam App ID (optional)" Style="{StaticResource FieldLabelStyle}"/>
                     <TextBlock TextWrapping="Wrap" FontSize="10" Opacity="0.6" Margin="0,-2,0,4"
                                Foreground="{DynamicResource SubTextBrush}"
                                Text="Numeric Steam ID for Launch via Steam (e.g. 12210 for GTA IV). Leave empty to launch the exe directly."/>
                     <TextBox x:Name="txtSteamAppId" Style="{StaticResource FieldBoxStyle}"/>
+
+                    <Expander Background="{DynamicResource HeaderBrush}" Foreground="{DynamicResource TextBrush}"
+                              Margin="0,0,0,12" IsExpanded="False">
+                        <Expander.Header>
+                            <TextBlock Text="Metadata (optional)" FontSize="11" FontWeight="SemiBold"/>
+                        </Expander.Header>
+                        <StackPanel Margin="8,8,0,0">
+                            <TextBlock Text="Author" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="txtAuthor" Style="{StaticResource FieldBoxStyle}"/>
+                            <TextBlock Text="Version" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="txtVersion" Style="{StaticResource FieldBoxStyle}"/>
+                        </StackPanel>
+                    </Expander>
 
                     <!-- ── Output Directory Mapping ─────────────────────────────── -->
                     <TextBlock Text="Output Directory Mapping" Style="{StaticResource FieldLabelStyle}" Margin="0,6,0,4"/>
@@ -296,9 +331,20 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border Background="{DynamicResource HeaderBrush}"
-                                        BorderBrush="{DynamicResource SubTextBrush}"
-                                        BorderThickness="1" CornerRadius="6"
+                                        CornerRadius="6"
                                         Padding="12,10" Margin="0,0,0,6">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource SubTextBrush}"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasConflict}" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#FF5555"/>
+                                                    <Setter Property="BorderThickness" Value="1.5"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -329,16 +375,36 @@
                                                      ToolTip="Subfolder to use when the check folder does NOT exist  (. = game root)"/>
                                         </WrapPanel>
 
-                                        <!-- Remove button -->
-                                        <Button Grid.Column="1" Content="&#xE8BB;"
-                                                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                                FontSize="9" Width="26" Height="26"
-                                                Background="Transparent" BorderThickness="0"
-                                                Foreground="{DynamicResource SubTextBrush}"
-                                                Cursor="Hand" Margin="10,0,0,0"
-                                                VerticalAlignment="Center"
-                                                ToolTip="Remove this rule"
-                                                Click="BtnRemoveCondRouteItem_Click"/>
+                                        <!-- Move Up/Down/Remove buttons -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <Button Content="&#xE70E;"
+                                                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                    FontSize="9" Width="26" Height="26"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Foreground="{DynamicResource SubTextBrush}"
+                                                    Cursor="Hand" Margin="0,0,3,0"
+                                                    VerticalAlignment="Center"
+                                                    ToolTip="Move rule up"
+                                                    Click="BtnMoveRuleUp_Click"/>
+                                            <Button Content="&#xE70D;"
+                                                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                    FontSize="9" Width="26" Height="26"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Foreground="{DynamicResource SubTextBrush}"
+                                                    Cursor="Hand" Margin="0,0,3,0"
+                                                    VerticalAlignment="Center"
+                                                    ToolTip="Move rule down"
+                                                    Click="BtnMoveRuleDown_Click"/>
+                                            <Button Content="&#xE8BB;"
+                                                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                    FontSize="9" Width="26" Height="26"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Foreground="{DynamicResource SubTextBrush}"
+                                                    Cursor="Hand"
+                                                    VerticalAlignment="Center"
+                                                    ToolTip="Remove this rule"
+                                                    Click="BtnRemoveCondRouteItem_Click"/>
+                                        </StackPanel>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -353,14 +419,36 @@
                                    Text="No routing rules yet. Click '+ Add Rule' or pick a preset above.&#x0A;Most games don't need any rules — leave blank and mods go to the game root."/>
                     </Border>
 
-                    <Button Content="+ Add Rule" Click="BtnAddCondRoute_Click"
-                            Style="{StaticResource BrowseBtnStyle}" Margin="0,0,0,14" Padding="8,4"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <Button Content="+ Add Rule" Click="BtnAddCondRoute_Click"
+                                Style="{StaticResource BrowseBtnStyle}" Margin="0,0,8,0" Padding="8,4"/>
+                        <Button Content="Test Routing..." Click="BtnTestRouting_Click"
+                                Style="{StaticResource BrowseBtnStyle}" Padding="8,4"/>
+                    </StackPanel>
 
                     <!-- Footer note -->
                     <Border Background="#1AFF8800" BorderBrush="#33FF8800" BorderThickness="1"
                             CornerRadius="5" Padding="10,8" Margin="0,0,0,10">
                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#FFCC66"
                                    Text="Note: TMM does not restructure mod archives automatically. If a downloaded archive uses a nested folder layout, you may need to reorganize files after installing so they land in the right place on deploy."/>
+                    </Border>
+
+                    <!-- Test Routing Panel (initially collapsed) -->
+                    <Border x:Name="pnlTestRouting" Visibility="Collapsed"
+                            Background="{DynamicResource ControlBgBrush}" CornerRadius="4"
+                            BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1" Padding="12,10" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Test Routing" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBox x:Name="txtTestFile" Style="{StaticResource FieldBoxStyle}"
+                                         Margin="0,0,8,0" MinHeight="32"/>
+                                <Button Content="Browse..." Click="BtnTestRoutingBrowse_Click"
+                                        Style="{StaticResource BrowseBtnStyle}" Padding="8,4" Width="Auto"/>
+                            </StackPanel>
+                            <TextBlock x:Name="txtTestResult" Text="→ (nothing yet)"
+                                       FontSize="11" Foreground="{DynamicResource SubTextBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
                     </Border>
 
                 </StackPanel>

@@ -48,7 +48,8 @@
       "Bash(mkdir -p \"C:\\\\Users\\\\noahd\\\\Desktop\\\\TGTAMM\\\\Publish\")",
       "Read(//c/Users/noahd/Desktop/**)",
       "Bash(dotnet publish *)",
-      "Bash(git commit -m 'Add B6 to PLANS.md: UI Modernization with traditional menu bar + responsive layout *)"
+      "Bash(git commit -m 'Add B6 to PLANS.md: UI Modernization with traditional menu bar + responsive layout *)",
+      "Bash(git commit -m '§2.4 + §4.1: Test routing dry-run panel + Skyrim AE embedded profile *)"
     ]
   }
 }

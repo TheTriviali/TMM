@@ -45,6 +45,7 @@ namespace TMM
         {
             _customGamesPath = Path.Combine(appDataPath, "CustomGames");
             Directory.CreateDirectory(_customGamesPath);
+            await LoadBuiltInProfilesAsync();
             await LoadCustomGamesAsync();
         }
 
@@ -53,6 +54,55 @@ namespace TMM
             _builtInGames.Clear();
             foreach (var profile in GameProfile.All)
                 _builtInGames[profile.Key] = profile;
+        }
+
+        private async Task LoadBuiltInProfilesAsync()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var resourceNames = assembly.GetManifestResourceNames()
+                .Where(n => n.StartsWith("TMM.Assets.GameProfiles.") && n.EndsWith(".tmmgame"))
+                .ToList();
+
+            foreach (var resourceName in resourceNames)
+            {
+                try
+                {
+                    using var stream = assembly.GetManifestResourceStream(resourceName);
+                    if (stream == null) continue;
+
+                    using var reader = new StreamReader(stream);
+                    var json = await reader.ReadToEndAsync();
+                    var export = JsonSerializer.Deserialize<TmmGameExport>(json, JsonHelper.TmmGameOptions);
+
+                    if (export?.GameName == null) continue;
+
+                    var config = new CustomGameProfile
+                    {
+                        GameName          = export.GameName,
+                        GameDirectory     = "", // Built-in profiles don't have a default path
+                        ExePath           = export.ExePath,
+                        SteamAppId        = export.SteamAppId,
+                        ModFileTypes      = export.ModFileTypes ?? ".rar, .zip, .7z",
+                        OutputDirectories = export.OutputDirectories ?? new(),
+                        ConditionalRoutes = export.ConditionalRoutes ?? new(),
+                        InstallerHints    = export.InstallerHints,
+                        LauncherCard      = export.LauncherCard,
+                        Description       = export.Description,
+                        Author            = export.Author,
+                        Version           = export.Version,
+                        IsBuiltIn         = true
+                    };
+
+                    // Use game name as key for built-in profiles
+                    string key = $"BUILTIN_{export.GameName.ToUpperInvariant().Replace(" ", "_")}";
+                    var profile = CustomGameProfileToGameProfile(key, config);
+                    _customGames[key] = (config, profile);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to load built-in profile {resourceName}: {ex.Message}");
+                }
+            }
         }
 
         private async Task LoadCustomGamesAsync()
@@ -115,9 +165,13 @@ namespace TMM
         public IReadOnlyList<GameProfile> GetBuiltInGames() =>
             _builtInGames.Values.ToList();
 
-        /// <summary>Get only custom games.</summary>
+        /// <summary>Get only user-created custom games (not built-in).</summary>
         public IReadOnlyList<(string Key, CustomGameProfile Config)> GetCustomGames() =>
-            _customGames.Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
+            _customGames.Where(kvp => !kvp.Value.config.IsBuiltIn).Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
+
+        /// <summary>Get only built-in custom games (Skyrim, Minecraft, etc.).</summary>
+        public IReadOnlyList<(string Key, CustomGameProfile Config)> GetBuiltInCustomGames() =>
+            _customGames.Where(kvp => kvp.Value.config.IsBuiltIn).Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
 
         /// <summary>Add a new custom game. Returns the generated key.</summary>
         public async Task<string> AddCustomGameAsync(CustomGameProfile config)

@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Assets\GameProfiles\skyrim_ae.tmmgame"/>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="SharpCompress" Version="0.48.1" />
   </ItemGroup>
 

@@ -689,9 +689,17 @@ namespace TMM
         private void MenuOpenModsStore_Click(object sender, RoutedEventArgs e)
         {
             var profile = GetActiveProfile();
-            string path = Path.Combine(_core.AppDataPath, profile.RawFolderName);
-            Directory.CreateDirectory(path);
-            ShellHelper.OpenFolder(path);
+            string url = profile.Key switch
+            {
+                "IV" => "https://www.nexusmods.com/gta4/",
+                "TLaD" => "https://www.nexusmods.com/gta4/",
+                "TBoGT" => "https://www.nexusmods.com/gta4/",
+                _ => ""
+            };
+            if (!string.IsNullOrEmpty(url))
+                ShellHelper.OpenUrl(url);
+            else
+                MessageBox.Show("No mods store configured for this game.", "Open Mods Store", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void MenuProperties_Click(object sender, RoutedEventArgs e)

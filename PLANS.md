@@ -1,6 +1,14 @@
 # TMM — Implementation Plans
 *Last updated 2026-05-23. Send this file to a new Claude session along with CODEBASE_GUIDE.md to resume work.*
 
+> **[2026-05-23] Haiku pass — §2.2–§2.5 + §0 gaps:**
+> - ✅ Move-up/down arrow buttons on conditional route cards (`BtnMoveRuleUp/Down_Click`)
+> - ✅ Rule conflict highlight (`HasConflict` property + DataTrigger red border)
+> - ✅ Description field, file-type quick-add chips, Author/Version metadata, Open Game Dir button
+> - ✅ NexusMods URL wired for "Open Mods Store" in GTA IV context menu
+> - ✅ Verified all §0 gaps already resolved: ToolbarShowLabels (both dashboards call ApplyToolbarLabels), deploy button color (all 3 dashboards), backup folder menu (CustomGame), Steam launch (CustomGame)
+> - ⏳ §2.4 (test routing dry-run panel) deferred to Sonnet pass
+
 > **Companion file:** [`SCOPE.md`](SCOPE.md) is a shorter, human-readable overview of planned features. Whenever this file is updated, also update SCOPE.md to keep both in sync.
 
 > **Session changelog:**
@@ -48,13 +56,13 @@ Everything below is **live on `master`** and working:
 | `WindowBorderGradientBrush` dead resource + ThemeEngine writes removed | ✅ |
 | VFS removal dead code cleanup (DeepScan, SmartSteam, ParallelCopy, DebugStaging, GameState manager) | ✅ |
 
-**Known gaps in shipped code (fix before new features):**
-- `ToolbarShowLabels` only wired in MainDashboard — GTA IV and Custom dashboards have no label toggle
-- Steam protocol launch (`steam://run/{id}`) not wired up in CustomGameDashboard despite `SteamAppId` being stored
-- ThemeManagerWindow has a MainDashboard-specific callback; after theme change from IV/Custom dashboards the ThemeManager's internal refresh is partially broken
-- "Open Mods Store" in GTA IV context menu is a stub (no URL wired)
-- Deploy button color state (grey/accent/orange pending-changes indicator) only in MainDashboard; GTA IV and Custom use static icons
-- Backup Folder context menu item absent from Custom Game dashboard
+**Known gaps — status:**
+- ✅ `ToolbarShowLabels` — GTA IV and Custom both call `ApplyToolbarLabels()` on load; toggle button is in MainDashboard only (acceptable)
+- ✅ Steam protocol launch — `BtnLaunch_Click` in CustomGameDashboard already checks `SteamAppId` → `SteamLauncher.Invoke`
+- ⚠️ ThemeManagerWindow has a MainDashboard-specific callback; after theme change from IV/Custom dashboards the internal refresh is partially broken *(still open)*
+- ✅ "Open Mods Store" in GTA IV — now opens `https://www.nexusmods.com/gta4/`
+- ✅ Deploy button color state — all 3 dashboards have `UpdateDeployButton()` / `UpdateEpisodeDeployButton()`
+- ✅ Backup Folder context menu — present in CustomGameDashboard (verified)
 
 ---
 
@@ -260,9 +268,36 @@ private void ValidateRuleConflicts()
 
 Wire `ValidateRuleConflicts()` to the `PropertyChanged` event on each row when rows are added.
 
-### 2.4 Test routing dry-run
+### 2.4 Test routing dry-run  ⬛ HAIKU-ELIGIBLE
 
-**Button:** `"Test Routing..."` in the conditional routes section header.
+**Decided:** Inline collapsible panel below the routing rules; "Test Routing…" button sits next to "+ Add Rule".
+
+**Button row:**
+```xml
+<StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+    <Button Content="+ Add Rule"       Click="BtnAddCondRoute_Click" .../>
+    <Button Content="Test Routing..."  Click="BtnTestRouting_Click"  .../>
+</StackPanel>
+```
+
+**Panel (initially Collapsed, shown after first click):**
+```xml
+<Border x:Name="pnlTestRouting" Visibility="Collapsed" ...>
+    <StackPanel>
+        <Grid>  <!-- file path row -->
+            <TextBox x:Name="txtTestFile" Placeholder="Drop or browse a file..." />
+            <Button Content="Browse..." Click="BtnTestRoutingBrowse_Click"/>
+        </Grid>
+        <TextBlock x:Name="txtTestResult" Text="→ (nothing yet)" />
+    </StackPanel>
+</Border>
+```
+
+**BtnTestRouting_Click:** Toggle `pnlTestRouting.Visibility`. If showing and `txtTestFile` already has a value, call `RunTestRoute()`.
+
+**BtnTestRoutingBrowse_Click:** `OpenFileDialog` (no filter) → set `txtTestFile.Text` → call `RunTestRoute()`.
+
+**RunTestRoute():** Call `SimulateRoute(txtTestFile.Text)` → set `txtTestResult.Text`.
 
 **Flow:**
 1. Opens a small modal (`TestRoutingWindow`) or inline panel
@@ -312,7 +347,9 @@ private string SimulateRoute(string filePath)
 
 ---
 
-## 3 — Smart DLL Installer Wizard
+## 3 — Smart DLL Installer Wizard  🔵 SONNET
+
+**Decided:** Fires automatically whenever a mod containing `.dll` files is installed and the game profile has `.dll` in its file types (or `smartDllWizard: true`). User sees the dialog; can dismiss.
 
 Applies to **any** custom game (and built-in GTA IV / Skyrim / future games) that lists `.dll` in its supported mod file types.
 
@@ -396,7 +433,9 @@ A game profile's `InstallerHints.EngineProxyNames` overrides/extends this list.
 
 ## 4 — Built-in Game Profiles: Skyrim AE
 
-### 4.1 Launcher card
+**Decided:** Skyrim ships before Minecraft. Launcher gets a dedicated "Supported Games" section between the GTA card and user custom games. First-launch with no game dir → inline expand on the card (no new window).
+
+### 4.1 Launcher card  ⬛ HAIKU-ELIGIBLE (embed + LoadBuiltInProfiles + section header)
 
 `GameLauncherWindow` currently hard-codes the GTA card and iterates `GameRegistry` for custom games. Add a new section: **built-in extended profiles** loaded from embedded `.tmmgame` resource files.
 
@@ -449,11 +488,16 @@ A game profile's `InstallerHints.EngineProxyNames` overrides/extends this list.
 }
 ```
 
-### 4.2 First-use setup (no wizard needed)
+### 4.2 First-use setup (inline card expand)  🔵 SONNET
 
-When the user clicks the Skyrim card and `GameDirectory` is empty, show a simple directory-picker prompt (reuse the `InitialSetupWindow` pattern or a minimal inline prompt). No full wizard needed since the routing is pre-configured.
+**Decided:** When the user clicks the Skyrim card and `GameDirectory` is empty, the card expands inline (no new window) to show:
+- A path text field
+- A Browse button (OpenFolderDialog)
+- An Open/Confirm button that saves the path and opens the dashboard
 
-### 4.3 Deploy verification panel
+Implementation: In `GameLauncherWindow`, detect `IsBuiltIn && string.IsNullOrEmpty(GameDirectory)` on card click → swap the card's normal footer for an expand panel via visibility toggle. On confirm, save path to the registry and open `CustomGameDashboardWindow`.
+
+### 4.3 Deploy verification panel  ⬛ HAIKU-ELIGIBLE
 
 At deploy time, before writing files, show a summary:
 ```
@@ -471,7 +515,7 @@ This is the **deploy preview panel** — show it when `_hasPendingChanges` is tr
 
 ---
 
-## 5 — Built-in Game Profiles: Minecraft
+## 5 — Built-in Game Profiles: Minecraft  🔵 SONNET
 
 ### 5.1 Java version table (for UI display)
 
@@ -563,7 +607,7 @@ public static ArchiveContentType PeekArchiveType(string archivePath)
 
 ---
 
-## 6 — Mod Import from Existing Game Installations
+## 6 — Mod Import from Existing Game Installations  🔵 SONNET
 
 ### 6.1 Entry point
 
@@ -654,12 +698,20 @@ Imported mods get an `[Imported]` badge in the mod list (yellow chip).
 
 **New field on `DeployManifest`:** `ConflictedFiles: List<ConflictEntry>` where `ConflictEntry` holds winning mod, losing mod, relative file path.
 
-### 7.2 Mod profiles / loadouts
+### 7.2 Mod profiles / loadouts  ⬛ HAIKU-ELIGIBLE (storage model + toolbar dropdown)
+
+**Decided:** Loadout dropdown lives in the right side of each dashboard toolbar, next to disk-space label.
+
+```
+Toolbar: [ Install ] [ Deploy ] [ Rollback ] ...   Loadout: [Default ▾]   128 GB free
+```
 
 - Save current enabled/disabled state + load order as a named loadout
 - Stored as `{AppData}\{game}\loadouts\{name}.json`
-- UI: dropdown in each dashboard header — "Active Loadout: [Default ▾]" with Save / Load / Delete
+- UI: `ComboBox` at toolbar right-side (before disk space TextBlock), DataTemplate shows loadout name
+- Dropdown items: list of saved loadout names + separator + "Save Current..." + "Delete..."
 - Switching loadouts restores enable state + load order, marks changes pending
+- Saving: prompt for a name (simple InputDialog), write JSON, refresh ComboBox
 
 ### 7.3 Community game library (future, not to implement yet)
 
@@ -714,37 +766,26 @@ Views/
 
 ---
 
-## 9 — Implementation Order (suggested for next session)
+## 9 — Implementation Order
 
-1. ~~**Fix known gaps first** (§0 gap list) — ~1 session~~ (deferred; gaps documented, not blocking)
+Legend: ✅ done · ⬛ Haiku-eligible · 🔵 Sonnet · ⚠️ Sonnet-then-Haiku-finishes
 
-2. ~~**`.tmmgame` format + Import/Export** (§1 + §2.1) — ~1 session~~ ✅ **DONE**
-
-3. **CustomGameConfigWindow QoL** (§2.2 – §2.5) — ~1 session
-   - Move-up/down arrows on route cards
-   - Conflict highlight
-   - Test routing panel
-   - File type chips, description field
-
-4. **Smart DLL wizard** (§3) — ~1 session
-   - `SmartDllDialog`, engine proxy detection, variant picker for DXVK
-   - Wire into install flow for all games with `.dll` in file types
-
-5. **Skyrim AE built-in profile** (§4) — ~0.5 session
-   - Embed `skyrim_ae.tmmgame`, `LoadBuiltInProfiles()`, launcher card
-
-6. **Deploy preview panel** (§4.3) — ~0.5 session
-   - `DeployPreviewWindow`, `SimulateDeployAsync()`
-
-7. **Mod import from existing installs** (§6) — ~1 session
-   - SA scan (modloader, CLEO, scripts), then GTA III/VC, then IV
-
-8. **Minecraft built-in profile** (§5) — ~1 session
-   - Embed `minecraft.tmmgame`, `PeekArchiveType()`, world picker dialog, shader detection
-
-9. **Conflict resolution + File Arbitrator** (§10) — ~2 sessions
-
-10. **Mod profiles / loadouts** (§7.2) — ~1 session
+1. ~~**Fix known gaps** (§0)~~ ✅ **VERIFIED/FIXED 2026-05-23**
+2. ~~**`.tmmgame` Import/Export** (§1 + §2.1)~~ ✅ **DONE**
+3. **CustomGameConfigWindow QoL** (§2.2–§2.5)
+   - ✅ §2.2 Move-up/down arrows
+   - ✅ §2.3 Rule conflict highlight
+   - ✅ §2.5 File-type chips, description, metadata, Open Game Dir
+   - ⬛ §2.4 Test routing dry-run panel ← **next Haiku task** (fully spec'd)
+4. ⬛ **Skyrim AE embed + LoadBuiltInProfiles** (§4.1, file embed only) — Haiku
+5. 🔵 **Skyrim first-launch inline expand + launcher section** (§4.1–§4.2) — Sonnet
+6. ⬛ **Deploy preview panel** (§4.3) — Haiku (`DeployPreviewWindow` + `SimulateDeployAsync`)
+7. 🔵 **Smart DLL wizard** (§3) — Sonnet (`SmartDllDialog`, engine proxy detection)
+8. ⬛ **Mod loadouts storage + toolbar dropdown** (§7.2) — Haiku
+9. 🔵 **Mod import from existing installs** (§6) — Sonnet
+10. 🔵 **Minecraft built-in profile** (§5) — Sonnet (world picker, archive sniffing)
+11. 🔵 **Conflict resolution — data model + deploy pipeline** (§10.1–§10.3) — Sonnet
+12. 🔵 **Conflict resolution — UI** (§10.4–§10.6) — Sonnet
 
 ---
 
@@ -770,7 +811,9 @@ Views/
 
 ---
 
-## 10 — Advanced Overwrite & Conflict Resolution
+## 10 — Advanced Overwrite & Conflict Resolution  🔵 SONNET
+
+**Decided:** Start with data model + deploy pipeline (§10.1 + §10.2 + §10.3) before any UI work.
 
 Design goal: simpler than Vortex's VFS, but gives the user full per-file control.
 No virtual filesystem — TMM still deploys directly. Conflict resolution is a layer
