@@ -60,15 +60,16 @@ namespace TMM
         {
             await _core.RefreshAllModListsAsync();
             txtDiskSpace.Text = _core.GetDriveSpaceInfo();
-            UpdateModCount();
             UpdateDeployButton();
+            UpdateSidebar();
         }
 
-        private void UpdateModCount()
+        private void UpdateSidebar()
         {
-            int enabled  = _mods.Count(m => m.IsEnabled);
-            int disabled = _mods.Count(m => !m.IsEnabled);
-            txtModCount.Text = $"{enabled} enabled, {disabled} disabled";
+            txtSidebarGameName.Text = _config.GameName;
+            txtSidebarDir.Text = string.IsNullOrEmpty(_config.GameDirectory)
+                ? "Directory not set"
+                : _config.GameDirectory;
         }
 
         private void UpdateDeployButton()
@@ -94,13 +95,64 @@ namespace TMM
 
         // ── Window chrome ──────────────────────────────────────────────────────
 
+        private new void TitleBar_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Left && e.ClickCount == 2)
+                BtnMaximize_Click(sender, e);
+            else if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+                DragMove();
+        }
+
         private void Window_StateChanged(object sender, EventArgs e)
         {
-            OuterBorder.CornerRadius = WindowState == WindowState.Maximized
+            MainWindowBorder.CornerRadius = WindowState == WindowState.Maximized
                 ? new CornerRadius(0) : new CornerRadius(10);
         }
 
-        private void BtnBack_Click(object sender, RoutedEventArgs e) => Close();
+        // ── Toolbar ────────────────────────────────────────────────────────────
+
+        private void BtnToggleSidebar_Click(object sender, RoutedEventArgs e)
+        {
+            SidebarBorder.Visibility = SidebarBorder.Visibility == Visibility.Visible
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private void BtnHelp_Click(object sender, RoutedEventArgs e)
+        {
+            var r = MessageBox.Show(
+                "For help and documentation, visit the TMM GitHub repository.\n\nOpen in browser?",
+                "Help & Resources", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (r == MessageBoxResult.Yes)
+                ShellHelper.OpenUrl("https://github.com/noahd179/tgtamm");
+        }
+
+        private void BtnAbout_Click(object sender, RoutedEventArgs e)
+        {
+            new AboutWindow(_core) { Owner = this }.ShowDialog();
+        }
+
+        private void BtnLink_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string url && !string.IsNullOrEmpty(url))
+                ShellHelper.OpenUrl(url);
+        }
+
+        private void BtnOpenAppData_Click(object sender, RoutedEventArgs e) => _core.OpenAppData();
+
+        // ── Notification toasts ────────────────────────────────────────────────
+
+        private void Toast_Close(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement el && el.DataContext is NotificationItem item)
+                NotificationService.Queue.Remove(item);
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement el && el.DataContext is NotificationItem item)
+                NotificationService.Queue.Remove(item);
+        }
 
         // ── Install mod ────────────────────────────────────────────────────────
 
@@ -147,7 +199,6 @@ namespace TMM
             }
 
             Directory.CreateDirectory(destFolder);
-            txtStatus.Text = $"Installing: {modName}...";
 
             bool isArchive = new[] { ".zip", ".rar", ".7z", ".tar", ".gz" }.Contains(ext);
             if (isArchive)
@@ -180,32 +231,31 @@ namespace TMM
             };
             SyncModInfoToFolder(item);
             _mods.Add(item);
-            txtStatus.Text = $"Installed: {modName}";
+            NotificationService.ShowSuccess($"Installed: {modName}");
         }
 
         // ── Refresh ────────────────────────────────────────────────────────────
 
         private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Rebuild mod list from folders?", "Sync",
-                MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
-
             _mods.Clear();
             string root = Path.Combine(_core.AppDataPath, _profile.RawFolderName);
-            if (!Directory.Exists(root)) return;
-
-            int order = 0;
-            foreach (var d in Directory.GetDirectories(root))
+            if (Directory.Exists(root))
             {
-                string info = Path.Combine(d, "modinfo.txt");
-                _mods.Add(File.Exists(info)
-                    ? JsonSerializer.Deserialize<ModItem>(File.ReadAllText(info), JsonHelper.PrettyOptions) ?? NewMod(d, order)
-                    : NewMod(d, order));
-                order++;
+                int order = 0;
+                foreach (var d in Directory.GetDirectories(root))
+                {
+                    string info = Path.Combine(d, "modinfo.txt");
+                    _mods.Add(File.Exists(info)
+                        ? JsonSerializer.Deserialize<ModItem>(File.ReadAllText(info), JsonHelper.PrettyOptions) ?? NewMod(d, order)
+                        : NewMod(d, order));
+                    order++;
+                }
             }
 
             await RefreshAsync();
             SaveMods();
+            NotificationService.ShowInfo("Mod list refreshed from disk.");
         }
 
         private static ModItem NewMod(string folder, int order) => new()
@@ -230,31 +280,46 @@ namespace TMM
             }
 
             var confirm = MessageBox.Show(
-                $"Deploy mods to:\n{_config.GameDirectory}\n\nEnabled mods will be copied to your game directory. Make sure you have a backup of your original game files.",
+                $"Deploy mods to:\n{_config.GameDirectory}\n\nEnabled mods will be copied to your game directory.",
                 "Confirm Deploy", MessageBoxButton.YesNo, MessageBoxImage.Information);
             if (confirm != MessageBoxResult.Yes) return;
 
             btnDeploy.IsEnabled = false;
-            txtStatus.Text = "Deploying...";
+
+            // Show overlay
+            DialogOverlay.Visibility      = Visibility.Visible;
+            DeployProgressPanel.Visibility = Visibility.Visible;
+            txtDeployStage.Text            = "Deploying...";
+            pbDeploy.IsIndeterminate       = true;
+            txtDeployCount.Text            = "";
 
             try
             {
                 var progress = new Progress<DeploymentProgress>(p =>
-                    txtStatus.Text = string.IsNullOrEmpty(p.Stage) ? "Deploying..." : p.Stage);
+                {
+                    txtDeployStage.Text = string.IsNullOrEmpty(p.Stage) ? "Deploying..." : p.Stage;
+                    if (p.Total > 0)
+                    {
+                        pbDeploy.IsIndeterminate = false;
+                        pbDeploy.Maximum = p.Total;
+                        pbDeploy.Value   = p.Current;
+                        txtDeployCount.Text = $"{p.Current} / {p.Total}";
+                    }
+                });
 
                 await _core.DeployCustomGameModsAsync(_profile, _config, _mods, progress);
                 _hasPendingChanges = false;
                 UpdateDeployButton();
-                txtStatus.Text = $"Deploy complete — {DateTime.Now:HH:mm:ss}";
+                NotificationService.ShowSuccess($"Deploy complete — {DateTime.Now:HH:mm:ss}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Deploy failed:\n{ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                txtStatus.Text = "Deploy failed.";
+                NotificationService.ShowError($"Deploy failed: {ex.Message}");
             }
             finally
             {
+                DialogOverlay.Visibility      = Visibility.Collapsed;
+                DeployProgressPanel.Visibility = Visibility.Collapsed;
                 btnDeploy.IsEnabled = true;
             }
         }
@@ -266,8 +331,7 @@ namespace TMM
             var manifests = _core.GetRollbackManifests(_profile.Key);
             if (manifests.Count == 0)
             {
-                MessageBox.Show("No rollback points found. Deploy mods first to create a backup.",
-                    "Rollback", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("No rollback points found. Deploy mods first to create a backup.");
                 return;
             }
 
@@ -286,21 +350,16 @@ namespace TMM
             if (choice != MessageBoxResult.Yes) return;
 
             btnRollback.IsEnabled = false;
-            txtStatus.Text = "Rolling back...";
 
             try
             {
-                var progress = new Progress<DeploymentProgress>(p =>
-                    txtStatus.Text = string.IsNullOrEmpty(p.Stage) ? "Rolling back..." : p.Stage);
-
+                var progress = new Progress<DeploymentProgress>(_ => { });
                 await _core.RollbackDeployAsync(latest, progress);
-                txtStatus.Text = $"Rollback complete — {DateTime.Now:HH:mm:ss}";
+                NotificationService.ShowSuccess($"Rollback complete — {DateTime.Now:HH:mm:ss}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Rollback failed:\n{ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                txtStatus.Text = "Rollback failed.";
+                NotificationService.ShowError($"Rollback failed: {ex.Message}");
             }
             finally
             {
@@ -312,7 +371,6 @@ namespace TMM
 
         private void BtnLaunch_Click(object sender, RoutedEventArgs e)
         {
-            // Prefer Steam protocol launch when SteamAppId is configured
             if (!string.IsNullOrWhiteSpace(_config.SteamAppId))
             {
                 SteamLauncher.Invoke("rungameid", _config.SteamAppId);
@@ -333,7 +391,7 @@ namespace TMM
             Process.Start(new ProcessStartInfo(exeFull) { UseShellExecute = true });
         }
 
-        // ── Settings ──────────────────────────────────────────────────────────
+        // ── Edit config ────────────────────────────────────────────────────────
 
         private async void BtnEditConfig_Click(object sender, RoutedEventArgs e)
         {
@@ -351,6 +409,8 @@ namespace TMM
             await RefreshAsync();
         }
 
+        // ── Settings / Theme ──────────────────────────────────────────────────
+
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
             new SettingsWindow(_core) { Owner = this }.ShowDialog();
@@ -362,26 +422,6 @@ namespace TMM
         private void BtnTheme_Click(object sender, RoutedEventArgs e)
         {
             new ThemeManagerWindow(_core) { Owner = this }.ShowDialog();
-            ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
-        }
-
-        private void BtnRollTheme_Click(object sender, RoutedEventArgs e)
-        {
-            var presets = ThemeManagerWindow.BuiltInPresets;
-            if (presets.Count == 0) return;
-            var preset = presets[new Random().Next(presets.Count)];
-
-            _core.Settings.AccentColor    = preset.AccentColor;
-            _core.Settings.BgColor        = preset.BgColor;
-            _core.Settings.ColorMode      = preset.ColorMode;
-            _core.Settings.TitlebarTheme  = preset.TitlebarTheme;
-            _core.Settings.FontFamily     = preset.FontFamily;
-            _core.Settings.MicaEnabled    = preset.MicaEnabled;
-            _core.Settings.LastPresetName = preset.Name;
-            _core.SaveSettings();
-
             ThemeEngine.ApplyTheme(_core.Settings);
             ThemeEngine.ApplyFont(this, _core.Settings);
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
@@ -422,14 +462,14 @@ namespace TMM
 
         // ── Drag & Drop reorder ────────────────────────────────────────────────
 
-        private void List_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) =>
+        private void List_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e) =>
             _startPoint = e.GetPosition(null);
 
-        private void List_MouseMove(object sender, MouseEventArgs e)
+        private void List_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
             var pos = e.GetPosition(null);
             var diff = _startPoint - pos;
-            if (e.LeftButton != MouseButtonState.Pressed) return;
+            if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed) return;
             if (Math.Abs(diff.X) < SystemParameters.MinimumHorizontalDragDistance &&
                 Math.Abs(diff.Y) < SystemParameters.MinimumVerticalDragDistance) return;
 
@@ -696,6 +736,5 @@ namespace TMM
                 SaveMods();
             }
         }
-
     }
 }

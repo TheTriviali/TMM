@@ -17,9 +17,9 @@ namespace TMM
 {
     /// <summary>
     /// Three-column dashboard for GTA IV, TLaD, and TBoGT.
-    /// Each column manages its own mod list, directory picker, search filter, and deploy/rollback pipeline.
-    /// ASI routing (plugins\ folder check) is handled transparently by BackendCore
-    /// via the ConditionalRoutes on each GameProfile.
+    /// Each column manages its own mod list, search filter, and per-column deploy/rollback/launch.
+    /// The toolbar has Deploy All, Rollback Active, and Play buttons for each episode.
+    /// ASI routing is handled transparently by BackendCore via ConditionalRoutes on each GameProfile.
     /// </summary>
     public partial class Gta4DashboardWindow : TmmWindow
     {
@@ -74,10 +74,7 @@ namespace TMM
             UpdateDeployButtons();
             UpdateStatusDots();
             UpdateLaunchButtons();
-            string disk = _core.GetDriveSpaceInfo();
-            txtDiskSpace.Text    = disk;
-            txtToolbarDisk.Text  = disk;
-            UpdateStatusBar();
+            txtDiskSpace.Text = _core.GetDriveSpaceInfo();
         }
 
         private void UpdatePathLabels()
@@ -99,14 +96,11 @@ namespace TMM
             bool ready    = _core.IsGameReady(profile);
             bool pending  = _pendingByEpisode[episodeIdx];
             bool hasMods  = _core.Mods[profile.Key].Any(m => m.IsEnabled);
-            bool override_ = _core.Settings.DeployOverrides.TryGetValue(profile.Key, out bool ov) && ov;
 
             btn.IsEnabled = ready;
 
             if (!ready || !hasMods)
                 btn.Background = UiColors.DisabledBrush;
-            else if (pending && override_)
-                btn.Background = UiColors.PendingBrush;
             else if (pending)
                 btn.SetResourceReference(Control.BackgroundProperty, "AccentBrush");
             else
@@ -129,26 +123,23 @@ namespace TMM
 
         private void UpdateLaunchButtons()
         {
-            // Show launch buttons only when the game directory + exe exist
-            UpdateLaunchButton(btnLaunchIV,    GameProfile.IV);
-            UpdateLaunchButton(btnLaunchTLaD,  GameProfile.TLaD);
-            UpdateLaunchButton(btnLaunchTBoGT, GameProfile.TBoGT);
+            UpdateLaunchButton(btnLaunchIV,    btnPlayIV,    GameProfile.IV);
+            UpdateLaunchButton(btnLaunchTLaD,  btnPlayTLaD,  GameProfile.TLaD);
+            UpdateLaunchButton(btnLaunchTBoGT, btnPlayTBoGT, GameProfile.TBoGT);
         }
 
-        private void UpdateLaunchButton(Button btn, GameProfile profile)
+        private void UpdateLaunchButton(Button colBtn, Button toolbarBtn, GameProfile profile)
         {
             string? dir = _core.GetVanillaPath(profile);
             bool canLaunch = !string.IsNullOrEmpty(dir)
                           && Directory.Exists(dir)
                           && File.Exists(Path.Combine(dir, profile.ExeName));
-            btn.Visibility = canLaunch ? Visibility.Visible : Visibility.Collapsed;
-        }
 
-        private void UpdateStatusBar()
-        {
-            txtStatus.Text = $"IV: {_episodes[0].Mods.Count(m => m.IsEnabled)} enabled  |  " +
-                             $"TLaD: {_episodes[1].Mods.Count(m => m.IsEnabled)} enabled  |  " +
-                             $"TBoGT: {_episodes[2].Mods.Count(m => m.IsEnabled)} enabled";
+            // Column footer launch button: show/hide
+            colBtn.Visibility = canLaunch ? Visibility.Visible : Visibility.Collapsed;
+
+            // Toolbar play button: tint green/red based on readiness
+            toolbarBtn.Background = new SolidColorBrush(canLaunch ? UiColors.ReadyGreen : UiColors.NotReadyRed);
         }
 
         // ── Window chrome ─────────────────────────────────────────────────────────
@@ -156,21 +147,45 @@ namespace TMM
         private new void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left && e.ClickCount == 2)
-                BtnMaxRestore_Click(sender, e);
+                BtnMaximize_Click(sender, e);
             else if (e.ChangedButton == MouseButton.Left)
                 DragMove();
         }
 
-        private void BtnMaxRestore_Click(object sender, RoutedEventArgs e) => BtnMaximize_Click(sender, e);
-
         private void Window_StateChanged(object sender, EventArgs e)
         {
-            btnMaxRestore.Content = WindowState == WindowState.Maximized ? "" : "";
             bool maximized = WindowState == WindowState.Maximized;
-            OuterBorder.CornerRadius = maximized ? new CornerRadius(0) : new CornerRadius(10);
+            MainWindowBorder.CornerRadius = maximized ? new CornerRadius(0) : new CornerRadius(10);
         }
 
         // ── Toolbar ───────────────────────────────────────────────────────────────
+
+        private void BtnToggleSidebar_Click(object sender, RoutedEventArgs e)
+        {
+            SidebarBorder.Visibility = SidebarBorder.Visibility == Visibility.Visible
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private void BtnHelp_Click(object sender, RoutedEventArgs e)
+        {
+            var r = MessageBox.Show(
+                "For help and documentation, visit the TMM GitHub repository.\n\nOpen in browser?",
+                "Help & Resources", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (r == MessageBoxResult.Yes)
+                ShellHelper.OpenUrl("https://github.com/noahd179/tgtamm");
+        }
+
+        private void BtnAbout_Click(object sender, RoutedEventArgs e)
+        {
+            new AboutWindow(_core) { Owner = this }.ShowDialog();
+        }
+
+        private void BtnLink_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string url && !string.IsNullOrEmpty(url))
+                ShellHelper.OpenUrl(url);
+        }
 
         private async void BtnInstallMod_Click(object sender, RoutedEventArgs e)
         {
@@ -178,20 +193,14 @@ namespace TMM
             var defaultProfile = ResolveProfileFromList(_activeList);
             GameProfile? profile = defaultProfile;
 
-            if (profile == null)
-            {
-                var picker = new EpisodePicker("Install mod for:", _episodes.Select(ep => ep.Profile).ToArray());
-                if (picker.ShowDialog() != true || picker.SelectedProfile == null) return;
-                profile = picker.SelectedProfile;
-            }
-            else
-            {
-                // Still offer a picker but pre-selected episode as a title hint
-                var picker = new EpisodePicker($"Install mod for (default: {profile.ShortName}):",
-                    _episodes.Select(ep => ep.Profile).ToArray());
-                if (picker.ShowDialog() != true || picker.SelectedProfile == null) return;
-                profile = picker.SelectedProfile;
-            }
+            var picker = new EpisodePicker(
+                defaultProfile != null
+                    ? $"Install mod for (default: {defaultProfile.ShortName}):"
+                    : "Install mod for:",
+                _episodes.Select(ep => ep.Profile).ToArray());
+
+            if (picker.ShowDialog() != true || picker.SelectedProfile == null) return;
+            profile = picker.SelectedProfile;
 
             string rawFolder = Path.Combine(_core.AppDataPath, profile.RawFolderName);
 
@@ -219,13 +228,9 @@ namespace TMM
             try
             {
                 if (ext is ".zip" or ".rar" or ".7z")
-                {
                     await BackendCore.ExtractArchiveSafeAsync(filePath, destDir, CancellationToken.None);
-                }
                 else
-                {
                     File.Copy(filePath, Path.Combine(destDir, Path.GetFileName(filePath)), overwrite: true);
-                }
 
                 var item = new ModItem
                 {
@@ -235,12 +240,11 @@ namespace TMM
                     RawFolderPath = destDir
                 };
                 SyncModInfoToFolder(item);
-                txtStatus.Text = $"Installed '{modName}' for {profile.ShortName}";
+                NotificationService.ShowSuccess($"Installed '{modName}' for {profile.ShortName}.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to install '{modName}':\n{ex.Message}", "Install Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Failed to install '{modName}': {ex.Message}");
             }
         }
 
@@ -248,9 +252,9 @@ namespace TMM
 
         private async void BtnRescanPaths_Click(object sender, RoutedEventArgs e)
         {
-            txtStatus.Text = "Scanning...";
             await Task.Run(() => _core.QuickScan());
             await RefreshAsync();
+            NotificationService.ShowInfo("Paths rescanned.");
         }
 
         private async void BtnDeployAll_Click(object sender, RoutedEventArgs e)
@@ -263,8 +267,45 @@ namespace TMM
                 count++;
             }
             if (count == 0)
-                MessageBox.Show("No IV episodes are configured. Set game paths via the browse buttons.",
+                MessageBox.Show("No IV episodes are configured. Set game paths via the sidebar browse buttons.",
                     "Nothing to Deploy", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void BtnRollbackActive_Click(object sender, RoutedEventArgs e)
+        {
+            var profile = GetActiveProfile();
+            var manifests = _core.GetRollbackManifests(profile.Key);
+            if (manifests.Count == 0)
+            {
+                NotificationService.ShowInfo($"No rollback snapshots exist for {profile.DisplayName}.");
+                return;
+            }
+
+            var latest = manifests[0];
+            string info = $"Rollback {profile.DisplayName} to snapshot from {latest.Timestamp}?\n\n" +
+                          $"Mods: {string.Join(", ", latest.ModNames.Take(5))}" +
+                          (latest.ModNames.Count > 5 ? $" (+{latest.ModNames.Count - 5} more)" : "");
+
+            if (MessageBox.Show(info, "Confirm Rollback", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                return;
+
+            var btn = (Button)sender;
+            btn.IsEnabled = false;
+
+            try
+            {
+                var progress = new Progress<DeploymentProgress>(_ => { });
+                await _core.RollbackDeployAsync(latest, progress);
+                NotificationService.ShowSuccess($"{profile.DisplayName} rolled back.");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Rollback failed: {ex.Message}");
+            }
+            finally
+            {
+                btn.IsEnabled = true;
+            }
         }
 
         private void BtnOpenAppData_Click(object sender, RoutedEventArgs e) => _core.OpenAppData();
@@ -306,7 +347,21 @@ namespace TMM
             ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
         }
 
-        // ── Per-column browse ─────────────────────────────────────────────────────
+        // ── Notification toasts ───────────────────────────────────────────────────
+
+        private void Toast_Close(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement el && el.DataContext is NotificationItem item)
+                NotificationService.Queue.Remove(item);
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement el && el.DataContext is NotificationItem item)
+                NotificationService.Queue.Remove(item);
+        }
+
+        // ── Per-column browse (sidebar) ───────────────────────────────────────────
 
         private async void BtnBrowse_Click(object sender, RoutedEventArgs e)
         {
@@ -347,7 +402,7 @@ namespace TMM
             {
                 MessageBox.Show(
                     $"Game directory for {profile.DisplayName} is not set or missing.\n\n" +
-                    "Use the browse button (folder icon) next to the path label to set it.",
+                    "Use the browse button in the sidebar to set it.",
                     "Directory Missing", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -355,30 +410,45 @@ namespace TMM
             _deployCts?.Cancel();
             _deployCts = new CancellationTokenSource();
             if (btn != null) btn.IsEnabled = false;
-            txtStatus.Text = $"Deploying {profile.ShortName}...";
+
+            // Show overlay
+            DialogOverlay.Visibility      = Visibility.Visible;
+            DeployProgressPanel.Visibility = Visibility.Visible;
+            txtDeployStage.Text            = $"Deploying {profile.ShortName}...";
+            pbDeploy.IsIndeterminate       = true;
+            txtDeployCount.Text            = "";
 
             try
             {
                 var progress = new Progress<DeploymentProgress>(p =>
-                    txtStatus.Text = $"[{profile.ShortName}] {p.Stage} ({p.Current}/{p.Total})");
+                {
+                    txtDeployStage.Text = $"[{profile.ShortName}] {p.Stage}";
+                    if (p.Total > 0)
+                    {
+                        pbDeploy.IsIndeterminate = false;
+                        pbDeploy.Maximum = p.Total;
+                        pbDeploy.Value   = p.Current;
+                        txtDeployCount.Text = $"{p.Current} / {p.Total}";
+                    }
+                });
 
                 await _core.DeployModsAsync(profile, _core.Mods[profile.Key], progress, _deployCts.Token);
                 _pendingByEpisode[EpisodeIndex(profile.Key)] = false;
                 UpdateDeployButtons();
-                txtStatus.Text = $"{profile.DisplayName} deployed successfully.";
+                NotificationService.ShowSuccess($"{profile.DisplayName} deployed successfully.");
             }
             catch (OperationCanceledException)
             {
-                txtStatus.Text = "Deploy cancelled.";
+                NotificationService.ShowWarning("Deploy cancelled.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Deploy failed for {profile.DisplayName}:\n{ex.Message}", "Deploy Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                txtStatus.Text = "Deploy failed.";
+                NotificationService.ShowError($"Deploy failed for {profile.DisplayName}: {ex.Message}");
             }
             finally
             {
+                DialogOverlay.Visibility      = Visibility.Collapsed;
+                DeployProgressPanel.Visibility = Visibility.Collapsed;
                 if (btn != null) btn.IsEnabled = true;
             }
         }
@@ -392,8 +462,7 @@ namespace TMM
             var manifests = _core.GetRollbackManifests(profile.Key);
             if (manifests.Count == 0)
             {
-                MessageBox.Show($"No rollback snapshots exist for {profile.DisplayName}.",
-                    "Nothing to Rollback", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo($"No rollback snapshots for {profile.DisplayName}.");
                 return;
             }
 
@@ -405,21 +474,17 @@ namespace TMM
             if (MessageBox.Show(info, "Confirm Rollback", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
-            btn.IsEnabled  = false;
-            txtStatus.Text = $"Rolling back {profile.ShortName}...";
+            btn.IsEnabled = false;
 
             try
             {
-                var progress = new Progress<DeploymentProgress>(p =>
-                    txtStatus.Text = $"[{profile.ShortName}] {p.Stage}");
+                var progress = new Progress<DeploymentProgress>(_ => { });
                 await _core.RollbackDeployAsync(latest, progress);
-                txtStatus.Text = $"{profile.DisplayName} rolled back.";
+                NotificationService.ShowSuccess($"{profile.DisplayName} rolled back.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Rollback failed:\n{ex.Message}", "Rollback Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                txtStatus.Text = "Rollback failed.";
+                NotificationService.ShowError($"Rollback failed: {ex.Message}");
             }
             finally
             {
@@ -464,23 +529,19 @@ namespace TMM
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (e.Key == Key.F2)    { MenuRename_Click(null, null!); e.Handled = true; }
+            if (e.Key == Key.F2)          { MenuRename_Click(null, null!); e.Handled = true; }
             else if (e.Key == Key.Space)  { MenuToggle_Click(null, null!); e.Handled = true; }
             else if (e.Key == Key.Delete) { MenuDelete_Click(null, null!); e.Handled = true; }
             else if (e.Key == Key.F5)     { BtnDeployAll_Click(null!, null!); e.Handled = true; }
             else if (Keyboard.Modifiers == ModifierKeys.Control)
             {
-                if (e.Key == Key.Up)   { MenuMoveUp_Click(null, null!);   e.Handled = true; }
+                if (e.Key == Key.Up)        { MenuMoveUp_Click(null, null!);   e.Handled = true; }
                 else if (e.Key == Key.Down) { MenuMoveDown_Click(null, null!); e.Handled = true; }
             }
             base.OnKeyDown(e);
         }
 
-        private void List_KeyDown(object sender, KeyEventArgs e)
-        {
-            // Let per-list key events bubble to the window handler.
-            OnKeyDown(e);
-        }
+        private void List_KeyDown(object sender, KeyEventArgs e) => OnKeyDown(e);
 
         // ── Search / filter ───────────────────────────────────────────────────────
 
@@ -518,12 +579,11 @@ namespace TMM
             if (sender is ListView lv) _activeList = lv;
         }
 
-        private void ModCheckBox_Click(object sender, RoutedEventArgs e)
+        private void ModCheckBox_Changed(object sender, RoutedEventArgs e)
         {
             if (sender is CheckBox { DataContext: ModItem item })
             {
                 SyncModInfoToFolder(item);
-                UpdateStatusBar();
                 // Flag whichever episode contains this mod as pending
                 for (int i = 0; i < _episodes.Length; i++)
                 {
@@ -558,14 +618,12 @@ namespace TMM
             if (mod == null) return;
             mod.IsEnabled = !mod.IsEnabled;
             SyncModInfoToFolder(mod);
-            UpdateStatusBar();
             FlagEpisodePending();
         }
 
         private void MenuDelete_Click(object? sender, RoutedEventArgs e)
         {
-            if (_activeList == null) return;
-            if (_activeList.Tag is not string key) return;
+            if (_activeList == null || _activeList.Tag is not string key) return;
 
             var mods     = _core.Mods[key];
             var selected = _activeList.SelectedItems.Cast<ModItem>().ToList();
@@ -584,13 +642,11 @@ namespace TMM
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error deleting '{m.Name}':\n{ex.Message}", "Delete Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError($"Error deleting '{m.Name}': {ex.Message}");
                 }
             }
 
             txtDiskSpace.Text = _core.GetDriveSpaceInfo();
-            UpdateStatusBar();
         }
 
         private void MenuMoveUp_Click(object? sender, RoutedEventArgs e)
@@ -674,20 +730,12 @@ namespace TMM
                     "Folder Not Found", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void MenuOpenModsStore_Click(object sender, RoutedEventArgs e)
+        private void MenuOpenBackupFolder_Click(object sender, RoutedEventArgs e)
         {
             var profile = GetActiveProfile();
-            string url = profile.Key switch
-            {
-                "IV" => "https://www.nexusmods.com/gta4/",
-                "TLaD" => "https://www.nexusmods.com/gta4/",
-                "TBoGT" => "https://www.nexusmods.com/gta4/",
-                _ => ""
-            };
-            if (!string.IsNullOrEmpty(url))
-                ShellHelper.OpenUrl(url);
-            else
-                MessageBox.Show("No mods store configured for this game.", "Open Mods Store", MessageBoxButton.OK, MessageBoxImage.Information);
+            string path = Path.Combine(_core.BackupsPath, profile.Key);
+            Directory.CreateDirectory(path);
+            ShellHelper.OpenFolder(path);
         }
 
         private void MenuProperties_Click(object sender, RoutedEventArgs e)
@@ -696,7 +744,6 @@ namespace TMM
             if (mod == null) return;
             new ModPropertiesWindow(mod) { Owner = this }.ShowDialog();
         }
-
 
         // ── Drag-and-drop reorder ─────────────────────────────────────────────────
 
@@ -752,7 +799,7 @@ namespace TMM
             var (_, mods) = _episodes.FirstOrDefault(ep => ep.Profile.Key == key);
             if (mods == null || !mods.Contains(_draggedItem)) { _draggedItem = null; return; }
 
-            int fromIdx  = mods.IndexOf(_draggedItem);
+            int fromIdx   = mods.IndexOf(_draggedItem);
             int insertIdx = GetInsertionIndex(targetList, e.GetPosition(targetList).Y);
             if (insertIdx > fromIdx) insertIdx--;
             int toIdx = Math.Clamp(insertIdx, 0, mods.Count - 1);
@@ -780,7 +827,11 @@ namespace TMM
             _           => null
         };
 
-        private void HideDropLine(ListView lv) { System.Windows.Shapes.Rectangle? l = GetDropLine(lv); if (l != null) l.Visibility = Visibility.Collapsed; }
+        private void HideDropLine(ListView lv)
+        {
+            var l = GetDropLine(lv);
+            if (l != null) l.Visibility = Visibility.Collapsed;
+        }
 
         private static double GetInsertionLineY(ListView lv, double mouseY)
         {
