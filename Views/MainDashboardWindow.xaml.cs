@@ -124,6 +124,7 @@ namespace TMM
         public async Task RefreshUIAsync()
         {
             ApplyTitlebarStyle();
+            UpdateGamePaths();
             await _core.RefreshAllModListsAsync();
             txtDiskSpace.Text = _core.GetDriveSpaceInfo();
 
@@ -1082,6 +1083,44 @@ namespace TMM
         // ==========================================================
         // SIMPLE BUTTON HANDLERS
         // ==========================================================
+
+        private void UpdateGamePaths()
+        {
+            UpdateGamePathRow(GameProfile.III, dotIII, txtPathIII);
+            UpdateGamePathRow(GameProfile.VC,  dotVC,  txtPathVC);
+            UpdateGamePathRow(GameProfile.SA,  dotSA,  txtPathSA);
+        }
+
+        private void UpdateGamePathRow(GameProfile profile,
+            System.Windows.Shapes.Ellipse dot, TextBlock txt)
+        {
+            string? path = _core.GetVanillaPath(profile);
+            bool isSet   = !string.IsNullOrEmpty(path) && Directory.Exists(path);
+            dot.Fill = new SolidColorBrush(isSet
+                ? UiColors.ReadyGreen
+                : Color.FromRgb(160, 60, 60));
+            txt.Text = isSet ? path! : "—";
+        }
+
+        private async void BtnBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button btn || btn.Tag is not string key) return;
+            var profile = GameProfile.ByKey(key);
+            if (profile == null) return;
+
+            var dlg = new Microsoft.Win32.OpenFolderDialog
+            {
+                Title = $"Select {profile.DisplayName} directory"
+            };
+            string? current = _core.GetVanillaPath(profile);
+            if (!string.IsNullOrEmpty(current) && Directory.Exists(current))
+                dlg.InitialDirectory = current;
+            if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.FolderName)) return;
+
+            _core.SetVanillaPath(profile, dlg.FolderName);
+            _core.SaveSettings();
+            await RefreshUIAsync();
+        }
 
         private void BtnLink_Click(object sender, RoutedEventArgs e)
         {

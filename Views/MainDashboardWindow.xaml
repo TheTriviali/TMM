@@ -673,8 +673,79 @@
                             <DockPanel Margin="10">
 
                                 <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+
+                                    <!-- GAMES section: browse rows for III / VC / SA -->
+                                    <TextBlock Text="GAMES" Foreground="{DynamicResource AccentLabelBrush}"
+                                               FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" Margin="0,10,0,6"/>
+
+                                    <!-- GTA III row -->
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="14"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse x:Name="dotIII" Width="8" Height="8" Grid.Column="0" VerticalAlignment="Center">
+                                            <Ellipse.Fill><SolidColorBrush Color="#A03C3C"/></Ellipse.Fill>
+                                        </Ellipse>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="GTA III" Foreground="{DynamicResource AccentLabelBrush}"
+                                                       FontSize="11" FontWeight="SemiBold"/>
+                                            <TextBlock x:Name="txtPathIII" Foreground="{DynamicResource SubTextBrush}"
+                                                       FontSize="9" TextTrimming="CharacterEllipsis" Opacity="0.7" Text="—"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Content="&#xE838;" ToolTip="Browse for GTA III directory"
+                                                Style="{StaticResource IconButtonStyle}" FontSize="11" Padding="4,2"
+                                                Click="BtnBrowse_Click" Tag="III"/>
+                                    </Grid>
+
+                                    <!-- GTA Vice City row -->
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="14"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse x:Name="dotVC" Width="8" Height="8" Grid.Column="0" VerticalAlignment="Center">
+                                            <Ellipse.Fill><SolidColorBrush Color="#A03C3C"/></Ellipse.Fill>
+                                        </Ellipse>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="GTA Vice City" Foreground="{DynamicResource AccentLabelBrush}"
+                                                       FontSize="11" FontWeight="SemiBold"/>
+                                            <TextBlock x:Name="txtPathVC" Foreground="{DynamicResource SubTextBrush}"
+                                                       FontSize="9" TextTrimming="CharacterEllipsis" Opacity="0.7" Text="—"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Content="&#xE838;" ToolTip="Browse for GTA Vice City directory"
+                                                Style="{StaticResource IconButtonStyle}" FontSize="11" Padding="4,2"
+                                                Click="BtnBrowse_Click" Tag="VC"/>
+                                    </Grid>
+
+                                    <!-- GTA San Andreas row -->
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="14"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse x:Name="dotSA" Width="8" Height="8" Grid.Column="0" VerticalAlignment="Center">
+                                            <Ellipse.Fill><SolidColorBrush Color="#A03C3C"/></Ellipse.Fill>
+                                        </Ellipse>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="GTA San Andreas" Foreground="{DynamicResource AccentLabelBrush}"
+                                                       FontSize="11" FontWeight="SemiBold"/>
+                                            <TextBlock x:Name="txtPathSA" Foreground="{DynamicResource SubTextBrush}"
+                                                       FontSize="9" TextTrimming="CharacterEllipsis" Opacity="0.7" Text="—"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Content="&#xE838;" ToolTip="Browse for GTA San Andreas directory"
+                                                Style="{StaticResource IconButtonStyle}" FontSize="11" Padding="4,2"
+                                                Click="BtnBrowse_Click" Tag="SA"/>
+                                    </Grid>
+
+                                    <Border Height="1" Background="{DynamicResource SubTextBrush}"
+                                            Opacity="0.3" Margin="10,10"/>
+
                                     <TextBlock Text="ESSENTIALS" Foreground="{DynamicResource AccentLabelBrush}"
-                                           FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" Margin="0,10,0,10"/>
+                                           FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" Margin="0,4,0,10"/>
 
                                     <!-- Downgrader links -->
                                     <Button Content="III 1.0 Downgrader" Click="BtnLink_Click"
@@ -725,7 +796,7 @@
                                 <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
                                     <!-- Reworded: only shown when one or more games still need a path. -->
                                     <TextBlock x:Name="txtInstallWarning"
-                                           Text="One or more games are unmapped. Open Settings to locate them."
+                                           Text="One or more games are unmapped. Use the browse buttons above to set game paths."
                                            Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="SemiBold"
                                            TextWrapping="Wrap" TextAlignment="Center"
                                            Visibility="Collapsed" Margin="0,0,0,10"/>

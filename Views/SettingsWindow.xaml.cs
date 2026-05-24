@@ -17,17 +17,6 @@ namespace TMM
             InitializeComponent();
         }
 
-        private void BtnRerunSetup_Click(object sender, RoutedEventArgs e)
-        {
-            new InitialSetupWindow(_core) { Owner = Owner }.ShowDialog();
-            _ = rowIII.RefreshAsync();
-            _ = rowVC.RefreshAsync();
-            _ = rowSA.RefreshAsync();
-            _ = rowIV.RefreshAsync();
-            _ = rowTLaD.RefreshAsync();
-            _ = rowTBoGT.RefreshAsync();
-        }
-
         private void BtnSteamAction_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button btn) return;
