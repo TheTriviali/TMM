@@ -16,23 +16,13 @@ namespace TMM
 
         public bool FirstLaunch { get; set; } = true;
 
-        // ── Colors ──────────────────────────────────────────────────────────
+        // ── Accent Colors (2-tone) ──────────────────────────────────────────
+        // Primary accent color (main UI highlights, nav icons, etc.)
         public string AccentColor { get; set; } = "#0883FF";
-        public string BgColor     { get; set; } = "#1C1C1E";
-        public string ColorMode   { get; set; } = "Dark";
-
-        // ── Titlebar ─────────────────────────────────────────────────────────
-        public string TitlebarTheme { get; set; } = "Vanilla";
-
-        // ── Typography ───────────────────────────────────────────────────────
-        public string FontFamily { get; set; } = "Segoe UI Light";
-
-        // ── Mica / Backdrop ──────────────────────────────────────────────────
-        public bool MicaEnabled { get; set; } = false;
-
-        // ── Accent border ────────────────────────────────────────────────────
-        // When true, the window outer border uses AccentBrush instead of HeaderBrush.
-        public bool AccentBorderEnabled { get; set; } = false;
+        // Secondary accent color (for gradients, optional decorative use)
+        public string AccentColor2 { get; set; } = "#00D9FF";
+        // Active preset name (e.g. "Blue-Cyan", "Purple-Pink")
+        public string ActiveAccentPreset { get; set; } = "Blue-Cyan";
 
         // ── Window state ──────────────────────────────────────────────────────
         public double WindowLeft   { get; set; } = -1;
@@ -48,10 +38,9 @@ namespace TMM
             { "III", false }, { "VC", false }, { "SA", false }
         };
 
-        public string LastPresetName { get; set; } = "Dark Teal (Default)";
-
         // ── Multi-game (TMM) ───────────────────────────────────────────────────
         // Track the last selected game for quick restoration on app launch.
         public string? LastSelectedGameKey { get; set; } = null;
+
     }
 }

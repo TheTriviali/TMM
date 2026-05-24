@@ -93,8 +93,6 @@ namespace TMM
 
             // Application.Current is guaranteed non-null from here onward.
             ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
 
             // Restore window position and size
             if (_core.Settings.WindowLeft > 0 && _core.Settings.WindowTop > 0)
@@ -201,26 +199,12 @@ namespace TMM
                     maskBorder.CornerRadius = squarify ? new CornerRadius(0) : new CornerRadius(11);
             }
 
-            // Hide both control groups, then show the right one.
-            VanillaControls.Visibility  = Visibility.Collapsed;
+            // Always use Vanilla titlebar (Compact mode removed with theming simplification)
+            VanillaControls.Visibility  = Visibility.Visible;
             CompactControls.Visibility  = Visibility.Collapsed;
-
-            if (_core.Settings.TitlebarTheme == "Compact")
-            {
-                TitleBarBorder.Visibility  = Visibility.Collapsed;
-                CompactControls.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                // Default: W11 Vanilla (also handles any legacy/unknown theme value)
-                TitleBarBorder.Visibility  = Visibility.Visible;
-                TitleBarBorder.Background  = Brushes.Transparent;
-                TitleBarBorder.Opacity     = 1.0;
-                VanillaControls.Visibility = Visibility.Visible;
-            }
-
-            // Apply font (cascades to all child controls in the main window)
-            ThemeEngine.ApplyFont(this, _core.Settings);
+            TitleBarBorder.Visibility   = Visibility.Visible;
+            TitleBarBorder.Background   = Brushes.Transparent;
+            TitleBarBorder.Opacity      = 1.0;
         }
 
         // ==========================================================
@@ -1228,9 +1212,8 @@ namespace TMM
 
         private void BtnTheme_Click(object s, RoutedEventArgs e)
         {
-            DialogOverlay.Visibility = Visibility.Visible;
-            new ThemeManagerWindow(_core) { Owner = this }.ShowDialog();
-            DialogOverlay.Visibility = Visibility.Collapsed;
+            // ThemeManagerWindow removed in simplified theme system
+            // This window will be deleted in D4 refactor
         }
 
 

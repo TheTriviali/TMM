@@ -19,8 +19,6 @@ namespace TMM
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
 
             txtVersion.Text = $"v{_core.Version}";
 

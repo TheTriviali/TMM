@@ -51,8 +51,6 @@ namespace TMM
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
             await RefreshAsync();
         }
 
@@ -415,16 +413,12 @@ namespace TMM
         {
             new SettingsWindow(_core) { Owner = this }.ShowDialog();
             ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
         }
 
         private void BtnTheme_Click(object sender, RoutedEventArgs e)
         {
-            new ThemeManagerWindow(_core) { Owner = this }.ShowDialog();
-            ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            // ThemeManagerWindow removed in simplified theme system
+            // This window will be deleted in D4 refactor
         }
 
         // ── JSON persistence ───────────────────────────────────────────────────

@@ -62,8 +62,6 @@ namespace TMM
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
             await RefreshAsync();
         }
 
@@ -314,37 +312,19 @@ namespace TMM
         {
             new SettingsWindow(_core) { Owner = this }.ShowDialog();
             ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
             await RefreshAsync();
         }
 
         private void BtnTheme_Click(object sender, RoutedEventArgs e)
         {
-            new ThemeManagerWindow(_core) { Owner = this }.ShowDialog();
-            ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            // ThemeManagerWindow removed in simplified theme system
+            // This window will be deleted in D4 refactor
         }
 
         private void BtnRollTheme_Click(object sender, RoutedEventArgs e)
         {
-            var presets = ThemeManagerWindow.BuiltInPresets;
-            if (presets.Count == 0) return;
-            var preset = presets[new Random().Next(presets.Count)];
-
-            _core.Settings.AccentColor    = preset.AccentColor;
-            _core.Settings.BgColor        = preset.BgColor;
-            _core.Settings.ColorMode      = preset.ColorMode;
-            _core.Settings.TitlebarTheme  = preset.TitlebarTheme;
-            _core.Settings.FontFamily     = preset.FontFamily;
-            _core.Settings.MicaEnabled    = preset.MicaEnabled;
-            _core.Settings.LastPresetName = preset.Name;
-            _core.SaveSettings();
-
-            ThemeEngine.ApplyTheme(_core.Settings);
-            ThemeEngine.ApplyFont(this, _core.Settings);
-            ThemeEngine.TryApplyMica(this, _core.Settings.MicaEnabled);
+            // Theme presets removed in simplified theme system
+            // This window will be deleted in D4 refactor
         }
 
         // ── Notification toasts ───────────────────────────────────────────────────

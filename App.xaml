@@ -9,27 +9,28 @@
         <!-- Notification type icon converter -->
         <local:NotificationTypeIconConverter x:Key="NotificationTypeIconConverter"/>
 
-        <!-- Core brushes (replaced live by ThemeEngine.ApplyTheme at startup) -->
-        <SolidColorBrush x:Key="AccentBrush" Color="#4EC9B0"/>
-        <SolidColorBrush x:Key="AccentTextBrush" Color="#000000"/>
-        <SolidColorBrush x:Key="AccentLabelBrush" Color="#4EC9B0"/>
-        <SolidColorBrush x:Key="BgBrush" Color="#1E1E1E"/>
-        <SolidColorBrush x:Key="PanelBrush" Color="#252526"/>
-        <SolidColorBrush x:Key="HeaderBrush" Color="#2D2D30"/>
-        <SolidColorBrush x:Key="TextBrush" Color="White"/>
-        <SolidColorBrush x:Key="SubTextBrush" Color="Gray"/>
-        <SolidColorBrush x:Key="ControlBgBrush" Color="#333333"/>
+        <!-- Core brushes: WinUI dark mode + 2-tone custom accent (replaced live by ThemeEngine.ApplyTheme at startup) -->
+        <SolidColorBrush x:Key="AccentBrush" Color="#0883FF"/>
+        <SolidColorBrush x:Key="AccentBrush2" Color="#00D9FF"/>
+        <SolidColorBrush x:Key="AccentTextBrush" Color="White"/>
+        <SolidColorBrush x:Key="BgBrush" Color="#202020"/>
+        <SolidColorBrush x:Key="PanelBrush" Color="#2D2D30"/>
+        <SolidColorBrush x:Key="HeaderBrush" Color="#323236"/>
+        <SolidColorBrush x:Key="TextBrush" Color="#E5E5E5"/>
+        <SolidColorBrush x:Key="SubTextBrush" Color="#9B9B9B"/>
+        <SolidColorBrush x:Key="ControlBgBrush" Color="#3C3C43"/>
         <SolidColorBrush x:Key="CheckeredRowBrush" Color="#1AFFFFFF"/>
 
-        <!-- Modular titlebar brushes (also replaced by ThemeEngine) -->
-        <SolidColorBrush x:Key="MacTitleBrush" Color="#2D2D2D"/>
-        <SolidColorBrush x:Key="Win8TitleBrush" Color="#0078D7"/>
-        <SolidColorBrush x:Key="Aero7TitleBrush" Color="#30FFFFFF"/>
+        <!-- Gradient brush for library cards (primary to secondary accent) -->
+        <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#0883FF" Offset="0"/>
+            <GradientStop Color="#00D9FF" Offset="1"/>
+        </LinearGradientBrush>
 
         <!-- Global ComboBox style
              Uses a full custom ControlTemplate so the closed-state selection box
-             always shows theme-aware colors, regardless of the system Aero theme.
-             Windows (like ThemeManagerWindow) can override with a local implicit style. -->
+             always shows theme-aware colors regardless of system theme.
+             Windows can override with a local implicit style if needed. -->
         <Style TargetType="{x:Type ComboBox}">
             <Setter Property="Background"      Value="{DynamicResource ControlBgBrush}"/>
             <Setter Property="Foreground"      Value="{DynamicResource TextBrush}"/>
