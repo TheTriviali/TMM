@@ -18,8 +18,9 @@ TMM is currently in **Alpha**. Expect bugs, unpolished edge cases, and missing f
 3. **Add Games:**
    - Built-in GTA III Series games appear in launcher on first run
    - Add custom games via "Add Custom Game" button
-4. **Install Mods:** Drag-drop `.zip`/`.rar`/`.7z` files into mod list, arrange load order, click Deploy
-5. **Play:** Use in-app Play buttons or launch manually from game directory
+4. **Set Game Paths:** In each game dashboard, use the 📂 browse buttons in the sidebar to point TMM at your game directories (paths are saved automatically)
+5. **Install Mods:** Drag-drop `.zip`/`.rar`/`.7z` files into mod list, arrange load order, click Deploy
+6. **Play:** Use in-app Play buttons or launch manually from game directory
 
 ---
 
@@ -80,6 +81,7 @@ Custom game configs are saved as `.tmmgame` files and can be exported/imported t
 * **Automatic Backup & Rollback:** Every deploy creates timestamped backups. Rollback to any previous state.
 * **Custom Game Support:** Add any game. Per-extension output directory routing with plain-English sentence builder routing rules + one-click presets (ASI Loader, Source Engine, SKSE, CLEO, etc.).
 * **Multi-game Launcher:** Home screen showing all games (built-in + custom) as cards. Quick access to Edit/Delete custom games.
+* **Sidebar Path Browse:** Game directory is set directly in each dashboard's sidebar via a 📂 browse button — no separate settings dialog needed. Dot indicator turns green when a valid path is configured.
 * **Smart Nested Archive Extraction:** Archives wrapping content in a single subdirectory are automatically unwrapped.
 * **Drag-and-Drop Load Orders:** Visual priority list with drop-line indicator. Bottom overrides top (0 loads first).
 * **Per-Game Search:** Each game's mod list has independent search box with live filtering.
@@ -87,6 +89,7 @@ Custom game configs are saved as `.tmmgame` files and can be exported/imported t
 
 ### GTA-Specific Features
 
+* **Unified Dashboard Interface:** All GTA dashboards (III/VC/SA, IV/TLaD/TBoGT) share the same chrome — sidebar with path browse rows, toolbar with Deploy/Rollback/Play buttons, deploy progress overlay, and notification toasts.
 * **Exe-as-Mod Downgrading:** Install a 1.0 `gta3.exe` / `gta-vc.exe` / `gta-sa.exe` directly as a mod. Auto-detects game, assigns load order 0, and unlocks deployment even on Steam installs (which ship with DRM).
 * **Force Deploy Override:** Right-click any play button or mod list to toggle override for games where exe check would block deployment.
 * **Multi-hash MD5 Verification:** Accepts all known 1.0 build variants (US/EU pressings, different downgrader tools).
@@ -97,7 +100,7 @@ Custom game configs are saved as `.tmmgame` files and can be exported/imported t
 
 * **Deploy Button** — deploys all pending changes across all games. Greyed when nothing pending, accent-colored when changes exist.
 * **Rollback Button** — restores active game to previous backup state.
-* **Play Buttons (GTA only)** — Launch directly. **Green** = 1.0 exe detected, ready to play. **Red** = vanilla exe, would block mods. **Orange** = override active (mods deploy but game needs 1.0 exe to run).
+* **Play Buttons** — Launch directly from the toolbar. GTA III/VC/SA: **Green** = 1.0 exe ready, **Red** = vanilla exe, **Orange** = override active. GTA IV/TLaD/TBoGT: per-episode play buttons, green when path is configured.
 * **Dice Theme Button** — Instantly apply random theme preset.
 
 ### Visual Customization
@@ -198,7 +201,6 @@ Check your exe hash via **Settings → Diagnostics → MD5 Check**.
 
 ## Known Limitations
 
-* Custom game toolbars missing some features (deploy color state, backup folder access) that are in GTA dashboards
 * Steam protocol launch not wired in custom game dashboards
 * ThemeManagerWindow refresh partially broken after theme change from non-GTA dashboards
 * "Open Mods Store" context menu item is a stub
