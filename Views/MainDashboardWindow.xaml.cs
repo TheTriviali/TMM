@@ -51,7 +51,7 @@ using System.Windows.Media;
 
 namespace TMM
 {
-    public partial class MainDashboardWindow : DashboardWindowBase
+    public partial class MainDashboardWindow : TmmWindow
     {
         // ==========================================================
         // STATE

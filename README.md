@@ -84,14 +84,13 @@ Custom game configs are saved as `.tmmgame` files and can be exported/imported t
 * **Drag-and-Drop Load Orders:** Visual priority list with drop-line indicator. Bottom overrides top (0 loads first).
 * **Per-Game Search:** Each game's mod list has independent search box with live filtering.
 * **Test Routing Panel:** Before deploying, simulate file routing within CustomGameConfigWindow. Browse a test file and see exactly where it would be installed based on your routing rules.
-* **Deploy Preview Window:** Review deployment summary (total files, destination folders, file types) before deployment proceeds. Cancel or confirm from the preview dialog.
 
 ### GTA-Specific Features
 
 * **Exe-as-Mod Downgrading:** Install a 1.0 `gta3.exe` / `gta-vc.exe` / `gta-sa.exe` directly as a mod. Auto-detects game, assigns load order 0, and unlocks deployment even on Steam installs (which ship with DRM).
 * **Force Deploy Override:** Right-click any play button or mod list to toggle override for games where exe check would block deployment.
 * **Multi-hash MD5 Verification:** Accepts all known 1.0 build variants (US/EU pressings, different downgrader tools).
-* **One-Click Essentials:** Auto-download DXVK, SilentPatch, Ultimate ASI Loader, Widescreen Fixes, Modloader, Project 2DFX, CLEO.
+* **One-Click Essentials:** Auto-download SilentPatch, Ultimate ASI Loader, Widescreen Fixes, Project 2DFX, CLEO.
 * **GTA IV Wizard:** Opening IV/TLaD/TBoGT with no paths configured shows setup wizard to auto-detect Steam paths.
 
 ### Toolbar
@@ -100,11 +99,10 @@ Custom game configs are saved as `.tmmgame` files and can be exported/imported t
 * **Rollback Button** — restores active game to previous backup state.
 * **Play Buttons (GTA only)** — Launch directly. **Green** = 1.0 exe detected, ready to play. **Red** = vanilla exe, would block mods. **Orange** = override active (mods deploy but game needs 1.0 exe to run).
 * **Dice Theme Button** — Instantly apply random theme preset.
-* **Toggle Labels** — Show/hide text beneath toolbar icons. Persists across sessions.
 
 ### Visual Customization
 
-* **Modular UI Themes:** Windows 7 Aero, Windows 8/10, Windows 9x Classic (dark/light), macOS Dark, macOS Light, Vanilla, Compact.
+* **Themed Window Styles:** Dark, Light, Compact, and retro-inspired chrome variants.
 * **25 Curated Built-in Theme Presets:**
   - **GTA-inspired:** Vice City Neon, GTA III Era, San Andreas Grove, GTA Online
   - **Popular Editors:** Dracula, Nord, Gruvbox, Catppuccin, One Dark, Monokai, Solarized Dark, GitHub Dark
@@ -112,9 +110,8 @@ Custom game configs are saved as `.tmmgame` files and can be exported/imported t
   - **Dark Quality:** Matrix (neon green), Deep Ocean, Obsidian, Slate
   - **Light Variants:** Light Sky, Solarized Light, Nord Light, Light Teal
 * **HSV Color Pickers:** Two-pane 2D spectrum pickers (accent + background) with hex input and live preview.
-* **Enhanced Mica/Acrylic Backdrop:** DWM API for Windows 11 native Mica with adjustable intensity.
+* **Mica/Acrylic Backdrop:** DWM API for Windows 11 native Mica backdrop.
 * **Font Choices:** 8 system fonts — Bahnschrift, Segoe UI (Light/Regular/Bold), Calibri, Consolas.
-* **Intelligent Text Contrast:** Three algorithms (WCAG, YIQ, Invert Snap) for automatic foreground color selection.
 
 ### Diagnostics & Status
 
@@ -164,7 +161,7 @@ Check your exe hash via **Settings → Diagnostics → MD5 Check**.
 
 ```
 %APPDATA%\TMM\
-├── config.json                 (settings: themes, toolbar labels, window size)
+├── settings.json               (settings: theme, font, game paths, deploy overrides)
 ├── ModsRaw/
 │   ├── III/
 │   ├── VC/
@@ -191,18 +188,17 @@ Check your exe hash via **Settings → Diagnostics → MD5 Check**.
 
 ## Planned Features
 
-* **Mod Profiles & Loadouts (Foundations In):** Backend persistence for saving/loading preset mod configurations (enable/disable state + load order) is implemented. UI integration pending.
-* **Conflict Resolution:** Warn when two mods overwrite the same file. Full design with file versioning registry and pinning UI is in `FUTURE_ADDITIONS.md`.
-* **Smart DLL Wizard:** Auto-detect proxy DLLs (d3d11, d3d9, etc.) and suggest output directories. Full decision tree and SmartDllDialog UI spec documented in `FUTURE_ADDITIONS.md`.
-* **Expanded Game Support:** Minecraft Java Edition (mod loader detection, world picker) and additional profiles (Baldur's Gate 3, Starfield, Oblivion, Morrowind) — designs in `FUTURE_ADDITIONS.md`.
-* **Advanced File Detection:** Phase 1 (import table scanning, ESP header detection) through Phase 3 (auto-routing suggestions) documented in `FUTURE_ADDITIONS.md`.
+* **Conflict Resolution:** Warn when two mods overwrite the same file.
+* **Smart DLL Wizard:** Auto-detect proxy DLLs (d3d11, d3d9, etc.) and suggest output directories.
+* **Mod Profiles & Loadouts:** UI for saving/loading named mod configurations (enable state + load order per game).
+* **Expanded Game Support:** Additional built-in profiles (Skyrim, Fallout, Baldur's Gate 3, etc.).
 * **Mod Store Integration:** One-click install from ModDB/Nexus (future).
 
 ---
 
 ## Known Limitations
 
-* Custom game toolbars missing some features (label toggle, deploy color state, backup folder access) that are in GTA dashboards
+* Custom game toolbars missing some features (deploy color state, backup folder access) that are in GTA dashboards
 * Steam protocol launch not wired in custom game dashboards
 * ThemeManagerWindow refresh partially broken after theme change from non-GTA dashboards
 * "Open Mods Store" context menu item is a stub
@@ -238,9 +234,7 @@ Full architecture documented in `CODEBASE_GUIDE.md`.
 ### Documentation
 
 * `CODEBASE_GUIDE.md` — Pseudocode table of contents and AI search index for all windows, services, models, and conventions
-* `PLANS.md` — Detailed implementation roadmap with shipped features, known gaps, and near-term work
-* `FUTURE_ADDITIONS.md` — Comprehensive specs for deferred features: Smart DLL Wizard, additional built-in profiles (Minecraft, Baldur's Gate 3, etc.), conflict resolution engine, mod import, advanced file detection, and backlog items
-* `SCOPE.md` — Human-readable feature overview
+* `CHANGELOG.md` — Full version history with added/changed/removed per release
 
 ---
 

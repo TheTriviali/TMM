@@ -37,6 +37,9 @@ namespace TMM
     /// Core backend. Owns persisted settings, mod lists per game, and the
     /// staging/deploy pipeline. UI windows talk to this; this talks to disk.
     /// </summary>
+    /// <summary>Progress payload reported by long-running deploy/rollback operations.</summary>
+    public readonly record struct DeploymentProgress(string Stage, int Current, int Total);
+
     public class BackendCore
     {
         // ==========================================================

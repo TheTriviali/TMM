@@ -5,6 +5,16 @@ using System.Text.Json.Serialization;
 
 namespace TMM
 {
+    /// <summary>
+    /// Legacy conditional route — used only for backward-compat import migration.
+    /// New configs use RoutingRule instead.
+    /// </summary>
+    public record ConditionalRoute(
+        string Extension,
+        string CheckSubdir,
+        string RouteIfExists,
+        string RouteIfMissing);
+
     public record InstallerHints(
         List<string>? EngineProxyNames = null,
         string? DxVersionTarget = null,   // "dx9" | "dx11" | "dx12"

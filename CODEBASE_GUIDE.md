@@ -12,7 +12,7 @@ Reference for AI sessions and developers. Two sections:
 ```
 App.xaml.cs
   on startup →
-    register global crash handler (ShowCrashDialog)
+    register global crash handler (ShowCrashDialog → MessageBox + clipboard)
     create BackendCore
     show GameLauncherWindow
 ```
@@ -24,7 +24,7 @@ App.xaml.cs
 #### `GameLauncherWindow` — Main Hub
 ```
 shows cards for: GTA III Series, GTA IV Series, each custom game, + Add button
-each card has: title, subtitle, status dot (configured/not), Manage button
+each card has: title, subtitle, status dot, Manage button
 clicking Manage →
   GTA III  → if FirstLaunch: show InitialSetupWindow → open MainDashboardWindow
   GTA IV   → if no IV paths set: show InitialSetupWindow → open Gta4DashboardWindow
@@ -79,37 +79,34 @@ Finish button requires at least one game ready → sets FirstLaunch=false
 tabs: Appearance, Paths, Advanced
 Appearance: theme picker → ThemeManagerWindow, font, Mica toggle
 Paths: shows GameSetupRow for each game (same as InitialSetupWindow)
-Advanced: DXVK settings, factory reset, debug console
+Advanced: factory reset, diagnostics (MD5 check, drive space)
 ```
 
 #### `ThemeManagerWindow`
 ```
-lists all built-in theme presets (69+) grouped by category
+lists all built-in theme presets grouped by category
 live preview on hover/select
 apply → ThemeEngine.ApplyTheme
-categories: Window Styles, Color Themes, Unique Themes, Retro/Special
+export preset → .mmtheme JSON file
 ```
 
 #### `CustomGameConfigWindow`
 ```
-form: game name, game directory (browse), exe path (browse), steam app id, 
-      output dirs, conditional routes, file extensions
+form: game name, game directory (browse), exe path (browse), steam app id,
+      routing rules (sentence builder), file extensions
 validation: steamAppId must be numeric, extensions must start with ".", routes need both fields
+test routing panel: browse a test file → shows where it would land (conditional dir check included)
+export .tmmgame / import .tmmgame
 returns CustomGameProfile on confirm
 ```
 
 #### Supporting Windows
 ```
-DxvkSettingsWindow   — DXVK async cache on/off per game
-ModPropertiesWindow  — read-only view of mod metadata (name, order, path, enabled)
-RenameWindow         — single text input dialog (used for rename + set load order)
-HelpWindow           — static help text
-AboutWindow          — version, credits
-ArchiveExtractionWindow — progress display during archive extraction
-DebugConsoleWindow   — live log viewer (BackendCore._log)
-NotificationWindow   — in-window corner toast panel
-ExitConfirmationDialog — "don't ask again" exit confirm
-GameSetupRow         — reusable path browse row (used by InitialSetupWindow + SettingsWindow)
+ModPropertiesWindow      — read-only view of mod metadata (name, order, path, enabled)
+RenameWindow             — single text input dialog (rename + set load order)
+AboutWindow              — version, credits
+ArchiveExtractionWindow  — progress display during archive extraction
+GameSetupRow             — reusable path browse row (used by InitialSetupWindow + SettingsWindow)
 ```
 
 ---
@@ -130,7 +127,7 @@ IsGameReady(profile) → true if path is set and non-empty
 
 DeployModsAsync(profile, mods, progress, ct)
   → creates backup manifest → copies enabled mods in load order to game dir
-  → uses ConditionalRoutes to route .asi to plugins\ if it exists
+  → uses RoutingRules / ConditionalRoutes to route files to subdirs
 RollbackDeployAsync(manifest, progress)
   → restores game dir from backup snapshot
 GetRollbackManifests(key) → list of DeployManifest sorted newest first
@@ -142,6 +139,11 @@ GetDriveSpaceInfo() → "X.X GB free on C:"
 OpenAppData() → shell-opens AppDataPath
 ```
 
+`DeploymentProgress` record struct lives at the top of `BackendCore.cs`:
+```
+public readonly record struct DeploymentProgress(string Stage, int Current, int Total)
+```
+
 #### `GameRegistry` — Game Roster (Singleton)
 ```
 Instance → thread-safe singleton
@@ -151,16 +153,19 @@ GetCustomGames()     → Dictionary<string, CustomGameProfile> of user-added gam
 GetGameProfile(key)  → GameProfile? by key
 GetCustomGameConfig(key) → CustomGameProfile? by key
 
-AddCustomGameAsync(config)    → assigns key, saves to disk, adds to registry
+AddCustomGameAsync(config)         → assigns key, saves to disk, adds to registry
 UpdateCustomGameAsync(key, config) → edits existing entry
-DeleteCustomGameAsync(key)    → removes from registry + disk
+DeleteCustomGameAsync(key)         → removes from registry + disk
 ```
 
 #### `NotificationService`
 ```
-Show(message, type) → triggers NotificationWindow to display a toast
-Types: Info, Success, Warning, Error
+Show(message, type, durationMs) → adds NotificationItem to Queue; DispatcherTimer removes it after durationMs
+Queue → ObservableCollection<NotificationItem> (UI binds to this for toast display)
+Helpers: ShowSuccess / ShowWarning / ShowError / ShowInfo
 ```
+
+`NotificationItem` + `NotificationType` enum are defined inline at the top of `NotificationService.cs`.
 
 #### `SteamLauncher`
 ```
@@ -173,15 +178,25 @@ Invoke(action, appId) → runs Steam protocol commands (install/validate/uninsta
 
 | Model | Purpose |
 |---|---|
-| `GameProfile` | Immutable record: Key, DisplayName, ExeName, SteamAppId, Vanilla10Md5, ConditionalRoutes. Static instances: III, VC, SA, IV, TLaD, TBoGT |
-| `CustomGameProfile` | User-defined game: GameName, GameDirectory, ExePath, SteamAppId, OutputDirs, ConditionalRoutes, Extensions |
+| `GameProfile` | Immutable record: Key, DisplayName, ExeName, SteamAppId, Vanilla10Md5, ConditionalRoutes. Static instances: III, VC, SA, IV, TLaD, TBoGT. Also defines `ExeStatus` enum (Unknown/Vanilla/Downgraded). |
+| `CustomGameProfile` | User-defined game: GameName, GameDirectory, ExePath, SteamAppId, RoutingRules, InstallerHints, LauncherCard |
 | `ModItem` | Single mod: Name, IsEnabled, LoadOrder, RawFolderPath. Persisted as modinfo.txt in mod folder |
-| `AppSettings` | All persisted settings: GamePaths, FirstLaunch, theme/color/font fields, DeployOverrides, CustomGameKeys |
-| `ConditionalRoute` | If file has Extension and CheckSubdir exists → write to TargetSubdir, else Fallback |
+| `AppSettings` | All persisted settings: GamePaths, FirstLaunch, theme/font fields, DeployOverrides, CustomGameKeys |
 | `DeployManifest` | Backup snapshot: Timestamp, ModNames, per-file backup paths. Used for rollback |
-| `DeploymentProgress` | Stage string + Current/Total count. Passed as IProgress<T> to deploy/rollback |
-| `ExeStatus` | Enum: Unknown, Vanilla (Steam), Downgraded (1.0) |
-| `NotificationItem` | Message + Type for toast display |
+| `RoutingRule` | Extension pattern + Destination + optional FallbackDestination + CheckSubdir. Used in CustomGameProfile |
+| `ConditionalRoute` | Legacy backward-compat route (`.tmmgame` v1.0 import only). Defined in `TmmGameConfig.cs` |
+
+---
+
+### Helpers
+
+**`Helpers/Helpers.cs`** — three static helpers in one file:
+
+| Class | Methods |
+|---|---|
+| `ShellHelper` | `OpenFolder(path)`, `OpenUrl(url)` — shell-execute wrappers |
+| `UiColors` | Static Color + SolidColorBrush constants: DisabledGray, ReadyGreen, NotReadyRed, PendingOrange |
+| `JsonHelper` | `PrettyOptions` + `TmmGameOptions` — shared `JsonSerializerOptions` instances |
 
 ---
 
@@ -189,15 +204,11 @@ Invoke(action, appId) → runs Steam protocol commands (install/validate/uninsta
 
 #### `ThemeEngine`
 ```
-ApplyTheme(settings)    → sets all DynamicResource brushes in App.Resources
+ApplyTheme(settings)        → sets all DynamicResource brushes in App.Resources
 ApplyFont(window, settings) → sets FontFamily on window
-TryApplyMica(window, enabled) → enables Windows Mica backdrop via WindowChrome hack
-```
-
-#### `IThemeSettings`
-```
-Interface exposing: AccentColor, BgColor, Mode (Dark/Light), font, Mica flag
-Implemented by AppSettings
+TryApplyMica(window, enabled) → enables Windows Mica backdrop via WindowChrome
+Text contrast: hardcoded WCAG algorithm
+Mica intensity: hardcoded 0.75
 ```
 
 ---
@@ -217,7 +228,7 @@ Implemented by AppSettings
 **Deploy flow:**
 1. `DeployModsAsync` iterates enabled mods in LoadOrder
 2. Backs up any existing files at destination
-3. Copies mod files respecting ConditionalRoutes (e.g. `.asi` → `plugins\` if that folder exists)
+3. Copies mod files respecting RoutingRules / ConditionalRoutes (e.g. `.asi` → `plugins\` if that folder exists)
 4. Saves DeployManifest for rollback
 
 **Resource keys (App.xaml):**  
@@ -252,8 +263,13 @@ Window-local styles: `ColActionBtn` `ToolIconBtn` `ModListStyle` `ModListTemplat
 **game exe names** → `GameProfile.ExeName` (gta3.exe, gta-vc.exe, gta-sa.exe, GTAIV.exe, TLAD.exe, EFLC.exe)  
 **status dot color logic** → `SetDotColor` in dashboard windows  
 **Mica backdrop** → `ThemeEngine.TryApplyMica`  
-**notification toasts** → `NotificationService` → `NotificationWindow`  
-**debug log** → `BackendCore.Log` → `DebugConsoleWindow`  
+**notification toasts** → `NotificationService.Show` → `NotificationService.Queue`  
 **factory reset** → `BackendCore.FactoryReset` called from `SettingsWindow`  
 **drive space** → `BackendCore.GetDriveSpaceInfo`  
+**shell open folder/url** → `ShellHelper.OpenFolder` / `ShellHelper.OpenUrl` in `Helpers/Helpers.cs`  
+**UI color constants** → `UiColors` in `Helpers/Helpers.cs`  
+**JSON options** → `JsonHelper.PrettyOptions` / `JsonHelper.TmmGameOptions` in `Helpers/Helpers.cs`  
+**exe status / downgrade detection** → `ExeStatus` enum in `GameProfile.cs`  
+**routing rules (custom games)** → `RoutingRule` in `CustomGameProfile.cs`  
+**legacy routing import** → `ConditionalRoute` in `TmmGameConfig.cs`  
 **resource brushes missing / XAML static resource error** → check `App.xaml` resources section; window-local styles (e.g. `CardButtonStyle`) are not available in other windows  

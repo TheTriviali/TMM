@@ -4,6 +4,32 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [v0.1-alpha-4] — 2026-05-23 *(Dead Window Removal & Code Consolidation)*
+
+### Removed
+- **DebugConsoleWindow, CrashReportWindow, HelpWindow, DxvkSettingsWindow:** Four dead/low-value windows deleted. Crash reporter is now an inline `MessageBox` + clipboard copy. Help replaced with `MessageBox` + GitHub URL.
+- **GitHub API auto-downloader (`DownloadLatestGithubReleaseAsync`):** DXVK and Modloader one-click install removed. Direct-URL installers (SilentPatch, ASI Loader, Widescreen, CLEO, Project2DFX) are unaffected.
+- **TextColorMode setting:** Hardcoded to WCAG algorithm; removed from AppSettings and ThemePreset.
+- **MicaIntensity setting:** Hardcoded to 0.75; removed from AppSettings and ThemePreset.
+- **IThemeSettings interface:** Removed unused interface; `ThemeEngine.ApplyTheme` takes `AppSettings` directly.
+- **DashboardWindowBase:** Removed empty wrapper class; all three dashboard windows now extend `TmmWindow` directly.
+- **SCOPE.md, FUTURE_ADDITIONS.md, PLANS.md:** Deleted stale documentation files.
+
+### Changed
+- **Code consolidation — 8 tiny files merged into their owners:**
+  - `GameState.cs` (`ExeStatus` enum) → `Models/GameProfile.cs`
+  - `ConditionalRoute.cs` → `Models/TmmGameConfig.cs`
+  - `DeploymentProgress.cs` → `Services/BackendCore.cs`
+  - `NotificationItem.cs` → `Services/NotificationService.cs`
+  - `ShellHelper.cs` + `UiColors.cs` + `JsonHelper.cs` → `Helpers/Helpers.cs`
+- **XAML root elements:** Dashboard window XAML files updated from `<local:DashboardWindowBase>` to `<local:TmmWindow>` to match code-behind base class.
+
+### Documentation
+- **CODEBASE_GUIDE.md:** Full rewrite — removed stale window refs, added Helpers section, tightened all entries.
+- **SANITYCHECK.md, README.md:** Removed stale references matching removed features.
+
+---
+
 ## [v0.1-alpha-3] — 2026-05-23 *(Documentation & Core Features Pass)*
 
 ### Added
@@ -199,6 +225,8 @@ All notable changes to TMM are listed here, newest first.
 | v0.02-prealpha-2 | 2026-05-22 | **VFS Removal, Direct Deploy, Custom Games, Launcher** | 45+ files |
 | v0.1-alpha-1 | 2026-05-22 | **First Release: Routing Sentence Builder, GTA IV Support** | 15+ files |
 | v0.1-alpha-2 | 2026-05-23 | **Theme Optimization, Dead Code Removal** | 3 files |
+| v0.1-alpha-3 | 2026-05-23 | **Core Features, Test Routing, GameRegistry built-ins** | 15+ files |
+| v0.1-alpha-4 | 2026-05-23 | **Dead Window Removal, Code Consolidation** | 20+ files |
 
 ---
 

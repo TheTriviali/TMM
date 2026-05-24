@@ -112,10 +112,6 @@ Before starting a new feature or after a big refactor, run through the checklist
 
 | Check | Last verified | Notes |
 |-------|--------------|-------|
-| macOS (default) titlebar | 2026-05-23 | |
-| Win7 Aero titlebar | — | |
-| Win9x Classic titlebar | — | |
-| WinXP titlebar | — | |
 | Win31 titlebar | — | |
 | Compact titlebar | — | |
 | Dark base theme | 2026-05-23 | |

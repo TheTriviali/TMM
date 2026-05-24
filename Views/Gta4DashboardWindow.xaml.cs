@@ -21,7 +21,7 @@ namespace TMM
     /// ASI routing (plugins\ folder check) is handled transparently by BackendCore
     /// via the ConditionalRoutes on each GameProfile.
     /// </summary>
-    public partial class Gta4DashboardWindow : DashboardWindowBase
+    public partial class Gta4DashboardWindow : TmmWindow
     {
         // ── State ─────────────────────────────────────────────────────────────────
 

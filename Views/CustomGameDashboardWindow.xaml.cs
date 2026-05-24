@@ -14,7 +14,7 @@ using System.Windows.Media;
 
 namespace TMM
 {
-    public partial class CustomGameDashboardWindow : DashboardWindowBase
+    public partial class CustomGameDashboardWindow : TmmWindow
     {
         private readonly BackendCore _core;
         private readonly GameProfile _profile;

@@ -1,20 +1,11 @@
-// TABLE OF CONTENTS
-// -----------------------------------------------------------------
-//   GameProfile RECORD
-//     Known 1.0 MD5 hashes ........................................ ~20
-//     Static profiles (III, VC, SA, IV, TLaD, TBoGT) + All list . ~25
-//     IvFamilyKeys ................................................ ~80
-//     ByKey() lookup .............................................. ~84
-//     HasExeCheck ................................................. ~89
-//     IsValidMd5() / AllValidMd5s ................................ ~92
-//     Folder name helpers (RawFolderName) ........................ ~107
-// -----------------------------------------------------------------
-
 using System.Collections.Generic;
 using System.Linq;
 
 namespace TMM
 {
+    /// <summary>Detected state of a game executable.</summary>
+    public enum ExeStatus { Unknown, Vanilla, Downgraded }
+
     /// <summary>
     /// Single source of truth for per-game data.
     /// </summary>
