@@ -4,7 +4,45 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
-## [v0.1-alpha-4] — 2026-05-23 *(Dead Window Removal & Code Consolidation)*
+## [v0.1-alpha-5] — 2026-05-25 *(TGTAMM→TMM Rebrand & Documentation Consolidation)*
+
+### Changed
+- **Project Rebrand:** TGTAMM → TMM (Triviali's Mod Manager)
+  - Namespace: TGTAMM → TMM throughout all .cs and .xaml files
+  - Assembly output: TGTAMM.dll → TMM.dll
+  - AppDataPath: `%APPDATA%\TGTAMM\` → `%APPDATA%\TMM\` (auto-migrates old data on first run)
+  - csproj/sln files renamed
+  - GitHub repo: TheTriviali/TGTAMM → TheTriviali/TMM
+  - Default branch: main → master (main branch deleted)
+
+### Documentation
+- **CLAUDE.md:** New chat reference guide with quick lookup structure, token-saving tips, and links to detailed docs. Reduces context bloat in new sessions.
+- **Consolidated Files:**
+  - **THEMING_SIMPLIFICATION.md** → Folded into this changelog as historical record (see v0.1-alpha-4 changes)
+  - **DESIGN_BRIEF.md** → Archived; unified shell design specs remain available in git history for future reference if needed
+
+---
+
+## [v0.1-alpha-4] — 2026-05-23 *(Theming System Simplification & Dead Window Removal)*
+
+### Removed (Theming Simplification)
+- **ThemeManagerWindow.xaml / .xaml.cs** — Complex theme picker UI removed
+- **AppSettings Customization Fields** (kept as deprecated stubs):
+  - BgColor, ColorMode, FontFamily, MicaEnabled, AccentBorderEnabled, TitlebarTheme, LastPresetName
+- **ThemeEngine Complexity** (200+ lines removed):
+  - 25+ theme presets (Dracula, Nord, Catppuccin, GTA themes, light themes)
+  - HSV/RGB color palette generation
+  - WCAG contrast algorithms
+  - Complementary color modes (Triadic, Analogous, SplitComp, Tetradic)
+  - Font application logic
+  - Mica/Acrylic DWM interop
+  - Title bar color customization
+
+### Added (Theming Simplification)
+- **AccentPresets.cs** — Streamlined accent color presets (2-tone system with auto-gradients)
+- Dark mode mandatory; light mode removed from runtime customization
+
+### Removed (Dead Windows & Consolidation)
 
 ### Removed
 - **DebugConsoleWindow, CrashReportWindow, HelpWindow, DxvkSettingsWindow:** Four dead/low-value windows deleted. Crash reporter is now an inline `MessageBox` + clipboard copy. Help replaced with `MessageBox` + GitHub URL.

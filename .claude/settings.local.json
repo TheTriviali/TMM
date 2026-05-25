@@ -74,7 +74,12 @@
       "Bash(Select-Object -First 20)",
       "Bash(Find C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tgtamm\\\\TGTAMM -name \"*.cs\")",
       "PowerShell(Stop-Process -Name TMM -Force -ErrorAction SilentlyContinue)",
-      "Bash(Start-Process dotnet *)"
+      "Bash(Start-Process dotnet *)",
+      "Bash(\n# Move to parent and verify structure\ncd \"C:\\\\Users\\\\noahd\\\\source\\\\repos\"\nls -la\n)",
+      "Bash(gh repo *)",
+      "PowerShell(winget install GitHub.cli --accept-source-agreements --accept-package-agreements)",
+      "Bash(gh --version)",
+      "Bash(git remote *)"
     ]
   }
 }

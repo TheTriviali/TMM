@@ -39,7 +39,7 @@ Run A1–A6 in parallel. Run C1–C6 in parallel (after A-phase done). D-phases 
 - `UnifiedShellWindow` inherits from `TmmWindow`
 - Dynamic brushes: `{DynamicResource BgBrush}`, `{DynamicResource AccentBrush}`, `{DynamicResource TextBrush}`, `{DynamicResource SubTextBrush}`, `{DynamicResource PanelBrush}`, `{DynamicResource ControlBgBrush}`
 - Static helper: `UiColors.ReadyGreen` (Color), `UiColors.NotReadyRed` (Color) — in `Helpers/Helpers.cs`
-- All new files go under `C:\Users\noahd\source\repos\tgtamm\TGTAMM\`
+- All new files go under `C:\Users\noahd\source\repos\tmm\TMM\` (or current working directory)
 
 ---
 
@@ -765,9 +765,9 @@ Create all four files below exactly as shown. These are embedded resources so Ga
 
 ---
 
-### B2 — Update `TGTAMM.csproj`
+### B2 — Update `TMM.csproj`
 
-**File:** `TGTAMM.csproj`
+**File:** `TMM.csproj`
 
 Find the existing EmbeddedResource block for skyrim_ae.tmmgame (it looks like):
 ```xml
@@ -2597,7 +2597,7 @@ Assets/GameProfiles/fallout_nv.tmmgame        (B1 — new)          PreAlpha pla
 Assets/GameProfiles/cyberpunk_2077.tmmgame    (B1 — new)          PreAlpha placeholder
 Assets/GameProfiles/red_dead_2.tmmgame        (B1 — new)          PreAlpha placeholder
 Assets/GameProfiles/witcher_3.tmmgame         (B1 — new)          PreAlpha placeholder
-TGTAMM.csproj                                 (B2 — edit)         4 new EmbeddedResource entries
+TMM.csproj                                 (B2 — edit)         4 new EmbeddedResource entries
 Views/Controls/GameCard.xaml + .cs            (C1 — new)          240×160 card, action buttons, default checkbox, archived state
 Views/Subpages/LibraryPage.xaml + .cs         (C2 — new)          4 view modes, drag reorder, Add Game card (NO search in header)
 Views/Subpages/SettingsPage.xaml + .cs        (C3 — new)          SettingsWindow ported to UserControl + accent color picker
