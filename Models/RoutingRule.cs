@@ -1,92 +1,178 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
 namespace TMM
 {
+    /// <summary>Load order bias when resolving final deployment order.</summary>
+    public enum LoadOrderBias
+    {
+        /// <summary>Load earlier in the sequence when no specific rule applies.</summary>
+        Lower,
+
+        /// <summary>Load later in the sequence when no specific rule applies.</summary>
+        Higher,
+
+        /// <summary>Use defaults; no explicit preference.</summary>
+        None,
+    }
+
     /// <summary>
-    /// A single mod-routing rule evaluated at deploy-time (first match wins).
+    /// Represents a routing rule that determines where files from a mod are deployed
+    /// and their relative load order. Rules are evaluated in priority order; first match wins.
+    /// Serializable to/from JSON for .tmmgame profile storage.
     ///
-    /// WHEN  ExtensionPattern matches the file  (AND optionally NameContains)
-    /// IF    CheckSubdir exists in the game directory           (optional)
-    /// THEN  route to Destination
-    /// ELSE  route to FallbackDestination  (defaults to game root ".")
-    ///
-    /// Use ExtensionPattern = "*" as a catch-all for any unmatched file.
+    /// Special target path tokens:
+    /// - {gameRoot} → Game install directory
+    /// - {scriptname} → Filename without extension (for nested structures)
+    /// - Literal paths: "scripts/", "plugins/", "modloader/cleo/", etc.
     /// </summary>
     public class RoutingRule : INotifyPropertyChanged
     {
-        private string _ruleName = "";
-        private string _extensionPattern = "*";
-        private string? _nameContains;
-        private string? _checkSubdir;
-        private string _destination = ".";
-        private string? _fallbackDestination;
-        private bool _hasConflict;
+        // ── Core properties ────────────────────────────────────────────────────
 
-        /// <summary>Optional user-readable label shown on the rule card.</summary>
-        public string RuleName
-        {
-            get => _ruleName;
-            set { _ruleName = value; Notify(); }
-        }
+        /// <summary>User-readable name for this rule (e.g., "ASI to scripts").</summary>
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Extension to match: ".dll", ".esp", "*" or "any" for catch-all.
-        /// Comparison is case-insensitive.
+        /// Conditions that must be satisfied for this rule to fire.
+        /// Empty list means the rule always applies (catch-all).
+        /// Conditions are combined using the Logic operator specified in each Condition.
         /// </summary>
+        public List<Condition> Conditions { get; set; } = new();
+
+        /// <summary>
+        /// Destination path where files matching this rule are deployed.
+        /// Examples: "scripts/", "{gameRoot}/plugins/", "modloader/cleo/{scriptname}/".
+        /// Relative to the game install directory.
+        /// </summary>
+        public string TargetPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Priority for conflict resolution (0–100).
+        /// Higher priority wins when multiple rules could apply to the same file.
+        /// </summary>
+        public int Priority { get; set; } = 50;
+
+        /// <summary>
+        /// When true, user is prompted if a file would overwrite an existing file.
+        /// When false, silently overwrite (use with caution).
+        /// </summary>
+        public bool AllowConflict { get; set; } = true;
+
+        /// <summary>Load order bias for mods matching this rule.</summary>
+        public LoadOrderBias LoadOrderBias { get; set; } = LoadOrderBias.None;
+
+        /// <summary>
+        /// When true, this is a fallback/catch-all rule applied to unmatched files.
+        /// Only one default rule per game is recommended.
+        /// </summary>
+        public bool IsDefault { get; set; } = false;
+
+        // ── Backward-compat properties (deprecated, for smooth migration) ──────
+        // These adapt the new Conditions-based model to the old flat-property interface
+        // used by CustomGameConfigWindow. Remove after CustomGameSetupWizard replaces it.
+
+        private bool _hasConflict;
+        private string? _fallbackDestination;
+
+        /// <summary>Alias for Name. Use Name instead.</summary>
+        [JsonIgnore]
+        [Obsolete("Use Name")]
+        public string RuleName { get => Name; set { Name = value; OnPropertyChanged(nameof(RuleName)); } }
+
+        /// <summary>Extension pattern from the first FileExtension condition. Use Conditions instead.</summary>
+        [JsonIgnore]
+        [Obsolete("Use Conditions with ConditionType.FileExtension")]
         public string ExtensionPattern
         {
-            get => _extensionPattern;
-            set { _extensionPattern = value; Notify(); }
+            get
+            {
+                var c = Conditions.FirstOrDefault(x => x.Type == ConditionType.FileExtension);
+                return c?.Value ?? "*";
+            }
+            set
+            {
+                var c = Conditions.FirstOrDefault(x => x.Type == ConditionType.FileExtension);
+                if (c is not null) c.Value = value;
+                else Conditions.Insert(0, new Condition { Type = ConditionType.FileExtension, Operator = ConditionOperator.Is, Value = value });
+                OnPropertyChanged(nameof(ExtensionPattern));
+            }
         }
 
-        /// <summary>
-        /// Optional: filename must contain this substring (case-insensitive) for the rule to fire.
-        /// Null or empty means match any filename with the right extension.
-        /// </summary>
+        /// <summary>Filename substring filter from PathContains condition. Use Conditions instead.</summary>
+        [JsonIgnore]
+        [Obsolete("Use Conditions with ConditionType.PathContains")]
         public string? NameContains
         {
-            get => _nameContains;
-            set { _nameContains = value; Notify(); Notify(nameof(HasNameFilter)); }
+            get => Conditions.FirstOrDefault(x => x.Type == ConditionType.PathContains)?.Value;
+            set
+            {
+                var c = Conditions.FirstOrDefault(x => x.Type == ConditionType.PathContains);
+                if (value is null) { if (c is not null) Conditions.Remove(c); }
+                else if (c is not null) c.Value = value;
+                else Conditions.Add(new Condition { Type = ConditionType.PathContains, Operator = ConditionOperator.Contains, Value = value });
+                OnPropertyChanged(nameof(NameContains));
+                OnPropertyChanged(nameof(HasCondition));
+            }
         }
 
-        /// <summary>
-        /// Optional: sub-folder to probe for existence inside the game directory.
-        /// When set, THEN/ELSE routing applies. When null/empty, THEN always applies.
-        /// </summary>
+        /// <summary>HasFolder condition value. Use Conditions instead.</summary>
+        [JsonIgnore]
+        [Obsolete("Use Conditions with ConditionType.HasFolder")]
         public string? CheckSubdir
         {
-            get => _checkSubdir;
-            set { _checkSubdir = value; Notify(); Notify(nameof(HasCondition)); }
+            get => Conditions.FirstOrDefault(x => x.Type == ConditionType.HasFolder)?.Value;
+            set
+            {
+                var c = Conditions.FirstOrDefault(x => x.Type == ConditionType.HasFolder);
+                if (value is null) { if (c is not null) Conditions.Remove(c); }
+                else if (c is not null) c.Value = value;
+                else Conditions.Add(new Condition { Type = ConditionType.HasFolder, Operator = ConditionOperator.Is, Value = value });
+                OnPropertyChanged(nameof(CheckSubdir));
+                OnPropertyChanged(nameof(HasCondition));
+            }
         }
 
-        /// <summary>Output sub-folder when no IF condition, or when IF condition is true.</summary>
+        /// <summary>Alias for TargetPath. Use TargetPath instead.</summary>
+        [JsonIgnore]
+        [Obsolete("Use TargetPath")]
         public string Destination
         {
-            get => _destination;
-            set { _destination = value; Notify(); }
+            get => TargetPath;
+            set { TargetPath = value; OnPropertyChanged(nameof(Destination)); }
         }
 
-        /// <summary>Output sub-folder when IF condition is false. Null means game root ".".</summary>
+        /// <summary>Legacy fallback destination when the HasFolder condition is not met. Not modeled in new system.</summary>
+        [JsonIgnore]
+        [Obsolete("Conditional fallback not directly supported in the new model")]
         public string? FallbackDestination
         {
             get => _fallbackDestination;
-            set { _fallbackDestination = value; Notify(); }
+            set { _fallbackDestination = value; OnPropertyChanged(nameof(FallbackDestination)); }
         }
 
-        [JsonIgnore] public bool HasCondition  => !string.IsNullOrWhiteSpace(_checkSubdir);
-        [JsonIgnore] public bool HasNameFilter => !string.IsNullOrWhiteSpace(_nameContains);
+        /// <summary>True when a HasFolder condition is present. Use Conditions directly.</summary>
+        [JsonIgnore]
+        [Obsolete("Check Conditions for ConditionType.HasFolder directly")]
+        public bool HasCondition => CheckSubdir is not null;
 
+        /// <summary>UI-only flag: true when this rule conflicts with another rule in the list.</summary>
         [JsonIgnore]
         public bool HasConflict
         {
             get => _hasConflict;
-            set { _hasConflict = value; Notify(); }
+            set { _hasConflict = value; OnPropertyChanged(nameof(HasConflict)); }
         }
 
+        // ── INotifyPropertyChanged ─────────────────────────────────────────────
+
         public event PropertyChangedEventHandler? PropertyChanged;
-        private void Notify([CallerMemberName] string? n = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
+
+        private void OnPropertyChanged([CallerMemberName] string? name = null) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }
