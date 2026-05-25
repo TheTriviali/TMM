@@ -78,7 +78,7 @@ namespace TMM
                     var config = ProfileMigration.FromExport(export, Path.GetFileNameWithoutExtension(resourceName));
                     config.IsBuiltIn = true;
 
-                    string key = $"BUILTIN_{export.GameName.ToUpperInvariant().Replace(" ", "_")}";
+                    string key = $"BUILTIN_{export.GameName.ToUpperInvariant().Replace(" ", "_").Replace(":", "").Replace("\\", "").Replace("/", "")}";
                     var profile = CustomGameProfileToGameProfile(key, config);
                     _customGames[key] = (config, profile);
                 }

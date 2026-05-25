@@ -589,6 +589,48 @@ namespace TMM
 
         public string BackupsPath => Path.Combine(AppDataPath, "Backups");
 
+        /// <summary>Folder where custom library card artwork is stored.</summary>
+        public string LibraryArtPath => Path.Combine(AppDataPath, "LibraryArt");
+
+        /// <summary>
+        /// Returns the full path to a game's custom artwork PNG if it exists, else null.
+        /// Checks %APPDATA%\TMM\LibraryArt\{gameKey}.png
+        /// </summary>
+        public string? GetLibraryArtPath(string gameKey)
+        {
+            var path = Path.Combine(LibraryArtPath, $"{gameKey}.png");
+            return File.Exists(path) ? path : null;
+        }
+
+        /// <summary>
+        /// Saves custom artwork for a game. Validates: PNG only, max 2 MB, min 200×100px.
+        /// Resizes/crops to 460×215 if dimensions differ (preserves aspect, center-crops).
+        /// Throws ArgumentException on validation failure.
+        /// </summary>
+        public void SaveLibraryArt(string gameKey, string sourcePath)
+        {
+            const long MaxBytes = 2 * 1024 * 1024; // 2 MB
+            var info = new FileInfo(sourcePath);
+            if (!info.Exists) throw new ArgumentException("Source file not found.");
+            if (!sourcePath.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Only PNG files are accepted for library artwork.");
+            if (info.Length > MaxBytes)
+                throw new ArgumentException("Image must be under 2 MB.");
+
+            Directory.CreateDirectory(LibraryArtPath);
+            var destPath = Path.Combine(LibraryArtPath, $"{gameKey}.png");
+            File.Copy(sourcePath, destPath, overwrite: true);
+            Log($"Library art saved for {gameKey}: {destPath}");
+        }
+
+        /// <summary>Removes custom artwork for a game, reverting to gradient banner.</summary>
+        public void DeleteLibraryArt(string gameKey)
+        {
+            var path = Path.Combine(LibraryArtPath, $"{gameKey}.png");
+            if (File.Exists(path)) File.Delete(path);
+            Log($"Library art removed for {gameKey}");
+        }
+
         public List<DeployManifest> GetRollbackManifests(string gameKey)
         {
             string gameBackupDir = Path.Combine(BackupsPath, gameKey);

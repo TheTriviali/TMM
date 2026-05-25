@@ -19,6 +19,14 @@ namespace TMM
         IReadOnlyList<string>? AdditionalValidMd5s = null,
         IReadOnlyList<ConditionalRoute>? ConditionalRoutes = null)
     {
+        // ── Library display properties ─────────────────────────────────────────
+        /// <summary>Library card gradient start color hex, e.g. "#1B3A1B".</summary>
+        public string GradientStartHex { get; init; } = "#1A1A2E";
+        /// <summary>Library card gradient end color hex, e.g. "#0C1E0C".</summary>
+        public string GradientEndHex { get; init; } = "#0D0D1A";
+        /// <summary>Maturity status shown as chip on library card.</summary>
+        public ReleaseStatus LibraryStatus { get; init; } = ReleaseStatus.Release;
+
         // ── GTA III Series ───────────────────────────────────────────────────────
 
         public static readonly GameProfile III = new(
@@ -27,7 +35,12 @@ namespace TMM
             ShortName: "III",
             ExeName: "gta3.exe",
             SteamAppId: "12100",
-            Vanilla10Md5: "85414bf9eb414d00ad81062360f0db1f");
+            Vanilla10Md5: "85414bf9eb414d00ad81062360f0db1f")
+        {
+            GradientStartHex = "#1B3A1B",
+            GradientEndHex   = "#0C1E0C",
+            LibraryStatus    = ReleaseStatus.Beta,
+        };
 
         public static readonly GameProfile VC = new(
             Key: "VC",
@@ -39,7 +52,12 @@ namespace TMM
             AdditionalValidMd5s: new[]
             {
                 "167a5c8b31b3e0dbefa033ca24453d4e"   // ModDB v1.0 downgrader variant
-            });
+            })
+        {
+            GradientStartHex = "#1B3A1B",
+            GradientEndHex   = "#0C1E0C",
+            LibraryStatus    = ReleaseStatus.Beta,
+        };
 
         public static readonly GameProfile SA = new(
             Key: "SA",
@@ -47,7 +65,12 @@ namespace TMM
             ShortName: "SA",
             ExeName: "gta-sa.exe",
             SteamAppId: "12120",
-            Vanilla10Md5: "00eb2056583dfa6a4ca79dedf70df5e9");
+            Vanilla10Md5: "00eb2056583dfa6a4ca79dedf70df5e9")
+        {
+            GradientStartHex = "#1B3A1B",
+            GradientEndHex   = "#0C1E0C",
+            LibraryStatus    = ReleaseStatus.Beta,
+        };
 
         // ── GTA IV Series ─────────────────────────────────────────────────────
         // Complete Edition layout (Steam):
@@ -70,7 +93,12 @@ namespace TMM
             ExeName: "GTAIV.exe",
             SteamAppId: "12210",
             Vanilla10Md5: "",           // no downgrade check for IV
-            ConditionalRoutes: IvAsiRoute);
+            ConditionalRoutes: IvAsiRoute)
+        {
+            GradientStartHex = "#0C1A2E",
+            GradientEndHex   = "#060F1C",
+            LibraryStatus    = ReleaseStatus.Alpha,
+        };
 
         public static readonly GameProfile TLaD = new(
             Key: "TLaD",
@@ -79,7 +107,12 @@ namespace TMM
             ExeName: "TLAD.exe",
             SteamAppId: "",             // part of IV Steam install; no separate AppId
             Vanilla10Md5: "",
-            ConditionalRoutes: IvAsiRoute);
+            ConditionalRoutes: IvAsiRoute)
+        {
+            GradientStartHex = "#0C1A2E",
+            GradientEndHex   = "#060F1C",
+            LibraryStatus    = ReleaseStatus.Alpha,
+        };
 
         public static readonly GameProfile TBoGT = new(
             Key: "TBoGT",
@@ -88,7 +121,12 @@ namespace TMM
             ExeName: "EFLC.exe",
             SteamAppId: "",
             Vanilla10Md5: "",
-            ConditionalRoutes: IvAsiRoute);
+            ConditionalRoutes: IvAsiRoute)
+        {
+            GradientStartHex = "#0C1A2E",
+            GradientEndHex   = "#060F1C",
+            LibraryStatus    = ReleaseStatus.Alpha,
+        };
 
         // ── Collections ──────────────────────────────────────────────────────────
 

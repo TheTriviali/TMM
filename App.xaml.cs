@@ -27,7 +27,7 @@ namespace TMM
             };
 
             Core = new BackendCore();
-            new GameLauncherWindow(Core).Show();
+            new UnifiedShellWindow(Core).Show();
         }
 
         private static void ShowCrashDialog(Exception ex)

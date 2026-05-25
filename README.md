@@ -80,27 +80,42 @@ Custom game configs are saved as `.tmmgame` files and can be exported/imported t
 * **Direct Deploy:** Copy mods straight into game directory. No VFS, no intermediate staging.
 * **Automatic Backup & Rollback:** Every deploy creates timestamped backups. Rollback to any previous state.
 * **Custom Game Support:** Add any game. Per-extension output directory routing with plain-English sentence builder routing rules + one-click presets (ASI Loader, Source Engine, SKSE, CLEO, etc.).
-* **Multi-game Launcher:** Home screen showing all games (built-in + custom) as cards. Quick access to Edit/Delete custom games.
-* **Sidebar Path Browse:** Game directory is set directly in each dashboard's sidebar via a 📂 browse button — no separate settings dialog needed. Dot indicator turns green when a valid path is configured.
 * **Smart Nested Archive Extraction:** Archives wrapping content in a single subdirectory are automatically unwrapped.
 * **Drag-and-Drop Load Orders:** Visual priority list with drop-line indicator. Bottom overrides top (0 loads first).
 * **Per-Game Search:** Each game's mod list has independent search box with live filtering.
-* **Test Routing Panel:** Before deploying, simulate file routing within CustomGameConfigWindow. Browse a test file and see exactly where it would be installed based on your routing rules.
+* **Test Routing Panel:** Before deploying, simulate file routing. Browse a test file and see exactly where it would be installed based on your routing rules.
+
+### Library & Game Management
+
+* **Unified Shell Interface:** Single window with game library, mod manager, and settings all in one integrated dashboard.
+* **Multi-View Game Library:** Switch between three display modes:
+  - **Grid View:** Card-based layout with always-visible action buttons (Play, Manage, Edit, Export, Archive)
+  - **List View:** Compact full-width rows with drag-to-reorder capability (64px height, status dot, mod count at a glance)
+  - **Showcase View:** Large hero card featuring your default game (300px tall, 2-column layout with cover art + metadata panel) plus horizontal carousel of other games below
+* **Game Library Features:**
+  - Set default game with checkbox (clicking while already default clears it)
+  - Archive/unarchive games without deletion
+  - Drag-to-reorder games in list and grid views (order persists to settings)
+  - Search/filter games by name
+  - Show/hide archived games toggle in titlebar
+  - Game status badges (Alpha, Beta, Pre-Alpha, Testing, Release)
+* **Mod Manager:** Full mod list for active game with Deploy/Rollback buttons in the main toolbar.
+* **Sidebar Path Browse:** Game directory is set directly via 📂 browse buttons — no separate settings dialog needed. Dot indicator turns green when a valid path is configured.
 
 ### GTA-Specific Features
 
-* **Unified Dashboard Interface:** All GTA dashboards (III/VC/SA, IV/TLaD/TBoGT) share the same chrome — sidebar with path browse rows, toolbar with Deploy/Rollback/Play buttons, deploy progress overlay, and notification toasts.
 * **Exe-as-Mod Downgrading:** Install a 1.0 `gta3.exe` / `gta-vc.exe` / `gta-sa.exe` directly as a mod. Auto-detects game, assigns load order 0, and unlocks deployment even on Steam installs (which ship with DRM).
-* **Force Deploy Override:** Right-click any play button or mod list to toggle override for games where exe check would block deployment.
+* **Force Deploy Override:** Toggle override for games where exe check would block deployment.
 * **Multi-hash MD5 Verification:** Accepts all known 1.0 build variants (US/EU pressings, different downgrader tools).
 * **One-Click Essentials:** Auto-download SilentPatch, Ultimate ASI Loader, Widescreen Fixes, Project 2DFX, CLEO.
 * **GTA IV Wizard:** Opening IV/TLaD/TBoGT with no paths configured shows setup wizard to auto-detect Steam paths.
 
-### Toolbar
+### Toolbar & Control Center
 
-* **Deploy Button** — deploys all pending changes across all games. Greyed when nothing pending, accent-colored when changes exist.
+* **Deploy Button** — deploys all pending changes for the active game. Greyed when nothing pending, accent-colored when changes exist.
 * **Rollback Button** — restores active game to previous backup state.
-* **Play Buttons** — Launch directly from the toolbar. GTA III/VC/SA: **Green** = 1.0 exe ready, **Red** = vanilla exe, **Orange** = override active. GTA IV/TLaD/TBoGT: per-episode play buttons, green when path is configured.
+* **Play Button** — Launch the active game directly. GTA III/VC/SA: **Green** = 1.0 exe ready, **Red** = vanilla exe, **Orange** = override active. GTA IV/TLaD/TBoGT: green when path is configured.
+* **Archive Toggle** — Simple on/off button in titlebar to show/hide archived games.
 * **Dice Theme Button** — Instantly apply random theme preset.
 
 ### Visual Customization
@@ -217,15 +232,16 @@ All source files include a **Table of Contents** block at the top. Key files:
 
 | File | Purpose |
 |------|---------|
+| `Views/UnifiedShellWindow.xaml.cs` | Main entry point: unified window hosting library, mod manager, and settings pages |
+| `Views/Subpages/LibraryPage.xaml.cs` | Game library UI with grid/list/showcase views, search filtering, drag-to-reorder, and game management |
+| `Views/Subpages/ModManagerPage.xaml.cs` | Mod management UI for active game (mod list, deploy/rollback buttons) |
+| `Views/Controls/GameCard.xaml.cs` | Reusable game card component with dual-mode layout (grid + list) and drag handle for reordering |
 | `Services/BackendCore.cs` | Core logic: settings, game detection, deploy pipeline, backup/rollback, archive extraction |
 | `Services/GameRegistry.cs` | Singleton loader for built-in + custom game profiles |
-| `Views/GameLauncherWindow.xaml.cs` | Entry point: game card launcher |
-| `Views/MainDashboardWindow.xaml.cs` | GTA III/VC/SA dashboard UI + event handlers |
-| `Views/Gta4DashboardWindow.xaml.cs` | GTA IV/TLaD/TBoGT dashboard |
-| `Views/CustomGameDashboardWindow.xaml.cs` | Generic single-game dashboard for custom games |
+| `Views/EpisodePicker.cs` | GTA IV episode selection dialog during mod install |
 | `Views/CustomGameConfigWindow.xaml.cs` | Add/Edit custom game dialog with routing sentence builder |
 | `Theming/ThemeEngine.cs` | Dynamic brush application, DWM Mica, HSV helpers, contrast algorithms |
-| `Models/AppSettings.cs` | All persisted settings (themes, window size, toolbar state, etc.) |
+| `Models/AppSettings.cs` | All persisted settings (themes, window size, library view mode, game order, etc.) |
 | `Models/GameProfile.cs` | Built-in game constants (exe names, Steam IDs, MD5s) |
 | `Models/CustomGameProfile.cs` | Custom game config with per-extension output routing |
 | `Models/DeployManifest.cs` | Backup tracking: what files changed, when, and where |

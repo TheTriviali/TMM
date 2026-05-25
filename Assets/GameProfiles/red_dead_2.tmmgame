@@ -1,0 +1,23 @@
+{
+  "$schema": "tmm-game/1.1",
+  "gameName": "Red Dead Redemption 2",
+  "gameDirectory": "",
+  "exePath": "RDR2.exe",
+  "steamAppId": "1174180",
+  "routingRules": [
+    { "extensionPattern": ".asi", "destination": "." },
+    { "extensionPattern": ".dll", "destination": "." },
+    { "extensionPattern": "*",    "destination": "." }
+  ],
+  "gradientStartHex": "#2E0A0A",
+  "gradientEndHex": "#1A0505",
+  "libraryStatus": "PreAlpha",
+  "launcherCard": {
+    "displayName": "Red Dead Redemption 2",
+    "subtitle": "The Frontier",
+    "iconGlyph": "&#xE7FC;"
+  },
+  "description": "Red Dead Redemption 2 mod support — Alpha placeholder",
+  "author": "TMM",
+  "version": "0.1"
+}

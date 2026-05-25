@@ -1,0 +1,24 @@
+{
+  "$schema": "tmm-game/1.1",
+  "gameName": "Fallout: New Vegas",
+  "gameDirectory": "",
+  "exePath": "FalloutNV.exe",
+  "steamAppId": "22380",
+  "routingRules": [
+    { "extensionPattern": ".esp", "destination": "Data" },
+    { "extensionPattern": ".esm", "destination": "Data" },
+    { "extensionPattern": ".bsa", "destination": "Data" },
+    { "extensionPattern": "*",    "destination": "." }
+  ],
+  "gradientStartHex": "#3A2008",
+  "gradientEndHex": "#1E1004",
+  "libraryStatus": "PreAlpha",
+  "launcherCard": {
+    "displayName": "Fallout: New Vegas",
+    "subtitle": "Mojave Wasteland",
+    "iconGlyph": "&#xE7FC;"
+  },
+  "description": "Fallout: New Vegas mod support — Alpha placeholder",
+  "author": "TMM",
+  "version": "0.1"
+}

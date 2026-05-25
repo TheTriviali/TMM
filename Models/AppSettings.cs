@@ -24,6 +24,32 @@ namespace TMM
         // Active preset name (e.g. "Blue-Cyan", "Purple-Pink")
         public string ActiveAccentPreset { get; set; } = "Blue-Cyan";
 
+        // ── Library state (Design-required) ──────────────────────────────────────────
+
+        /// <summary>
+        /// Keys of games the user has archived (hidden from main grid by default).
+        /// Persisted across sessions. Users can unarchive from the archive chip panel.
+        /// </summary>
+        public List<string> ArchivedGameKeys { get; set; } = new();
+
+        /// <summary>
+        /// Key of the game set as "default" (highlighted in library, used for ModManager
+        /// shortcut nav item). E.g. "GTA_III_SERIES". Null = no default set.
+        /// </summary>
+        public string? DefaultGameKey { get; set; }
+
+        /// <summary>
+        /// Library view mode. One of: "grid" | "large" | "list" | "showcase".
+        /// Default is "grid".
+        /// </summary>
+        public string LibraryViewMode { get; set; } = "grid";
+
+        /// <summary>
+        /// User-defined display order for library cards. List of game keys in order.
+        /// Cards not in this list appear after the listed ones.
+        /// </summary>
+        public List<string> GameOrder { get; set; } = new();
+
         // ── Window state ──────────────────────────────────────────────────────
         public double WindowLeft   { get; set; } = -1;
         public double WindowTop    { get; set; } = -1;

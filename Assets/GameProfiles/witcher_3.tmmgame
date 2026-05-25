@@ -1,0 +1,23 @@
+{
+  "$schema": "tmm-game/1.1",
+  "gameName": "The Witcher 3",
+  "gameDirectory": "",
+  "exePath": "bin\\x64\\witcher3.exe",
+  "steamAppId": "292030",
+  "routingRules": [
+    { "extensionPattern": ".bundle", "destination": "Mods" },
+    { "extensionPattern": ".xml",    "destination": "Mods" },
+    { "extensionPattern": "*",       "destination": "." }
+  ],
+  "gradientStartHex": "#0A2E14",
+  "gradientEndHex": "#051A0A",
+  "libraryStatus": "PreAlpha",
+  "launcherCard": {
+    "displayName": "The Witcher 3",
+    "subtitle": "Wild Hunt",
+    "iconGlyph": "&#xE7FC;"
+  },
+  "description": "The Witcher 3 mod support — Alpha placeholder",
+  "author": "TMM",
+  "version": "0.1"
+}

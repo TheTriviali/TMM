@@ -1,0 +1,24 @@
+{
+  "$schema": "tmm-game/1.1",
+  "gameName": "Cyberpunk 2077",
+  "gameDirectory": "",
+  "exePath": "bin\\x64\\Cyberpunk2077.exe",
+  "steamAppId": "1091500",
+  "routingRules": [
+    { "extensionPattern": ".archive", "destination": "archive\\pc\\mod" },
+    { "extensionPattern": ".xl",      "destination": "archive\\pc\\mod" },
+    { "extensionPattern": ".lua",     "destination": "bin\\x64\\plugins\\cyber_engine_tweaks\\mods" },
+    { "extensionPattern": "*",        "destination": "." }
+  ],
+  "gradientStartHex": "#0A1A2E",
+  "gradientEndHex": "#050D1A",
+  "libraryStatus": "PreAlpha",
+  "launcherCard": {
+    "displayName": "Cyberpunk 2077",
+    "subtitle": "Night City",
+    "iconGlyph": "&#xE7FC;"
+  },
+  "description": "Cyberpunk 2077 mod support — Alpha placeholder",
+  "author": "TMM",
+  "version": "0.1"
+}

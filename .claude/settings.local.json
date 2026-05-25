@@ -50,7 +50,26 @@
       "Bash(dotnet publish *)",
       "Bash(git commit -m 'Add B6 to PLANS.md: UI Modernization with traditional menu bar + responsive layout *)",
       "Bash(git commit -m '§2.4 + §4.1: Test routing dry-run panel + Skyrim AE embedded profile *)",
-      "Bash(git commit -m '§4.3 + §7.2: Deploy preview panel + Mod loadouts foundation *)"
+      "Bash(git commit -m '§4.3 + §7.2: Deploy preview panel + Mod loadouts foundation *)",
+      "Bash(del \"Views\\\\DebugConsoleWindow.xaml\" \"Views\\\\DebugConsoleWindow.xaml.cs\" \"Views\\\\CrashReportWindow.xaml\" \"Views\\\\CrashReportWindow.xaml.cs\" \"Views\\\\HelpWindow.xaml\" \"Views\\\\HelpWindow.xaml.cs\" \"Views\\\\DxvkSettingsWindow.xaml\" \"Views\\\\DxvkSettingsWindow.xaml.cs\" \"Theming\\\\IThemeSettings.cs\")",
+      "Bash(Start-Process \"C:\\\\Users\\\\noahd\\\\Desktop\\\\TGTAMM\\\\Publish\\\\TMM.exe\")",
+      "Bash(ls \"C:/Users/noahd/source/repos/tgtamm/\")",
+      "Bash(powershell -Command \"\\(New-Object -ComObject WScript.Shell\\).CreateShortcut\\('C:/Users/noahd/Desktop/TMM.lnk'\\).TargetPath\")",
+      "Bash(cd /tmp)",
+      "Bash(unzip -q \"/mnt/c/Users/noahd/Downloads/TMM \\(1\\).zip\")",
+      "Bash(unzip -q \"TMM \\(1\\).zip\")",
+      "Bash(git rm *)",
+      "Bash(Get-Content \"C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tgtamm\\\\TGTAMM\\\\Views\\\\MainDashboardWindow.xaml.cs\")",
+      "Bash(Measure-Object -Line)",
+      "Bash(del \"Views\\\\GameLauncherWindow.xaml\" \"Views\\\\GameLauncherWindow.xaml.cs\" \"Views\\\\MainDashboardWindow.xaml\" \"Views\\\\MainDashboardWindow.xaml.cs\" \"Views\\\\Gta4DashboardWindow.xaml\" \"Views\\\\Gta4DashboardWindow.xaml.cs\" \"Views\\\\CustomGameDashboardWindow.xaml\" \"Views\\\\CustomGameDashboardWindow.xaml.cs\" \"Views\\\\SettingsWindow.xaml\" \"Views\\\\SettingsWindow.xaml.cs\")",
+      "Read(//c/Users/noahd/AppData/Roaming/TMM/**)",
+      "Read(//c/Users/noahd/AppData/Roaming/TMM/CustomGames/**)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('ArchivedKeys:', d.get\\('archivedGameKeys', []\\)\\); print\\('CustomGameKeys:', d.get\\('customGameKeys', []\\)\\)\")",
+      "Bash(echo \"PID: $!\")",
+      "Bash(sleep 8 && cat /tmp/tmm_run.log)",
+      "Bash(git -C \"C:/Users/noahd/source/repos/TMM\" log --oneline -5)",
+      "Bash(git -C \"C:/Users/noahd/source/repos/tgtamm\" log --oneline -5)",
+      "Bash(grep -v \"obj\\\\\\\\\")"
     ]
   }
 }

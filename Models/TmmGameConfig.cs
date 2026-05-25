@@ -25,7 +25,10 @@ namespace TMM
         string? DisplayName = null,
         string? Subtitle = null,
         string? IconGlyph = null,
-        string? AccentColor = null
+        string? AccentColor = null,
+        string? GradientStartHex = null,
+        string? GradientEndHex = null,
+        string? LibraryStatus = null   // "Release"|"Beta"|"Alpha"|"Testing"
     );
 
     // Wire-format class for .tmmgame files — camelCase JSON, schema v1.0/v1.1.
@@ -58,6 +61,9 @@ namespace TMM
         public string? Description { get; set; }
         public string? Author { get; set; }
         public string? Version { get; set; }
+        public string? GradientStartHex { get; set; }
+        public string? GradientEndHex { get; set; }
+        public string? LibraryStatus { get; set; }
     }
 
     /// <summary>
@@ -68,6 +74,15 @@ namespace TMM
     {
         public static CustomGameProfile FromExport(TmmGameExport export, string fallbackName)
         {
+            // Parse LibraryStatus string → enum
+            ReleaseStatus status = ReleaseStatus.Release;
+            if (!string.IsNullOrEmpty(export.LibraryStatus))
+                System.Enum.TryParse(export.LibraryStatus, ignoreCase: true, out status);
+            // Also check LauncherCard.LibraryStatus for per-card override
+            if (status == ReleaseStatus.Release &&
+                !string.IsNullOrEmpty(export.LauncherCard?.LibraryStatus))
+                System.Enum.TryParse(export.LauncherCard.LibraryStatus, ignoreCase: true, out status);
+
             var config = new CustomGameProfile
             {
                 GameName      = export.GameName ?? fallbackName,
@@ -80,6 +95,9 @@ namespace TMM
                 Author         = export.Author,
                 Version        = export.Version,
                 RoutingRules   = export.RoutingRules ?? new(),
+                GradientStartHex = export.GradientStartHex ?? export.LauncherCard?.GradientStartHex,
+                GradientEndHex   = export.GradientEndHex   ?? export.LauncherCard?.GradientEndHex,
+                LibraryStatus    = status,
             };
 
             if (config.RoutingRules.Count == 0)

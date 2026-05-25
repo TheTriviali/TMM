@@ -29,6 +29,22 @@ namespace TMM
         public string? Author { get; set; }
         public string? Version { get; set; }
 
+        /// <summary>Library card gradient start color, hex e.g. "#1B3A1B". Null = use theme default.</summary>
+        public string? GradientStartHex { get; set; }
+
+        /// <summary>Library card gradient end color, hex e.g. "#0C1E0C". Null = use theme default.</summary>
+        public string? GradientEndHex { get; set; }
+
+        /// <summary>Maturity/release status shown as a chip on the library card.</summary>
+        public ReleaseStatus LibraryStatus { get; set; } = ReleaseStatus.Release;
+
+        /// <summary>
+        /// Optional custom artwork filename (basename only, e.g. "my_art.png").
+        /// Full path resolved by BackendCore.GetLibraryArtPath(gameKey).
+        /// Null = use gradient banner.
+        /// </summary>
+        public string? CustomArtFileName { get; set; }
+
         [JsonIgnore]
         public bool IsBuiltIn { get; set; }
 

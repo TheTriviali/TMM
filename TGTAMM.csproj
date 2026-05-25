@@ -17,6 +17,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\GameProfiles\skyrim_ae.tmmgame"/>
+    <EmbeddedResource Include="Assets\GameProfiles\fallout_nv.tmmgame"/>
+    <EmbeddedResource Include="Assets\GameProfiles\cyberpunk_2077.tmmgame"/>
+    <EmbeddedResource Include="Assets\GameProfiles\red_dead_2.tmmgame"/>
+    <EmbeddedResource Include="Assets\GameProfiles\witcher_3.tmmgame"/>
   </ItemGroup>
 
   <ItemGroup>

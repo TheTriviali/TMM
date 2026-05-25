@@ -1,0 +1,238 @@
+<UserControl x:Class="TMM.LibraryPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TMM"
+             Background="{DynamicResource BgBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Page header -->
+        <Grid Grid.Row="0" Margin="24,20,24,12">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="My Library" FontSize="22" FontWeight="Bold"
+                           Foreground="{DynamicResource TextBrush}"/>
+                <TextBlock x:Name="txtGameCount" FontSize="11"
+                           Foreground="{DynamicResource SubTextBrush}" Margin="0,2,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Content area -->
+        <Grid Grid.Row="1">
+
+            <!-- ── Grid / Large view ──────────────────────────────────── -->
+            <ScrollViewer x:Name="gridScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Visibility="Visible" Padding="0,0,0,20">
+                <WrapPanel x:Name="cardPanel" Margin="16,0,16,4"
+                           Orientation="Horizontal" HorizontalAlignment="Center"/>
+            </ScrollViewer>
+
+            <!-- ── List view ──────────────────────────────────────────── -->
+            <ScrollViewer x:Name="listScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Visibility="Collapsed" Padding="0,0,0,20">
+                <StackPanel x:Name="listPanel" Margin="20,0,20,4"
+                            AllowDrop="True" Drop="ListPanel_Drop"
+                            DragOver="ListPanel_DragOver"/>
+            </ScrollViewer>
+
+            <!-- ── Showcase view ──────────────────────────────────────── -->
+            <ScrollViewer x:Name="showcaseScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Visibility="Collapsed" Padding="0,0,0,20">
+                <StackPanel x:Name="showcasePanel" Margin="20,0,20,4">
+
+                    <!-- Hero card (full-width, 300px tall) -->
+                    <Border x:Name="showcaseHero"
+                            CornerRadius="14" Height="300"
+                            BorderBrush="#22FFFFFF" BorderThickness="1.5"
+                            Margin="0,0,0,16" ClipToBounds="True">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="32" ShadowDepth="8" Opacity="0.45" Color="#000000"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="240"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Cover art column -->
+                            <Border Grid.Column="0" x:Name="heroGradientBorder"
+                                    CornerRadius="14,0,0,14" ClipToBounds="True">
+                                <Grid>
+                                    <Border x:Name="heroGradientBg" CornerRadius="14,0,0,14">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop x:Name="heroGradStart" Color="#1B3A1B" Offset="0"/>
+                                                <GradientStop x:Name="heroGradEnd"   Color="#0C1E0C" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                    </Border>
+                                    <!-- Right edge separator -->
+                                    <Border HorizontalAlignment="Right" Width="1"
+                                            Background="#80000000"/>
+                                    <!-- Cover title (bottom-left) -->
+                                    <TextBlock x:Name="heroCoverTitle"
+                                               VerticalAlignment="Bottom" HorizontalAlignment="Left"
+                                               Margin="22,0,22,22"
+                                               FontSize="28" FontWeight="Black"
+                                               Foreground="#F0FFFFFF"
+                                               TextWrapping="Wrap" LineHeight="30"
+                                               TextOptions.TextRenderingMode="ClearType">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.6" Color="#000000"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+
+                            <!-- Meta panel -->
+                            <Border Grid.Column="1"
+                                    Background="{DynamicResource PanelBrush}"
+                                    CornerRadius="0,14,14,0">
+                                <StackPanel Margin="20,20,20,20" VerticalAlignment="Center">
+
+                                    <TextBlock x:Name="heroMetaName"
+                                               FontSize="20" FontWeight="Black"
+                                               Foreground="{DynamicResource TextBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock x:Name="heroMetaSub"
+                                               FontSize="12" Margin="0,3,0,10"
+                                               Foreground="{DynamicResource SubTextBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <!-- Tags row -->
+                                    <WrapPanel x:Name="heroTagsPanel" Margin="0,0,0,12"/>
+
+                                    <!-- Stats row -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <StackPanel Margin="0,0,24,0">
+                                            <TextBlock x:Name="heroStatMods"
+                                                       FontSize="22" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                            <TextBlock Text="MODS INSTALLED" FontSize="9" FontWeight="Bold"
+                                                       Foreground="{DynamicResource SubTextBrush}"
+                                                       Margin="0,1,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock x:Name="heroStatReady"
+                                                       FontSize="22" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                            <TextBlock Text="READY TO DEPLOY" FontSize="9" FontWeight="Bold"
+                                                       Foreground="{DynamicResource SubTextBrush}"
+                                                       Margin="0,1,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Ready row -->
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                                                Margin="0,0,0,14">
+                                        <Ellipse x:Name="heroReadyDot" Width="8" Height="8" Margin="0,0,8,0"/>
+                                        <TextBlock x:Name="heroReadyText"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource SubTextBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Action buttons -->
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="btnHeroLaunch" Height="32" Padding="14,0"
+                                                Margin="0,0,8,0" Click="BtnHeroLaunch_Click"
+                                                Background="{DynamicResource AccentBrush}"
+                                                Foreground="#06222E" FontWeight="Bold"
+                                                BorderThickness="0">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="b"
+                                                                        Background="{TemplateBinding Background}"
+                                                                        CornerRadius="5"
+                                                                        Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="b" Property="Opacity" Value="0.85"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="▶ " FontSize="11" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Launch game" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button x:Name="btnHeroManage" Content="Manage mods"
+                                                Height="32" Padding="14,0" Margin="0,0,8,0"
+                                                Click="BtnHeroManage_Click">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="b"
+                                                                        Background="{DynamicResource ControlBgBrush}"
+                                                                        CornerRadius="5"
+                                                                        Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="b" Property="Opacity" Value="0.75"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Carousel section -->
+                    <TextBlock x:Name="carouselLabel"
+                               Text="OTHER GAMES"
+                               FontSize="10" FontWeight="Bold"
+                               Foreground="{DynamicResource SubTextBrush}"
+                               Margin="0,0,0,6"/>
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  Padding="4,4,4,12">
+                        <StackPanel x:Name="carouselPanel" Orientation="Horizontal"/>
+                    </ScrollViewer>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── Empty state ────────────────────────────────────────── -->
+            <StackPanel x:Name="emptyState"
+                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Opacity="0.4" Visibility="Collapsed">
+                <TextBlock Text="📚" FontSize="48" HorizontalAlignment="Center"/>
+                <TextBlock Text="No games in library" FontSize="14"
+                           Foreground="{DynamicResource SubTextBrush}"
+                           HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                <TextBlock Text="Click ➕ to add your first game" FontSize="11"
+                           Foreground="{DynamicResource SubTextBrush}"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+        </Grid>
+    </Grid>
+</UserControl>
