@@ -67,7 +67,7 @@ namespace TMM
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "TMM");
 
-            // Migrate existing TGTAMM data if the old folder exists and TMM doesn't yet
+            // Migrate existing TGTAMM data to TMM if old folder exists and new doesn't
             string oldPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "TGTAMM");

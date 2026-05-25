@@ -69,7 +69,12 @@
       "Bash(sleep 8 && cat /tmp/tmm_run.log)",
       "Bash(git -C \"C:/Users/noahd/source/repos/TMM\" log --oneline -5)",
       "Bash(git -C \"C:/Users/noahd/source/repos/tgtamm\" log --oneline -5)",
-      "Bash(grep -v \"obj\\\\\\\\\")"
+      "Bash(grep -v \"obj\\\\\\\\\")",
+      "Bash(Get-ChildItem -Recurse -Filter \"*.xaml\")",
+      "Bash(Select-Object -First 20)",
+      "Bash(Find C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tgtamm\\\\TGTAMM -name \"*.cs\")",
+      "PowerShell(Stop-Process -Name TMM -Force -ErrorAction SilentlyContinue)",
+      "Bash(Start-Process dotnet *)"
     ]
   }
 }
