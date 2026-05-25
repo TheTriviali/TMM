@@ -41,8 +41,10 @@ namespace TMM
                 var gradientBrush = new LinearGradientBrush(accentPrimary, accentSecondary, 45.0);
                 Application.Current.Resources["AccentGradientBrush"] = gradientBrush;
 
-                // ── Window border: accent color ─────────────────────────────────────
+                // ── Window border + accent label/soft fills ─────────────────────────
                 Application.Current.Resources["WindowBorderBrush"] = new SolidColorBrush(accentPrimary);
+                Application.Current.Resources["AccentLabelBrush"]  = new SolidColorBrush(accentPrimary);
+                Application.Current.Resources["AccentSoftBrush"]   = new SolidColorBrush(Color.FromArgb(0x22, accentPrimary.R, accentPrimary.G, accentPrimary.B));
             }
             catch { /* invalid hex - keep previous theme */ }
         }

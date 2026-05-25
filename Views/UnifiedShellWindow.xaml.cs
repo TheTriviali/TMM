@@ -17,6 +17,7 @@ namespace TMM
         private readonly BackendCore _core;
         private string _currentPage = "Library";
         private LibraryEntry? _modalEntry;
+        private LibraryEntry? _activeModManagerEntry;   // last game opened in mod manager
         private bool _showingArchived = false;
 
         // Pages instantiated lazily in Window_Loaded
@@ -75,9 +76,15 @@ namespace TMM
 
             // Build library entries from all known games
             await _core.InitializeAsync();
-            var entries = BuildLibraryEntries();
+            var entries = BuildLibraryEntries().ToList();
             pageLibrary.LoadEntries(entries);
+            pageDownloads.Initialize(_core, entries);
+            pageDownloads.UrlChanged += url =>
+            {
+                if (_currentPage == "Downloads") txtBrowserUrl.Text = url;
+            };
             pageLibrary.SetViewMode(_core.Settings.LibraryViewMode);
+            UpdateViewModeButtonStyles(_core.Settings.LibraryViewMode);
 
             SetNavActive("Library");
         }
@@ -155,26 +162,39 @@ namespace TMM
 
             searchContainer.Visibility  = Visibility.Collapsed;
             viewModePanel.Visibility    = Visibility.Collapsed;
+            downloadsNavBar.Visibility  = Visibility.Collapsed;
 
             switch (page)
             {
                 case "Library":
-                    pageLibrary.Visibility = Visibility.Visible;
+                    pageLibrary.Visibility     = Visibility.Visible;
                     searchContainer.Visibility = Visibility.Visible;
                     viewModePanel.Visibility   = Visibility.Visible;
                     titleSubtext.Text          = " — Library";
-                    navBtnModMgr.Visibility    = Visibility.Collapsed;
                     break;
 
                 case "ModManager":
+                    // If no active entry, fall back to default game then first available
+                    if (_activeModManagerEntry == null)
+                    {
+                        var entries = BuildLibraryEntries();
+                        _activeModManagerEntry =
+                            entries.FirstOrDefault(e => !e.IsPlaceholder && e.IsDefault) ??
+                            entries.FirstOrDefault(e => !e.IsPlaceholder && !e.IsArchived);
+                    }
+                    if (_activeModManagerEntry == null)
+                        return; // no games yet — button click is a no-op on fresh install
+                    pageModManager.LoadEntry(_activeModManagerEntry, _core);
                     pageModManager.Visibility = Visibility.Visible;
-                    titleSubtext.Text         = " — Mod Manager";
-                    navBtnModMgr.Visibility   = Visibility.Visible;
+                    titleSubtext.Text         = $" — {_activeModManagerEntry.DisplayName}";
+                    UpdateModManagerNavTip();
                     break;
 
                 case "Downloads":
-                    pageDownloads.Visibility = Visibility.Visible;
-                    titleSubtext.Text        = " — Downloads";
+                    pageDownloads.Visibility    = Visibility.Visible;
+                    downloadsNavBar.Visibility  = Visibility.Visible;
+                    titleSubtext.Text           = " — Downloads";
+                    txtBrowserUrl.Text          = pageDownloads.CurrentUrl;
                     break;
 
                 case "Backups":
@@ -221,6 +241,23 @@ namespace TMM
             }
         }
 
+        // ── Downloads browser nav ────────────────────────────────────────────────
+
+        private void BtnBrowserBack_Click(object sender, RoutedEventArgs e)
+            => pageDownloads.GoBack();
+
+        private void BtnBrowserForward_Click(object sender, RoutedEventArgs e)
+            => pageDownloads.GoForward();
+
+        private void BtnBrowserRefresh_Click(object sender, RoutedEventArgs e)
+            => pageDownloads.Reload();
+
+        private void TxtBrowserUrl_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+                pageDownloads.Navigate(txtBrowserUrl.Text);
+        }
+
         // ── Search (library) ──────────────────────────────────────────────────────
 
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -245,6 +282,18 @@ namespace TMM
             _core.Settings.LibraryViewMode = mode;
             _core.SaveSettings();
             pageLibrary.SetViewMode(mode);
+            UpdateViewModeButtonStyles(mode);
+        }
+
+        private void UpdateViewModeButtonStyles(string activeMode)
+        {
+            var activeStyle = (Style)Resources["ViewModeBtnActiveStyle"];
+            var inactiveStyle = (Style)Resources["ViewModeBtnStyle"];
+
+            btnViewGrid.Style     = activeMode == "grid"     ? activeStyle : inactiveStyle;
+            btnViewLarge.Style    = activeMode == "large"    ? activeStyle : inactiveStyle;
+            btnViewList.Style     = activeMode == "list"     ? activeStyle : inactiveStyle;
+            btnViewShowcase.Style = activeMode == "showcase" ? activeStyle : inactiveStyle;
         }
 
         // ── Archive flyout ────────────────────────────────────────────────────────
@@ -367,8 +416,17 @@ namespace TMM
 
         private void OnManageRequested(LibraryEntry entry)
         {
+            _activeModManagerEntry = entry;
             pageModManager.LoadEntry(entry, _core);
+            UpdateModManagerNavTip();
             NavigateTo("ModManager");
+        }
+
+        private void UpdateModManagerNavTip()
+        {
+            navBtnModMgr.ToolTip = _activeModManagerEntry != null
+                ? $"Mod Manager — {_activeModManagerEntry.DisplayName}"
+                : "Mod Manager";
         }
 
         private void OnArchiveToggled(LibraryEntry entry, bool archive)

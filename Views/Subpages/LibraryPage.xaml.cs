@@ -137,7 +137,7 @@ namespace TMM
             gridScrollViewer.Visibility = Visibility.Visible;
             cardPanel.Children.Clear();
 
-            double scale = _viewMode == "large" ? 1.3 : 1.0;
+            double scale = _viewMode == "large" ? 1.25 : 1.0;
 
             foreach (var entry in _filteredEntries)
             {
@@ -149,6 +149,7 @@ namespace TMM
                 card.AllowDrop = true;
                 card.MouseMove += GridCard_MouseMove;
                 card.DragOver  += GridCard_DragOver;
+                card.DragLeave += GridCard_DragLeave;
                 card.Drop      += GridCard_Drop;
                 cardPanel.Children.Add(card);
             }
@@ -188,7 +189,19 @@ namespace TMM
             e.Effects = DragDropEffects.Move;
             e.Handled = true;
             if (sender is GameCard target && target != _gridDragSource)
-                target.Opacity = 0.7;
+            {
+                target.cardBorder.BorderBrush = (Brush)(Application.Current.Resources["AccentBrush"] ?? Brushes.Cyan);
+                target.cardBorder.BorderThickness = new Thickness(2);
+            }
+        }
+
+        private void GridCard_DragLeave(object sender, DragEventArgs e)
+        {
+            if (sender is GameCard card)
+            {
+                card.cardBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(0x22, 0xFF, 0xFF, 0xFF));
+                card.cardBorder.BorderThickness = new Thickness(1.5);
+            }
         }
 
         private void GridCard_Drop(object sender, DragEventArgs e)
@@ -198,6 +211,8 @@ namespace TMM
 
             // Reset visual
             target.Opacity = target.Entry?.IsArchived == true ? 0.55 : 1.0;
+            target.cardBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(0x22, 0xFF, 0xFF, 0xFF));
+            target.cardBorder.BorderThickness = new Thickness(1.5);
 
             // Reorder _allEntries
             string? fromKey = _gridDragSource.Entry?.Key;
@@ -220,9 +235,9 @@ namespace TMM
                 var card = CreateCard(entry);
                 card.IsListMode          = true;
                 card.Width               = double.NaN;
-                card.Height              = 64;
+                card.Height              = 72;
                 card.HorizontalAlignment = HorizontalAlignment.Stretch;
-                card.Margin              = new Thickness(0, 3, 0, 3);
+                card.Margin              = new Thickness(0, 4, 0, 4);
 
                 // Wire drag-drop via the grip handle
                 card.AllowDrop = true;
@@ -336,6 +351,7 @@ namespace TMM
         {
             showcaseScrollViewer.Visibility = Visibility.Visible;
             carouselPanel.Children.Clear();
+            ResetCarousel();
 
             var real = _filteredEntries.Where(e => !e.IsPlaceholder).ToList();
             if (real.Count == 0) { emptyState.Visibility = Visibility.Visible; return; }
@@ -399,6 +415,64 @@ namespace TMM
 
         private LibraryEntry? _heroEntry;
 
+        // ── Carousel ──────────────────────────────────────────────────────────────
+
+        private double _carouselOffset = 0;
+        private const double CardStep = 150; // card width (140) + margin (10)
+
+        private void ResetCarousel() { _carouselOffset = 0; carouselTranslate.X = 0; }
+
+        private void BtnCarouselPrev_Click(object sender, RoutedEventArgs e)
+        {
+            int count = carouselPanel.Children.Count;
+            if (count == 0) return;
+
+            double panelW   = count * CardStep;
+            double viewportW = carouselViewport.ActualWidth;
+            double minOffset = Math.Min(0, viewportW - panelW); // negative when panel wider than viewport
+
+            if (_carouselOffset >= 0)
+            {
+                // Already at start — wrap to end
+                _carouselOffset = minOffset;
+            }
+            else
+            {
+                _carouselOffset = Math.Min(_carouselOffset + CardStep, 0);
+            }
+            AnimateCarousel(_carouselOffset);
+        }
+
+        private void BtnCarouselNext_Click(object sender, RoutedEventArgs e)
+        {
+            int count = carouselPanel.Children.Count;
+            if (count == 0) return;
+
+            double panelW    = count * CardStep;
+            double viewportW = carouselViewport.ActualWidth;
+            double minOffset = Math.Min(0, viewportW - panelW);
+
+            if (_carouselOffset <= minOffset)
+            {
+                // Already at end — wrap to start
+                _carouselOffset = 0;
+            }
+            else
+            {
+                _carouselOffset = Math.Max(_carouselOffset - CardStep, minOffset);
+            }
+            AnimateCarousel(_carouselOffset);
+        }
+
+        private void AnimateCarousel(double targetX)
+        {
+            var anim = new DoubleAnimation(targetX, TimeSpan.FromMilliseconds(220))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+            carouselTranslate.BeginAnimation(System.Windows.Media.TranslateTransform.XProperty, anim);
+        }
+
         private void AddHeroTag(string text, string bg, string fg)
         {
             var border = new Border
@@ -431,7 +505,7 @@ namespace TMM
                 BorderBrush     = new SolidColorBrush(Color.FromArgb(0x22, 0xFF, 0xFF, 0xFF)),
                 BorderThickness = new Thickness(1.5),
                 ClipToBounds    = true,
-                Margin          = new Thickness(0, 0, 10, 0),
+                Margin          = new Thickness(5, 0, 5, 0),
                 Cursor          = Cursors.Hand,
             };
             outer.Effect = new DropShadowEffect { BlurRadius = 10, ShadowDepth = 2, Opacity = 0.35, Color = Colors.Black };

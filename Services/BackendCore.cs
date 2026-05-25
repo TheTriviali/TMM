@@ -589,6 +589,14 @@ namespace TMM
 
         public string BackupsPath => Path.Combine(AppDataPath, "Backups");
 
+        /// <summary>Folder where raw downloaded archives (.zip/.rar/.7z) are stored per game key.</summary>
+        public string GetModsArchivePath(string gameKey)
+        {
+            string path = Path.Combine(AppDataPath, $"ModsArchive{gameKey}");
+            Directory.CreateDirectory(path);
+            return path;
+        }
+
         /// <summary>Folder where custom library card artwork is stored.</summary>
         public string LibraryArtPath => Path.Combine(AppDataPath, "LibraryArt");
 

@@ -27,7 +27,7 @@
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Visibility="Visible" Padding="0,0,0,20">
-                <WrapPanel x:Name="cardPanel" Margin="16,0,16,4"
+                <WrapPanel x:Name="cardPanel" Margin="12,12,12,12"
                            Orientation="Horizontal" HorizontalAlignment="Center"/>
             </ScrollViewer>
 
@@ -36,17 +36,22 @@
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Visibility="Collapsed" Padding="0,0,0,20">
-                <StackPanel x:Name="listPanel" Margin="20,0,20,4"
-                            AllowDrop="True" Drop="ListPanel_Drop"
-                            DragOver="ListPanel_DragOver"/>
+                <Grid HorizontalAlignment="Center">
+                    <Grid.Width>800</Grid.Width>
+                    <StackPanel x:Name="listPanel" Margin="0,0,0,0"
+                                AllowDrop="True" Drop="ListPanel_Drop"
+                                DragOver="ListPanel_DragOver"/>
+                </Grid>
             </ScrollViewer>
 
             <!-- ── Showcase view ──────────────────────────────────────── -->
             <ScrollViewer x:Name="showcaseScrollViewer"
-                          VerticalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Hidden"
                           HorizontalScrollBarVisibility="Disabled"
                           Visibility="Collapsed" Padding="0,0,0,20">
-                <StackPanel x:Name="showcasePanel" Margin="20,0,20,4">
+                <Grid HorizontalAlignment="Center">
+                    <Grid.Width>980</Grid.Width>
+                    <StackPanel x:Name="showcasePanel" Margin="0,0,0,0">
 
                     <!-- Hero card (full-width, 300px tall) -->
                     <Border x:Name="showcaseHero"
@@ -210,14 +215,80 @@
                                Text="OTHER GAMES"
                                FontSize="10" FontWeight="Bold"
                                Foreground="{DynamicResource SubTextBrush}"
-                               Margin="0,0,0,6"/>
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Disabled"
-                                  Padding="4,4,4,12">
-                        <StackPanel x:Name="carouselPanel" Orientation="Horizontal"/>
-                    </ScrollViewer>
+                               Margin="0,18,0,8"/>
 
-                </StackPanel>
+                    <!-- Custom carousel: prev/next + clipping viewport -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="32"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="32"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Prev arrow -->
+                        <Button x:Name="btnCarouselPrev" Grid.Column="0"
+                                Width="28" Height="44" VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                Click="BtnCarouselPrev_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                            CornerRadius="6">
+                                        <TextBlock Text="&#xE76B;"
+                                                   FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="{DynamicResource SubTextBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background"
+                                                    Value="{DynamicResource ControlBgBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <!-- Clipping viewport -->
+                        <Border Grid.Column="1" ClipToBounds="True" x:Name="carouselViewport">
+                            <StackPanel x:Name="carouselPanel" Orientation="Horizontal">
+                                <StackPanel.RenderTransform>
+                                    <TranslateTransform x:Name="carouselTranslate" X="0"/>
+                                </StackPanel.RenderTransform>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Next arrow -->
+                        <Button x:Name="btnCarouselNext" Grid.Column="2"
+                                Width="28" Height="44" VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                Click="BtnCarouselNext_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                            CornerRadius="6">
+                                        <TextBlock Text="&#xE76C;"
+                                                   FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="{DynamicResource SubTextBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background"
+                                                    Value="{DynamicResource ControlBgBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+
+                    </StackPanel>
+                </Grid>
             </ScrollViewer>
 
             <!-- ── Empty state ────────────────────────────────────────── -->

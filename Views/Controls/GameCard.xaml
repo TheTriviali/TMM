@@ -197,13 +197,13 @@
             </Border>
 
             <!-- ═══════════════════════════════════════════════════════════ -->
-            <!-- LIST MODE — full-width × 64px row                          -->
+            <!-- LIST MODE — full-width × 72px row                          -->
             <!-- ═══════════════════════════════════════════════════════════ -->
             <Grid x:Name="listModeRoot" Visibility="Collapsed">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="34"/>   <!-- drag grip -->
                     <ColumnDefinition Width="36"/>   <!-- default checkbox -->
-                    <ColumnDefinition Width="*"/>    <!-- title + subtitle -->
+                    <ColumnDefinition Width="*"/>    <!-- title + subtitle (with inline pills) -->
                     <ColumnDefinition Width="22"/>   <!-- ready dot -->
                     <ColumnDefinition Width="Auto"/> <!-- action buttons -->
                     <ColumnDefinition Width="10"/>   <!-- right padding -->
@@ -233,18 +233,37 @@
                                Visibility="Collapsed"/>
                 </Border>
 
-                <!-- Title + Subtitle -->
+                <!-- Title + Subtitle with inline pills -->
                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="4,0,8,0">
                     <TextBlock x:Name="listTxtTitle"
                                Foreground="#F4FFFFFF" FontSize="15" FontWeight="Bold"
                                TextTrimming="CharacterEllipsis"
                                TextOptions.TextRenderingMode="ClearType"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0" VerticalAlignment="Center">
+                        <!-- Archived badge -->
+                        <Border x:Name="listArchivedTag"
+                                CornerRadius="2" Padding="4,1" Margin="0,0,5,0"
+                                Background="#1FFFFFFF" Visibility="Collapsed">
+                            <TextBlock Text="ARCHIVED" FontSize="8" FontWeight="Bold"
+                                       Foreground="#A0FFFFFF" VerticalAlignment="Center"/>
+                        </Border>
+                        <!-- Status pill (inline, colored) -->
+                        <Border x:Name="listStatusPill"
+                                CornerRadius="2" Padding="5,1" Margin="0,0,6,0"
+                                Visibility="Collapsed">
+                            <TextBlock x:Name="listTxtStatus"
+                                       FontSize="8" FontWeight="Bold"
+                                       Foreground="White" VerticalAlignment="Center"/>
+                        </Border>
+                        <!-- Subtitle text -->
                         <TextBlock x:Name="listTxtSubtitle"
                                    Foreground="#C0FFFFFF" FontSize="11"
+                                   VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis"/>
+                        <!-- Mod count -->
                         <TextBlock x:Name="listTxtModCount"
-                                   Foreground="#88FFFFFF" FontSize="11" Margin="8,0,0,0"/>
+                                   Foreground="#66FFFFFF" FontSize="11" Margin="8,0,0,0"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
                 </StackPanel>
 

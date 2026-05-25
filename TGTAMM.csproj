@@ -12,18 +12,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\icon.ico"/>
+    <Resource Include="Assets\icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Assets\GameProfiles\skyrim_ae.tmmgame"/>
-    <EmbeddedResource Include="Assets\GameProfiles\fallout_nv.tmmgame"/>
-    <EmbeddedResource Include="Assets\GameProfiles\cyberpunk_2077.tmmgame"/>
-    <EmbeddedResource Include="Assets\GameProfiles\red_dead_2.tmmgame"/>
-    <EmbeddedResource Include="Assets\GameProfiles\witcher_3.tmmgame"/>
+    <EmbeddedResource Include="Assets\GameProfiles\skyrim_ae.tmmgame" />
+    <EmbeddedResource Include="Assets\GameProfiles\fallout_nv.tmmgame" />
+    <EmbeddedResource Include="Assets\GameProfiles\cyberpunk_2077.tmmgame" />
+    <EmbeddedResource Include="Assets\GameProfiles\red_dead_2.tmmgame" />
+    <EmbeddedResource Include="Assets\GameProfiles\witcher_3.tmmgame" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
     <PackageReference Include="SharpCompress" Version="0.48.1" />
   </ItemGroup>
 

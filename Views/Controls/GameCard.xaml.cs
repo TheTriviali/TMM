@@ -35,10 +35,15 @@ namespace TMM
                 _isListMode = value;
                 cardModeRoot.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
                 listModeRoot.Visibility = value ? Visibility.Visible   : Visibility.Collapsed;
+                // Hide card-mode overlays (default checkbox + status chip) in list mode
+                // — list mode has its own inline versions of both
+                defaultCheckbox.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
+                // statusChip visibility is managed by ApplyStatusChip; re-apply after mode switch
+                if (Entry != null) ApplyStatusChip(Entry.Status);
                 // List mode: flat border, no hover scale
                 cardBorder.CornerRadius = value ? new CornerRadius(8) : new CornerRadius(10);
                 cardBorder.BorderThickness = value ? new Thickness(1) : new Thickness(1.5);
-                // Disable drop shadow in list mode (subtle background already shows depth)
+                // Disable drop shadow in list mode
                 if (cardBorder.Effect is DropShadowEffect dse)
                     dse.Opacity = value ? 0.15 : 0.35;
             }
@@ -114,6 +119,8 @@ namespace TMM
             double baseOpacity = entry.IsPlaceholder ? 0.72 : entry.IsArchived ? 0.55 : 1.0;
             Opacity = baseOpacity;
             archivedOverlay.Visibility = entry.IsArchived ? Visibility.Visible : Visibility.Collapsed;
+            // List-mode archived badge (inline with subtitle)
+            listArchivedTag.Visibility = entry.IsArchived ? Visibility.Visible : Visibility.Collapsed;
 
             // ── Default checkbox (card + list modes) ──
             ApplyDefaultState(entry.IsDefault);
@@ -199,10 +206,11 @@ namespace TMM
         {
             if (status == ReleaseStatus.Release)
             {
-                statusChip.Visibility = Visibility.Collapsed;
+                statusChip.Visibility     = Visibility.Collapsed;
+                listStatusPill.Visibility = Visibility.Collapsed;
                 return;
             }
-            statusChip.Visibility = Visibility.Visible;
+
             (Color chipColor, string label) = status switch
             {
                 ReleaseStatus.Beta     => (Color.FromRgb(180, 140,  20), "BETA"),
@@ -211,8 +219,17 @@ namespace TMM
                 ReleaseStatus.Testing  => (Color.FromRgb( 80,  80, 180), "TESTING"),
                 _                      => (Colors.Gray, status.ToString().ToUpperInvariant()),
             };
-            statusChip.Background = new SolidColorBrush(Color.FromArgb(217, chipColor.R, chipColor.G, chipColor.B));
-            txtStatus.Text = label;
+            var bgBrush = new SolidColorBrush(Color.FromArgb(217, chipColor.R, chipColor.G, chipColor.B));
+
+            // Card-mode overlay (top-right) — hidden when in list mode
+            statusChip.Visibility = _isListMode ? Visibility.Collapsed : Visibility.Visible;
+            statusChip.Background = bgBrush;
+            txtStatus.Text        = label;
+
+            // List-mode inline pill
+            listStatusPill.Visibility = _isListMode ? Visibility.Visible : Visibility.Collapsed;
+            listStatusPill.Background = bgBrush;
+            listTxtStatus.Text        = label;
         }
 
         private void AnimateHover(bool entering)

@@ -44,22 +44,25 @@
             <Setter Property="Background"      Value="Transparent"/>
             <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width"           Value="40"/>
-            <Setter Property="Height"          Value="30"/>
+            <Setter Property="Width"           Value="46"/>
+            <Setter Property="Height"          Value="32"/>
             <Setter Property="Cursor"          Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}">
                             <TextBlock Text="{TemplateBinding Content}"
-                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#33FFFFFF"/>
+                                <Setter TargetName="bd" Property="Background" Value="#1AFFFFFF"/>
                                 <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#0DFFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -73,14 +76,18 @@
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}">
                             <TextBlock Text="{TemplateBinding Content}"
-                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#E81123"/>
+                                <Setter TargetName="bd" Property="Background" Value="#C42B1C"/>
                                 <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#9E1D12"/>
+                                <Setter Property="Foreground" Value="#CCFFFFff"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -93,8 +100,8 @@
             <Setter Property="Background"      Value="Transparent"/>
             <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width"           Value="28"/>
-            <Setter Property="Height"          Value="24"/>
+            <Setter Property="Width"           Value="32"/>
+            <Setter Property="Height"          Value="28"/>
             <Setter Property="Cursor"          Value="Hand"/>
             <Setter Property="Margin"          Value="1,0"/>
             <Setter Property="Template">
@@ -102,7 +109,7 @@
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
                             <TextBlock Text="{TemplateBinding Content}"
-                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11"
+                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Foreground="{TemplateBinding Foreground}"/>
                         </Border>
@@ -114,6 +121,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- Active view mode button style -->
+        <Style x:Key="ViewModeBtnActiveStyle" BasedOn="{StaticResource ViewModeBtnStyle}" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
         </Style>
     </Window.Resources>
 
@@ -151,11 +164,17 @@
                                    Foreground="{DynamicResource AccentBrush}"
                                    HorizontalAlignment="Center" Margin="0,14,0,10"/>
 
-                        <!-- Bottom: Quit -->
+                        <!-- Bottom: Settings + Quit -->
                         <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,8">
+                            <!-- Settings (global) -->
+                            <Button x:Name="navBtnSettings" Style="{StaticResource NavBtnStyle}"
+                                    ToolTip="Settings" Click="NavBtn_Click" Tag="Settings">
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                           Foreground="{DynamicResource SubTextBrush}"/>
+                            </Button>
                             <Button Style="{StaticResource NavBtnStyle}" ToolTip="Quit TMM"
                                     Click="BtnQuit_Click">
-                                <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="18"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
                         </StackPanel>
@@ -166,46 +185,38 @@
                             <!-- Library -->
                             <Button x:Name="navBtnLibrary" Style="{StaticResource NavBtnStyle}"
                                     ToolTip="Library" Click="NavBtn_Click" Tag="Library">
-                                <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
-
-                            <!-- Mod Manager (hidden until navigated from library card) -->
-                            <Button x:Name="navBtnModMgr" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Mod Manager" Click="NavBtn_Click" Tag="ModManager"
-                                    Visibility="Collapsed">
-                                <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="18"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
-
-                            <Border Height="1" Background="{DynamicResource SubTextBrush}"
-                                    Opacity="0.2" Margin="6,6"/>
 
                             <!-- Downloads -->
                             <Button x:Name="navBtnDownloads" Style="{StaticResource NavBtnStyle}"
                                     ToolTip="Downloads" Click="NavBtn_Click" Tag="Downloads">
-                                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                           Foreground="{DynamicResource SubTextBrush}"/>
+                            </Button>
+
+                            <!-- Mod Manager -->
+                            <Button x:Name="navBtnModMgr" Style="{StaticResource NavBtnStyle}"
+                                    ToolTip="Mod Manager" Click="NavBtn_Click" Tag="ModManager">
+                                <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
                             <!-- Backups -->
                             <Button x:Name="navBtnBackups" Style="{StaticResource NavBtnStyle}"
                                     ToolTip="Backups" Click="NavBtn_Click" Tag="Backups">
-                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
+
+                            <Border Height="1" Background="{DynamicResource SubTextBrush}"
+                                    Opacity="0.2" Margin="6,8"/>
 
                             <!-- Paths -->
                             <Button x:Name="navBtnPaths" Style="{StaticResource NavBtnStyle}"
                                     ToolTip="File Locations" Click="NavBtn_Click" Tag="Paths">
-                                <TextBlock Text="&#xE9CE;" FontFamily="Segoe MDL2 Assets" FontSize="18"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
-
-                            <!-- Settings -->
-                            <Button x:Name="navBtnSettings" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Settings" Click="NavBtn_Click" Tag="Settings">
-                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                <TextBlock Text="&#xE9CE;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
@@ -218,7 +229,7 @@
                 <!-- ══════════════════════════════════════════════ -->
                 <Grid Grid.Column="1">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="44"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
@@ -227,67 +238,103 @@
                             MouseLeftButtonDown="TitleBar_MouseDown">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>  <!-- title text -->
+                                <ColumnDefinition Width="*"/>     <!-- center toolbar -->
+                                <ColumnDefinition Width="Auto"/>  <!-- view modes + window controls -->
                             </Grid.ColumnDefinitions>
 
-                            <!-- Title + search (search only visible on Library) -->
+                            <!-- Title -->
                             <StackPanel Grid.Column="0" Orientation="Horizontal"
-                                        VerticalAlignment="Center" Margin="12,0,0,0">
+                                        VerticalAlignment="Center" Margin="12,0,8,0">
                                 <TextBlock Text="TMM" Foreground="{DynamicResource AccentBrush}"
-                                           FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                                           FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="titleSubtext" Text=" — Library"
                                            Foreground="{DynamicResource SubTextBrush}"
-                                           FontSize="12" VerticalAlignment="Center"/>
+                                           FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
 
-                                <!-- Library-only search -->
-                                <Border x:Name="searchContainer" Visibility="Visible"
-                                        Background="{DynamicResource ControlBgBrush}" CornerRadius="4"
-                                        Margin="16,0,0,0" Padding="6,2">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE71E;" FontFamily="Segoe MDL2 Assets" FontSize="11"
-                                                   Foreground="{DynamicResource SubTextBrush}"
-                                                   VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                        <TextBox x:Name="txtSearch" Width="160" Height="20"
-                                                 Background="Transparent" BorderThickness="0"
-                                                 Foreground="{DynamicResource TextBrush}" FontSize="12"
-                                                 VerticalContentAlignment="Center"
-                                                 TextChanged="TxtSearch_TextChanged"/>
-                                        <Button x:Name="btnClearSearch" Content="&#x2715;" Width="18" Height="18"
-                                                Background="Transparent" BorderThickness="0"
-                                                Foreground="{DynamicResource SubTextBrush}" FontSize="10"
-                                                Cursor="Hand" Click="BtnClearSearch_Click"
-                                                Visibility="Collapsed"/>
-                                    </StackPanel>
+                            <!-- Center: Library search (centered) -->
+                            <Border x:Name="searchContainer" Grid.Column="1"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    Visibility="Visible"
+                                    Background="{DynamicResource ControlBgBrush}" CornerRadius="5"
+                                    Padding="6,0" Height="26" MinWidth="220">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE71E;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                               Foreground="{DynamicResource SubTextBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBox x:Name="txtSearch" Width="180" Height="20"
+                                             Background="Transparent" BorderThickness="0"
+                                             Foreground="{DynamicResource TextBrush}" FontSize="12"
+                                             VerticalContentAlignment="Center"
+                                             TextChanged="TxtSearch_TextChanged"/>
+                                    <Button x:Name="btnClearSearch" Content="&#x2715;" Width="18" Height="18"
+                                            Background="Transparent" BorderThickness="0"
+                                            Foreground="{DynamicResource SubTextBrush}" FontSize="10"
+                                            Cursor="Hand" Click="BtnClearSearch_Click"
+                                            Visibility="Collapsed"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Center: Downloads browser nav (fills center column) -->
+                            <Grid x:Name="downloadsNavBar" Grid.Column="1"
+                                  VerticalAlignment="Center" Margin="6,0" Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Browser nav buttons -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,4,0">
+                                    <Button x:Name="btnBrowserBack" Content="&#xE72B;" Width="30" Height="28"
+                                            ToolTip="Back" Click="BtnBrowserBack_Click"
+                                            Style="{StaticResource ViewModeBtnStyle}"/>
+                                    <Button x:Name="btnBrowserForward" Content="&#xE72A;" Width="30" Height="28"
+                                            ToolTip="Forward" Click="BtnBrowserForward_Click"
+                                            Style="{StaticResource ViewModeBtnStyle}"/>
+                                    <Button x:Name="btnBrowserRefresh" Content="&#xE72C;" Width="30" Height="28"
+                                            ToolTip="Refresh" Click="BtnBrowserRefresh_Click"
+                                            Style="{StaticResource ViewModeBtnStyle}"/>
+                                </StackPanel>
+
+                                <!-- URL bar -->
+                                <Border Grid.Column="1" Background="{DynamicResource ControlBgBrush}"
+                                        CornerRadius="5" Padding="8,0" Height="26">
+                                    <TextBox x:Name="txtBrowserUrl" Background="Transparent"
+                                             BorderThickness="0"
+                                             Foreground="{DynamicResource TextBrush}" FontSize="12"
+                                             VerticalContentAlignment="Center"
+                                             KeyDown="TxtBrowserUrl_KeyDown"/>
                                 </Border>
-                            </StackPanel>
+                            </Grid>
 
-                            <!-- View-mode switcher (library only) -->
-                            <StackPanel x:Name="viewModePanel" Grid.Column="1"
-                                        Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                                <Button Style="{StaticResource ViewModeBtnStyle}"
-                                        Content="&#xE8A9;" ToolTip="Grid view"
-                                        Click="BtnViewMode_Click" Tag="grid"/>
-                                <Button Style="{StaticResource ViewModeBtnStyle}"
-                                        Content="&#xE739;" ToolTip="Large grid"
-                                        Click="BtnViewMode_Click" Tag="large"/>
-                                <Button Style="{StaticResource ViewModeBtnStyle}"
-                                        Content="&#xE9D5;" ToolTip="List view"
-                                        Click="BtnViewMode_Click" Tag="list"/>
-                                <Button Style="{StaticResource ViewModeBtnStyle}"
-                                        Content="&#xE7B9;" ToolTip="Showcase view"
-                                        Click="BtnViewMode_Click" Tag="showcase"/>
-
-                                <!-- Archive chip -->
-                                <Button x:Name="btnArchiveChip" Style="{StaticResource ViewModeBtnStyle}"
-                                        Content="&#xE7B3;" ToolTip="Show archived games"
-                                        Width="28" Height="24" Margin="8,0,0,0"
-                                        Click="BtnArchiveChip_Click"/>
-                            </StackPanel>
-
-                            <!-- Window controls -->
+                            <!-- Right: view-mode buttons + window controls -->
                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+
+                                <!-- View-mode switcher (library only) -->
+                                <StackPanel x:Name="viewModePanel"
+                                            Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
+                                    <Button x:Name="btnViewGrid" Style="{StaticResource ViewModeBtnStyle}"
+                                            Content="&#xE8A9;" ToolTip="Grid view"
+                                            Click="BtnViewMode_Click" Tag="grid"/>
+                                    <Button x:Name="btnViewLarge" Style="{StaticResource ViewModeBtnStyle}"
+                                            Content="&#xE739;" ToolTip="Large grid"
+                                            Click="BtnViewMode_Click" Tag="large"/>
+                                    <Button x:Name="btnViewList" Style="{StaticResource ViewModeBtnStyle}"
+                                            Content="&#xE9D5;" ToolTip="List view"
+                                            Click="BtnViewMode_Click" Tag="list"/>
+                                    <Button x:Name="btnViewShowcase" Style="{StaticResource ViewModeBtnStyle}"
+                                            Content="&#xE7B9;" ToolTip="Showcase view"
+                                            Click="BtnViewMode_Click" Tag="showcase"/>
+
+                                    <!-- Archive chip -->
+                                    <Button x:Name="btnArchiveChip" Style="{StaticResource ViewModeBtnStyle}"
+                                            Content="&#xE7B3;" ToolTip="Show archived games"
+                                            Width="32" Height="28" Margin="8,0,0,0"
+                                            Click="BtnArchiveChip_Click"/>
+                                </StackPanel>
+
+                                <!-- Window controls -->
                                 <Button Content="&#xE921;" Style="{StaticResource WinBtnStyle}"
                                         Click="BtnMinimize_Click"/>
                                 <Button Content="&#xE922;" Style="{StaticResource WinBtnStyle}"
@@ -299,7 +346,7 @@
                     </Border>
 
                     <!-- Content area -->
-                    <Grid Grid.Row="1">
+                    <Grid Grid.Row="1" Background="{DynamicResource BgBrush}">
 
                         <!-- ═══ LIBRARY PAGE ═══ -->
                         <local:LibraryPage x:Name="pageLibrary"/>
