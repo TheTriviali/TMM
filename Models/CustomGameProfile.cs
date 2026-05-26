@@ -43,6 +43,8 @@ namespace TMM
     public class CustomGameProfile
     {
         public string GameName { get; set; } = "";
+        /// <summary>Abbreviated display name for game cards (≤10 chars). Derived from GameName if null.</summary>
+        public string? ShortName { get; set; }
         public string GameDirectory { get; set; } = "";
         public string? ExePath { get; set; }
         public string? SteamAppId { get; set; }

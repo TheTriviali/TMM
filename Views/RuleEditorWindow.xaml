@@ -1,0 +1,267 @@
+<local:TmmWindow x:Class="TMM.RuleEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TMM"
+        Title="Rule Editor"
+        Height="580" Width="640"
+        MinHeight="480" MinWidth="560"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+
+    <Window.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin"     Value="0,0,0,4"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+        <Style x:Key="HintStyle" TargetType="TextBlock">
+            <Setter Property="FontSize"  Value="10"/>
+            <Setter Property="Opacity"   Value="0.55"/>
+            <Setter Property="Margin"    Value="0,-2,0,6"/>
+            <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
+        </Style>
+        <Style x:Key="FieldBox" TargetType="TextBox">
+            <Setter Property="Background"      Value="{DynamicResource ControlBgBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="8,5"/>
+            <Setter Property="FontSize"        Value="12"/>
+            <Setter Property="Margin"          Value="0,0,0,14"/>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="IconBtn" TargetType="Button">
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Padding"         Value="4"/>
+        </Style>
+        <Style x:Key="SuggestionChip" TargetType="Button">
+            <Setter Property="Background"      Value="{DynamicResource ControlBgBrush}"/>
+            <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="6,3"/>
+            <Setter Property="Margin"          Value="0,0,4,4"/>
+            <Setter Property="FontSize"        Value="10"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+        </Style>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Border CornerRadius="10" Background="{DynamicResource BgBrush}"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1"
+            ClipToBounds="True">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Grid Grid.Row="0" Background="#18000000" MouseLeftButtonDown="TitleBar_MouseDown">
+                <TextBlock x:Name="txtTitle" Text="Add Routing Rule"
+                           Foreground="{DynamicResource SubTextBrush}"
+                           VerticalAlignment="Center" Margin="14,0,0,0"
+                           FontSize="12" FontWeight="SemiBold"/>
+                <Button HorizontalAlignment="Right" Width="40" VerticalAlignment="Stretch"
+                        Click="BtnClose_Click" ToolTip="Cancel">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="Transparent" CornerRadius="0,8,0,0">
+                                <TextBlock Text="✕" Foreground="{DynamicResource SubTextBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#E81123"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+
+            <!-- Body -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="20,16,20,8">
+
+                    <!-- Rule Name -->
+                    <TextBlock Text="Rule Name" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="txtRuleName" Style="{StaticResource FieldBox}"
+/>
+
+                    <!-- Conditions -->
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Conditions" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="+ Add Condition"
+                                Click="BtnAddCondition_Click"
+                                Background="{DynamicResource AccentSoftBrush}"
+                                Foreground="{DynamicResource AccentBrush}"
+                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand"/>
+                    </Grid>
+                    <TextBlock Text="Empty condition list = catch-all rule (matches everything)"
+                               Style="{StaticResource HintStyle}"/>
+
+                    <ItemsControl x:Name="icConditions" Margin="0,0,0,14">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource PanelBrush}"
+                                        BorderBrush="{DynamicResource ControlBgBrush}"
+                                        BorderThickness="1" CornerRadius="4"
+                                        Margin="0,0,0,4" Padding="8,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="140"/>
+                                            <ColumnDefinition Width="110"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="28"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Type -->
+                                        <ComboBox Grid.Column="0" Margin="0,0,4,0"
+                                                  ItemsSource="{Binding AvailableTypes}"
+                                                  SelectedItem="{Binding Type, Mode=TwoWay}"
+                                                  FontSize="11"/>
+                                        <!-- Operator -->
+                                        <ComboBox Grid.Column="1" Margin="0,0,4,0"
+                                                  ItemsSource="{Binding AvailableOperators}"
+                                                  SelectedItem="{Binding Operator, Mode=TwoWay}"
+                                                  FontSize="11"/>
+                                        <!-- Value -->
+                                        <TextBox Grid.Column="2" Margin="0,0,4,0"
+                                                 Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Background="{DynamicResource ControlBgBrush}"
+                                                 Foreground="{DynamicResource TextBrush}"
+                                                 BorderBrush="{DynamicResource SubTextBrush}"
+                                                 BorderThickness="1" Padding="5,3" FontSize="11"/>
+                                        <!-- Logic (AND/OR) -->
+                                        <ComboBox Grid.Column="3" Margin="4,0,4,0"
+                                                  ItemsSource="{Binding AvailableLogic}"
+                                                  SelectedItem="{Binding Logic, Mode=TwoWay}"
+                                                  FontSize="11"
+                                                  Visibility="{Binding IsLastCondition, Converter={StaticResource BoolToVis}}"/>
+                                        <!-- Remove -->
+                                        <Button Grid.Column="4" Content="×"
+                                                Style="{StaticResource IconBtn}"
+                                                FontSize="14"
+                                                Tag="{Binding}"
+                                                Click="BtnRemoveCondition_Click"
+                                                ToolTip="Remove condition"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Target Path -->
+                    <TextBlock Text="Target Directory" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="Path relative to the game install directory. Use tokens like {gameRoot} or {scriptname}."
+                               Style="{StaticResource HintStyle}"/>
+                    <TextBox x:Name="txtTargetPath" Style="{StaticResource FieldBox}"
+/>
+
+                    <!-- Path suggestions -->
+                    <WrapPanel Margin="0,-8,0,14">
+                        <TextBlock Text="Quick:" FontSize="10" Foreground="{DynamicResource SubTextBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,6,4"/>
+                        <Button Content="{}{gameRoot}/" Style="{StaticResource SuggestionChip}" Tag="{}{gameRoot}/" Click="BtnSuggest_Click"/>
+                        <Button Content="scripts/" Style="{StaticResource SuggestionChip}" Tag="scripts/" Click="BtnSuggest_Click"/>
+                        <Button Content="plugins/" Style="{StaticResource SuggestionChip}" Tag="plugins/" Click="BtnSuggest_Click"/>
+                        <Button Content="CLEO/" Style="{StaticResource SuggestionChip}" Tag="CLEO/" Click="BtnSuggest_Click"/>
+                        <Button Content="modloader/" Style="{StaticResource SuggestionChip}" Tag="modloader/" Click="BtnSuggest_Click"/>
+                        <Button Content="{}modloader/cleo/{scriptname}/" Style="{StaticResource SuggestionChip}" Tag="{}modloader/cleo/{scriptname}/" Click="BtnSuggest_Click"/>
+                        <Button Content="Data/" Style="{StaticResource SuggestionChip}" Tag="Data/" Click="BtnSuggest_Click"/>
+                    </WrapPanel>
+
+                    <!-- Priority -->
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Priority (0–100)" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtPriorityValue" Grid.Column="1"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Slider x:Name="sliderPriority" Minimum="0" Maximum="100" Value="50"
+                            TickFrequency="10" IsSnapToTickEnabled="False"
+                            Margin="0,0,0,14"
+                            ValueChanged="SliderPriority_ValueChanged"/>
+
+                    <!-- Load order bias -->
+                    <TextBlock Text="Load Order Bias" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="Influences when mods matching this rule are loaded relative to others."
+                               Style="{StaticResource HintStyle}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <RadioButton x:Name="rbBiasLower" Content="Lower (load earlier)"
+                                     Foreground="{DynamicResource TextBrush}" Margin="0,0,16,0"/>
+                        <RadioButton x:Name="rbBiasNone" Content="None (default)"
+                                     Foreground="{DynamicResource TextBrush}" Margin="0,0,16,0"
+                                     IsChecked="True"/>
+                        <RadioButton x:Name="rbBiasHigher" Content="Higher (load later)"
+                                     Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+
+                    <!-- Toggles -->
+                    <CheckBox x:Name="chkAllowConflict" IsChecked="True" Margin="0,0,0,8"
+                              Foreground="{DynamicResource TextBrush}">
+                        <TextBlock>
+                            <Run Text="Ask user when a conflict occurs" FontWeight="SemiBold"/>
+                            <Run Text=" — prompt before overwriting an existing file" Foreground="{DynamicResource SubTextBrush}" FontSize="10"/>
+                        </TextBlock>
+                    </CheckBox>
+                    <CheckBox x:Name="chkIsDefault" Margin="0,0,0,0"
+                              Foreground="{DynamicResource TextBrush}">
+                        <TextBlock>
+                            <Run Text="Default (catch-all) rule" FontWeight="SemiBold"/>
+                            <Run Text=" — applies to files that match no other rule" Foreground="{DynamicResource SubTextBrush}" FontSize="10"/>
+                        </TextBlock>
+                    </CheckBox>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <Border Grid.Row="2" Background="#0A000000" Padding="16,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="txtValidationMsg"
+                               Foreground="#E07070" FontSize="11"
+                               VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    <Button Grid.Column="2" Content="Cancel" Click="BtnCancel_Click"
+                            Width="80" Height="30"
+                            Background="{DynamicResource PanelBrush}"
+                            Foreground="{DynamicResource TextBrush}"
+                            BorderThickness="0" Cursor="Hand"/>
+                    <Button Grid.Column="4" x:Name="btnSave" Content="Save Rule"
+                            Click="BtnSave_Click"
+                            Width="90" Height="30"
+                            Background="{DynamicResource AccentBrush}"
+                            Foreground="{DynamicResource AccentTextBrush}"
+                            BorderThickness="0" Cursor="Hand" FontWeight="SemiBold"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</local:TmmWindow>

@@ -1,0 +1,8 @@
+You are an expert software architect specializing in .NET WPF applications. We are performing code archaeology on our mod manager (TMM) to decouple hardcoded game logic into a data-driven structure before a major refactor.
+
+Analyze these files and provide a highly technical blueprint addressing:
+- Tight Coupling: Identify every instance of hardcoded game keys, custom routing logic branches, and specific dashboard dependencies. Provide file and approximate structural locations.
+- Data-Driven Migration: Map out exactly which hardcoded elements should be extracted into external .tmmgame profile schemas. 
+- Preservation: Identify patterns we MUST preserve, specifically focusing on how BackendCore handles top-level orchestration and its implementation of the service pattern.
+
+Output this as a clean, scannable Markdown architectural brief.

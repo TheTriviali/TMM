@@ -16,6 +16,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- GTA built-in profiles (Phase 5) -->
+    <EmbeddedResource Include="Assets\GameProfiles\gta3.tmmgame" />
+    <EmbeddedResource Include="Assets\GameProfiles\gtavc.tmmgame" />
+    <EmbeddedResource Include="Assets\GameProfiles\gtasa.tmmgame" />
+    <EmbeddedResource Include="Assets\GameProfiles\gtaiv.tmmgame" />
+    <EmbeddedResource Include="Assets\GameProfiles\gtatlad.tmmgame" />
+    <EmbeddedResource Include="Assets\GameProfiles\gtatbogt.tmmgame" />
+    <!-- Other supported games -->
     <EmbeddedResource Include="Assets\GameProfiles\skyrim_ae.tmmgame" />
     <EmbeddedResource Include="Assets\GameProfiles\fallout_nv.tmmgame" />
     <EmbeddedResource Include="Assets\GameProfiles\cyberpunk_2077.tmmgame" />
@@ -26,6 +34,16 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
     <PackageReference Include="SharpCompress" Version="0.48.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Prevent the WPF SDK temp-project glob from sweeping in test sources.
+         The TMM.Tests\ folder lives as a subdirectory of the main project and
+         would otherwise be included by the implicit **\*.cs pattern. -->
+    <Compile          Remove="TMM.Tests\**" />
+    <EmbeddedResource Remove="TMM.Tests\**" />
+    <None             Remove="TMM.Tests\**" />
+    <Content          Remove="TMM.Tests\**" />
   </ItemGroup>
 
 </Project>

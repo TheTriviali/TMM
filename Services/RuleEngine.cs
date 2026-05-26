@@ -25,26 +25,17 @@ namespace TMM.Services
             string modFolderPath,
             CustomGameProfile gameProfile)
         {
-            var results = new List<RoutingRule>();
+            var typeRules = gameProfile.ModTypes
+                .SelectMany(m => m.RoutingRules)
+                .Where(r => RuleMatches(r, filePath, modFolderPath))
+                .ToList();
 
-            // 1. Check ModType-specific rules first (higher specificity)
-            foreach (var modType in gameProfile.ModTypes)
-            {
-                foreach (var rule in modType.RoutingRules)
-                {
-                    if (RuleMatches(rule, filePath, modFolderPath))
-                        results.Add(rule);
-                }
-            }
+            var gameRules = gameProfile.RoutingRules
+                .Where(r => RuleMatches(r, filePath, modFolderPath))
+                .ToList();
 
-            // 2. Then game-wide rules
-            foreach (var rule in gameProfile.RoutingRules)
-            {
-                if (RuleMatches(rule, filePath, modFolderPath))
-                    results.Add(rule);
-            }
-
-            return results;
+            typeRules.AddRange(gameRules);
+            return typeRules;
         }
 
         /// <summary>

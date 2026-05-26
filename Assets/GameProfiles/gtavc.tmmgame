@@ -1,0 +1,66 @@
+{
+  "$schema": "tmm-game/1.1",
+  "gameKey": "VC",
+  "gameName": "GTA Vice City",
+  "shortName": "VC",
+  "gameDirectory": "",
+  "exePath": "gta-vc.exe",
+  "steamAppId": "12110",
+  "routingRules": [
+    {
+      "name": "ASI Plugin (scripts/ if exists)",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".asi", "logic": "AND" },
+        { "type": "HasFolder",     "operator": "Is", "value": "scripts" }
+      ],
+      "targetPath": "scripts",
+      "priority": 80
+    },
+    {
+      "name": "ASI Plugin (root fallback)",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".asi" }
+      ],
+      "targetPath": ".",
+      "priority": 50
+    },
+    {
+      "name": "CLEO Script",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".cs" }
+      ],
+      "targetPath": "cleo",
+      "priority": 60
+    },
+    {
+      "name": "CLEO FXT",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".fxt" }
+      ],
+      "targetPath": "cleo",
+      "priority": 60
+    },
+    {
+      "name": "Default (game root)",
+      "conditions": [],
+      "targetPath": ".",
+      "priority": 10,
+      "isDefault": true
+    }
+  ],
+  "installerHints": {
+    "engineProxyNames": ["dinput8.dll", "d3d9.dll"],
+    "smartDllWizard": true
+  },
+  "launcherCard": {
+    "displayName": "Vice City",
+    "subtitle": "Miami, 1986",
+    "iconGlyph": "&#xE7FC;"
+  },
+  "gradientStartHex": "#1B3A1B",
+  "gradientEndHex": "#0C1E0C",
+  "libraryStatus": "Beta",
+  "description": "Grand Theft Auto: Vice City — Miami, 1986. Routes ASI plugins to scripts/ or game root; CLEO scripts to cleo/.",
+  "author": "TMM",
+  "version": "1.0"
+}

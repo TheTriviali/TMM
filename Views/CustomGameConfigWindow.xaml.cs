@@ -39,7 +39,7 @@ namespace TMM
             txtSteamAppId.Text  = config.SteamAppId ?? "";
             txtDescription.Text = config.Description ?? "";
             txtAuthor.Text      = config.Author ?? "";
-            txtVersion.Text     = config.Version ?? "";
+            txtVersion.Text     = config.Version?.ToString() ?? "";
 
             _rules.Clear();
             foreach (var rule in config.RoutingRules)
@@ -82,9 +82,12 @@ namespace TMM
                 }).ToList(),
                 Description = NullIfBlank(txtDescription.Text),
                 Author      = NullIfBlank(txtAuthor.Text),
-                Version     = NullIfBlank(txtVersion.Text),
+                Version     = ParseVersion(txtVersion.Text),
             };
         }
+
+        private static System.Version? ParseVersion(string? s) =>
+            System.Version.TryParse(s?.Trim(), out var v) ? v : null;
 
         private static string? NullIfBlank(string? s) =>
             string.IsNullOrWhiteSpace(s) ? null : s.Trim();
@@ -486,7 +489,7 @@ namespace TMM
                 RoutingRules  = routingRules,
                 Description   = NullIfBlank(txtDescription.Text),
                 Author        = NullIfBlank(txtAuthor.Text),
-                Version       = NullIfBlank(txtVersion.Text),
+                Version       = ParseVersion(txtVersion.Text),
             };
 
             DialogResult = true;

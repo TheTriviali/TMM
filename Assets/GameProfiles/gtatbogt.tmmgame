@@ -1,0 +1,50 @@
+{
+  "$schema": "tmm-game/1.1",
+  "gameKey": "TBoGT",
+  "gameName": "GTA IV: The Ballad of Gay Tony",
+  "shortName": "TBoGT",
+  "gameDirectory": "",
+  "exePath": "EFLC.exe",
+  "steamAppId": "",
+  "routingRules": [
+    {
+      "name": "ASI Plugin (plugins/ if exists)",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".asi", "logic": "AND" },
+        { "type": "HasFolder",     "operator": "Is", "value": "plugins" }
+      ],
+      "targetPath": "plugins",
+      "priority": 80
+    },
+    {
+      "name": "ASI Plugin (root fallback)",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".asi" }
+      ],
+      "targetPath": ".",
+      "priority": 50
+    },
+    {
+      "name": "Default (game root)",
+      "conditions": [],
+      "targetPath": ".",
+      "priority": 10,
+      "isDefault": true
+    }
+  ],
+  "installerHints": {
+    "engineProxyNames": ["dinput8.dll", "d3d9.dll", "dsound.dll"],
+    "smartDllWizard": true
+  },
+  "launcherCard": {
+    "displayName": "TBoGT",
+    "subtitle": "Gay Tony, 2008",
+    "iconGlyph": "&#xE7FC;"
+  },
+  "gradientStartHex": "#0C1A2E",
+  "gradientEndHex": "#060F1C",
+  "libraryStatus": "Alpha",
+  "description": "GTA IV: The Ballad of Gay Tony — part of the Episodes from Liberty City package. Nested under the GTA IV install directory.",
+  "author": "TMM",
+  "version": "1.0"
+}

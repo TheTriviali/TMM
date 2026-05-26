@@ -1,0 +1,134 @@
+<UserControl x:Class="TMM.Step4_ReviewPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TMM"
+             Background="{DynamicResource BgBrush}">
+
+    <UserControl.Resources>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Margin"     Value="0,14,0,6"/>
+        </Style>
+        <Style x:Key="ReviewRow" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style x:Key="ReviewKey" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="Width"      Value="100"/>
+        </Style>
+        <Style x:Key="ReviewVal" TargetType="TextBlock">
+            <Setter Property="FontSize"      Value="11"/>
+            <Setter Property="Foreground"    Value="{DynamicResource TextBrush}"/>
+            <Setter Property="TextWrapping"  Value="Wrap"/>
+        </Style>
+        <Style x:Key="RobustBtn" TargetType="RadioButton">
+            <Setter Property="Margin"       Value="0,0,8,0"/>
+            <Setter Property="Foreground"   Value="{DynamicResource TextBrush}"/>
+            <Setter Property="FontSize"     Value="11"/>
+            <Setter Property="Cursor"       Value="Hand"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28,16,28,24" MaxWidth="660">
+
+            <TextBlock Text="Review your game configuration. You can go back to make changes."
+                       FontSize="12" Foreground="{DynamicResource SubTextBrush}"
+                       Margin="0,0,0,8" TextWrapping="Wrap"/>
+
+            <!-- ── Game Details ── -->
+            <Border BorderBrush="{DynamicResource ControlBgBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,0"/>
+            <TextBlock Text="GAME DETAILS" Style="{StaticResource SectionTitle}"/>
+
+            <Grid Style="{StaticResource ReviewRow}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Name:" Style="{StaticResource ReviewKey}"/>
+                <TextBlock x:Name="lblName" Grid.Column="1" Style="{StaticResource ReviewVal}"/>
+            </Grid>
+            <Grid Style="{StaticResource ReviewRow}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Directory:" Style="{StaticResource ReviewKey}"/>
+                <TextBlock x:Name="lblDir" Grid.Column="1" Style="{StaticResource ReviewVal}"/>
+            </Grid>
+            <Grid Style="{StaticResource ReviewRow}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Executable:" Style="{StaticResource ReviewKey}"/>
+                <TextBlock x:Name="lblExe" Grid.Column="1" Style="{StaticResource ReviewVal}"/>
+            </Grid>
+            <Grid Style="{StaticResource ReviewRow}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Steam ID:" Style="{StaticResource ReviewKey}"/>
+                <TextBlock x:Name="lblSteam" Grid.Column="1" Style="{StaticResource ReviewVal}"/>
+            </Grid>
+
+            <!-- ── Mod Types ── -->
+            <Border BorderBrush="{DynamicResource ControlBgBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
+            <TextBlock Text="MOD TYPES" Style="{StaticResource SectionTitle}"/>
+            <ItemsControl x:Name="icModTypeSummary">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource TextBrush}"
+                                   Text="{Binding}" Margin="0,0,0,3"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock x:Name="lblNoModTypes" Text="(none defined)"
+                       FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                       Opacity="0.6" Visibility="Collapsed"/>
+
+            <!-- ── Profile Settings ── -->
+            <Border BorderBrush="{DynamicResource ControlBgBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
+            <TextBlock Text="PROFILE SETTINGS" Style="{StaticResource SectionTitle}"/>
+
+            <TextBlock Text="Robustness level:" FontSize="11" FontWeight="SemiBold"
+                       Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,6"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <RadioButton x:Name="rbExperimental" Content="Experimental"
+                             Style="{StaticResource RobustBtn}"/>
+                <RadioButton x:Name="rbStable" Content="Stable" IsChecked="True"
+                             Style="{StaticResource RobustBtn}"/>
+                <RadioButton x:Name="rbMature" Content="Mature"
+                             Style="{StaticResource RobustBtn}"/>
+            </StackPanel>
+
+            <TextBlock Text="Custom tag (optional):" FontSize="11" FontWeight="SemiBold"
+                       Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
+            <TextBlock Text='Shown alongside the version, e.g. "+gta3-optimized". Omit for none.'
+                       FontSize="10" Foreground="{DynamicResource SubTextBrush}"
+                       Opacity="0.6" Margin="0,0,0,6"/>
+            <TextBox x:Name="txtCustomTag"
+                     Background="{DynamicResource ControlBgBrush}"
+                     Foreground="{DynamicResource TextBrush}"
+                     BorderBrush="{DynamicResource SubTextBrush}"
+                     BorderThickness="1" Padding="8,5" FontSize="12"
+                     Width="260" HorizontalAlignment="Left" Margin="0,0,0,12"
+/>
+
+            <CheckBox x:Name="chkNative" Margin="0,0,0,0"
+                      Foreground="{DynamicResource TextBrush}">
+                <TextBlock>
+                    <Run Text="Mark as native (built-in) profile" FontWeight="SemiBold"/>
+                    <Run Text=" — for TMM developers testing bundled game profiles"
+                         Foreground="{DynamicResource SubTextBrush}" FontSize="10"/>
+                </TextBlock>
+            </CheckBox>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

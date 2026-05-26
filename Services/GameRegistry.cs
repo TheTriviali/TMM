@@ -45,15 +45,15 @@ namespace TMM
         {
             _customGamesPath = Path.Combine(appDataPath, "CustomGames");
             Directory.CreateDirectory(_customGamesPath);
-            await LoadBuiltInProfilesAsync();
+            // LoadCustomGamesAsync calls LoadBuiltInProfilesAsync internally
             await LoadCustomGamesAsync();
         }
 
         private void InitializeBuiltInGames()
         {
             _builtInGames.Clear();
-            foreach (var profile in GameProfile.All)
-                _builtInGames[profile.Key] = profile;
+            foreach (var p in GameProfile.All)
+                _builtInGames[p.Key] = p;
         }
 
         private async Task LoadBuiltInProfilesAsync()
@@ -78,9 +78,18 @@ namespace TMM
                     var config = ProfileMigration.FromExport(export, Path.GetFileNameWithoutExtension(resourceName));
                     config.IsBuiltIn = true;
 
-                    string key = $"BUILTIN_{export.GameName.ToUpperInvariant().Replace(" ", "_").Replace(":", "").Replace("\\", "").Replace("/", "")}";
+                    // Use explicit gameKey if provided; otherwise generate from name
+                    string key = !string.IsNullOrEmpty(export.GameKey)
+                        ? export.GameKey
+                        : $"BUILTIN_{export.GameName.ToUpperInvariant().Replace(" ", "_").Replace(":", "").Replace("\\", "").Replace("/", "")}";
+
                     var profile = CustomGameProfileToGameProfile(key, config);
                     _customGames[key] = (config, profile);
+
+                    // If this .tmmgame claims a known built-in key, retire the static C# profile
+                    // so the same game doesn't appear twice in GetAllGames().
+                    if (_builtInGames.ContainsKey(key))
+                        _builtInGames.Remove(key);
                 }
                 catch (Exception ex)
                 {
@@ -91,10 +100,11 @@ namespace TMM
 
         private async Task LoadCustomGamesAsync()
         {
+            // Reset static built-in games first so a reload is idempotent
+            InitializeBuiltInGames();
             _customGames.Clear();
-            if (!Directory.Exists(_customGamesPath)) return;
-
             await LoadBuiltInProfilesAsync();
+            if (!Directory.Exists(_customGamesPath)) return;
 
             var jsonFiles = Directory.GetFiles(_customGamesPath, "*.json");
             foreach (var file in jsonFiles)
@@ -162,13 +172,11 @@ namespace TMM
         }
 
         /// <summary>Get all available games (built-in + custom), sorted by display name.</summary>
-        public IReadOnlyList<GameProfile> GetAllGames()
-        {
-            var all = new List<GameProfile>();
-            all.AddRange(_builtInGames.Values);
-            all.AddRange(_customGames.Values.Select(x => x.profile));
-            return all.OrderBy(g => g.DisplayName).ToList();
-        }
+        public IReadOnlyList<GameProfile> GetAllGames() =>
+            _builtInGames.Values
+                .Concat(_customGames.Values.Select(x => x.profile))
+                .OrderBy(g => g.DisplayName)
+                .ToList();
 
         public IReadOnlyList<GameProfile> GetBuiltInGames() =>
             _builtInGames.Values.ToList();
@@ -244,7 +252,7 @@ namespace TMM
                 LauncherCard   = config.LauncherCard,
                 Description    = config.Description,
                 Author         = config.Author,
-                Version        = config.Version,
+                Version        = config.Version?.ToString(),
                 // Legacy fields intentionally omitted — new format only
             };
             await File.WriteAllTextAsync(destPath, JsonSerializer.Serialize(export, JsonHelper.TmmGameOptions));
@@ -266,13 +274,25 @@ namespace TMM
 
         private static GameProfile CustomGameProfileToGameProfile(string key, CustomGameProfile custom)
         {
+            string shortName = custom.ShortName
+                ?? (custom.GameName.Length > 10 ? custom.GameName[..10] : custom.GameName);
+
+            string exeName = string.IsNullOrEmpty(custom.ExePath)
+                ? ""
+                : System.IO.Path.GetFileName(custom.ExePath);
+
             return new GameProfile(
                 Key: key,
                 DisplayName: custom.GameName,
-                ShortName: custom.GameName.Length > 10 ? custom.GameName[..10] : custom.GameName,
-                ExeName: "",
-                SteamAppId: "",
-                Vanilla10Md5: "");
+                ShortName: shortName,
+                ExeName: exeName,
+                SteamAppId: custom.SteamAppId ?? "",
+                Vanilla10Md5: "")
+            {
+                GradientStartHex = custom.GradientStartHex ?? "#1A1A2E",
+                GradientEndHex   = custom.GradientEndHex   ?? "#0D0D1A",
+                LibraryStatus    = custom.LibraryStatus,
+            };
         }
     }
 }

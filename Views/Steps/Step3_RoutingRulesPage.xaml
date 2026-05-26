@@ -1,0 +1,72 @@
+<UserControl x:Class="TMM.Step3_RoutingRulesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TMM"
+             Background="{DynamicResource BgBrush}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <Style x:Key="SectionHeader" TargetType="Border">
+            <Setter Property="Background"      Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource ControlBgBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="4"/>
+            <Setter Property="Padding"         Value="10,8"/>
+            <Setter Property="Margin"          Value="0,0,0,4"/>
+        </Style>
+        <Style x:Key="RuleCard" TargetType="Border">
+            <Setter Property="Background"      Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource ControlBgBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="4"/>
+            <Setter Property="Margin"          Value="16,0,0,4"/>
+            <Setter Property="Padding"         Value="10,8"/>
+        </Style>
+        <Style x:Key="ConflictCard" TargetType="Border">
+            <Setter Property="Background"      Value="#1AFF6B00"/>
+            <Setter Property="BorderBrush"     Value="#60FF6B00"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="4"/>
+            <Setter Property="Padding"         Value="10,8"/>
+            <Setter Property="Margin"          Value="0,0,0,8"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Padding="20,12,20,10"
+                BorderBrush="{DynamicResource ControlBgBrush}" BorderThickness="0,0,0,1">
+            <StackPanel>
+                <TextBlock Text="Rules are evaluated in priority order (higher wins). First match deploys the file."
+                           FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                           TextWrapping="Wrap"/>
+                <!-- Conflict warnings -->
+                <ItemsControl x:Name="icConflicts" Margin="0,8,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource ConflictCard}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⚠  " Foreground="#FF6B00" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding}" Foreground="#FF6B00" FontSize="11"
+                                               VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- Rule groups -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,12">
+            <StackPanel x:Name="spRuleGroups">
+                <!-- Populated dynamically in code-behind as GroupHeaderControl items -->
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

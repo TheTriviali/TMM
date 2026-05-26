@@ -42,7 +42,12 @@ namespace TMM
         [JsonPropertyName("$schema")]
         public string Schema { get; set; } = "tmm-game/1.1";
 
+        /// <summary>Override the auto-generated registry key (e.g. "III", "IV"). Must be unique.</summary>
+        public string? GameKey { get; set; }
+
         public string? GameName { get; set; }
+        /// <summary>Abbreviated name shown on game cards (≤10 chars). Derived from GameName if omitted.</summary>
+        public string? ShortName { get; set; }
         public string GameDirectory { get; set; } = "";
         public string? ExePath { get; set; }
         public string? SteamAppId { get; set; }
@@ -86,6 +91,7 @@ namespace TMM
             var config = new CustomGameProfile
             {
                 GameName      = export.GameName ?? fallbackName,
+                ShortName     = export.ShortName,
                 GameDirectory = export.GameDirectory,
                 ExePath       = export.ExePath,
                 SteamAppId    = export.SteamAppId,
@@ -93,7 +99,7 @@ namespace TMM
                 LauncherCard   = export.LauncherCard,
                 Description    = export.Description,
                 Author         = export.Author,
-                Version        = export.Version,
+                Version        = System.Version.TryParse(export.Version, out var ver) ? ver : null,
                 RoutingRules   = export.RoutingRules ?? new(),
                 GradientStartHex = export.GradientStartHex ?? export.LauncherCard?.GradientStartHex,
                 GradientEndHex   = export.GradientEndHex   ?? export.LauncherCard?.GradientEndHex,
