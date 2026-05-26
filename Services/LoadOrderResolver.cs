@@ -114,17 +114,10 @@ namespace TMM.Services
         /// - None-biased mods fill the middle
         /// Order within each group is preserved.
         /// </summary>
-        private static List<ModItem> ApplyBiasGrouping(List<ModItem> sorted)
-        {
-            var lower  = sorted.Where(m => m.LoadOrderBias == LoadOrderBias.Lower).ToList();
-            var middle = sorted.Where(m => m.LoadOrderBias == LoadOrderBias.None).ToList();
-            var higher = sorted.Where(m => m.LoadOrderBias == LoadOrderBias.Higher).ToList();
-
-            var result = new List<ModItem>(sorted.Count);
-            result.AddRange(lower);
-            result.AddRange(middle);
-            result.AddRange(higher);
-            return result;
-        }
+        private static List<ModItem> ApplyBiasGrouping(List<ModItem> sorted) =>
+            sorted.Where(m => m.LoadOrderBias == LoadOrderBias.Lower)
+                .Concat(sorted.Where(m => m.LoadOrderBias == LoadOrderBias.None))
+                .Concat(sorted.Where(m => m.LoadOrderBias == LoadOrderBias.Higher))
+                .ToList();
     }
 }
