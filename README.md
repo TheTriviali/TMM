@@ -89,7 +89,7 @@ Custom game configs are saved as `.tmmgame` files and can be exported/imported t
 
 * **Unified Shell Interface:** Single window with game library, mod manager, and settings all in one integrated dashboard.
 * **Multi-View Game Library:** Switch between three display modes:
-  - **Grid View:** Card-based layout with always-visible action buttons (Play, Manage, Edit, Export, Archive)
+  - **Grid View:** Card-based layout with always-visible action buttons (Play, Manage, Edit, Export)
   - **List View:** Compact full-width rows with drag-to-reorder capability (64px height, status dot, mod count at a glance)
   - **Showcase View:** Large hero card featuring your default game (300px tall, 2-column layout with cover art + metadata panel) plus horizontal carousel of other games below
 * **Game Library Features:**

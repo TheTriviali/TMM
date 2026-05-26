@@ -7,20 +7,20 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="260"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="260"/>
         </Grid.ColumnDefinitions>
 
         <!-- ── Archive sidebar ── -->
-        <Border Grid.Column="0" Background="{DynamicResource PanelBrush}"
-                BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="0,0,1,0">
+        <Border Grid.Column="1" Background="{DynamicResource PanelBrush}"
+                BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1,0,0,0">
             <DockPanel>
 
                 <!-- Header: game selector -->
                 <Border DockPanel.Dock="Top" Padding="12,10,12,10"
                         BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="0,0,0,1">
                     <StackPanel>
-                        <TextBlock Text="DOWNLOADED ARCHIVES" FontSize="10" FontWeight="Bold"
+                        <TextBlock Text="Downloaded archives" FontSize="10" FontWeight="Bold"
                                    Foreground="{DynamicResource AccentLabelBrush}" Margin="0,0,0,8"/>
                         <TextBlock Text="Save downloads to:" FontSize="11"
                                    Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
@@ -71,7 +71,7 @@
         </Border>
 
         <!-- ── Browser area ── -->
-        <Grid Grid.Column="1" Background="{DynamicResource BgBrush}">
+        <Grid Grid.Column="0" Background="{DynamicResource BgBrush}">
             <!-- WebView2 -->
             <wv2:WebView2 x:Name="webView" Visibility="Collapsed"/>
 

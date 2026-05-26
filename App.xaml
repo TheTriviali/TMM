@@ -6,8 +6,9 @@
     <Application.Resources>
         <BitmapImage x:Key="AppIcon" UriSource="Assets/icon.ico"/>
 
-        <!-- Notification type icon converter -->
+        <!-- Converters -->
         <local:NotificationTypeIconConverter x:Key="NotificationTypeIconConverter"/>
+        <local:InverseBoolToVisConverter x:Key="InverseBoolToVisConverter"/>
 
         <!-- Core brushes: WinUI dark mode + 2-tone custom accent (replaced live by ThemeEngine.ApplyTheme at startup) -->
         <SolidColorBrush x:Key="AccentBrush" Color="#0883FF"/>
@@ -264,12 +265,7 @@
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.4"/>
                             </Trigger>
-                            <Trigger Property="Role" Value="Separator">
-                                <Setter TargetName="bd" Property="Background" Value="Transparent"/>
-                                <Setter TargetName="bd" Property="Padding"    Value="0"/>
-                                <Setter TargetName="bd" Property="Height"     Value="1"/>
-                                <Setter TargetName="bd" Property="Margin"     Value="4,2"/>
-                            </Trigger>
+
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>

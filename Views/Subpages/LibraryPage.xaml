@@ -121,7 +121,7 @@
                                             <TextBlock x:Name="heroStatMods"
                                                        FontSize="22" FontWeight="Bold"
                                                        Foreground="{DynamicResource TextBrush}"/>
-                                            <TextBlock Text="MODS INSTALLED" FontSize="9" FontWeight="Bold"
+                                            <TextBlock Text="Mods installed" FontSize="9" FontWeight="Bold"
                                                        Foreground="{DynamicResource SubTextBrush}"
                                                        Margin="0,1,0,0"/>
                                         </StackPanel>
@@ -129,7 +129,7 @@
                                             <TextBlock x:Name="heroStatReady"
                                                        FontSize="22" FontWeight="Bold"
                                                        Foreground="{DynamicResource TextBrush}"/>
-                                            <TextBlock Text="READY TO DEPLOY" FontSize="9" FontWeight="Bold"
+                                            <TextBlock Text="Ready to deploy" FontSize="9" FontWeight="Bold"
                                                        Foreground="{DynamicResource SubTextBrush}"
                                                        Margin="0,1,0,0"/>
                                         </StackPanel>
@@ -212,7 +212,7 @@
 
                     <!-- Carousel section -->
                     <TextBlock x:Name="carouselLabel"
-                               Text="OTHER GAMES"
+                               Text="Other games"
                                FontSize="10" FontWeight="Bold"
                                Foreground="{DynamicResource SubTextBrush}"
                                Margin="0,18,0,8"/>

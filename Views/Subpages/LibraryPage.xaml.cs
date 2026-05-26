@@ -122,8 +122,7 @@ namespace TMM
 
             switch (_viewMode)
             {
-                case "grid":
-                case "large": RenderGridView();    break;
+                case "grid": RenderGridView();    break;
                 case "list":  RenderListView();    break;
                 case "showcase": RenderShowcaseView(); break;
                 default:      RenderGridView();    break;
@@ -137,7 +136,7 @@ namespace TMM
             gridScrollViewer.Visibility = Visibility.Visible;
             cardPanel.Children.Clear();
 
-            double scale = _viewMode == "large" ? 1.25 : 1.0;
+            double scale = 1.0;
 
             foreach (var entry in _filteredEntries)
             {

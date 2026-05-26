@@ -189,17 +189,17 @@
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
-                            <!-- Downloads -->
-                            <Button x:Name="navBtnDownloads" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Downloads" Click="NavBtn_Click" Tag="Downloads">
-                                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
-
                             <!-- Mod Manager -->
                             <Button x:Name="navBtnModMgr" Style="{StaticResource NavBtnStyle}"
                                     ToolTip="Mod Manager" Click="NavBtn_Click" Tag="ModManager">
                                 <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                           Foreground="{DynamicResource SubTextBrush}"/>
+                            </Button>
+
+                            <!-- Downloads -->
+                            <Button x:Name="navBtnDownloads" Style="{StaticResource NavBtnStyle}"
+                                    ToolTip="Downloads" Click="NavBtn_Click" Tag="Downloads">
+                                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
@@ -258,12 +258,12 @@
                                     HorizontalAlignment="Center" VerticalAlignment="Center"
                                     Visibility="Visible"
                                     Background="{DynamicResource ControlBgBrush}" CornerRadius="5"
-                                    Padding="6,0" Height="26" MinWidth="220">
+                                    Padding="8,0" Height="28" MinWidth="320" MaxWidth="500">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE71E;" FontFamily="Segoe MDL2 Assets" FontSize="13"
                                                Foreground="{DynamicResource SubTextBrush}"
-                                               VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                    <TextBox x:Name="txtSearch" Width="180" Height="20"
+                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="txtSearch" MinWidth="260" Height="22"
                                              Background="Transparent" BorderThickness="0"
                                              Foreground="{DynamicResource TextBrush}" FontSize="12"
                                              VerticalContentAlignment="Center"
@@ -317,21 +317,12 @@
                                     <Button x:Name="btnViewGrid" Style="{StaticResource ViewModeBtnStyle}"
                                             Content="&#xE8A9;" ToolTip="Grid view"
                                             Click="BtnViewMode_Click" Tag="grid"/>
-                                    <Button x:Name="btnViewLarge" Style="{StaticResource ViewModeBtnStyle}"
-                                            Content="&#xE739;" ToolTip="Large grid"
-                                            Click="BtnViewMode_Click" Tag="large"/>
                                     <Button x:Name="btnViewList" Style="{StaticResource ViewModeBtnStyle}"
                                             Content="&#xE9D5;" ToolTip="List view"
                                             Click="BtnViewMode_Click" Tag="list"/>
                                     <Button x:Name="btnViewShowcase" Style="{StaticResource ViewModeBtnStyle}"
-                                            Content="&#xE7B9;" ToolTip="Showcase view"
+                                            Content="&#xE71D;" ToolTip="Showcase view"
                                             Click="BtnViewMode_Click" Tag="showcase"/>
-
-                                    <!-- Archive chip -->
-                                    <Button x:Name="btnArchiveChip" Style="{StaticResource ViewModeBtnStyle}"
-                                            Content="&#xE7B3;" ToolTip="Show archived games"
-                                            Width="32" Height="28" Margin="8,0,0,0"
-                                            Click="BtnArchiveChip_Click"/>
                                 </StackPanel>
 
                                 <!-- Window controls -->
@@ -364,27 +355,6 @@
                              because their constructors require BackendCore -->
                         <ContentPresenter x:Name="pagePathsPlaceholder" Visibility="Collapsed"/>
                         <ContentPresenter x:Name="pageSettings"         Visibility="Collapsed"/>
-
-                        <!-- ═══ ARCHIVE FLYOUT OVERLAY ═══ -->
-                        <Grid x:Name="archiveFlyout" Visibility="Collapsed" Panel.ZIndex="50"
-                              HorizontalAlignment="Right" VerticalAlignment="Top">
-                            <Border Background="{DynamicResource PanelBrush}" CornerRadius="0,0,8,8"
-                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
-                                    Padding="12,10" MinWidth="260" MaxHeight="400">
-                                <StackPanel>
-                                    <TextBlock Text="ARCHIVED GAMES" FontSize="11" FontWeight="Bold"
-                                               Foreground="{DynamicResource AccentLabelBrush}"
-                                               Margin="0,0,0,8"/>
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="340">
-                                        <StackPanel x:Name="archiveList"/>
-                                    </ScrollViewer>
-                                    <TextBlock x:Name="txtNoArchived" Text="No archived games"
-                                               FontSize="11" Foreground="{DynamicResource SubTextBrush}"
-                                               HorizontalAlignment="Center" Margin="0,8,0,0"
-                                               Visibility="Collapsed"/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
 
                         <!-- ═══ CARD-CLICK MODAL OVERLAY ═══ -->
                         <Grid x:Name="cardModal" Visibility="Collapsed" Panel.ZIndex="90"

@@ -4,6 +4,29 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [v0.1-alpha-6] — 2026-05-25 *(UI Refinements & Backend Stability)*
+
+### Removed
+- **Archive Feature:** Removed archive/unarchive game functionality (btnArchiveChip button, archiveFlyout overlay, BtnArchiveChip_Click handler, UpdateArchiveChipStyle method, _showingArchived field).
+- **Large Grid View:** Removed duplicate large grid view option from game library (was 1.25x scaled grid). Library now supports 3 modes: Grid View, List View, Showcase View.
+
+### Changed
+- **Game Library Text:** Normalized title casing in LibraryPage showcase view:
+  - "MODS INSTALLED" → "Mods installed"
+  - "READY TO DEPLOY" → "Ready to deploy"
+  - "OTHER GAMES" → "Other games"
+- **DownloadsPage Sidebar:** Relocated "Downloaded archives" sidebar from left (Grid.Column 0) to right side (Grid.Column 1) of window for improved layout balance.
+- **Search Bar Expansion:** Increased library search bar dimensions (MinWidth: 220→320, MaxWidth: 500, height: 26→28, padding: 6,0→8,0) for better visibility and usability.
+- **Navigation Order:** Swapped "Mod Manager" and "Downloads" tabs in main navigation strip. Mod Manager now appears before Downloads to prioritize the core modding workflow.
+- **Showcase View Icon:** Fixed gallery icon in view mode switcher (&#xE7B9; → &#xE71D;) for proper visual representation.
+- **Fullscreen Padding:** Added 8px margin to main window border when app enters fullscreen/maximized state (`MainWindowBorder.Margin = max ? new Thickness(8) : new Thickness(0)`).
+
+### Fixed
+- **MenuItemRole Validation (.NET 10 compatibility):** Removed invalid MenuItem ControlTemplate Trigger with `Property="Role" Value="Separator"` from App.xaml. MenuItemRole enum in .NET 10 does not include Separator value (only TopLevelHeader, TopLevelItem, SubmenuHeader, SubmenuItem). This was causing XamlParseException on startup.
+- **Inner Exception Logging:** Enhanced App.xaml.cs ShowCrashDialog method to capture and display inner exception details for better debugging of nested exceptions.
+
+---
+
 ## [v0.1-alpha-5] — 2026-05-25 *(TGTAMM→TMM Rebrand & Documentation Consolidation)*
 
 ### Changed
@@ -265,6 +288,7 @@ All notable changes to TMM are listed here, newest first.
 | v0.1-alpha-2 | 2026-05-23 | **Theme Optimization, Dead Code Removal** | 3 files |
 | v0.1-alpha-3 | 2026-05-23 | **Core Features, Test Routing, GameRegistry built-ins** | 15+ files |
 | v0.1-alpha-4 | 2026-05-23 | **Dead Window Removal, Code Consolidation** | 20+ files |
+| v0.1-alpha-6 | 2026-05-25 | **UI Refinements & Backend Stability** | 6 files |
 
 ---
 

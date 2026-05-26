@@ -18,8 +18,6 @@ namespace TMM
         private string _currentPage = "Library";
         private LibraryEntry? _modalEntry;
         private LibraryEntry? _activeModManagerEntry;   // last game opened in mod manager
-        private bool _showingArchived = false;
-
         // Pages instantiated lazily in Window_Loaded
         private PathsPage? _pagePaths;
         private SettingsPage? _pageSettingsInstance;
@@ -42,6 +40,7 @@ namespace TMM
             pageLibrary.ArchiveToggled  += OnArchiveToggled;
             pageLibrary.DefaultToggled  += OnDefaultToggled;
             pageLibrary.OrderChanged    += OnOrderChanged;
+            pageLibrary.AddGameRequested += OnAddGameRequested;
         }
 
         // ── Loaded ────────────────────────────────────────────────────────────────
@@ -108,6 +107,7 @@ namespace TMM
         {
             bool max = WindowState == WindowState.Maximized;
             MainWindowBorder.CornerRadius = max ? new CornerRadius(0) : new CornerRadius(10);
+            MainWindowBorder.Margin       = max ? new Thickness(8)    : new Thickness(0);
         }
 
         private void BtnMinimize_Click(object sender, RoutedEventArgs e)
@@ -214,7 +214,6 @@ namespace TMM
             }
 
             SetNavActive(page);
-            if (archiveFlyout != null) archiveFlyout.Visibility = Visibility.Collapsed;
             cardModal.Visibility     = Visibility.Collapsed;
         }
 
@@ -291,35 +290,8 @@ namespace TMM
             var inactiveStyle = (Style)Resources["ViewModeBtnStyle"];
 
             btnViewGrid.Style     = activeMode == "grid"     ? activeStyle : inactiveStyle;
-            btnViewLarge.Style    = activeMode == "large"    ? activeStyle : inactiveStyle;
             btnViewList.Style     = activeMode == "list"     ? activeStyle : inactiveStyle;
             btnViewShowcase.Style = activeMode == "showcase" ? activeStyle : inactiveStyle;
-        }
-
-        // ── Archive flyout ────────────────────────────────────────────────────────
-
-        private void BtnArchiveChip_Click(object sender, RoutedEventArgs e)
-        {
-            _showingArchived = !_showingArchived;
-            pageLibrary.ShowArchived = _showingArchived;
-
-            // Update chip visual state
-            btnArchiveChip.Tag = _showingArchived ? "on" : "off";
-            UpdateArchiveChipStyle();
-        }
-
-        private void UpdateArchiveChipStyle()
-        {
-            if (_showingArchived)
-            {
-                btnArchiveChip.SetResourceReference(Button.ForegroundProperty, "AccentBrush");
-                btnArchiveChip.SetResourceReference(Button.BackgroundProperty, "AccentSoftBrush");
-            }
-            else
-            {
-                btnArchiveChip.SetResourceReference(Button.ForegroundProperty, "SubTextBrush");
-                btnArchiveChip.Background = System.Windows.Media.Brushes.Transparent;
-            }
         }
 
         // ── Card-click modal ──────────────────────────────────────────────────────
@@ -475,39 +447,7 @@ namespace TMM
             var result = new List<LibraryEntry>();
             var settings = _core.Settings;
 
-            // ── GTA III Series ─────────────────────────────────────────────────
-            result.Add(new LibraryEntry(
-                Key:             "III_SERIES",
-                DisplayName:     "GTA III Series",
-                Subtitle:        "III · Vice City · San Andreas",
-                GradientStartHex: GameProfile.III.GradientStartHex,
-                GradientEndHex:   GameProfile.III.GradientEndHex,
-                Status:          GameProfile.III.LibraryStatus,
-                ModCount:        CountMods("III", "VC", "SA"),
-                IsReady:         AnyPathSet("III", "VC", "SA"),
-                Category:        "Rockstar",
-                GameKeys:        ["III", "VC", "SA"],
-                IsArchived:      settings.ArchivedGameKeys.Contains("III_SERIES"),
-                IsDefault:       settings.DefaultGameKey == "III_SERIES"
-            ));
-
-            // ── GTA IV Series ──────────────────────────────────────────────────
-            result.Add(new LibraryEntry(
-                Key:             "IV_SERIES",
-                DisplayName:     "GTA IV Series",
-                Subtitle:        "IV · The Lost and Damned · The Ballad of Gay Tony",
-                GradientStartHex: GameProfile.IV.GradientStartHex,
-                GradientEndHex:   GameProfile.IV.GradientEndHex,
-                Status:          GameProfile.IV.LibraryStatus,
-                ModCount:        CountMods("IV", "TLaD", "TBoGT"),
-                IsReady:         AnyPathSet("IV", "TLaD", "TBoGT"),
-                Category:        "Rockstar",
-                GameKeys:        ["IV", "TLaD", "TBoGT"],
-                IsArchived:      settings.ArchivedGameKeys.Contains("IV_SERIES"),
-                IsDefault:       settings.DefaultGameKey == "IV_SERIES"
-            ));
-
-            // ── Custom / built-in profiles from GameRegistry ──────────────────
+            // ── All games from GameRegistry (built-in .tmmgame profiles + user-added) ──
             var registry = GameRegistry.Instance;
             var allCustom = registry.GetBuiltInCustomGames()
                 .Concat(registry.GetCustomGames())
@@ -559,16 +499,28 @@ namespace TMM
             return count;
         }
 
-        private bool AnyPathSet(params string[] keys)
+        // ── Add-game flow ─────────────────────────────────────────────────────────
+
+        private async void OnAddGameRequested()
         {
-            foreach (var key in keys)
+            var wizard = new CustomGameSetupWizard { Owner = this };
+            if (wizard.ShowDialog() != true || wizard.Result is null) return;
+
+            try
             {
-                var profile = GameProfile.ByKey(key);
-                if (profile == null) continue;
-                string? path = _core.GetVanillaPath(profile);
-                if (!string.IsNullOrEmpty(path) && Directory.Exists(path)) return true;
+                await GameRegistry.Instance.AddCustomGameAsync(wizard.Result);
+
+                // Re-init registers the new key in BackendCore.Mods and creates the mod folder.
+                await _core.InitializeAsync();
+
+                RefreshLibrary();
+                NotificationService.ShowSuccess($"'{wizard.Result.GameName}' added.");
             }
-            return false;
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Could not save game: {ex.Message}");
+            }
         }
+
     }
 }
