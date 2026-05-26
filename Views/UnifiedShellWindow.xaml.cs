@@ -110,14 +110,14 @@ namespace TMM
             MainWindowBorder.Margin       = max ? new Thickness(8)    : new Thickness(0);
         }
 
-        private void BtnMinimize_Click(object sender, RoutedEventArgs e)
+        private new void BtnMinimize_Click(object sender, RoutedEventArgs e)
             => WindowState = WindowState.Minimized;
 
         private new void BtnMaximize_Click(object sender, RoutedEventArgs e)
             => WindowState = WindowState == WindowState.Maximized
                 ? WindowState.Normal : WindowState.Maximized;
 
-        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        private new void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             SaveWindowState();
             Close();
