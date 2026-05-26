@@ -49,23 +49,9 @@ namespace TMM
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "TMM");
 
-            // Migrate existing TGTAMM data to TMM if old folder exists and new doesn't
-            string oldPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "TGTAMM");
-            if (Directory.Exists(oldPath) && !Directory.Exists(AppDataPath))
-            {
-                try { Directory.Move(oldPath, AppDataPath); }
-                catch { Directory.CreateDirectory(AppDataPath); }
-            }
-            else
-            {
-                Directory.CreateDirectory(AppDataPath);
-            }
-
+            Directory.CreateDirectory(AppDataPath);
             LoadSettings();
 
-            // Seed mod lists and raw folders for built-in games
             foreach (var profile in GameProfile.All)
             {
                 _modsDict[profile.Key] = new ObservableCollection<ModItem>();

@@ -79,7 +79,16 @@
       "Bash(gh repo *)",
       "PowerShell(winget install GitHub.cli --accept-source-agreements --accept-package-agreements)",
       "Bash(gh --version)",
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(grep -E \"\\\\.\\(csproj|sln|json|md|xaml|cs\\)$\")",
+      "Bash(dotnet test *)",
+      "Bash(grep -n \"^ *//\" Services/BackendCore.cs)",
+      "Bash(grep -c \"^ *//\" Models/CustomGameProfile.cs Services/DeploymentPlanner.cs Services/RuleEngine.cs)",
+      "Bash(git commit -m 'docs: condense CLAUDE.md, TEST_FLOW.md; remove TOC comment from BackendCore *)",
+      "Bash(cd \"C:\\\\Users\\\\noahd\\\\source\\\\repos\\\\tmm\\\\tmm\" && wc -l Views/*.xaml.cs 2>/dev/null | sort -rn | head -10)",
+      "Bash(wc -l * 2>/dev/null | sort -rn *)",
+      "Bash(grep -rn * --include=\"*.cs\" * | head -20)",
+      "Bash(git commit -m 'refactor: remove TGTAMM migration code \\(post-rebrand\\), optimize BackendCore constructor *)"
     ]
   }
 }
