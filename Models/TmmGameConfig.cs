@@ -120,16 +120,52 @@ namespace TMM
             if (config.RoutingRules.Count > 0) return;
             var covered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // Conditional routes first — they override static mappings for the same extension
+            // Conditional routes: create two rules — one with HasFolder condition, one without
             foreach (var cr in conditionalRoutes ?? Enumerable.Empty<ConditionalRoute>())
             {
+                // High-priority rule: if folder exists, route to RouteIfExists
                 config.RoutingRules.Add(new RoutingRule
                 {
-                    ExtensionPattern  = cr.Extension,
-                    CheckSubdir       = cr.CheckSubdir,
-                    Destination       = cr.RouteIfExists,
-                    FallbackDestination = cr.RouteIfMissing,
+                    Name = $"{cr.Extension} (if {cr.CheckSubdir} exists)",
+                    Conditions = new()
+                    {
+                        new Condition
+                        {
+                            Type = ConditionType.FileExtension,
+                            Operator = ConditionOperator.Is,
+                            Value = cr.Extension,
+                            Logic = LogicOperator.AND
+                        },
+                        new Condition
+                        {
+                            Type = ConditionType.HasFolder,
+                            Operator = ConditionOperator.Is,
+                            Value = cr.CheckSubdir,
+                            Logic = LogicOperator.AND
+                        }
+                    },
+                    TargetPath = cr.RouteIfExists,
+                    Priority = 100
                 });
+
+                // Low-priority rule: fallback when folder doesn't exist
+                config.RoutingRules.Add(new RoutingRule
+                {
+                    Name = $"{cr.Extension} (fallback)",
+                    Conditions = new()
+                    {
+                        new Condition
+                        {
+                            Type = ConditionType.FileExtension,
+                            Operator = ConditionOperator.Is,
+                            Value = cr.Extension,
+                            Logic = LogicOperator.AND
+                        }
+                    },
+                    TargetPath = cr.RouteIfMissing,
+                    Priority = 50
+                });
+
                 covered.Add(cr.Extension.ToLowerInvariant());
             }
 
@@ -140,8 +176,19 @@ namespace TMM
                 {
                     config.RoutingRules.Add(new RoutingRule
                     {
-                        ExtensionPattern = kvp.Key,
-                        Destination      = kvp.Value,
+                        Name = $"{kvp.Key} → {kvp.Value}",
+                        Conditions = new()
+                        {
+                            new Condition
+                            {
+                                Type = ConditionType.FileExtension,
+                                Operator = ConditionOperator.Is,
+                                Value = kvp.Key,
+                                Logic = LogicOperator.AND
+                            }
+                        },
+                        TargetPath = kvp.Value,
+                        Priority = 75
                     });
                 }
             }
