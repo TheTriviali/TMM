@@ -1,23 +1,4 @@
-﻿// TABLE OF CONTENTS
-// -----------------------------------------------------------------
-//   STATE & FIELDS  (AppDataPath, Settings, Mods, HttpClient)
-//   INIT  (BackendCore constructor)
-//   LOGGING  (Log)
-//   SETTINGS  (LoadSettings, SaveSettings, FactoryReset)
-//   GAME PATH ACCESS  (GetVanillaPath, SetVanillaPath, IsGameReady)
-//   GAME DETECTION  (QuickScan, ScanForExe)
-//   GAME STATUS & EXE VERIFICATION
-//     VerifyGameStatusAsync / HasExeModOverride / FindExeInMod
-//     GetFileMD5Async / GetEffectiveMd5Async / GetMd5DiagnosticsAsync
-//   MOD LIST LOAD/SAVE  (RefreshAllModListsAsync / RefreshModListForGame)
-//   DOWNLOAD CACHE  (DownloadCachePath / WipeDownloadCache / GetDriveSpaceInfo)
-//   BACKUP / ROLLBACK  (GetRollbackManifests / RollbackDeployAsync / PruneOldBackups)
-//   DEPLOYMENT  (DeployModsAsync / DeployCustomGameModsAsync / DeployFilesToGameDirAsync)
-//   ARCHIVE EXTRACTION  (ExtractArchiveSafeAsync)
-//   DOWNLOADING  (DownloadFileAsync)
-// -----------------------------------------------------------------
-
-using SharpCompress.Readers;
+﻿using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,6 +11,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using TMM.Services;
 
 namespace TMM
 {
@@ -736,12 +718,13 @@ namespace TMM
                 throw new InvalidOperationException($"Game directory for {profile.DisplayName} is missing.");
 
             var allMods = mods.ToList();
-            var enabled = allMods.Where(m => m.IsEnabled).OrderBy(m => m.LoadOrder).ToList();
+            new LoadOrderResolver().ResolveFinalLoadOrders(allMods);
+            var enabled = allMods.Where(m => m.IsEnabled).OrderBy(m => m.FinalLoadOrder).ToList();
             var disabled = allMods.Where(m => !m.IsEnabled).ToList();
 
             Log($"[Deploy:{profile.Key}] Starting - {enabled.Count} enabled, {disabled.Count} disabled");
             foreach (var m in disabled)
-                Log($"[Deploy:{profile.Key}]   SKIP (disabled) [{m.LoadOrder}] {m.Name}");
+                Log($"[Deploy:{profile.Key}]   SKIP (disabled) [{m.FinalLoadOrder}] {m.Name}");
 
             // Build flat file map: relative game-dir path -> winning source file.
             // ConditionalRoutes on the profile are applied here (e.g. .asi → plugins\).
@@ -750,7 +733,7 @@ namespace TMM
             {
                 if (!Directory.Exists(mod.RawFolderPath))
                 {
-                    Log($"[Deploy:{profile.Key}]   WARN: folder missing for [{mod.LoadOrder}] {mod.Name}");
+                    Log($"[Deploy:{profile.Key}]   WARN: folder missing for [{mod.FinalLoadOrder}] {mod.Name}");
                     continue;
                 }
                 foreach (var file in Directory.EnumerateFiles(mod.RawFolderPath, "*", SearchOption.AllDirectories))
@@ -783,24 +766,33 @@ namespace TMM
             if (string.IsNullOrEmpty(gameDir) || !Directory.Exists(gameDir))
                 throw new InvalidOperationException($"Game directory for '{config.GameName}' is missing or not set.");
 
+            // Keep config.GameDirectory in sync so DeploymentPlanner resolves tokens correctly.
+            if (!string.IsNullOrEmpty(vanilla))
+                config.GameDirectory = gameDir;
+
             var allMods = mods.ToList();
-            var enabled = allMods.Where(m => m.IsEnabled).OrderBy(m => m.LoadOrder).ToList();
+            new LoadOrderResolver().ResolveFinalLoadOrders(allMods, config);
+            var enabled = allMods.Where(m => m.IsEnabled).OrderBy(m => m.FinalLoadOrder).ToList();
             var disabled = allMods.Where(m => !m.IsEnabled).ToList();
 
             Log($"[CustomDeploy:{profile.Key}] Starting - {enabled.Count} enabled, {disabled.Count} disabled");
 
-            // Build file map with routing rules (first-match-wins, extension + optional name filter).
+            // Build file map using DeploymentPlanner; higher FinalLoadOrder wins on destination conflict.
+            var planner = new DeploymentPlanner();
             var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var mod in enabled)
             {
                 if (!Directory.Exists(mod.RawFolderPath)) continue;
-                foreach (var file in Directory.EnumerateFiles(mod.RawFolderPath, "*", SearchOption.AllDirectories))
+
+                var plan = await planner.PlanDeploymentAsync(mod, config, ct);
+
+                foreach (var warning in plan.Warnings)
+                    Log($"[CustomDeploy:{profile.Key}] WARN [{mod.Name}]: {warning.Message}");
+
+                foreach (var entry in plan.Files.Where(f => !f.Skip))
                 {
-                    string ext      = Path.GetExtension(file).ToLowerInvariant();
-                    string fileName = Path.GetFileName(file);
-                    string outSubDir = config.ResolveOutputDirectory(ext, fileName, gameDir);
-                    string rel = outSubDir == "." ? fileName : Path.Combine(outSubDir, fileName);
-                    fileMap[rel] = file;
+                    string rel = Path.GetRelativePath(gameDir, entry.DestinationPath);
+                    fileMap[rel] = entry.SourcePath;
                 }
             }
 
@@ -836,7 +828,7 @@ namespace TMM
         /// new files, saves a rollback manifest, and prunes old backups.
         /// fileMap key = path relative to gameDir, value = absolute source path.
         /// </summary>
-        private async Task DeployFilesToGameDirAsync(
+        public async Task DeployFilesToGameDirAsync(
             string gameKey,
             string gameDir,
             Dictionary<string, string> fileMap,
