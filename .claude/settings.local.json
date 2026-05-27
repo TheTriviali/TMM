@@ -98,7 +98,8 @@
       "Bash(taskkill //F //IM TMM.exe)",
       "Bash(grep -v \"obj\\\\\\\\\\\\\\\\\")",
       "Bash(git commit -m 'Design finalization: Block B \\(sync/import\\) with locked architectural principles *)",
-      "Bash(git commit -m 'Add handoff document for Block B implementation \\(B2-B6\\) *)"
+      "Bash(git commit -m 'Add handoff document for Block B implementation \\(B2-B6\\) *)",
+      "Bash(git commit *)"
     ]
   }
 }

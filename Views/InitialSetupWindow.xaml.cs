@@ -38,8 +38,9 @@ namespace TMM
             }
             cmbLanguage.ItemsSource = items;
 
-            // Select current language
-            ApplyLanguage(_core.Settings.CurrentLanguage, updateDropdown: true);
+            // Default to English to avoid placeholder text showing
+            string defaultLang = _core.Settings.CurrentLanguage ?? "en-US";
+            ApplyLanguage(defaultLang, updateDropdown: true);
         }
 
         private void BtnQuickLang_Click(object sender, RoutedEventArgs e)
@@ -77,6 +78,19 @@ namespace TMM
                     }
                 }
                 _suppressDropdownEvent = false;
+            }
+
+            // Sync with main window's language selector if it's in the background
+            if (Owner is UnifiedShellWindow mainWindow)
+            {
+                foreach (ComboBoxItem item in mainWindow.CmbLanguage.Items)
+                {
+                    if (item.Tag as string == code)
+                    {
+                        mainWindow.CmbLanguage.SelectedItem = item;
+                        break;
+                    }
+                }
             }
         }
 

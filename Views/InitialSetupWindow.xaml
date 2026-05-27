@@ -225,23 +225,37 @@
                         </Button.Template>
                     </Button>
 
-                    <!-- Skip link — text updates live -->
+                    <!-- Skip button — text updates live -->
                     <Button Click="BtnClose_Click" Margin="0,12,0,0"
-                            HorizontalAlignment="Center"
-                            Background="Transparent" BorderThickness="0" Cursor="Hand">
+                            Height="40" HorizontalAlignment="Stretch"
+                            BorderThickness="1" Cursor="Hand"
+                            Background="Transparent"
+                            BorderBrush="{DynamicResource SubTextBrush}"
+                            Foreground="{DynamicResource SubTextBrush}">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <TextBlock x:Name="lnk"
-                                           Text="{helpers:Localization Setup_Skip}"
-                                           Foreground="{DynamicResource SubTextBrush}" FontSize="12">
-                                    <TextBlock.TextDecorations>
-                                        <TextDecoration Location="Underline"/>
-                                    </TextBlock.TextDecorations>
-                                </TextBlock>
+                                <Border x:Name="bd" CornerRadius="7"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        Padding="12,0">
+                                    <TextBlock Text="{helpers:Localization Setup_Skip}"
+                                               Foreground="{TemplateBinding Foreground}"
+                                               FontSize="12" FontWeight="Medium"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center"/>
+                                </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="lnk" Property="Foreground"
+                                        <Setter TargetName="bd" Property="Background"
+                                                Value="{DynamicResource ControlBgBrush}"/>
+                                        <Setter TargetName="bd" Property="BorderBrush"
                                                 Value="{DynamicResource TextBrush}"/>
+                                        <Setter Property="Foreground"
+                                                Value="{DynamicResource TextBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>

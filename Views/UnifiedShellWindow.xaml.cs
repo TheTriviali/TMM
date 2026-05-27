@@ -24,6 +24,9 @@ namespace TMM
         private PathsPage? _pagePaths;
         private SettingsPage? _pageSettingsInstance;
 
+        // Public property for child windows to access language selector
+        public ComboBox CmbLanguage => cmbLanguage;
+
         // ── Constructor ───────────────────────────────────────────────────────────
 
         public UnifiedShellWindow(BackendCore core)
