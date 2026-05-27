@@ -152,10 +152,45 @@ See [PLANS.md](PLANS.md) for the full roadmap.
 
 ## Known Limitations
 
-- Steam protocol launch not yet wired for custom game dashboards
-- "Find Mods" sidebar buttons currently point at generic Nexus/ModDB homepages (per-game deep links coming)
-- Drag-drop into the IV/TLaD/TBoGT shared folder structure has some rough edges
-- Theme picker refresh from non-GTA dashboards can be flaky
+The honest list. TMM works, but it's pre-1.0 and these gaps are real:
+
+**Architecture (in flight):**
+- Routing rules re-evaluate on every deploy (the "freeze at install" guarantee in the docs above is the goal, not the current behavior — coming in B2)
+- Rollback uses per-deploy snapshots, not a true vanilla baseline. Stacking mods can lose the original files (B3 will fix this)
+- Mods with `models/`, `data/`, `audio/` folders that mirror game structure get routed by extension only, not merged as overlays (B4)
+- No way to import a pre-existing modded install — TMM has to start clean today (B5)
+- No mod groups / collapsible nesting yet (B6)
+
+**Deploy / rollback:**
+- No conflict detection — two mods writing the same destination file silently overwrites
+- Backup retention is hard-coded at 3 deploys, no UI to change it
+- Backups can balloon for large games (heavily modded SA: multi-GB) with no warning or quota
+- Empty mod-side directories are skipped on deploy
+- Symlinks in mod sources are not supported; behavior is unpredictable if encountered
+- No way to manually trigger a baseline re-capture if something gets out of sync
+
+**UI / UX:**
+- First-launch flow is four dialogs deep for one decision (language → game picker → built-in vs custom → setup)
+- Steam protocol launch not wired for custom game dashboards
+- "Find Mods" sidebar buttons currently point at generic Nexus/ModDB homepages (no per-game deep links)
+- Drag-drop into IV/TLaD/TBoGT shared folder structure has rough edges
+- Theme picker refresh from non-GTA dashboards is flaky
+- "Open Mods Store" context menu item is a stub (no implementation)
+- Theme manager window doesn't always refresh after a theme change
+- Some hard-coded English strings remain in XAML (incomplete localization coverage)
+- Wizard validation events aren't wired on Steps 2–4 (3 known CS0067 warnings)
+- No undo for individual mod removal — full rollback is the only escape
+
+**Custom games:**
+- Auto-scan (`QuickScan`) hardcodes GTA-specific paths; doesn't search custom games yet
+- Per-game search hints in `.tmmgame` profiles not implemented
+- No way to validate a `.tmmgame` profile is complete before saving it
+
+**Other:**
+- No log rotation — `TMM.log` grows unbounded
+- One-click essentials downloader doesn't gracefully handle network failures mid-download
+- Crash handler exists but doesn't auto-attach the log to the dialog
+- No telemetry, no auto-update check, no version-pinning of mods
 
 ---
 
