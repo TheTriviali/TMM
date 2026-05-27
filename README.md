@@ -1,319 +1,174 @@
-# TMM - Triviali's Mod Manager
+# TMM — Triviali's Mod Manager
 
-A lightweight, cross-game mod manager for classic and modern games. Built for simplicity — no scripts, no manifests, no intermediate virtual filesystems. Just a clean GUI with direct-deploy mod installation, automatic backups, and instant rollback.
+A lightweight mod manager for **any game**. Direct-deploy architecture — no virtual filesystem, no manifests to maintain, no staging folders. Just rules, deployment, and one-click rollback.
 
-**Currently ships with:** GTA III Series (III, Vice City, San Andreas, IV, TLaD, TBoGT) + Skyrim Anniversary Edition  
-**Extensible to:** Any game via custom game profiles with per-filetype output directory routing
+**Ships with built-in profiles for:** GTA III, Vice City, San Andreas, IV, The Lost and Damned, The Ballad of Gay Tony.
+**Add any other game** through the Custom Game wizard.
 
-## ⚠️ Active Development Notice
+---
 
-**TMM is under active heavy development by its creator.** Architecture and APIs are in flux. Major features, refactors, and breaking changes are frequent. 
+## ⚠️ Active Development
 
-**⛔ External contributions are not recommended at this time.** The codebase is reorganizing rapidly; PRs risk becoming stale or conflicting with in-flight architectural changes. Please wait for the development cycle to stabilize before contributing.
-
-**If you encounter bugs:** File an issue with reproduction steps and logs. Bug reports are valuable and welcome.
+TMM is under active heavy development by its creator. Architecture is still in flux — expect breaking changes between builds. **External PRs are not accepted yet** (wait for v1.0 stabilization). Bug reports with logs are always welcome.
 
 ---
 
 ## Quick Start
 
-1. **Download & Extract:** Unzip to any folder
-2. **First Launch:** App creates `%APPDATA%\TMM\` folder structure automatically
-3. **Add Games:**
-   - Built-in GTA III Series games appear in launcher on first run
-   - Add custom games via "Add Custom Game" button
-4. **Set Game Paths:** In each game dashboard, use the 📂 browse buttons in the sidebar to point TMM at your game directories (paths are saved automatically)
-5. **Install Mods:** Drag-drop `.zip`/`.rar`/`.7z` files into mod list, arrange load order, click Deploy
-6. **Play:** Use in-app Play buttons or launch manually from game directory
+1. Grab the latest release zip, extract anywhere.
+2. Run `TMM.exe`. First launch creates `%APPDATA%\TMM\`.
+3. Pick or add a game. Built-in GTA profiles appear automatically; click **Add Custom Game** for anything else.
+4. Set the game directory using the 📂 button in the sidebar.
+5. Drag-drop mod archives (`.zip` / `.rar` / `.7z`) into the mod list. Reorder them — bottom overrides top.
+6. Hit **Deploy**. Files land in the game folder per your routing rules.
+7. If something breaks, hit **Rollback**.
 
 ---
 
-## How It Works
+## Core Concepts
 
-### Direct Deploy Architecture
+### Direct Deploy
 
-Unlike traditional mod managers that layer mods into a virtual staging folder, TMM deploys mods **directly to your game directory**:
+Mods get copied directly into the game's directory — no virtual filesystem, no symlinks, no overlay redirection. What you see in the game folder is what's running. This means modded files persist outside of TMM (the game doesn't need TMM running to launch), and any external tool can inspect the result.
 
-```
-Game Directory
-├── gta3.exe
-├── gta3.set
-├── models/          ← mods deploy here
-├── scripts/         ← mods deploy here
-└── ...
-```
+### Backup & Rollback
 
-**Benefits:**
-- No intermediate copies or staging overhead
-- Faster deployment for large mod counts
-- Clear file structure — see exactly what's where
-- Works offline after deploy (no VFS redirection needed)
+Every deploy snapshots the files it's about to overwrite. The last **3 deploys per game** are retained — older snapshots get pruned automatically. One click in the **Backups** page restores any retained state.
 
-### Backup & Rollback System
+### Routing Rules (the heart of custom games)
 
-Before overwriting any file, TMM creates a timestamped backup:
+When you add a game, you teach TMM where its mods belong. Rules map file patterns to destination folders:
 
-```
-%APPDATA%\TMM\Backups\{gameKey}\{timestamp}\
-├── (backup copy of all files that would be overwritten)
-└── .manifest.json (tracks what was changed)
-```
+- `.asi` files → `scripts\`
+- `.dll` files → `plugins\` if `plugins\` exists, else game root
+- Anything else → game root
 
-The last **3 deploys per game** are retained. Click the **Rollback** button to restore any previous state. Backups are removed when you exceed the limit.
+Rules are built in plain English via a sentence builder — no JSON editing required. One-click presets exist for common engines (ASI Loader, CLEO, SKSE, etc.).
 
-### Custom Game Profiles
+### Rules Freeze at Install
 
-Add any game with:
-- **Game Name** — user-friendly label
-- **Game Directory** — where the executable lives
-- **Executable Path** — relative path to `.exe`
-- **File Type Routing** — map extensions to output subdirectories:
-  - `.asi` → `plugins\`
-  - `.dll` → `scripts\`
-  - `*` → root (default)
-- **Conditional Routing** — *"Put .dll files into plugins\ if plugins\ exists, otherwise root"* (one-click presets for ASI Loader, SKSE, etc.)
+When you add a mod, TMM evaluates the routing rules **once** and saves the resulting deployment plan. Subsequent deploys execute that saved plan verbatim — they don't re-evaluate rules. This makes deploys predictable: editing routing rules later won't silently change what existing mods do. (Editing rules surfaces a "replan affected mods?" prompt instead.)
 
-Custom game configs are saved as `.tmmgame` files and can be exported/imported to share with friends.
+### First-Touch Baseline
+
+The first time TMM touches a file in your game directory, it remembers the original bytes. Rollback restores to *that* state — not to the previous deploy. So stacking multiple mods doesn't lose the vanilla baseline.
 
 ---
 
 ## Features
 
-### Core Modding
+### Mod Management
 
-* **Direct Deploy:** Copy mods straight into game directory. No VFS, no intermediate staging.
-* **Automatic Backup & Rollback:** Every deploy creates timestamped backups. Rollback to any previous state.
-* **Custom Game Support:** Add any game. Per-extension output directory routing with plain-English sentence builder routing rules + one-click presets (ASI Loader, Source Engine, SKSE, CLEO, etc.).
-* **Smart Nested Archive Extraction:** Archives wrapping content in a single subdirectory are automatically unwrapped.
-* **Drag-and-Drop Load Orders:** Visual priority list with drop-line indicator. Bottom overrides top (0 loads first).
-* **Per-Game Search:** Each game's mod list has independent search box with live filtering.
-* **Test Routing Panel:** Before deploying, simulate file routing. Browse a test file and see exactly where it would be installed based on your routing rules.
+- Drag-and-drop archives — nested archives auto-unwrap
+- Per-game search with live filtering
+- Drag-to-reorder load order (bottom wins)
+- Per-mod enable/disable
+- Right-click context menu: open mod folder / game folder / backup folder
 
-### Library & Game Management
+### Game Library
 
-* **Unified Shell Interface:** Single window with game library, mod manager, and settings all in one integrated dashboard.
-* **Multi-View Game Library:** Switch between three display modes:
-  - **Grid View:** Card-based layout with always-visible action buttons (Play, Manage, Edit, Export)
-  - **List View:** Compact full-width rows with drag-to-reorder capability (64px height, status dot, mod count at a glance)
-  - **Showcase View:** Large hero card featuring your default game (300px tall, 2-column layout with cover art + metadata panel) plus horizontal carousel of other games below
-* **Game Library Features:**
-  - Set default game with checkbox (clicking while already default clears it)
-  - Archive/unarchive games without deletion
-  - Drag-to-reorder games in list and grid views (order persists to settings)
-  - Search/filter games by name
-  - Show/hide archived games toggle in titlebar
-  - Game status badges (Alpha, Beta, Pre-Alpha, Testing, Release)
-* **Mod Manager:** Full mod list for active game with Deploy/Rollback buttons in the main toolbar.
-* **Sidebar Path Browse:** Game directory is set directly via 📂 browse buttons — no separate settings dialog needed. Dot indicator turns green when a valid path is configured.
+Three view modes:
+- **Grid** — card layout with action buttons always visible
+- **List** — compact rows, drag-to-reorder, mod count at a glance
+- **Showcase** — hero card for your default game + horizontal carousel below
 
-### GTA-Specific Features
+Library extras:
+- Set a default game (or clear it by clicking again)
+- Archive games you're not using without deleting their data
+- Filter / search by name
+- Reorder games via drag (persists across sessions)
 
-* **Exe-as-Mod Downgrading:** Install a 1.0 `gta3.exe` / `gta-vc.exe` / `gta-sa.exe` directly as a mod. Auto-detects game, assigns load order 0, and unlocks deployment even on Steam installs (which ship with DRM).
-* **Force Deploy Override:** Toggle override for games where exe check would block deployment.
-* **Multi-hash MD5 Verification:** Accepts all known 1.0 build variants (US/EU pressings, different downgrader tools).
-* **One-Click Essentials:** Auto-download SilentPatch, Ultimate ASI Loader, Widescreen Fixes, Project 2DFX, CLEO.
-* **GTA IV Wizard:** Opening IV/TLaD/TBoGT with no paths configured shows setup wizard to auto-detect Steam paths.
+### Custom Game Profiles
 
-### Toolbar & Control Center
+Each profile holds:
+- Display name, executable path, Steam App ID (optional)
+- Per-extension routing rules + conditional rules (folder-existence checks)
+- Companion sibling folders (e.g. `CLEO_TEXT/`, `CLEO_FONTS/` for CLEO scripts)
+- Optional **integrity verification** — expected exe byte size + accepted MD5 list, with an auto-detect button to capture the current binary in one click
+- Cover art
 
-* **Deploy Button** — deploys all pending changes for the active game. Greyed when nothing pending, accent-colored when changes exist.
-* **Rollback Button** — restores active game to previous backup state.
-* **Play Button** — Launch the active game directly. GTA III/VC/SA: **Green** = 1.0 exe ready, **Red** = vanilla exe, **Orange** = override active. GTA IV/TLaD/TBoGT: green when path is configured.
-* **Archive Toggle** — Simple on/off button in titlebar to show/hide archived games.
-* **Dice Theme Button** — Instantly apply random theme preset.
+Profiles export to portable `.tmmgame` files. Share them; users never need to touch JSON directly.
 
 ### Visual Customization
 
-* **Themed Window Styles:** Dark, Light, Compact, and retro-inspired chrome variants.
-* **25 Curated Built-in Theme Presets:**
-  - **GTA-inspired:** Vice City Neon, GTA III Era, San Andreas Grove, GTA Online
-  - **Popular Editors:** Dracula, Nord, Gruvbox, Catppuccin, One Dark, Monokai, Solarized Dark, GitHub Dark
-  - **Synthwave/Retro:** Synthwave Sunset, Outrun, Retrowave, 80s Neon
-  - **Dark Quality:** Matrix (neon green), Deep Ocean, Obsidian, Slate
-  - **Light Variants:** Light Sky, Solarized Light, Nord Light, Light Teal
-* **HSV Color Pickers:** Two-pane 2D spectrum pickers (accent + background) with hex input and live preview.
-* **Mica/Acrylic Backdrop:** DWM API for Windows 11 native Mica backdrop.
-* **Font Choices:** 8 system fonts — Bahnschrift, Segoe UI (Light/Regular/Bold), Calibri, Consolas.
+- 25 built-in theme presets — Dracula, Nord, Gruvbox, Catppuccin, Synthwave, Vice City Neon, GTA Online, plus light/dark variants
+- HSV 2D color picker for custom accent + background colors
+- Windows 11 Mica/Acrylic backdrop support
+- 8 font choices (Bahnschrift, Segoe UI variants, Consolas, etc.)
+- Random theme button (the dice 🎲)
 
-### Diagnostics & Status
+### Diagnostics
 
-* **MD5 Diagnostics Console:** Check game exe hash against known 1.0 variants, detect mod overrides.
-* **Error Reporting:** Crash dialog with one-line friendly message + copy-to-clipboard full stack trace.
-* **Right-click Folder Access:** Open mod folder, game folder, or backup folder from mod list context menu.
-* **Download Cache Wipe:** Clear temporary archive cache with confirmation.
-* **AppData Location:** All settings, mods, and backups stored in `%APPDATA%\TMM\` (migrated automatically from old `%APPDATA%\TGTAMM\` on first run).
+- Test Routing panel — pick a file and see exactly where it would deploy before committing
+- Per-game integrity status (when configured): colored dot in the sidebar shows OK / size mismatch / hash mismatch / file missing
+- Crash dialog with copy-to-clipboard stack trace
+- App log at `%APPDATA%\TMM\TMM.log`
 
 ---
 
-## GTA Downgrade Requirement
-
-For the GTA III Series, Steam installs ship with DRM that blocks mods from running. You need a 1.0 downgraded executable:
-
-1. **Option A (Recommended):** Download a 1.0 `.exe` and install it as a mod in TMM:
-   - Click `+` button in mod list
-   - Select the `.exe` file
-   - TMM auto-detects game and assigns load order 0
-   - Click Deploy
-
-2. **Option B:** Manually replace your vanilla exe with a 1.0 version in your game directory
-
-**Exe Auto-Detection:**
-- `gta3.exe` 85MB → GTA III
-- `gta-vc.exe` 116MB → Vice City
-- `gta-sa.exe` 132MB → San Andreas
-
-When deploying with override enabled but a Steam exe still in place, TMM displays a warning showing which games can't yet be played.
-
----
-
-## MD5 Reference (GTA 1.0 Builds)
-
-| Game            | Accepted Hash(es)                                         |
-|-----------------|-----------------------------------------------------------|
-| GTA III 1.0     | `85414bf9eb414d00ad81062360f0db1f`                        |
-| GTA Vice City   | `8f3707edaa361957c70f8b13998816f1` (primary)             |
-|                 | `167a5c8b31b3e0dbefa033ca24453d4e` (ModDB downgrader)   |
-| GTA San Andreas | `00eb2056583dfa6a4ca79dedf70df5e9`                        |
-
-Check your exe hash via **Settings → Diagnostics → MD5 Check**.
-
----
-
-## AppData Structure
+## File Locations
 
 ```
 %APPDATA%\TMM\
-├── settings.json               (settings: theme, font, game paths, deploy overrides)
-├── ModsRaw/
-│   ├── III/
-│   ├── VC/
-│   ├── SA/
-│   ├── IV/
-│   ├── TLaD/
-│   ├── TBoGT/
-│   └── {customGameKey}/        (custom game mods)
-├── Backups/
-│   ├── III/{timestamp}/        (rollback snapshots)
-│   ├── VC/{timestamp}/
-│   └── ...
-├── CustomGames/
-│   ├── skyrim.json             (.tmmgame profile for custom game)
-│   └── ...
-└── Themes/
-    ├── Dark Teal.mmtheme       (exported theme presets)
-    └── ...
+├── settings.json              ← themes, game paths, view modes
+├── ModsRaw_{gameKey}\         ← per-game mod sources
+│   └── {ModName}\
+│       └── _tmm\
+│           ├── deployplan.json  ← frozen plan from install time
+│           └── modinfo.json     ← group membership, etc.
+├── Backups\{gameKey}\         ← rollback snapshots (last 3)
+├── Baselines\{gameKey}\       ← first-touch vanilla baseline
+├── CustomGames\               ← user-added .tmmgame profiles
+└── Themes\                    ← exported .mmtheme files
 ```
 
-**Migration:** AppData is automatically migrated from `%APPDATA%\TGTAMM` to `%APPDATA%\TMM` on first launch.
+Built-in game keys: `III` `VC` `SA` `IV` `TLAD` `TBOGT`. Custom games get auto-generated keys like `CUSTOM_abc123`.
 
----
-
-## Planned Features
-
-* **Conflict Resolution:** Warn when two mods overwrite the same file.
-* **Smart DLL Wizard:** Auto-detect proxy DLLs (d3d11, d3d9, etc.) and suggest output directories.
-* **Mod Profiles & Loadouts:** UI for saving/loading named mod configurations (enable state + load order per game).
-* **Expanded Game Support:** Additional built-in profiles (Skyrim, Fallout, Baldur's Gate 3, etc.).
-* **Mod Store Integration:** One-click install from ModDB/Nexus (future).
-
----
-
-## Known Limitations
-
-* Steam protocol launch not wired in custom game dashboards
-* ThemeManagerWindow refresh partially broken after theme change from non-GTA dashboards
-* "Open Mods Store" context menu item is a stub
-
----
-
-## Contributing
-
-**The project is in active heavy development.** External contributions are not recommended until the development cycle stabilizes. See the [Active Development Notice](#-active-development-notice) above.
-
-**Bug reports are welcome** — please open an Issue with:
-- Steps to reproduce
-- Which game(s) affected
-- Screenshot if applicable
-- Contents of `%APPDATA%\TMM\TMM.log`
-
-**Interest in the codebase?** Check back after v1.0 is released, when the architecture has solidified.
-
-### Codebase Navigation
-
-All source files include a **Table of Contents** block at the top. Key files:
-
-| File | Purpose |
-|------|---------|
-| `Views/UnifiedShellWindow.xaml.cs` | Main entry point: unified window hosting library, mod manager, and settings pages |
-| `Views/Subpages/LibraryPage.xaml.cs` | Game library UI with grid/list/showcase views, search filtering, drag-to-reorder, and game management |
-| `Views/Subpages/ModManagerPage.xaml.cs` | Mod management UI for active game (mod list, deploy/rollback buttons) |
-| `Views/Controls/GameCard.xaml.cs` | Reusable game card component with dual-mode layout (grid + list) and drag handle for reordering |
-| `Services/BackendCore.cs` | Core logic: settings, game detection, deploy pipeline, backup/rollback, archive extraction |
-| `Services/GameRegistry.cs` | Singleton loader for built-in + custom game profiles |
-| `Views/EpisodePicker.cs` | GTA IV episode selection dialog during mod install |
-| `Views/CustomGameConfigWindow.xaml.cs` | Add/Edit custom game dialog with routing sentence builder |
-| `Theming/ThemeEngine.cs` | Dynamic brush application, DWM Mica, HSV helpers, contrast algorithms |
-| `Models/AppSettings.cs` | All persisted settings (themes, window size, library view mode, game order, etc.) |
-| `Models/GameProfile.cs` | Built-in game constants (exe names, Steam IDs, MD5s) |
-| `Models/CustomGameProfile.cs` | Custom game config with per-extension output routing |
-| `Models/DeployManifest.cs` | Backup tracking: what files changed, when, and where |
-| `Models/ModItem.cs` | Single mod entry with property change notifications |
-
-Full architecture documented in `CODEBASE_GUIDE.md`.
-
-### Documentation
-
-* `CODEBASE_GUIDE.md` — Pseudocode table of contents and AI search index for all windows, services, models, and conventions
-* `CHANGELOG.md` — Full version history with added/changed/removed per release
-
----
-
-## Technical Details
-
-### Deploy Pipeline
-
-1. **Pre-deploy:** Scan for pending mods (enabled but not yet deployed)
-2. **Backup Phase:** Copy all files that will be overwritten to `Backups/{gameKey}/{timestamp}/`
-3. **Deploy Phase:** Copy mods to game directory, respecting per-extension output routing
-4. **Manifest:** Save `DeployManifest.json` recording what changed, where, and when
-5. **Prune:** If 4+ backups exist, delete oldest ones to stay within 3-backup limit
-
-### File Routing
-
-Given a mod file `MyMod/MyPlugin.asi`:
-
-1. Check conditional routes: *"if plugins\ exists, put in plugins\, else root"*
-2. If match found, deploy to conditional target
-3. Else check extension map: `.asi` → `plugins\`
-4. Else use wildcard: `*` → root
-
-Custom games define these routes via the sentence builder or `.tmmgame` JSON export.
+**Migration note:** older versions stored data at `%APPDATA%\TGTAMM\`. TMM migrates this automatically on first launch.
 
 ---
 
 ## System Requirements
 
-* **Windows 7 or later** (best on Windows 10/11)
-* **.NET 10 Runtime** — Download from [dotnet.microsoft.com/download/dotnet/10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
-  - Choose "Run desktop apps" installer (not SDK)
-  - Pre-bundled in official releases (no separate install needed)
-* **2 GB RAM** minimum
-* **1 GB free disk space** (plus backup storage)
+- Windows 10 or 11 (Windows 7+ may work; not tested)
+- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) — bundled with official releases
+- 2 GB RAM
+- 1 GB free disk space, plus headroom for backups (a heavily modded GTA SA baseline can hit several GB)
+
+---
+
+## In Progress
+
+Active work toward v1.0:
+
+- **Sync / import** — point TMM at a pre-modded game folder, have it detect and import existing mods into managed form
+- **Folder-overlay deploy** — mods shipping with `models/`, `data/`, `audio/` folders that mirror game structure (currently routed by extension only)
+- **Mod groups** — collapsible nested deployment (`modloader\GroupName\ModName\`)
+- **Conflict resolution** — warn when two mods write to the same destination
+
+See [PLANS.md](PLANS.md) for the full roadmap.
+
+---
+
+## Known Limitations
+
+- Steam protocol launch not yet wired for custom game dashboards
+- "Find Mods" sidebar buttons currently point at generic Nexus/ModDB homepages (per-game deep links coming)
+- Drag-drop into the IV/TLaD/TBoGT shared folder structure has some rough edges
+- Theme picker refresh from non-GTA dashboards can be flaky
+
+---
+
+## Reporting Bugs
+
+Open a GitHub Issue with:
+- Steps to reproduce
+- Which game(s) affected
+- Screenshot if relevant
+- Contents of `%APPDATA%\TMM\TMM.log`
 
 ---
 
 ## License
 
-TMM is open source. See LICENSE file for details.
-
----
-
-## Support
-
-**Issues?** Open a GitHub Issue with:
-- Steps to reproduce
-- Which game(s) affected
-- Screenshot if applicable
-- Contents of `%APPDATA%\TMM\TMM.log`
-
-**Questions?** Check CODEBASE_GUIDE.md and the issue tracker before opening a new issue.
+Open source. See [LICENSE](LICENSE).
