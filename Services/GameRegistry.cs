@@ -20,7 +20,7 @@ namespace TMM
         {
             get
             {
-                if (_instance == null)
+                if (_instance is null)
                 {
                     lock (_lock)
                     {
@@ -68,12 +68,12 @@ namespace TMM
                 try
                 {
                     using var stream = assembly.GetManifestResourceStream(resourceName);
-                    if (stream == null) continue;
+                    if (stream is null) continue;
 
                     using var reader = new StreamReader(stream);
                     var json = await reader.ReadToEndAsync();
                     var export = JsonSerializer.Deserialize<TmmGameExport>(json, JsonHelper.TmmGameOptions);
-                    if (export?.GameName == null) continue;
+                    if (export?.GameName is null) continue;
 
                     var config = ProfileMigration.FromExport(export, Path.GetFileNameWithoutExtension(resourceName));
                     config.IsBuiltIn = true;
@@ -121,14 +121,14 @@ namespace TMM
                     }
                     catch { /* fall through to legacy */ }
 
-                    if (config == null || string.IsNullOrEmpty(config.GameName)) continue;
+                    if (config is null || string.IsNullOrEmpty(config.GameName)) continue;
 
                     // If RoutingRules is empty, check for legacy fields in the raw JSON
                     if (config.RoutingRules.Count == 0)
                     {
                         // Deserialize as legacy export format to get old OutputDirectories / ConditionalRoutes
                         var legacy = JsonSerializer.Deserialize<TmmGameExport>(json, JsonHelper.TmmGameOptions);
-                        if (legacy != null)
+                        if (legacy is not null)
                         {
                             ProfileMigration.MigrateOldFields(
                                 config,

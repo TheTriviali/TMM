@@ -119,7 +119,7 @@ namespace TMM
             try
             {
                 var loaded = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path));
-                if (loaded != null) Settings = loaded;
+                if (loaded is not null) Settings = loaded;
 
                 // Ensure all GamePaths keys exist (forward-compat for added games).
                 foreach (var profile in GameProfile.All)
@@ -301,9 +301,9 @@ namespace TMM
             var exeMod = list
                 .Where(m => m.IsEnabled)
                 .OrderBy(m => m.LoadOrder)
-                .LastOrDefault(m => FindExeInMod(m.RawFolderPath, profile.ExeName) != null);
+                .LastOrDefault(m => FindExeInMod(m.RawFolderPath, profile.ExeName) is not null);
 
-            if (exeMod != null)
+            if (exeMod is not null)
             {
                 string modExePath = FindExeInMod(exeMod.RawFolderPath, profile.ExeName)!;
                 string modMd5 = await GetFileMD5Async(modExePath);
@@ -332,7 +332,7 @@ namespace TMM
                 return true;
 
             var list = Mods[profile.Key];
-            return list.Any(m => m.IsEnabled && FindExeInMod(m.RawFolderPath, profile.ExeName) != null);
+            return list.Any(m => m.IsEnabled && FindExeInMod(m.RawFolderPath, profile.ExeName) is not null);
         }
 
         /// <summary>Toggles the per-game force-deploy override and persists settings.</summary>
@@ -393,9 +393,9 @@ namespace TMM
             var exeMod = list
                 .Where(m => m.IsEnabled)
                 .OrderBy(m => m.LoadOrder)
-                .LastOrDefault(m => FindExeInMod(m.RawFolderPath, profile.ExeName) != null);
+                .LastOrDefault(m => FindExeInMod(m.RawFolderPath, profile.ExeName) is not null);
 
-            if (exeMod != null)
+            if (exeMod is not null)
             {
                 string modExe = FindExeInMod(exeMod.RawFolderPath, profile.ExeName)!;
                 return await GetFileMD5Async(modExe);
@@ -433,9 +433,9 @@ namespace TMM
             var exeMod = list
                 .Where(m => m.IsEnabled)
                 .OrderBy(m => m.LoadOrder)
-                .LastOrDefault(m => FindExeInMod(m.RawFolderPath, profile.ExeName) != null);
+                .LastOrDefault(m => FindExeInMod(m.RawFolderPath, profile.ExeName) is not null);
 
-            if (exeMod != null)
+            if (exeMod is not null)
             {
                 string exePath = FindExeInMod(exeMod.RawFolderPath, profile.ExeName)!;
                 lines.AppendLine($"  Exe source mod   : [{exeMod.LoadOrder}] {exeMod.Name}");
@@ -473,7 +473,7 @@ namespace TMM
                         try
                         {
                             var loaded = JsonSerializer.Deserialize<ModItem>(File.ReadAllText(infoPath), JsonHelper.PrettyOptions);
-                            if (loaded != null)
+                            if (loaded is not null)
                             {
                                 loaded.RawFolderPath = subFolder;
                                 found.Add(loaded);
@@ -498,7 +498,7 @@ namespace TMM
             // Guard: Application.Current can be null if the app is shutting down
             // (e.g. immediately after factory reset before the process exits).
             var app = System.Windows.Application.Current;
-            if (app == null) return;
+            if (app is null) return;
             app.Dispatcher.Invoke(() =>
             {
                 var target = Mods[profile.Key];
@@ -610,7 +610,7 @@ namespace TMM
         public List<DeployManifest> GetRollbackManifests(string gameKey)
         {
             string gameBackupDir = Path.Combine(BackupsPath, gameKey);
-            if (!Directory.Exists(gameBackupDir)) return new List<DeployManifest>();
+            if (!Directory.Exists(gameBackupDir)) return [];
 
             var manifests = new List<DeployManifest>();
             foreach (var dir in Directory.GetDirectories(gameBackupDir).OrderByDescending(d => d))
@@ -620,7 +620,7 @@ namespace TMM
                 try
                 {
                     var m = JsonSerializer.Deserialize<DeployManifest>(File.ReadAllText(mPath));
-                    if (m != null) manifests.Add(m);
+                    if (m is not null) manifests.Add(m);
                 }
                 catch { /* skip corrupt manifest */ }
             }
@@ -640,7 +640,7 @@ namespace TMM
                 ct.ThrowIfCancellationRequested();
                 string destFile = Path.Combine(manifest.GameDirectory, entry.RelativePath);
 
-                if (entry.BackupFilePath != null && File.Exists(entry.BackupFilePath))
+                if (entry.BackupFilePath is not null && File.Exists(entry.BackupFilePath))
                 {
                     // Restore the backed-up original.
                     string? destDir = Path.GetDirectoryName(destFile);
@@ -648,7 +648,7 @@ namespace TMM
                     try { File.SetAttributes(destFile, FileAttributes.Normal); } catch { }
                     await Task.Run(() => File.Copy(entry.BackupFilePath, destFile, overwrite: true), ct);
                 }
-                else if (entry.BackupFilePath == null && File.Exists(destFile))
+                else if (entry.BackupFilePath is null && File.Exists(destFile))
                 {
                     // File was newly added by deploy — remove it on rollback.
                     try
@@ -865,7 +865,7 @@ namespace TMM
                     FileShare.None, 81920, useAsync: true);
                 await src.CopyToAsync(dst, ct);
 
-                long originalSize = backupFilePath != null ? new FileInfo(backupFilePath).Length : 0;
+                long originalSize = backupFilePath is not null ? new FileInfo(backupFilePath).Length : 0;
                 entries.Add(new BackupEntry(rel, backupFilePath, originalSize));
 
                 done++;
@@ -879,7 +879,7 @@ namespace TMM
                 JsonSerializer.Serialize(manifest, JsonHelper.PrettyOptions));
 
             PruneOldBackups(gameKey);
-            int backedUp = entries.Count(e => e.BackupFilePath != null);
+            int backedUp = entries.Count(e => e.BackupFilePath is not null);
             Log($"[Deploy:{gameKey}] Done - {done} files written, {backedUp} backed up, manifest saved.");
         }
 

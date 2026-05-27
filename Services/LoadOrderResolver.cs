@@ -51,7 +51,7 @@ namespace TMM.Services
             // adjacency[i] = list of indices that must come AFTER mods[i]
             var adjacency = new List<List<int>>(mods.Count);
             for (int i = 0; i < mods.Count; i++)
-                adjacency.Add(new List<int>());
+                adjacency.Add([]);
 
             int[] inDegree = new int[mods.Count];
 

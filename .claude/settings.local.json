@@ -89,7 +89,9 @@
       "Bash(wc -l * 2>/dev/null | sort -rn *)",
       "Bash(grep -rn * --include=\"*.cs\" * | head -20)",
       "Bash(git commit -m 'refactor: remove TGTAMM migration code \\(post-rebrand\\), optimize BackendCore constructor *)",
-      "Bash(git commit -m 'refactor: optimize Services with LINQ, streamline collection operations *)"
+      "Bash(git commit -m 'refactor: optimize Services with LINQ, streamline collection operations *)",
+      "Bash(Get-ChildItem -Recurse -Filter \"*.csproj\")",
+      "Bash(grep \"//\")"
     ]
   }
 }

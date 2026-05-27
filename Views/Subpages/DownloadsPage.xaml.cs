@@ -25,8 +25,8 @@ namespace TMM
         public event Action<string>? UrlChanged;
         public string CurrentUrl => webView.Source?.ToString() ?? "";
 
-        public void GoBack()    { if (webView.CoreWebView2?.CanGoBack    == true) webView.GoBack(); }
-        public void GoForward() { if (webView.CoreWebView2?.CanGoForward == true) webView.GoForward(); }
+        public void GoBack()    { webView.CoreWebView2?.GoBack(); }
+        public void GoForward() { webView.CoreWebView2?.GoForward(); }
         public void Reload()    { webView.CoreWebView2?.Reload(); }
 
         public void Navigate(string input)
