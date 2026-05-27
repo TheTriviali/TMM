@@ -5,9 +5,13 @@ A lightweight, cross-game mod manager for classic and modern games. Built for si
 **Currently ships with:** GTA III Series (III, Vice City, San Andreas, IV, TLaD, TBoGT) + Skyrim Anniversary Edition  
 **Extensible to:** Any game via custom game profiles with per-filetype output directory routing
 
-## Alpha Notice
+## ⚠️ Active Development Notice
 
-TMM is currently in **Alpha**. Expect bugs, unpolished edge cases, and missing features. Feedback, issue reports, and pull requests are welcome!
+**TMM is under active heavy development by its creator.** Architecture and APIs are in flux. Major features, refactors, and breaking changes are frequent. 
+
+**⛔ External contributions are not recommended at this time.** The codebase is reorganizing rapidly; PRs risk becoming stale or conflicting with in-flight architectural changes. Please wait for the development cycle to stabilize before contributing.
+
+**If you encounter bugs:** File an issue with reproduction steps and logs. Bug reports are valuable and welcome.
 
 ---
 
@@ -224,7 +228,15 @@ Check your exe hash via **Settings → Diagnostics → MD5 Check**.
 
 ## Contributing
 
-Fork, submit PRs, or open an Issue. If you're tackling a known bug, comment in the Issues tab to avoid duplicate work.
+**The project is in active heavy development.** External contributions are not recommended until the development cycle stabilizes. See the [Active Development Notice](#-active-development-notice) above.
+
+**Bug reports are welcome** — please open an Issue with:
+- Steps to reproduce
+- Which game(s) affected
+- Screenshot if applicable
+- Contents of `%APPDATA%\TMM\TMM.log`
+
+**Interest in the codebase?** Check back after v1.0 is released, when the architecture has solidified.
 
 ### Codebase Navigation
 
