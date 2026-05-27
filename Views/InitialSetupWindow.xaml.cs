@@ -14,8 +14,11 @@ namespace TMM
 
         public InitialSetupWindow(BackendCore core)
         {
-            InitializeComponent();
             _core = core;
+            // Set language BEFORE InitializeComponent so XAML bindings evaluate with correct translations
+            string defaultLang = core.Settings.CurrentLanguage ?? "en-US";
+            LocalizationService.Instance.SetLanguage(defaultLang);
+            InitializeComponent();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -38,9 +41,17 @@ namespace TMM
             }
             cmbLanguage.ItemsSource = items;
 
-            // Default to English to avoid placeholder text showing
-            string defaultLang = _core.Settings.CurrentLanguage ?? "en-US";
-            ApplyLanguage(defaultLang, updateDropdown: true);
+            // Sync UI state (language is already set in constructor before InitializeComponent)
+            string currentLang = _core.Settings.CurrentLanguage ?? "en-US";
+            UpdateQuickPickState(currentLang);
+            foreach (ComboBoxItem item in cmbLanguage.Items)
+            {
+                if (item.Tag as string == currentLang)
+                {
+                    cmbLanguage.SelectedItem = item;
+                    break;
+                }
+            }
         }
 
         private void BtnQuickLang_Click(object sender, RoutedEventArgs e)
