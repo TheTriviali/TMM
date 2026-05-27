@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "tmm-game/1.1",
   "gameKey": "TBoGT",
   "gameName": "GTA IV: The Ballad of Gay Tony",
@@ -46,5 +46,6 @@
   "libraryStatus": "Alpha",
   "description": "GTA IV: The Ballad of Gay Tony — part of the Episodes from Liberty City package. Nested under the GTA IV install directory.",
   "author": "TMM",
-  "version": "1.0"
+  "version": "1.0",
+  "nexusSlug": "grandtheftauto4"
 }

@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:TMM"
+             xmlns:helpers="clr-namespace:TMM.Helpers"
              Background="{DynamicResource BgBrush}">
 
     <UserControl.Resources>
@@ -42,7 +43,7 @@
         <Border Grid.Row="0" Padding="20,12,20,10"
                 BorderBrush="{DynamicResource ControlBgBrush}" BorderThickness="0,0,0,1">
             <StackPanel>
-                <TextBlock Text="Rules are evaluated in priority order (higher wins). First match deploys the file."
+                <TextBlock Text="{helpers:Localization Step3_Intro}"
                            FontSize="11" Foreground="{DynamicResource SubTextBrush}"
                            TextWrapping="Wrap"/>
                 <!-- Conflict warnings -->

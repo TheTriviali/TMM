@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "tmm-game/1.1",
   "gameKey": "III",
   "gameName": "Grand Theft Auto III",
@@ -62,5 +62,6 @@
   "libraryStatus": "Beta",
   "description": "Grand Theft Auto III — Liberty City. Routes ASI plugins to scripts/ (if Silent's ASI Loader is present) or game root; CLEO scripts to cleo/.",
   "author": "TMM",
-  "version": "1.0"
+  "version": "1.0",
+  "nexusSlug": "grandtheftauto3"
 }

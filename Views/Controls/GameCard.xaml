@@ -52,10 +52,12 @@
                                 Margin="0,0,8,6">
                         <!-- Play / Launch (primary accent) -->
                         <Button x:Name="btnPlay" Width="24" Height="24" Margin="0,0,3,0"
-                                ToolTip="Launch game" Click="BtnPlay_Click" Style="{x:Null}">
+                                ToolTip="Launch game" Click="BtnPlay_Click" Focusable="True"
+                                Background="Transparent" BorderThickness="0" Padding="0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border x:Name="b" Background="{DynamicResource AccentBrush}" CornerRadius="5">
+                                    <Border x:Name="b" Background="{DynamicResource AccentBrush}" CornerRadius="5"
+                                            Padding="{TemplateBinding Padding}">
                                         <TextBlock Text="▶" FontSize="9" Foreground="#06222E"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
@@ -63,17 +65,22 @@
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="b" Property="Background" Value="#80000000"/>
                                         </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="b" Property="Opacity" Value="0.7"/>
+                                        </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
                         <!-- Manage mods -->
                         <Button x:Name="btnManage" Width="24" Height="24" Margin="0,0,3,0"
-                                ToolTip="Manage mods" Click="BtnManage_Click" Style="{x:Null}">
+                                ToolTip="Manage mods" Click="BtnManage_Click" Focusable="True"
+                                Background="Transparent" BorderThickness="0" Padding="0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="b" Background="#66000000" BorderBrush="#44FFFFFF"
-                                            BorderThickness="1" CornerRadius="5">
+                                            BorderThickness="1" CornerRadius="5"
+                                            Padding="{TemplateBinding Padding}">
                                         <TextBlock Text="☰" FontSize="10" Foreground="White"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
@@ -81,23 +88,32 @@
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="b" Property="Background" Value="#BB000000"/>
                                         </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="b" Property="Opacity" Value="0.7"/>
+                                        </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
-                        <!-- Edit -->
+                        <!-- Edit (hidden; use Mod Manager → Edit Config) -->
                         <Button x:Name="btnEdit" Width="24" Height="24" Margin="0,0,3,0"
-                                ToolTip="Edit game" Click="BtnEdit_Click" Style="{x:Null}">
+                                ToolTip="Edit game" Click="BtnEdit_Click" Focusable="True"
+                                Visibility="Collapsed"
+                                Background="Transparent" BorderThickness="0" Padding="0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="b" Background="#66000000" BorderBrush="#44FFFFFF"
-                                            BorderThickness="1" CornerRadius="5">
+                                            BorderThickness="1" CornerRadius="5"
+                                            Padding="{TemplateBinding Padding}">
                                         <TextBlock Text="⚙" FontSize="10" Foreground="#CCFFFFFF"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="b" Property="Background" Value="#BB000000"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="b" Property="Opacity" Value="0.7"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -106,11 +122,13 @@
                         <!-- Export (custom games only, hidden otherwise) -->
                         <Button x:Name="btnExport" Width="24" Height="24" Margin="0,0,3,0"
                                 ToolTip="Export game profile (.tmmgame)"
-                                Click="BtnExport_Click" Visibility="Collapsed" Style="{x:Null}">
+                                Click="BtnExport_Click" Visibility="Collapsed" Focusable="True"
+                                Background="Transparent" BorderThickness="0" Padding="0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="b" Background="#66000000" BorderBrush="#44FFFFFF"
-                                            BorderThickness="1" CornerRadius="5">
+                                            BorderThickness="1" CornerRadius="5"
+                                            Padding="{TemplateBinding Padding}">
                                         <TextBlock Text="↑" FontSize="11" Foreground="#CCFFFFFF"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
@@ -118,17 +136,22 @@
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="b" Property="Background" Value="#BB000000"/>
                                         </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="b" Property="Opacity" Value="0.7"/>
+                                        </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
                         <!-- Archive / Unarchive / Delete -->
                         <Button x:Name="btnArchiveOrDelete" Width="24" Height="24"
-                                ToolTip="Archive game" Click="BtnArchiveOrDelete_Click" Style="{x:Null}">
+                                ToolTip="Archive game" Click="BtnArchiveOrDelete_Click" Focusable="True"
+                                Background="Transparent" BorderThickness="0" Padding="0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="archiveBorder" Background="#66000000"
-                                            BorderBrush="#44FFFFFF" BorderThickness="1" CornerRadius="5">
+                                            BorderBrush="#44FFFFFF" BorderThickness="1" CornerRadius="5"
+                                            Padding="{TemplateBinding Padding}">
                                         <TextBlock x:Name="archiveIcon" Text="⊟" FontSize="10"
                                                    Foreground="#CCFFFFFF"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -136,6 +159,9 @@
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="archiveBorder" Property="Background" Value="#BB000000"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="archiveBorder" Property="Opacity" Value="0.7"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -280,10 +306,12 @@
                 <StackPanel Grid.Column="4" Orientation="Horizontal"
                             VerticalAlignment="Center" Margin="4,0,0,0">
                     <Button x:Name="listBtnPlay" Width="26" Height="26" Margin="0,0,3,0"
-                            ToolTip="Launch game" Click="BtnPlay_Click" Style="{x:Null}">
+                            ToolTip="Launch game" Click="BtnPlay_Click" Focusable="True"
+                            Background="Transparent" BorderThickness="0" Padding="0">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border x:Name="b" Background="{DynamicResource AccentBrush}" CornerRadius="5">
+                                <Border x:Name="b" Background="{DynamicResource AccentBrush}" CornerRadius="5"
+                                        Padding="{TemplateBinding Padding}">
                                     <TextBlock Text="▶" FontSize="9" Foreground="#06222E"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
@@ -291,16 +319,21 @@
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="b" Property="Background" Value="#80000000"/>
                                     </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="b" Property="Opacity" Value="0.7"/>
+                                    </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
                     <Button x:Name="listBtnManage" Width="26" Height="26" Margin="0,0,3,0"
-                            ToolTip="Manage mods" Click="BtnManage_Click" Style="{x:Null}">
+                            ToolTip="Manage mods" Click="BtnManage_Click" Focusable="True"
+                            Background="Transparent" BorderThickness="0" Padding="0">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="b" Background="#55000000" BorderBrush="#44FFFFFF"
-                                        BorderThickness="1" CornerRadius="5">
+                                        BorderThickness="1" CornerRadius="5"
+                                        Padding="{TemplateBinding Padding}">
                                     <TextBlock Text="☰" FontSize="10" Foreground="White"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
@@ -308,16 +341,22 @@
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="b" Property="Background" Value="#AA000000"/>
                                     </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="b" Property="Opacity" Value="0.7"/>
+                                    </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
                     <Button x:Name="listBtnEdit" Width="26" Height="26" Margin="0,0,3,0"
-                            ToolTip="Edit game" Click="BtnEdit_Click" Style="{x:Null}">
+                            ToolTip="Edit game" Click="BtnEdit_Click" Focusable="True"
+                            Visibility="Collapsed"
+                            Background="Transparent" BorderThickness="0" Padding="0">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="b" Background="#55000000" BorderBrush="#44FFFFFF"
-                                        BorderThickness="1" CornerRadius="5">
+                                        BorderThickness="1" CornerRadius="5"
+                                        Padding="{TemplateBinding Padding}">
                                     <TextBlock Text="⚙" FontSize="10" Foreground="#CCFFFFFF"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
@@ -325,16 +364,21 @@
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="b" Property="Background" Value="#AA000000"/>
                                     </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="b" Property="Opacity" Value="0.7"/>
+                                    </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
                     <Button x:Name="listBtnArchiveOrDelete" Width="26" Height="26"
-                            ToolTip="Archive game" Click="BtnArchiveOrDelete_Click" Style="{x:Null}">
+                            ToolTip="Archive game" Click="BtnArchiveOrDelete_Click" Focusable="True"
+                            Background="Transparent" BorderThickness="0" Padding="0">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="ab" Background="#55000000" BorderBrush="#44FFFFFF"
-                                        BorderThickness="1" CornerRadius="5">
+                                        BorderThickness="1" CornerRadius="5"
+                                        Padding="{TemplateBinding Padding}">
                                     <TextBlock x:Name="listArchiveIcon" Text="⊟" FontSize="10"
                                                Foreground="#CCFFFFFF"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -342,6 +386,9 @@
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter TargetName="ab" Property="Background" Value="#AA000000"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="ab" Property="Opacity" Value="0.7"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>

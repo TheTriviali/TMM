@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using TMM.Services;
 
 namespace TMM
 {
@@ -19,6 +20,7 @@ namespace TMM
         private LibraryEntry? _modalEntry;
         private LibraryEntry? _activeModManagerEntry;   // last game opened in mod manager
         // Pages instantiated lazily in Window_Loaded
+        private BackupsPage? _pageBackups;
         private PathsPage? _pagePaths;
         private SettingsPage? _pageSettingsInstance;
 
@@ -49,6 +51,14 @@ namespace TMM
         {
             ThemeEngine.ApplyTheme(_core.Settings);
 
+            // Initialize language selector with display names
+            var svc = LocalizationService.Instance;
+            var langItems = svc.GetAvailableLanguages()
+                .Select(code => new ComboBoxItem { Content = svc.GetDisplayName(code), Tag = code })
+                .ToList();
+            cmbLanguage.ItemsSource = langItems;
+            cmbLanguage.SelectedItem = langItems.FirstOrDefault(i => i.Tag is string c && c == _core.Settings.CurrentLanguage);
+
             // Restore position/size
             if (_core.Settings.WindowLeft > 0 && _core.Settings.WindowTop > 0)
             {
@@ -68,15 +78,18 @@ namespace TMM
             }
 
             // Build and inject pages that require BackendCore constructor
-            _pagePaths          = new PathsPage(_core);
+            _pageBackups          = new BackupsPage(_core);
+            _pagePaths            = new PathsPage(_core);
             _pageSettingsInstance = new SettingsPage(_core);
-            pagePathsPlaceholder.Content = _pagePaths;
-            pageSettings.Content         = _pageSettingsInstance;
+            pageBackupsPlaceholder.Content = _pageBackups;
+            pagePathsPlaceholder.Content   = _pagePaths;
+            pageSettings.Content           = _pageSettingsInstance;
 
             // Build library entries from all known games
             await _core.InitializeAsync();
             var entries = BuildLibraryEntries().ToList();
             pageLibrary.LoadEntries(entries);
+            _pageBackups.Initialize(entries);
             pageDownloads.Initialize(_core, entries);
             pageDownloads.UrlChanged += url =>
             {
@@ -141,6 +154,16 @@ namespace TMM
             }
         }
 
+        private void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbLanguage.SelectedItem is ComboBoxItem item && item.Tag is string code)
+            {
+                LocalizationService.Instance.SetLanguage(code);
+                _core.Settings.CurrentLanguage = code;
+                _core.SaveSettings();
+            }
+        }
+
         // ── Navigation ────────────────────────────────────────────────────────────
 
         private void NavBtn_Click(object sender, RoutedEventArgs e)
@@ -156,7 +179,7 @@ namespace TMM
             pageLibrary.Visibility       = Visibility.Collapsed;
             pageModManager.Visibility    = Visibility.Collapsed;
             pageDownloads.Visibility     = Visibility.Collapsed;
-            pageBackups.Visibility       = Visibility.Collapsed;
+            pageBackupsPlaceholder.Visibility = Visibility.Collapsed;
             pagePathsPlaceholder.Visibility = Visibility.Collapsed;
             pageSettings.Visibility      = Visibility.Collapsed;
 
@@ -198,8 +221,8 @@ namespace TMM
                     break;
 
                 case "Backups":
-                    pageBackups.Visibility = Visibility.Visible;
-                    titleSubtext.Text      = " — Backups";
+                    pageBackupsPlaceholder.Visibility = Visibility.Visible;
+                    titleSubtext.Text                 = " — Backups";
                     break;
 
                 case "Paths":

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using TMM.Services;
 
 namespace TMM
 {
@@ -20,43 +21,38 @@ namespace TMM
         private record PathRowDef(
             string Label,
             string Description,
-            Func<string> GetPath,
-            Action<string>? SetPath = null   // null = read-only (log dir)
+            Func<string> GetPath
         );
 
         private void BuildPathRows()
         {
+            var loc = LocalizationService.Instance;
             var rows = new[]
             {
                 new PathRowDef(
-                    "Library Art",
-                    "Custom artwork for game cards (PNG files)",
-                    () => _core.LibraryArtPath,
-                    null   // Always under AppData — not user-configurable in v1
+                    loc["Paths_LibraryArt"],
+                    loc["Paths_LibraryArt_Desc"],
+                    () => _core.LibraryArtPath
                 ),
                 new PathRowDef(
-                    "Tmmpack Archive",
-                    "Exported .tmmpack bundles",
-                    () => Path.Combine(_core.AppDataPath, "Packs"),
-                    null
+                    loc["Paths_TmmpackArchive"],
+                    loc["Paths_TmmpackArchive_Desc"],
+                    () => Path.Combine(_core.AppDataPath, "Packs")
                 ),
                 new PathRowDef(
-                    "Backups",
-                    "Automatic mod backups before deploy",
-                    () => _core.BackupsPath,
-                    null
+                    loc["Paths_Backups"],
+                    loc["Paths_Backups_Desc"],
+                    () => _core.BackupsPath
                 ),
                 new PathRowDef(
-                    "Downloads Cache",
-                    "Temporary files during downloads",
-                    () => _core.DownloadCachePath,
-                    null
+                    loc["Paths_DownloadsCache"],
+                    loc["Paths_DownloadsCache_Desc"],
+                    () => _core.DownloadCachePath
                 ),
                 new PathRowDef(
-                    "Log Files",
-                    "TMM.log and diagnostic output",
-                    () => _core.AppDataPath,
-                    null
+                    loc["Paths_LogFiles"],
+                    loc["Paths_LogFiles_Desc"],
+                    () => _core.AppDataPath
                 ),
             };
 
@@ -113,7 +109,7 @@ namespace TMM
             // Open button
             var btnOpen = new System.Windows.Controls.Button
             {
-                Content = "Open", Height = 28, Padding = new Thickness(14, 0, 14, 0),
+                Content = LocalizationService.Instance["Button_Open"], Height = 28, Padding = new Thickness(14, 0, 14, 0),
                 Margin = new Thickness(8, 0, 0, 0), Cursor = System.Windows.Input.Cursors.Hand,
             };
             btnOpen.SetResourceReference(System.Windows.Controls.Button.BackgroundProperty, "ControlBgBrush");

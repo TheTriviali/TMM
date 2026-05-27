@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "tmm-game/1.1",
   "gameKey": "VC",
   "gameName": "GTA Vice City",
@@ -62,5 +62,6 @@
   "libraryStatus": "Beta",
   "description": "Grand Theft Auto: Vice City — Miami, 1986. Routes ASI plugins to scripts/ or game root; CLEO scripts to cleo/.",
   "author": "TMM",
-  "version": "1.0"
+  "version": "1.0",
+  "nexusSlug": "grandtheftautovicecity"
 }

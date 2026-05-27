@@ -1,12 +1,13 @@
-﻿<UserControl x:Class="TMM.GameSetupRow"
+<UserControl x:Class="TMM.GameSetupRow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:helpers="clr-namespace:TMM.Helpers"
              Margin="0,0,0,12">
     <UserControl.Resources>
         <ContextMenu x:Key="SteamMenu">
-            <MenuItem Header="Verify Files"   Tag="validate"   Click="MenuSteamAction_Click"/>
-            <MenuItem Header="Install Game"   Tag="install"    Click="MenuSteamAction_Click"/>
-            <MenuItem Header="Uninstall Game" Tag="uninstall"  Click="MenuSteamAction_Click"/>
+            <MenuItem Header="{helpers:Localization GameSetupRow_Steam_Verify}"   Tag="validate"   Click="MenuSteamAction_Click"/>
+            <MenuItem Header="{helpers:Localization GameSetupRow_Steam_Install}"  Tag="install"    Click="MenuSteamAction_Click"/>
+            <MenuItem Header="{helpers:Localization GameSetupRow_Steam_Uninstall}" Tag="uninstall" Click="MenuSteamAction_Click"/>
         </ContextMenu>
 
         <!-- Compact icon button style for Quick Scan / Browse -->
@@ -49,29 +50,29 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Path + status (status wraps so nothing is clipped) -->
+            <!-- Path + status -->
             <StackPanel Grid.Column="0">
                 <TextBox x:Name="txtPath" Height="26" VerticalContentAlignment="Center"
                          Background="{DynamicResource ControlBgBrush}"
                          Foreground="{DynamicResource TextBrush}"
                          BorderThickness="0" Padding="5,0" IsReadOnly="True" FontSize="12"/>
-                <TextBlock x:Name="lblStatus" Text="Not Found" FontSize="10.5"
+                <TextBlock x:Name="lblStatus" FontSize="10.5"
                            Foreground="Gray" TextWrapping="Wrap" Margin="2,2,0,0"/>
             </StackPanel>
 
-            <!-- Action buttons: icon-only for compactness -->
+            <!-- Action buttons -->
             <Button x:Name="btnQuickScan" Grid.Column="1" Content="&#xE721;"
-                    ToolTip="Quick Scan - auto-detect game path"
+                    ToolTip="{helpers:Localization GameSetupRow_Tooltip_QuickScan}"
                     Style="{StaticResource IconActionButton}"
                     Margin="6,0,0,0" Click="BtnQuickScan_Click"/>
 
             <Button x:Name="btnBrowse" Grid.Column="2" Content="..."
-                    ToolTip="Browse - locate game executable manually"
+                    ToolTip="{helpers:Localization GameSetupRow_Tooltip_Browse}"
                     Style="{StaticResource IconActionButton}"
                     Margin="4,0,0,0" Click="BtnBrowse_Click"/>
 
             <Button x:Name="btnSteam" Grid.Column="3" Content="⚙ ▾"
-                    ToolTip="Steam Actions"
+                    ToolTip="{helpers:Localization GameSetupRow_Tooltip_Steam}"
                     Width="40" Height="26" Margin="4,0,0,0"
                     Background="#2A2A2A" Foreground="#FF88EE"
                     BorderThickness="0" Cursor="Hand" FontSize="11"

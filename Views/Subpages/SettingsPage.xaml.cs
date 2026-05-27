@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -17,6 +18,9 @@ namespace TMM
             _core = core;
             InitializeComponent();
             InitializeAccentPresets();
+
+            var ver = Assembly.GetExecutingAssembly().GetName().Version;
+            if (ver != null) lblVersion.Text = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
         }
 
         private void InitializeAccentPresets()
@@ -107,25 +111,6 @@ namespace TMM
             {
                 NotificationService.ShowWarning($"Invalid color format: {ex.Message}");
             }
-        }
-
-        private void BtnSteamAction_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is not Button btn) return;
-            if (cmbSteamGame.SelectedItem is not ComboBoxItem item) return;
-            var profile = GameProfile.ByKey(item.Tag.ToString());
-            if (profile == null) return;
-            SteamLauncher.Invoke(btn.Tag.ToString()!, profile.SteamAppId, _core.Log);
-        }
-
-        private async void BtnMd5Check_Click(object sender, RoutedEventArgs e)
-        {
-            if (cmbSteamGame.SelectedItem is not ComboBoxItem item) return;
-            var profile = GameProfile.ByKey(item.Tag.ToString());
-            if (profile == null) return;
-            string result = await _core.GetMd5DiagnosticsAsync(profile);
-            MessageBox.Show(result, $"MD5 Check - {profile.DisplayName}",
-                MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnOpenLog_Click(object sender, RoutedEventArgs e)

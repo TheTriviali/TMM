@@ -1,599 +1,349 @@
-# TMM Routing Rules & Game Configuration Refactor
+# TMM — Active Plans
 
-> **Big Vision:** Replace all hardcoded game implementations with fully configurable `.tmmgame` profiles. Every game (GTA III, VC, SA, IV, TLaD, TBoGT, custom) is treated identically as an individual `.tmmgame` entry. Users can create/configure games via GUI with mod types, routing rules, load order preferences, and versioning. Built-in games are re-implemented through this same system—becoming the ultimate test of the feature.
-
-**Architectural Change:** No more special-case handling for game series. All predefined routing logic is removed and reimplemented through the GUI for each game individually.
-
----
-
-## Strategic Goals
-
-1. **Differentiate from MO2:** Direct-deploy simplicity, any-game support, intuitive rule builder
-2. **User empowerment:** Anyone can add/configure games without code
-3. **Consistency:** All installation methods (downloads, file picker, drag-drop) use identical routing logic
-4. **Robustness:** Conflict detection, preview before deploy, user intervention points
+> Living plan doc. Each section is a self-contained brief a cold agent can execute.
+> Older routing-rules-refactor plans are archived (Phases 3/5/6 complete; see memory).
+>
+> **Standing rule:** Any feature that works for built-in games must be fully
+> configurable by a user adding a custom game through the wizard UI. No field or
+> behaviour is complete until it appears in `CustomGameSetupWizard` Step 1 (input)
+> and Step 4 (review summary). The `.tmmgame` JSON is only a shortcut for built-in
+> profiles — users never edit JSON.
 
 ---
 
-## Phase 1: Data Models & Serialization
+## Status snapshot — 2026-05-27
 
-### 1.1 — Condition System (`Models/Condition.cs`) [HAIKU]
-
-**File:** `Models/Condition.cs`
-
-```csharp
-public enum ConditionType
-{
-    FileExtension,      // ".asi", ".dll", ".cs"
-    HasFolder,          // "modloader", "cleo", "data"
-    FolderCount,        // "= 0", "> 1" (for companion detection)
-    FileCount,          // Single vs multiple
-    PathContains,       // Substring match in file path
-    FilenameMatches,    // Specific filename (e.g., "special_dll.dll")
-}
-
-public enum ConditionOperator
-{
-    Is,                 // FileExtension: is ".asi"
-    IsNot,              // FileExtension: is not ".dll"
-    Contains,           // PathContains: contains "modloader"
-    DoesNotContain,     // PathContains: does not contain
-    StartsWith,         // PathContains: starts with "data/"
-    EndsWith,           // FilenameMatches: ends with "config.ini"
-    MatchesRegex,       // Advanced pattern matching
-    Equals,             // FolderCount: = 0
-    GreaterThan,        // FolderCount: > 1
-    LessThan,           // FolderCount: < 2
-}
-
-public enum LogicOperator
-{
-    AND,                // All conditions must match
-    OR,                 // Any condition can match
-}
-
-public class Condition
-{
-    public ConditionType Type { get; set; }
-    public ConditionOperator Operator { get; set; }
-    public string Value { get; set; }                // ".asi", "modloader", "0", "data/"
-    public LogicOperator Logic { get; set; }         // AND, OR (for next condition)
-}
-```
-
-**Serialized example:**
-```json
-{
-  "type": "FileExtension",
-  "operator": "Is",
-  "value": ".asi",
-  "logic": "AND"
-}
-```
+**Just done (this session, Opus):**
+- Audited every interactive UI element, found ~25 bugs / non-sequiturs / dead code paths.
+- Fixed cheap stuff inline (empty Segoe glyphs in DownloadsPage, dead AboutWindow handlers,
+  no-op `if (_isEdit)` in CustomGameSetupWizard, dead `LastSelectedGameKey`, hidden no-op
+  Edit buttons on GameCard, hardcoded "Black" foreground on SelectBuiltinGameWindow, dead
+  locale keys `GridView/LargeView/ListenView/ShowcaseView`, hardcoded "v2.0" strings,
+  removed `task1_prompt.txt`).
+- **GTA III/VC/SA deprecated cleanup pass:**
+  - Deleted unreachable `Views/ArchiveExtractionWindow.xaml(.cs)`.
+  - Stripped MD5/vanilla detection: `GameProfile.Vanilla10Md5` /`AdditionalValidMd5s`
+    /`HasExeCheck`/`IsValidMd5`/`AllValidMd5s`, `ExeStatus` enum, `BackendCore`
+    `VerifyGameStatusAsync` /`GetEffectiveMd5Async`/`GetMd5DiagnosticsAsync`
+    /`HasExeModOverride`/`ToggleDeployOverride`/`FindExeInMod`/`GetFileMD5Async`,
+    `AppSettings.DeployOverrides`, the III/VC/SA defaults in `AppSettings.GamePaths`,
+    `Settings_SteamControls/Settings_MD5*/Settings_SteamVerify/Settings_VerifyTooltip
+    /GameSetupRow_SteamAPI` locale keys, the Steam Controls + MD5 Check panels in
+    SettingsPage, and the "Steam API Detected (1.0 Downgrade Required)" status path
+    in GameSetupRow.
+  - Removed unused `BackendCore.Version` field.
+  - Canonicalised repo URL to `https://github.com/TheTriviali/TMM`.
+- Build is clean (only 3 pre-existing CS0067 warnings on `IWizardStep.ValidationChanged`
+  for Steps 2-4, which is correct — they implement the interface but don't validate).
 
 ---
 
-### 1.2 — Routing Rules (`Models/RoutingRule.cs`) [HAIKU]
+## Block B — Sync/import + architectural foundations  (active)
 
-**File:** `Models/RoutingRule.cs` (create new or expand existing)
+**Approved 2026-05-27** with these decisions:
+- **Import ownership:** files move into `ModsRaw_{key}` so post-import everything uses the normal deploy/rollback paths.
+- **Companion grouping scope:** same folder + known per-game sibling folders (e.g. `CLEO_TEXT/`, `CLEO_FONTS/` for CLEO scripts). Per-game sibling list lives in the `.tmmgame` profile.
+- **Mod groups:** nested deployment targets — adding mod X to group "Cars" auto-routes its files under `modloader\Cars\X\`.
+- See [CLAUDE.md → Architectural Principles](CLAUDE.md) for the two rules these briefs assume (install-time plan freeze + first-touch baseline). Both audited 2026-05-27: install-time freeze is NOT current behaviour (must build); first-touch baseline does NOT exist (must build).
 
-```csharp
-public enum LoadOrderBias
-{
-    Lower,              // Load earlier when no specific rule applies
-    Higher,             // Load later when no specific rule applies
-    None,               // Use defaults
-}
+**Critical path:** B2 → B3 → B4 → B5. B1 and B6 can branch off independently once B2/B3 land.
 
-public class RoutingRule
-{
-    public string Name { get; set; }                         // "ASI to scripts"
-    public List<Condition> Conditions { get; set; }          // AND/OR chained
-    public string TargetPath { get; set; }                   // "scripts/", "{gameRoot}/", "modloader/cleo/{scriptname}/"
-    
-    public int Priority { get; set; }                        // 0–100 (higher wins conflicts)
-    public bool AllowConflict { get; set; }                  // true = ask user if conflict
-    public LoadOrderBias LoadOrderBias { get; set; }         // Influence final load order
-    
-    public bool IsDefault { get; set; }                      // "Catch-all" rule?
-}
-```
+### B2 — Install-time deployment plan freeze  (foundation)
 
-**Special target path tokens:**
-- `{gameRoot}` → Game install directory
-- `{scriptname}` → Filename without extension (for nested CLEO scripts)
-- Literal paths: `scripts/`, `plugins/`, `modloader/cleo/`, etc.
+**Goal:** Replace per-deploy `PlanDeploymentAsync` calls with a one-time install-time capture + saved-plan execution.
 
----
+**Current behaviour (audited):** [BackendCore.cs:614](Services/BackendCore.cs#L614) and [ModManagerPage.xaml.cs:285-290](Views/Subpages/ModManagerPage.xaml.cs#L285) both call `new DeploymentPlanner().PlanDeploymentAsync(...)` fresh on every deploy. Nothing is persisted.
 
-### 1.3 — Mod Types (`Models/ModType.cs`) [HAIKU]
+**Plan:**
+1. Make `DeploymentPlan` (in `Services/DeploymentPlanner.cs`) JSON-serialisable. Add `int PlanVersion = 1` for future migrations.
+2. Add `BackendCore.OnModAddedAsync(string gameKey, string modName)` that calls the planner once and writes the result to `ModsRaw_{key}/{ModName}/_tmm/deployplan.json`. Wire it from *every* mod-add entry point: archive extraction (~BackendCore.cs:794), wizard import flow, manual folder-scan refresh, and B5's import path.
+3. Change `DeployModsAsync` to load `deployplan.json` per mod. If missing, fall back to live planning *and* log a warning (legacy path until all mods are migrated).
+4. Profile-edit invalidation: when a user edits routing rules in the wizard, surface a "N existing mods have stale plans — replan all?" prompt. Don't auto-replan (silent rule changes are exactly what principle #1 forbids).
 
-**File:** `Models/ModType.cs`
+**Gotcha:** identify *all* mod-add paths before wiring `OnModAddedAsync` — search `_core.Mods.Add`, `RefreshAllModListsAsync`, archive extraction, drag-drop handlers. Missing one means some mods never get a plan.
 
-```csharp
-public class ModType
-{
-    public string Name { get; set; }                         // "ASI Plugin", "CLEO Script", "Texture Pack"
-    public List<string> FileExtensions { get; set; }         // [".asi", ".dll"], [".cs"], [".dds", ".txd"]
-    
-    public List<RoutingRule> RoutingRules { get; set; }      // Rules specific to this type
-    public LoadOrderBias DefaultBias { get; set; }           // Default load order preference
-    
-    // Auto-detection: is this mod type the "primary" detector?
-    public bool IsPrimary { get; set; }                      // If multiple types match, use this one
-}
-```
+### B3 — First-touch baseline snapshot  (foundation)
 
----
+**Goal:** Capture the original bytes of any game file the first time TMM touches it. Rollback restores to that, not to the previous deploy.
 
-### 1.4 — Updated CustomGameProfile (`Models/CustomGameProfile.cs`) [HAIKU]
+**Why now:** audited 2026-05-27. Today's rollback restores from per-deploy manifests, which means stacking mods loses the vanilla baseline (Mod B's deploy backs up Mod A's modifications, not vanilla). See PLANS.md audit notes / agent transcript.
 
-**File:** `Models/CustomGameProfile.cs` (expand)
+**Files:**
+- New `Services/BaselineSnapshot.cs` — encapsulates per-game baseline read/write.
+- Storage: `%APPDATA%\TMM\Baselines\{gameKey}\baseline.json` + `\snapshots\{sha256-of-relativePath}.bin`.
+- `Services/BackendCore.cs:684-ish` — insert baseline capture before any overwrite.
+- `Services/BackendCore.cs:471-501` — rollback now reads `baseline.json` as source of truth.
 
-```csharp
-public enum ReleaseTag
-{
-    Release,
-    Beta,
-    Alpha,
-    Custom,             // User-defined tag
-}
+**Plan:**
+1. Schema: `baseline.json` = `{ "<relativePath>": { "snapshotFile": "<hash>.bin"|null, "originalSize": N, "capturedAt": "ISO8601" } }`. `snapshotFile = null` means "file did not exist at first touch" (rollback = delete).
+2. On deploy, before overwriting `destFile`: if path not in baseline, snapshot current bytes (or record null if file didn't exist), then proceed with normal per-deploy backup *as well* (per-deploy manifest remains a secondary index of "what this deploy did").
+3. Rollback semantics shift: per-deploy manifest tells you *which files to revert*; baseline.json tells you *what to revert them to*. Document this prominently in the rollback confirmation MessageBox and in CHANGELOG.
+4. B5 (sync/import) explicitly seeds baseline.json by snapshotting the full game dir at import time — that IS the import's "first touch."
 
-public enum RobustnessLevel
-{
-    Experimental,       // Early, frequent changes
-    Stable,             // Tested, reliable
-    Mature,             // Production-ready, change rarely
-}
+**Gotcha:** disk space. A baseline of a heavily-modded GTA SA could be several GB. Consider an opt-out for very large directories (warn user) or hash-based dedup (probably overkill for v1).
 
-public class CustomGameProfile
-{
-    // Existing
-    public string GameKey { get; set; }                      // "III", "IV", "CUSTOM_abc123"
-    public string Name { get; set; }                         // "Grand Theft Auto III"
-    public string InstallDir { get; set; }
-    public string? ExePath { get; set; }
-    public uint? SteamAppId { get; set; }
-    
-    // NEW: Mod configuration
-    public List<ModType> ModTypes { get; set; }              // User-defined mod types
-    public List<RoutingRule> RoutingRules { get; set; }      // Game-wide rules (in addition to type-specific)
-    
-    // NEW: Versioning
-    public Version Version { get; set; }                     // 1.0.0
-    public ReleaseTag ReleaseTag { get; set; }               // release, beta, alpha
-    public string? CustomTag { get; set; }                   // +gta3-optimized
-    public RobustnessLevel Robustness { get; set; }
-    
-    // NEW: Built-in flag
-    public bool IsNative { get; set; }                       // true = shipped with TMM, false = user-created
-}
-```
+### B4 — Folder-overlay deploy + rollback + empty-dir walking
 
----
+**Goal:** Mods that ship folders matching game folders (e.g. `models/`, `data/`) merge into the game folder instead of being routed by extension. Also fix silent gaps around empty directories.
 
-### 1.5 — Updated ModItem (`Models/ModItem.cs`) [HAIKU]
+**Files:**
+- `Services/DeploymentPlanner.cs` — add overlay detection at plan time.
+- `Models/RoutingRule.cs` — add `RuleKind.FolderOverlay` (or a `PreserveRelativePath` flag on the existing rule schema).
+- `Services/BackendCore.cs:566` — `Directory.EnumerateFiles` is files-only; switch to file-and-directory walk so empty mod-side directories are deployable/recreatable.
+- All 11 `.tmmgame` profiles — add `overlayFolders: ["models", "data", "audio", "text", "anim"]` (per-game list).
 
-**File:** `Models/ModItem.cs` (expand)
+**Plan:**
+1. At install time (B2's `OnModAddedAsync`), if the mod root contains a top-level folder whose name appears in the game's `overlayFolders` list, every file under that folder gets `PreserveRelativePath = true` in the persisted plan.
+2. At deploy, files with `PreserveRelativePath = true` deploy to `{gameRoot}\{originalRelativePath}` — bypassing extension routing.
+3. Walk directories (not just files) so empty mod-side directories are recorded in the plan and recreated on deploy.
+4. Symlinks: fail-loud at install time with "TMM does not support symlinked mod sources." (Cleaner than flattening to copies silently.)
 
-```csharp
-public class ModItem
-{
-    // Existing
-    public string Name { get; set; }
-    public string FolderPath { get; set; }
-    public bool IsEnabled { get; set; }
-    
-    // NEW: Type & load order
-    public ModType? DetectedType { get; set; }               // Auto-detected from file contents
-    public string? LoadAfter { get; set; }                   // Relative ordering: "ModX"
-    public string? LoadBefore { get; set; }                  // Relative ordering: "ModY"
-    public LoadOrderBias LoadOrderBias { get; set; }         // User preference for this mod
-    
-    // Calculated at deploy time
-    public int FinalLoadOrder { get; set; }                  // 0–255, resolved from rules + preferences
-}
-```
+**Depends on:** B3 — without baseline.json, rollback of an overlay-mod can't restore vanilla files it overwrote.
+
+### B1 — GTA III/VC/SA routing profile completeness
+
+**Goal:** Bring the three GTA III-series `.tmmgame` profiles up to modern Mod Loader conventions.
+
+**Files:** `Assets/GameProfiles/gta3.tmmgame`, `gtavc.tmmgame`, `gtasa.tmmgame`.
+
+**Per-game additions (all three):**
+- **New rule, priority 95**: any file under a top-level `modloader\` folder → preserve relative path (depends on B4's `PreserveRelativePath` mechanism). This catches `modloader\{modname}\*` and `modloader\{group}\{modname}\*` automatically.
+- **Extend existing CLEO rule** to match `.cs`, `.cs4`, `.cs5`, `.fxt` (currently only `.cs` and `.fxt`).
+- **Add `.ini` companion handling**: routing-rule side just ensures `.ini` co-routes with its sibling `.cs/.cs4/.cs5` when their basenames match (heavy lifting happens at install-time companion detection — see B5).
+- **Add `companionSiblings`** field to the profile: `{ "cleo": ["CLEO_TEXT", "CLEO_FONTS"] }`. Used by B5 import heuristic and by post-install plan validation.
+
+**Depends on:** B4 (the `PreserveRelativePath` rule kind must exist).
+
+### B5 — Sync/import from existing modded install
+
+**Goal:** Point TMM at a friend's pre-modded game directory; heuristically detect mods; move them into `ModsRaw_{key}` as proper TMM-managed mods with persisted plans.
+
+**Files:**
+- New `Services/ModImporter.cs` — heuristic scan + companion grouping logic.
+- New `Views/ImportReviewWindow.xaml(.cs)` — preview detected mods, let user rename / merge / split / exclude before commit.
+- `Views/Subpages/ModManagerPage.xaml(.cs)` — add "Import from game folder…" button to the sidebar.
+- Calls into B2 (`OnModAddedAsync`) and B3 (baseline seeding).
+
+**Plan:**
+1. **Scan:** walk the game dir. Flag any file matching the game's mod-type extensions (from the profile) in mod-type-target folders (cleo/, scripts/, modloader/*) as a candidate. Top-level subfolders under `modloader\` each become one mod (preserve nesting).
+2. **Companion grouping (per Q2 decision):** for each candidate, look for matching basenames in (a) the same folder, (b) the game's `companionSiblings` folders. Group as one mod.
+3. **Low-confidence handling:** files that match a mod-type extension but live in unexpected locations (mystery `.dll` in game root) get flagged with a warning chip in the review UI — user explicitly confirms or excludes.
+4. **Review UI:** table of detected mods with name, file list, suggested group. User can rename, merge, split, or exclude before commit.
+5. **Commit:**
+   - First, seed `baseline.json` by snapshotting *every* file currently in the game dir (this install IS the user's baseline — see CLAUDE.md principle #2).
+   - Then for each accepted mod: create `ModsRaw_{key}/{ModName}/`, move (not copy — these files are leaving the game dir) the mod's files in preserving relative structure, fire `OnModAddedAsync` to write `deployplan.json`.
+   - On first deploy after import the saved plan re-deploys the files to where they came from, end state matches start state. The point is: now they're removable.
+
+**Gotcha:** "move not copy" means a failed import can leave the game dir in a half-state. Wrap the whole commit in a transaction (collect all file ops, validate, then execute; on failure, revert moves).
+
+### B6 — Mod groups as nested deployment targets
+
+**Goal:** Let users group mods so the group name becomes a deployment-path segment (`modloader\{group}\{mod}\`).
+
+**Files:**
+- `Models/ModItem.cs` — add `string? GroupName { get; set; }` (null = ungrouped).
+- `Services/DeploymentPlanner.cs` — when planning a grouped mod under the `modloader\` scheme, prepend `\{GroupName}\` to destination paths.
+- `Views/Subpages/ModManagerPage.xaml(.cs)` — group column, drag-into-group UI, "New group" button, collapsible group headers (opt-in via a "Show groups" toggle).
+
+**Plan:**
+1. GroupName lives in the mod's sidecar metadata (`ModsRaw_{key}/{ModName}/_tmm/modinfo.json` — same place as the persisted plan from B2).
+2. Adding/removing/renaming a group → regenerate the affected mods' `deployplan.json` via `OnModAddedAsync`. This is the *one* sanctioned plan invalidation per principle #1 (group change = re-install for plan purposes).
+3. Group affects only the `modloader\` deployment scheme. Files that deploy to game root (engine proxies, root ASIs by user choice) are unaffected.
+4. UI: ungrouped is default. "Show groups" toggle reveals collapsible headers. Drag a mod into a group header to assign; drag out to ungroup.
+
+**Depends on:** B2 (plan persistence) — without it there's no defined moment to re-apply group rules.
 
 ---
 
-## Phase 2: GUI — Sentence Builder & Custom Game Wizard
+## Sonnet queue — discrete fixes, hand off one at a time
 
-> **Design Philosophy:** Multi-step wizard (inspired by Lizard's Autodesigner) replaces monolithic dialog. Each step is focused, visually clean, and progressively builds the game profile. Mod type editing is inline (Step 2). Rule creation uses modal RuleEditorWindow (Step 3).
+Each entry is self-contained: file paths, exact symbols, gotchas. Ship in any order.
 
-### 2.1 — Rule Editor Window (`Views/RuleEditorWindow.xaml`) [HAIKU]
+### ~~S1 — BackupsPage: implement actual backup list + restore action~~ ✅ DONE (2026-05-27)
 
-**File:** `Views/RuleEditorWindow.xaml` + `RuleEditorWindow.xaml.cs`
+**Files:**
+- [Views/Subpages/BackupsPage.xaml](Views/Subpages/BackupsPage.xaml) — currently just an empty-state.
+- [Views/Subpages/BackupsPage.xaml.cs](Views/Subpages/BackupsPage.xaml.cs) — just `InitializeComponent()`.
 
-**Modal dialog for creating/editing routing rules.**
+**Backend already exists:**
+- `BackendCore.GetRollbackManifests(string gameKey)` returns ordered list of `DeployManifest`
+  (newest first). Each manifest exposes `Timestamp` and `ModNames`.
+- `BackendCore.RollbackDeployAsync(DeployManifest, IProgress<DeploymentProgress>)` executes
+  the restore.
+- See [Views/Subpages/ModManagerPage.xaml.cs:357-389](Views/Subpages/ModManagerPage.xaml.cs#L357)
+  (`RunRollbackAsync`) for the existing rollback flow — reuse the same confirmation
+  prompt structure.
 
-**Features:**
-- Condition builder with color-coded dropdowns (FileExtension, HasFolder, PathContains, etc.)
-- Add/remove AND/OR operators between conditions
-- Priority slider (0–100)
-- Target path input with suggestions: {gameRoot}, scripts/, plugins/, modloader/cleo/{scriptname}/, etc.
-- Load order bias selector: Lower / Higher / None
-- "Ask user on conflicts" toggle checkbox
-- Preview: "~X files would match this rule"
-- [Save Rule] / [Cancel] buttons
+**Plan:**
+1. Add constructor `BackupsPage(BackendCore core)` to the code-behind (mirror how
+   `PathsPage` is wired in [UnifiedShellWindow.xaml.cs:77-80](Views/UnifiedShellWindow.xaml.cs#L77)).
+   Update `UnifiedShellWindow.xaml` so `pageBackups` is a `ContentPresenter`
+   (replace the current `<local:BackupsPage>` instance + add a new `pageBackupsPlaceholder`
+   the same way `pagePathsPlaceholder` works), and instantiate in `Window_Loaded`.
+2. In code-behind:
+   - Pull library entries via `BuildLibraryEntries()` from UnifiedShellWindow (or pass
+     them in) — easier: iterate `_core.Mods.Keys` and resolve display names from
+     `GameProfile.ByKey(key) ?? GameRegistry.Instance.GetGameProfile(key)`.
+   - Add a game selector ComboBox (mirror the one in [DownloadsPage.xaml.cs:57-65](Views/Subpages/DownloadsPage.xaml.cs#L57)).
+   - On selection change, call `core.GetRollbackManifests(key)` and render rows in a
+     panel. Each row: timestamp formatted (`yyyy-MM-dd HH:mm`), mod count + first
+     few mod names truncated, and a "Restore" button.
+   - Restore button → confirmation MessageBox → `RollbackDeployAsync` with the
+     existing `ShowDeployOverlay`/`HideDeployOverlay` pattern (or its own simpler
+     progress UI; the page can own the overlay since ModManagerPage's overlay isn't reachable from here).
+3. XAML: replace the empty-state StackPanel with a `Grid` containing the selector
+   + a `ScrollViewer > StackPanel x:Name="backupRowsPanel"`. Keep the empty-state
+   inside the panel so it renders when `GetRollbackManifests` returns an empty list
+   for the selected game.
+4. New locale keys needed (add to both `en-US.json` and `es-MX.json`):
+   - `Backups_SelectGame` ("Select game")
+   - `Backups_RestoreBtn` ("Restore")
+   - `Backups_ConfirmRestore` ("Restore {0} to the snapshot from {1}? Current files will be replaced.")
+   - `Backups_ModsList` ("Mods: {0}")
 
-**Opened from:** Step 3 (RoutingRulesPage) when user clicks [Edit] on existing rule or [+ Add Rule to {ModType}]
+**Gotchas:** `RollbackDeployAsync` expects `IProgress<DeploymentProgress>` — use
+`new Progress<DeploymentProgress>(_ => { })` like `ModManagerPage.RunRollbackAsync`
+does, or wire the page's own progress UI if added.
 
----
+### ~~S2 — UnifiedShellWindow language dropdown: show display names, not codes~~ ✅ DONE (2026-05-27)
 
-### 2.2 — Custom Game Setup Wizard (`Views/CustomGameSetupWizard.xaml`) [HAIKU THEN SONNET]
+**File:** [Views/UnifiedShellWindow.xaml.cs:54-56](Views/UnifiedShellWindow.xaml.cs#L54) +
+[`CmbLanguage_SelectionChanged`](Views/UnifiedShellWindow.xaml.cs#L150)
 
-**Vision:** Multi-step wizard with clean, modern UI inspired by Lizard's Autodesigner. Each step is focused, visually distinct, and progressively builds the game profile.
+**Current:** Sets `cmbLanguage.ItemsSource = languages` (raw `List<string>` of codes)
+and reads `cmbLanguage.SelectedItem is string`.
 
-**Main Window:** `Views/CustomGameSetupWizard.xaml` + `CustomGameSetupWizard.xaml.cs`
+**Reference impl:** [Views/InitialSetupWindow.xaml.cs:25-39](Views/InitialSetupWindow.xaml.cs#L25)
+builds `ComboBoxItem { Content = svc.GetDisplayName(code), Tag = code }` and reads
+`cmbLanguage.SelectedItem is ComboBoxItem item && item.Tag is string code`. Port
+that pattern.
 
-**Features:**
-- Progress bar showing current step (e.g., "Step 2 of 4: Mod Types [━━━━●────────────] 50%")
-- Back/Next navigation
-- Dynamic content area that swaps between step pages
-- Validation: disable Next until current step is valid
-- Summary screen before final save
+### ~~S3 — Steam Controls (future): per-game launcher in Settings~~ ❌ SCRAPPED (2026-05-27)
 
-**Step Pages (each a UserControl):**
+Triviali's reasoning: a Steam-side "verify files" would silently overwrite mod-modified game files, breaking TMM's first-touch baseline and per-deploy manifests. Decided the convenience isn't worth the data-corruption risk. Original brief preserved below for reference but will not be implemented.
 
-#### Step 1: Game Details (`Views/Steps/Step1_GameDetailsPage.xaml`)
-- **Inputs:**
-  - Game name (required, text input)
-  - Install directory (required, path picker with validation)
-  - Executable path (optional, file picker)
-  - Steam App ID (optional, numeric input)
-- **Behavior:**
-  - Path auto-detection on load (Steam registry scan)
-  - Validate path exists before allowing Next
-  - Show status: ✓ Valid / ✗ Invalid
 
-#### Step 2: Mod Types (`Views/Steps/Step2_ModTypesPage.xaml`)
-- **Display:**
-  - List of created mod types as clean cards
-  - Each card shows: name, file extensions, rule count
-  - [+ New Mod Type] button to add new
-- **Inline Editing:**
-  - Click card to edit inline (expand/collapse)
-  - Name field, extension list (add/remove), [Delete] button
-  - Validation: require at least 1 extension
-- **Default types** (optional, suggested):
-  - ASI Plugin (.asi, .dll)
-  - CLEO Script (.cs)
-  - DLL Plugin (.dll)
-- **Behavior:**
-  - Allow Next even with no custom types (use defaults)
-  - Warn if no types selected: "Add at least 1 mod type"
 
-#### Step 3: Routing Rules (`Views/Steps/Step3_RoutingRulesPage.xaml`)
-- **Display:**
-  - Rules grouped by mod type (collapsible sections)
-  - Each rule shows: name, priority, conditions summary, load bias
-  - [Edit] button opens `RuleEditorWindow` modal
-  - [Delete] button with confirmation
-- **Add Rules:**
-  - [+ Add Rule to {ModType}] button per type
-  - Opens `RuleEditorWindow` to create new rule
-- **Conflict Detection:**
-  - Scan for overlapping rules (same files, equal priority)
-  - Show warning chips: "⚠ Rule 1 & Rule 3 overlap (allow conflict: yes/no toggle)"
-  - Allow conflicts only if both rules have `AllowConflict=true`
-- **Default Rules** (optional, suggested):
-  - "ASI to scripts (no companions)"
-  - "ASI with companions to root"
-  - "CLEO scripts to modloader/cleo/{scriptname}/"
+**Note:** The previous Settings → Steam Controls section was removed in this session
+because it hardcoded GTA III/VC/SA/IV. If you want it back, build it generically:
 
-#### Step 4: Review & Save (`Views/Steps/Step4_ReviewPage.xaml`)
-- **Summary:**
-  - Game name, path, exe, Steam ID
-  - Separator line
-  - Mod types list (name, extensions, rule count)
-  - Separator line
-  - Robustness level selector: [Experimental] [Stable] [Mature]
-  - Custom tag input (optional, e.g., "+gta3-optimized")
-  - Native toggle (for testing): [☐ Mark as Native]
-  - Version display (auto-calculated, read-only)
-- **Actions:**
-  - [Test Archive] — Show file browser, test routing rules on sample mod
-  - [← Back] — Go back to edit
-  - [Save Profile] — Create .tmmgame file, show success + location
-  - [Cancel] — Discard and close
+- Build dropdown from `GameProfile.All.Concat(GameRegistry.Instance.GetCustomGames().Select(c => c.profile))`
+  filtered to entries with non-empty `SteamAppId`.
+- Three buttons: `validate`, `install`, `uninstall` calling
+  `SteamLauncher.Invoke(action, profile.SteamAppId, _core.Log)`.
+- Add a settings-section heading + new locale keys.
 
----
+**Decision pending:** confirm with Triviali whether this is worth re-adding before
+implementing. Library cards already launch games; Steam-side admin is rarely needed
+for direct-deploy modding.
 
-### 2.2.1 — Mod Type Inline Editor (Step 2)
+### ~~S4 — PathsPage: honest read-only copy~~ ✅ DONE (2026-05-27)
 
-**Within Step2_ModTypesPage:**
-- Click card → expands inline
-- Shows inputs: name, file extension list with [+ Add Extension] / [×] remove
-- [Delete Type] button
-- [Done] / [Cancel] buttons to collapse
+**Files:** [Views/Subpages/PathsPage.xaml.cs:21-26](Views/Subpages/PathsPage.xaml.cs#L21) +
+[Assets/Localization/en-US.json `Paths_Subtitle`](Assets/Localization/en-US.json) and es-MX.
 
-**No separate modal needed** — keep Step 2 self-contained.
+**Decision (from Triviali, this session):** make read-only honest, don't wire Browse.
 
----
+**Changes:**
+1. Delete the `SetPath` parameter from `PathRowDef` record (currently dead).
+2. Drop the `null = read-only` comment.
+3. Rewrite `Paths_Subtitle` in both locale files to:
+   - en: `"TMM data file locations."`
+   - es: `"Ubicaciones de archivos de datos de TMM."`
 
-### 2.3 — Deploy Preview Dialog (`Views/DeployPreviewWindow.xaml`) [SONNET]
+### ~~S5 — `LibraryViewMode` doc-comment lie~~ ✅ DONE (2026-05-27)
 
-**File:** `Views/DeployPreviewWindow.xaml` + `DeployPreviewWindow.xaml.cs`
+**File:** [Models/AppSettings.cs:42-45](Models/AppSettings.cs#L42)
 
-**Shows:**
-- Detected mod type
-- Matched rules
-- File deployment mapping (file → destination)
-- Load order preference
-- [Override] buttons per file
-- [Create custom rule] shortcut
-- [Deploy] or [Cancel]
+Comment claims `"grid" | "large" | "list" | "showcase"`. Only `grid`/`list`/`showcase`
+are implemented (see `UnifiedShellWindow.BtnViewMode_Click`). Drop `large` from the
+comment.
+
+### ~~S6 — Sidebar "find mods" links are generic homepages~~ ✅ DONE (2026-05-27)
+
+**File:** [Views/Subpages/ModManagerPage.xaml:284-295](Views/Subpages/ModManagerPage.xaml#L284)
+
+NexusMods/ModDB/GitHub buttons currently link to homepages. Two options, pick one:
+
+**Option A (low effort):** Replace with a single "Find Mods" text box → DuckDuckGo
+query like `{currentGame.DisplayName} mods`.
+
+**Option B (more value):** Add a `NexusSlug` field to `CustomGameProfile` + the
+built-in `GameProfile` records, and rewrite the Nexus button to
+`https://www.nexusmods.com/games/{slug}`. Hide buttons for games with no slug. ModDB
+has no clean per-game slug, so drop that button.
+
+### S7 — First-launch flow consolidation (cosmetic; low priority)
+
+Currently: `App.OnStartup` → `UnifiedShellWindow` → `InitialSetupWindow` (modal) →
+`FirstGamePickerWindow` → `SelectBuiltinGameWindow` *or* `CustomGameSetupWizard`.
+Four dialogs deep for one decision. Merge `InitialSetupWindow` + `FirstGamePickerWindow`
+into one screen (language at top, two big cards below). Defer unless a user complains.
 
 ---
 
-## Phase 3: Backend Logic & Conflict Resolution
+## Opus follow-ups — needs design judgment, save for next big session
 
-### 3.1 — Rule Matching Engine (`Services/RuleEngine.cs`) [SONNET]
+### ~~O1 — Custom-game integrity verification~~ ✅ DONE (2026-05-27)
 
-**File:** `Services/RuleEngine.cs` (new)
+Shipped as a generic per-game feature replacing the deleted GTA-MD5 logic.
 
-```csharp
-public class RuleEngine
-{
-    // Given a file path, return all matching rules (may be multiple)
-    public List<RoutingRule> FindMatchingRules(
-        string filePath, 
-        CustomGameProfile gameProfile) 
-        => /* iterate rules, test conditions */;
-    
-    // Resolve priority conflicts
-    public RoutingRule ResolveConflict(List<RoutingRule> candidates)
-        => candidates.OrderByDescending(r => r.Priority).First();
-    
-    // Test if a condition matches a file
-    private bool EvaluateCondition(Condition cond, string filePath, string modFolderPath)
-        => /* extension check, folder presence, regex, etc. */;
-    
-    // Recursively evaluate AND/OR chains
-    private bool EvaluateConditionChain(List<Condition> conditions, string filePath)
-        => /* handle Logic.AND vs OR */;
-}
-```
+**Schema (`Models/CustomGameProfile.cs`):**
+- `long? ExpectedExeBytes` — optional fast size check.
+- `List<string> AcceptedExeMd5s` — optional hash list (supports downgrader variants).
 
----
+**Service (`Services/IntegrityChecker.cs`):**
+- `IntegrityState` enum: `NotConfigured | Ok | SizeMismatch | Md5Mismatch | FileMissing`.
+- `IntegrityChecker.CheckAsync(exePath, profile)` — size first (cheap), then MD5 only if size passes.
+- `IntegrityChecker.ComputeMd5Async(filePath)` — public helper.
 
-### 3.2 — File Deployment Calculator (`Services/DeploymentPlanner.cs`) [SONNET]
+**UI surfaces:**
+- **Step 1 wizard:** collapsible Expander below Steam App ID with size field, hash chip list,
+  and "Auto-detect from current exe" button (hashes + measures current binary in one click).
+  Validation: MD5 must be 32 hex chars (strips whitespace/dashes automatically).
+- **Step 4 review:** one-line summary ("X bytes + N MD5 hashes" / "(not configured)").
+- **ModManagerPage sidebar:** colored status row shown only when integrity is configured —
+  green ✓ for OK, amber ⚠ for Size/MD5 mismatch, red for file missing.
 
-**File:** `Services/DeploymentPlanner.cs` (new)
+**Policy:** warn-only. Deploy is never blocked — users may intentionally run modded exes.
 
-```csharp
-public class DeploymentPlanner
-{
-    // Given a mod, return list of (file, destinationPath) tuples + warnings
-    public async Task<DeploymentPlan> PlanDeploymentAsync(
-        ModItem mod,
-        CustomGameProfile gameProfile)
-    {
-        var plan = new DeploymentPlan
-        {
-            ModName = mod.Name,
-            Files = new List<FileDeploymentEntry>(),
-            Warnings = new List<DeploymentWarning>(),
-        };
-        
-        foreach (var file in Directory.EnumerateFiles(mod.FolderPath, "*", SearchOption.AllDirectories))
-        {
-            var matches = ruleEngine.FindMatchingRules(file, gameProfile);
-            
-            if (matches.Count > 1 && !AllowConflict(matches))
-            {
-                plan.Warnings.Add(new DeploymentWarning { /* ... */ });
-                continue;  // Don't deploy, ask user
-            }
-            
-            var rule = matches.FirstOrDefault() ?? gameProfile.DefaultRule;
-            plan.Files.Add(new FileDeploymentEntry
-            {
-                SourcePath = file,
-                DestinationPath = ResolveTargetPath(rule.TargetPath, file),
-            });
-        }
-        
-        return plan;
-    }
-}
+**Built-in games:** the `.tmmgame` profiles in `Assets/GameProfiles/` are deserialized as
+`CustomGameProfile`, so the new fields are automatically available — just unpopulated until
+someone fills them in. To re-establish the old GTA III/VC/SA downgrader checks, edit those
+files and add `expectedExeBytes` + `acceptedExeMd5s` (the old hashes are in git history at
+`Models/GameProfile.cs` before the 2026-05-27 cleanup commit if you want them back).
 
-public class DeploymentPlan
-{
-    public string ModName { get; set; }
-    public List<FileDeploymentEntry> Files { get; set; }
-    public List<DeploymentWarning> Warnings { get; set; }  // Conflicts, unsupported files, etc.
-}
+### O2 — Strip more hardcoded GTA-specific paths from `BackendCore.QuickScan`
 
-public class FileDeploymentEntry
-{
-    public string SourcePath { get; set; }
-    public string DestinationPath { get; set; }
-    public bool Skip { get; set; }  // User can mark to skip
-}
-```
+[Services/BackendCore.cs:210+](Services/BackendCore.cs#L210) — `QuickScan` hardcodes
+`Grand Theft Auto IV\GTAIV`, `SteamLibrary\steamapps\common`, `Rockstar Games\`, etc.
+The IV-family auto-derivation (TLaD/TBoGT inside IV folder) is legitimate game-layout
+convenience, but the path roots are GTA-specific.
+
+**Design question:** how does QuickScan work for arbitrary custom games? Maybe
+custom games declare a `SearchHints: string[]` array in their `.tmmgame` profile,
+and `QuickScan` iterates `GameProfile.All` + custom profiles, using each profile's
+own hints? Sonnet can't decide this without architectural input.
 
 ---
 
-### 3.3 — Load Order Resolution (`Services/LoadOrderResolver.cs`) [SONNET]
+## Stale docs — ✅ cleaned up (2026-05-27)
 
-**File:** `Services/LoadOrderResolver.cs` (new)
-
-```csharp
-public class LoadOrderResolver
-{
-    // Given a list of mods + their preferences, calculate final 0–255 order
-    public void ResolveFinalLoadOrders(List<ModItem> mods, CustomGameProfile gameProfile)
-    {
-        // 1. Sort by explicit LoadAfter/LoadBefore relationships
-        // 2. Within unspecified mods, sort by LoadOrderBias (Lower first, Higher last)
-        // 3. Assign 0–255 positions
-        
-        var ordered = TopologicalSort(mods);  // Respects LoadAfter/LoadBefore
-        
-        int position = 0;
-        int step = 255 / mods.Count;
-        
-        foreach (var mod in ordered)
-        {
-            if (mod.LoadOrderBias == LoadOrderBias.Lower)
-                mod.FinalLoadOrder = position;
-            else if (mod.LoadOrderBias == LoadOrderBias.Higher)
-                mod.FinalLoadOrder = 255 - position;
-            else
-                mod.FinalLoadOrder = position;
-            
-            position += step;
-        }
-    }
-}
-```
+`TASK_BREAKDOWN.md`, `tool_usage_guide.md`, `TEST_FLOW.md` deleted.
+`CLAUDE.md` CODEBASE_GUIDE.md references removed.
+[SANITYCHECK.md](SANITYCHECK.md) and [CHANGELOG.md](CHANGELOG.md) kept.
 
 ---
 
-## Phase 4: Integration with BackendCore
+## Done (archived)
 
-### 4.1 — Updated Deploy Flow [SONNET]
-
-**File:** `Services/BackendCore.cs` (update `DeployModsAsync`)
-
-**New flow:**
-1. Show `DeployPreviewWindow` with deployment plan
-2. User reviews and confirms (or overrides per-file)
-3. If conflicts: ask user which rule to apply
-4. Resolve load orders
-5. Copy files to game directory
-6. Create backup manifest
-7. Show success notification
-
----
-
-## Phase 5: Built-in Game Re-implementation
-
-> **Note:** Each game is a standalone `.tmmgame` profile. No special series handling. All 6 games use identical system.
-
-### 5.1 — Re-implement GTA III `.tmmgame` Profile [USER + HAIKU]
-
-**File:** `Resources/Profiles/gta3.tmmgame` (new)
-
-**Process:**
-1. Open Custom Game Maker GUI
-2. Configure:
-   - Name: "Grand Theft Auto III"
-   - Install Dir: Auto-detect from Steam registry
-   - Exe: gta-iii.exe
-   - Steam App ID: 12310
-3. Create mod types:
-   - "ASI Plugin" (.asi)
-   - "CLEO Script" (.cs)
-   - "DLL Plugin" (.dll)
-4. Create routing rules (via sentence builder):
-   - ASI (no companions): extension is .asi AND folder count = 0 → scripts/
-   - ASI (with companions): extension is .asi AND folder count > 0 → {gameRoot}/
-   - CLEO Scripts: extension is .cs → modloader/cleo/{scriptname}/
-   - DLLs: extension is .dll → {gameRoot}/
-   - Modloader: folder named "modloader" exists in root → copy entire modloader/ to {gameRoot}/
-5. Set robustness: Mature, custom tag: (none)
-6. Save with Native flag: ✓
-7. Test with real GTA III mods
-
-### 5.2 — Re-implement GTA VC `.tmmgame` Profile [USER + HAIKU]
-
-**File:** `Resources/Profiles/gtavc.tmmgame` (new)
-
-**Same structure as GTA III**
-- Name: "Grand Theft Auto: Vice City"
-- Steam App ID: 12311
-- Same mod types + routing rules (identical logic)
-- Save with Native flag
-
-### 5.3 — Re-implement GTA SA `.tmmgame` Profile [USER + HAIKU]
-
-**File:** `Resources/Profiles/gtasa.tmmgame` (new)
-
-**Same structure as GTA III**
-- Name: "Grand Theft Auto: San Andreas"
-- Steam App ID: 12312
-- Same mod types + routing rules
-- Save with Native flag
-
-### 5.4 — Re-implement GTA IV `.tmmgame` Profile [USER + HAIKU]
-
-**File:** `Resources/Profiles/gtaiv.tmmgame` (new)
-
-**Same structure, potentially episode-agnostic**
-- Name: "Grand Theft Auto IV"
-- Steam App ID: 12313
-- Same mod types + routing rules (shared logic, no per-episode rules for now)
-- Save with Native flag
-
-### 5.5 — Re-implement GTA: Chinatown Wars `.tmmgame` Profile [USER + HAIKU]
-
-**File:** `Resources/Profiles/gtatcw.tmmgame` (new)
-
-**Same structure**
-- Name: "Grand Theft Auto: Chinatown Wars"
-- Steam App ID: 269170
-- Same mod types + routing rules
-- Save with Native flag
-
-### 5.6 — Re-implement GTA: The Ballad of Gay Tony `.tmmgame` Profile [USER + HAIKU]
-
-**File:** `Resources/Profiles/gtatbogt.tmmgame` (new)
-
-**Same structure**
-- Name: "Grand Theft Auto: The Ballad of Gay Tony"
-- Steam App ID: 12314
-- Same mod types + routing rules
-- Save with Native flag
-
----
-
-## Phase 6: Testing & Deployment
-
-### 6.1 — Integration Tests [SONNET]
-
-- Rule matching for each GTA game type
-- Conflict detection
-- Load order resolution
-- File deployment (real I/O)
-
-### 6.2 — Manual Testing (TEST_FLOW.md) [USER]
-
-- Deploy custom game configs
-- Test rule conflicts
-- Verify GTA III/IV re-implementation matches original behavior
-
----
-
-## Dependency Order
-
-1. **Phase 1** (all 1.1–1.5 in parallel): Data models
-2. **Phase 2** (all 2.1–2.3 in parallel, after Phase 1): GUI
-3. **Phase 3** (3.1–3.3 in parallel, after Phase 2): Backend logic
-4. **Phase 4** (4.1–4.2 sequentially, after Phase 3): BackendCore integration
-5. **Phase 5** (5.1–5.6 in parallel, after Phase 4): Re-implement all 6 built-in games (ultimate test)
-6. **Phase 6** (6.1–6.2 after Phase 5): Integration tests & verify
-
----
-
-## Open Questions
-
-- [ ] Load order: 0–255 or MO2 convention?
-- [ ] Rule priority: numeric (0–100) or named tiers?
-- [ ] Version auto-increment: based on robustness level?
-- [ ] `.tmmgame` storage: Resources/ folder or %APPDATA%/TMM/Profiles/?
-- [ ] Regex support in conditions: yes or too complex?
-- [ ] Rule templates: pre-made rules users can use as starting point?
-
----
-
-## Success Criteria
-
-✓ User can create custom game config through GUI  
-✓ Routing rules work for GTA III/IV mod scenarios  
-✓ Conflict detection prevents silent failures  
-✓ Deploy preview lets user intervene before deployment  
-✓ GTA III/IV re-implementation via GUI produces identical behavior to original hardcoded logic  
-✓ Any user can add new game support without touching code  
+- **Phase 3:** RuleEngine, DeploymentPlanner, LoadOrderResolver — built and shipped.
+- **Phase 5:** 6 GTA `.tmmgame` profiles created in `Assets/GameProfiles/`,
+  `GameRegistry` wired to use `gameKey` for deduplication.
+- **Phase 6:** IIISeries/IVSeries DashModes removed; all games use one unified panel
+  + DeploymentPlanner.
+- **This session (2026-05-27):** UI audit + cheap fixes + GTA-deprecated cleanup
+  (see status snapshot above).
+- **O1 (2026-05-27):** Generic exe integrity verification — `ExpectedExeBytes` +
+  `AcceptedExeMd5s` on `CustomGameProfile`, `IntegrityChecker` service, wizard Step 1
+  Expander with auto-detect, Step 4 review summary, ModManagerPage sidebar status row.

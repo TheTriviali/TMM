@@ -4,6 +4,26 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [v0.1-alpha-7] — 2026-05-27 *(UI Audit, GTA Deprecated Cleanup & BackupsPage)*
+
+### Added
+- **BackupsPage:** Fully implemented — game selector ComboBox, per-game backup list with timestamps and mod summaries, restore button with confirmation dialog and progress overlay. Previously showed only an empty-state placeholder.
+- **Integrity verification:** Generic per-game exe integrity checking (`IntegrityChecker` service, `ExpectedExeBytes`/`AcceptedExeMd5s` on `CustomGameProfile`, wizard Step 1 Expander with auto-detect, Step 4 review summary, ModManagerPage sidebar status row).
+
+### Removed
+- **GTA-specific deprecated logic:** MD5/vanilla detection fields (`GameProfile.Vanilla10Md5`, `AdditionalValidMd5s`, `HasExeCheck`, etc.), `ExeStatus` enum, `BackendCore` methods (`VerifyGameStatusAsync`, `GetEffectiveMd5Async`, `GetMd5DiagnosticsAsync`, `HasExeModOverride`, `ToggleDeployOverride`, `FindExeInMod`, `GetFileMD5Async`), `AppSettings.DeployOverrides`, Steam Controls + MD5 panels in SettingsPage.
+- **ArchiveExtractionWindow:** Deleted unreachable `Views/ArchiveExtractionWindow.xaml(.cs)`.
+- **Stale docs:** Deleted `TASK_BREAKDOWN.md`, `tool_usage_guide.md`, `TEST_FLOW.md` (all described removed or obsolete functionality).
+
+### Fixed
+- **Language dropdown:** UnifiedShellWindow now shows display names (e.g. "English", "Español") instead of raw locale codes in the language ComboBox.
+- **PathsPage:** Removed dead `SetPath` parameter from `PathRowDef` record; updated subtitle to accurately describe the page as read-only.
+- **LibraryViewMode doc-comment:** Removed non-existent `"large"` from the list of valid values.
+- **CLAUDE.md:** Removed broken references to `CODEBASE_GUIDE.md` (file never existed).
+- **Various UI:** Fixed empty Segoe glyphs in DownloadsPage, dead AboutWindow handlers, no-op `if (_isEdit)` branch in wizard, dead `LastSelectedGameKey`, hidden no-op Edit buttons on GameCard, hardcoded foreground on SelectBuiltinGameWindow, dead locale keys, hardcoded version strings.
+
+---
+
 ## [v0.1-alpha-6] — 2026-05-25 *(UI Refinements & Backend Stability)*
 
 ### Removed

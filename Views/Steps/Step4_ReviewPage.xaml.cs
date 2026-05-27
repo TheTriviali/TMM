@@ -22,6 +22,9 @@ namespace TMM
             lblExe.Text   = string.IsNullOrEmpty(profile.ExePath) ? "(not set)" : profile.ExePath;
             lblSteam.Text = string.IsNullOrEmpty(profile.SteamAppId) ? "(not set)" : profile.SteamAppId;
 
+            lblIntegrity.Text  = DescribeIntegrity(profile);
+            lblNexusSlug.Text  = string.IsNullOrEmpty(profile.NexusSlug) ? "(not set)" : profile.NexusSlug;
+
             var modTypeSummaries = profile.ModTypes
                 .Select(mt =>
                 {
@@ -60,6 +63,18 @@ namespace TMM
             profile.CustomTag  = string.IsNullOrEmpty(tag) ? null : tag;
             profile.IsNative   = chkNative.IsChecked == true;
             profile.ReleaseTag = ReleaseTag.Release;
+        }
+
+        private static string DescribeIntegrity(CustomGameProfile profile)
+        {
+            bool hasSize = profile.ExpectedExeBytes.HasValue;
+            int hashCount = profile.AcceptedExeMd5s.Count;
+            if (!hasSize && hashCount == 0) return "(not configured)";
+
+            var parts = new System.Collections.Generic.List<string>(2);
+            if (hasSize) parts.Add($"{profile.ExpectedExeBytes:N0} bytes");
+            if (hashCount > 0) parts.Add($"{hashCount} MD5 hash{(hashCount == 1 ? "" : "es")}");
+            return string.Join(" + ", parts);
         }
     }
 }

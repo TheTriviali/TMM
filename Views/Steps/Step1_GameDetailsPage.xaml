@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:TMM"
+             xmlns:helpers="clr-namespace:TMM.Helpers"
              Background="{DynamicResource BgBrush}">
 
     <UserControl.Resources>
@@ -45,19 +46,18 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,24,28,24" MaxWidth="620">
 
-            <TextBlock Text="Let's start with the basics." FontSize="13"
+            <TextBlock Text="{helpers:Localization Step1_Intro}" FontSize="13"
                        Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,24"/>
 
             <!-- Game Name -->
-            <TextBlock Text="Game Name *" Style="{StaticResource FieldLabel}"/>
+            <TextBlock Text="{helpers:Localization Step1_GameName_Label}" Style="{StaticResource FieldLabel}"/>
             <TextBox x:Name="txtGameName" Style="{StaticResource FieldBox}"
                      Margin="0,0,0,16"
-
                      TextChanged="ValidateInputs"/>
 
             <!-- Install Directory -->
-            <TextBlock Text="Install Directory *" Style="{StaticResource FieldLabel}"/>
-            <TextBlock Text="The folder where the game is installed (contains the game executable)."
+            <TextBlock Text="{helpers:Localization Step1_InstallDir_Label}" Style="{StaticResource FieldLabel}"/>
+            <TextBlock Text="{helpers:Localization Step1_InstallDir_Hint}"
                        Style="{StaticResource FieldHint}"/>
             <Grid Margin="0,0,0,6">
                 <Grid.ColumnDefinitions>
@@ -67,9 +67,8 @@
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="txtInstallDir" Style="{StaticResource FieldBox}"
                          Margin="0"
-
                          TextChanged="ValidateInputs"/>
-                <Button Grid.Column="2" Content="Browse…" Style="{StaticResource BrowseBtn}"
+                <Button Grid.Column="2" Content="{helpers:Localization Button_BrowseDir}" Style="{StaticResource BrowseBtn}"
                         Click="BtnBrowseDir_Click"/>
             </Grid>
 
@@ -79,8 +78,8 @@
             </StackPanel>
 
             <!-- Executable Path -->
-            <TextBlock Text="Executable Path" Style="{StaticResource FieldLabel}"/>
-            <TextBlock Text="Optional. Used for the launch button. Can be relative to the install directory."
+            <TextBlock Text="{helpers:Localization Step1_ExePath_Label}" Style="{StaticResource FieldLabel}"/>
+            <TextBlock Text="{helpers:Localization Step1_ExePath_Hint}"
                        Style="{StaticResource FieldHint}"/>
             <Grid Margin="0,0,0,20">
                 <Grid.ColumnDefinitions>
@@ -89,23 +88,94 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="txtExePath" Style="{StaticResource FieldBox}"
-                         Margin="0"
-/>
-                <Button Grid.Column="2" Content="Browse…" Style="{StaticResource BrowseBtn}"
+                         Margin="0"/>
+                <Button Grid.Column="2" Content="{helpers:Localization Button_BrowseDir}" Style="{StaticResource BrowseBtn}"
                         Click="BtnBrowseExe_Click"/>
             </Grid>
 
             <!-- Steam App ID -->
-            <TextBlock Text="Steam App ID" Style="{StaticResource FieldLabel}"/>
-            <TextBlock Text="Optional. Enables Steam launch integration. Find it in the store URL."
+            <TextBlock Text="{helpers:Localization Step1_SteamAppId_Label}" Style="{StaticResource FieldLabel}"/>
+            <TextBlock Text="{helpers:Localization Step1_SteamAppId_Hint}"
                        Style="{StaticResource FieldHint}"/>
             <TextBox x:Name="txtSteamAppId" Style="{StaticResource FieldBox}"
                      Margin="0,0,0,0" Width="160" HorizontalAlignment="Left"
-
                      TextChanged="ValidateInputs"/>
-            <TextBlock x:Name="txtSteamIdError" Text="Must be a positive number."
+            <TextBlock x:Name="txtSteamIdError" Text="{helpers:Localization Step1_SteamAppId_Error}"
                        FontSize="10" Foreground="#E07070" Margin="0,4,0,0"
                        Visibility="Collapsed"/>
+
+            <!-- NexusMods Slug -->
+            <TextBlock Text="{helpers:Localization Step1_NexusSlug_Label}" Style="{StaticResource FieldLabel}"
+                       Margin="0,20,0,4"/>
+            <TextBlock Text="{helpers:Localization Step1_NexusSlug_Hint}" Style="{StaticResource FieldHint}"/>
+            <TextBox x:Name="txtNexusSlug" Style="{StaticResource FieldBox}"
+                     Margin="0,0,0,0" Width="260" HorizontalAlignment="Left"/>
+
+            <!-- Integrity Verification (optional, advanced) -->
+            <Expander Header="{helpers:Localization Step1_Integrity_Header}"
+                      Margin="0,24,0,0" Foreground="{DynamicResource TextBrush}"
+                      FontSize="12">
+                <StackPanel Margin="0,12,0,0">
+                    <TextBlock Text="{helpers:Localization Step1_Integrity_Intro}"
+                               Style="{StaticResource FieldHint}" Margin="0,0,0,12"/>
+
+                    <!-- Auto-detect button -->
+                    <Button x:Name="btnAutoDetect" Content="{helpers:Localization Step1_Integrity_AutoDetect}"
+                            Click="BtnAutoDetect_Click" Style="{StaticResource BrowseBtn}"
+                            HorizontalAlignment="Left" Margin="0,0,0,16"/>
+
+                    <!-- Expected size -->
+                    <TextBlock Text="{helpers:Localization Step1_Integrity_SizeLabel}"
+                               Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Text="{helpers:Localization Step1_Integrity_SizeHint}"
+                               Style="{StaticResource FieldHint}"/>
+                    <TextBox x:Name="txtExpectedBytes" Style="{StaticResource FieldBox}"
+                             Margin="0,0,0,16" Width="200" HorizontalAlignment="Left"/>
+
+                    <!-- Accepted MD5 hashes -->
+                    <TextBlock Text="{helpers:Localization Step1_Integrity_HashesLabel}"
+                               Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Text="{helpers:Localization Step1_Integrity_HashesHint}"
+                               Style="{StaticResource FieldHint}"/>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="txtNewMd5" Style="{StaticResource FieldBox}"
+                                 KeyDown="TxtNewMd5_KeyDown"/>
+                        <Button Grid.Column="2" Content="{helpers:Localization Step2_Extension_Add}"
+                                Click="BtnAddMd5_Click" Style="{StaticResource BrowseBtn}"/>
+                    </Grid>
+
+                    <!-- Hash chip list -->
+                    <ItemsControl x:Name="icMd5List" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource ControlBgBrush}"
+                                        CornerRadius="4" Padding="8,4" Margin="0,0,0,4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding}" FontFamily="Consolas"
+                                                   FontSize="11" Foreground="{DynamicResource TextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                        <Button Grid.Column="1" Content="✕" Tag="{Binding}"
+                                                Click="BtnRemoveMd5_Click"
+                                                Width="20" Height="20" Padding="0"
+                                                Background="Transparent" BorderThickness="0"
+                                                Foreground="{DynamicResource SubTextBrush}"
+                                                FontSize="10" Cursor="Hand"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Expander>
 
         </StackPanel>
     </ScrollViewer>

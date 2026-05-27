@@ -3,9 +3,6 @@ using System.Linq;
 
 namespace TMM
 {
-    /// <summary>Detected state of a game executable.</summary>
-    public enum ExeStatus { Unknown, Vanilla, Downgraded }
-
     /// <summary>
     /// Single source of truth for per-game data.
     /// </summary>
@@ -15,8 +12,6 @@ namespace TMM
         string ShortName,
         string ExeName,
         string SteamAppId,
-        string Vanilla10Md5,
-        IReadOnlyList<string>? AdditionalValidMd5s = null,
         IReadOnlyList<ConditionalRoute>? ConditionalRoutes = null)
     {
         // ── Library display properties ─────────────────────────────────────────
@@ -34,8 +29,7 @@ namespace TMM
             DisplayName: "GTA III",
             ShortName: "III",
             ExeName: "gta3.exe",
-            SteamAppId: "12100",
-            Vanilla10Md5: "85414bf9eb414d00ad81062360f0db1f")
+            SteamAppId: "12100")
         {
             GradientStartHex = "#1B3A1B",
             GradientEndHex   = "#0C1E0C",
@@ -47,12 +41,7 @@ namespace TMM
             DisplayName: "GTA Vice City",
             ShortName: "VC",
             ExeName: "gta-vc.exe",
-            SteamAppId: "12110",
-            Vanilla10Md5: "8f3707edaa361957c70f8b13998816f1",
-            AdditionalValidMd5s: new[]
-            {
-                "167a5c8b31b3e0dbefa033ca24453d4e"   // ModDB v1.0 downgrader variant
-            })
+            SteamAppId: "12110")
         {
             GradientStartHex = "#1B3A1B",
             GradientEndHex   = "#0C1E0C",
@@ -64,8 +53,7 @@ namespace TMM
             DisplayName: "GTA San Andreas",
             ShortName: "SA",
             ExeName: "gta-sa.exe",
-            SteamAppId: "12120",
-            Vanilla10Md5: "00eb2056583dfa6a4ca79dedf70df5e9")
+            SteamAppId: "12120")
         {
             GradientStartHex = "#1B3A1B",
             GradientEndHex   = "#0C1E0C",
@@ -92,7 +80,6 @@ namespace TMM
             ShortName: "IV",
             ExeName: "GTAIV.exe",
             SteamAppId: "12210",
-            Vanilla10Md5: "",           // no downgrade check for IV
             ConditionalRoutes: IvAsiRoute)
         {
             GradientStartHex = "#0C1A2E",
@@ -106,7 +93,6 @@ namespace TMM
             ShortName: "TLaD",
             ExeName: "TLAD.exe",
             SteamAppId: "",             // part of IV Steam install; no separate AppId
-            Vanilla10Md5: "",
             ConditionalRoutes: IvAsiRoute)
         {
             GradientStartHex = "#0C1A2E",
@@ -120,7 +106,6 @@ namespace TMM
             ShortName: "TBoGT",
             ExeName: "EFLC.exe",
             SteamAppId: "",
-            Vanilla10Md5: "",
             ConditionalRoutes: IvAsiRoute)
         {
             GradientStartHex = "#0C1A2E",
@@ -133,7 +118,7 @@ namespace TMM
         public static readonly IReadOnlyList<GameProfile> All =
             new[] { III, VC, SA, IV, TLaD, TBoGT };
 
-        /// <summary>Keys that belong to the GTA IV episode family.</summary>
+        /// <summary>Keys that belong to the GTA IV episode family (used for path auto-derivation).</summary>
         public static readonly IReadOnlyCollection<string> IvFamilyKeys =
             new HashSet<string> { "IV", "TLaD", "TBoGT" };
 
@@ -141,27 +126,6 @@ namespace TMM
 
         public static GameProfile? ByKey(string? key) =>
             string.IsNullOrEmpty(key) ? null : All.FirstOrDefault(p => p.Key == key);
-
-        /// <summary>
-        /// True when this profile has a known vanilla MD5 to check against.
-        /// False for IV-family and custom games — no downgrade check is performed.
-        /// </summary>
-        public bool HasExeCheck => !string.IsNullOrEmpty(Vanilla10Md5);
-
-        /// <summary>Returns true for any known-good 1.0 MD5 for this game.</summary>
-        public bool IsValidMd5(string md5)
-        {
-            if (string.IsNullOrEmpty(md5) || string.IsNullOrEmpty(Vanilla10Md5)) return false;
-            string lower = md5.ToLowerInvariant();
-            if (lower == Vanilla10Md5) return true;
-            return AdditionalValidMd5s?.Any(h => h == lower) ?? false;
-        }
-
-        /// <summary>All accepted 1.0 hashes, for display in diagnostics.</summary>
-        public IEnumerable<string> AllValidMd5s =>
-            AdditionalValidMd5s == null
-                ? new[] { Vanilla10Md5 }
-                : new[] { Vanilla10Md5 }.Concat(AdditionalValidMd5s);
 
         public string RawFolderName => $"ModsRaw{Key}";
     }

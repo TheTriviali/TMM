@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "tmm-game/1.1",
   "gameName": "Red Dead Redemption 2",
   "gameDirectory": "",
@@ -19,5 +19,6 @@
   },
   "description": "Red Dead Redemption 2 mod support — Alpha placeholder",
   "author": "TMM",
-  "version": "0.1"
+  "version": "0.1",
+  "nexusSlug": "reddeadredemption2"
 }

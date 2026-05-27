@@ -91,7 +91,13 @@
       "Bash(git commit -m 'refactor: remove TGTAMM migration code \\(post-rebrand\\), optimize BackendCore constructor *)",
       "Bash(git commit -m 'refactor: optimize Services with LINQ, streamline collection operations *)",
       "Bash(Get-ChildItem -Recurse -Filter \"*.csproj\")",
-      "Bash(grep \"//\")"
+      "Bash(grep \"//\")",
+      "PowerShell(Get-ChildItem -Path \".\\\\.claude\\\\skills\" -ErrorAction SilentlyContinue | ForEach-Object { $_ })",
+      "PowerShell(dotnet build TMM.sln -c Release 2>&1)",
+      "PowerShell(Get-Process TMM -ErrorAction SilentlyContinue)",
+      "Bash(taskkill //F //IM TMM.exe)",
+      "Bash(grep -v \"obj\\\\\\\\\\\\\\\\\")",
+      "Bash(git commit -m 'Design finalization: Block B \\(sync/import\\) with locked architectural principles *)"
     ]
   }
 }

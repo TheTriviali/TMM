@@ -286,8 +286,7 @@ namespace TMM
                 DisplayName: custom.GameName,
                 ShortName: shortName,
                 ExeName: exeName,
-                SteamAppId: custom.SteamAppId ?? "",
-                Vanilla10Md5: "")
+                SteamAppId: custom.SteamAppId ?? "")
             {
                 GradientStartHex = custom.GradientStartHex ?? "#1A1A2E",
                 GradientEndHex   = custom.GradientEndHex   ?? "#0D0D1A",

@@ -225,12 +225,13 @@
                 </Border>
 
                 <!-- ══════════════════════════════════════════════ -->
-                <!-- RIGHT: TITLEBAR + CONTENT                     -->
+                <!-- RIGHT: TITLEBAR + CONTENT + STATUSBAR          -->
                 <!-- ══════════════════════════════════════════════ -->
                 <Grid Grid.Column="1">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="44"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="28"/>
                     </Grid.RowDefinitions>
 
                     <!-- Titlebar -->
@@ -349,7 +350,7 @@
                         <local:DownloadsPage x:Name="pageDownloads" Visibility="Collapsed"/>
 
                         <!-- ═══ BACKUPS PAGE ═══ -->
-                        <local:BackupsPage x:Name="pageBackups" Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageBackupsPlaceholder" Visibility="Collapsed"/>
 
                         <!-- Paths and Settings are added dynamically in code-behind
                              because their constructors require BackendCore -->
@@ -423,6 +424,24 @@
                         </Grid>
 
                     </Grid>
+
+                    <!-- Status Bar (Row 2) -->
+                    <Border Grid.Row="2" Background="{DynamicResource HeaderBrush}"
+                            BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                            Padding="12,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Language selector -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                                <TextBlock Text="🌐" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <ComboBox x:Name="cmbLanguage" Width="140" Height="22"
+                                          Background="{DynamicResource ControlBgBrush}"
+                                          Foreground="{DynamicResource TextBrush}"
+                                          BorderBrush="{DynamicResource SubTextBrush}"
+                                          BorderThickness="1" FontSize="11"
+                                          SelectionChanged="CmbLanguage_SelectionChanged"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </Grid>
 
             </Grid>

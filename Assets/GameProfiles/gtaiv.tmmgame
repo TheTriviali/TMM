@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "tmm-game/1.1",
   "gameKey": "IV",
   "gameName": "GTA IV",
@@ -46,5 +46,6 @@
   "libraryStatus": "Alpha",
   "description": "Grand Theft Auto IV — Liberty City, 2008. Routes ASI plugins to plugins/ (if the folder exists) or game root.",
   "author": "TMM",
-  "version": "1.0"
+  "version": "1.0",
+  "nexusSlug": "grandtheftauto4"
 }

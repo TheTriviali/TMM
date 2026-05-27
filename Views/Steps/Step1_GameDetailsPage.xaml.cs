@@ -1,9 +1,12 @@
 using Microsoft.Win32;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using TMM.Services;
 
 namespace TMM
 {
@@ -13,9 +16,12 @@ namespace TMM
 
         public bool IsValid { get; private set; }
 
+        private readonly ObservableCollection<string> _md5s = new();
+
         public Step1_GameDetailsPage()
         {
             InitializeComponent();
+            icMd5List.ItemsSource = _md5s;
         }
 
         public void LoadProfile(CustomGameProfile profile)
@@ -24,15 +30,28 @@ namespace TMM
             txtInstallDir.Text = profile.GameDirectory;
             txtExePath.Text    = profile.ExePath ?? "";
             txtSteamAppId.Text = profile.SteamAppId ?? "";
+            txtNexusSlug.Text  = profile.NexusSlug ?? "";
+
+            txtExpectedBytes.Text = profile.ExpectedExeBytes?.ToString() ?? "";
+            _md5s.Clear();
+            foreach (var h in profile.AcceptedExeMd5s) _md5s.Add(h);
+
             ValidateInputs(null, null);
         }
 
         public void SaveProfile(CustomGameProfile profile)
         {
-            profile.GameName     = txtGameName.Text.Trim();
+            profile.GameName      = txtGameName.Text.Trim();
             profile.GameDirectory = txtInstallDir.Text.Trim();
-            profile.ExePath      = NullIfBlank(txtExePath.Text);
-            profile.SteamAppId   = NullIfBlank(txtSteamAppId.Text);
+            profile.ExePath       = NullIfBlank(txtExePath.Text);
+            profile.SteamAppId    = NullIfBlank(txtSteamAppId.Text);
+            profile.NexusSlug     = NullIfBlank(txtNexusSlug.Text);
+
+            string sizeText = txtExpectedBytes.Text.Trim();
+            profile.ExpectedExeBytes = long.TryParse(sizeText, out long bytes) && bytes > 0
+                ? bytes : null;
+
+            profile.AcceptedExeMd5s = new System.Collections.Generic.List<string>(_md5s);
         }
 
         private void ValidateInputs(object? sender, TextChangedEventArgs? e)
@@ -115,5 +134,83 @@ namespace TMM
 
         private static string? NullIfBlank(string? s) =>
             string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+        // ── Integrity handlers ────────────────────────────────────────────────
+
+        private async void BtnAutoDetect_Click(object sender, RoutedEventArgs e)
+        {
+            string? resolved = ResolveExePath();
+            if (resolved is null || !File.Exists(resolved))
+            {
+                NotificationService.ShowWarning(
+                    "Set a valid install directory and executable path first.");
+                return;
+            }
+
+            btnAutoDetect.IsEnabled = false;
+            try
+            {
+                long size = new FileInfo(resolved).Length;
+                txtExpectedBytes.Text = size.ToString();
+
+                string md5 = await IntegrityChecker.ComputeMd5Async(resolved);
+                if (!_md5s.Contains(md5)) _md5s.Add(md5);
+
+                NotificationService.ShowSuccess($"Detected: {size:N0} bytes, MD5 {md5[..8]}…");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Could not read exe: {ex.Message}");
+            }
+            finally
+            {
+                btnAutoDetect.IsEnabled = true;
+            }
+        }
+
+        private void BtnAddMd5_Click(object sender, RoutedEventArgs e) => AddMd5FromInput();
+
+        private void TxtNewMd5_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter) AddMd5FromInput();
+        }
+
+        private void AddMd5FromInput()
+        {
+            string val = txtNewMd5.Text.Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(val)) return;
+            // Strip whitespace/dashes that some hash generators include
+            val = val.Replace(" ", "").Replace("-", "");
+            if (val.Length != 32 || !IsHex(val))
+            {
+                NotificationService.ShowWarning("MD5 must be 32 hex characters.");
+                return;
+            }
+            if (!_md5s.Contains(val)) _md5s.Add(val);
+            txtNewMd5.Clear();
+        }
+
+        private void BtnRemoveMd5_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button { Tag: string hash }) _md5s.Remove(hash);
+        }
+
+        private static bool IsHex(string s)
+        {
+            foreach (char c in s)
+                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) return false;
+            return true;
+        }
+
+        /// <summary>Resolves the absolute path to the exe from current form state.</summary>
+        private string? ResolveExePath()
+        {
+            string dir = txtInstallDir.Text.Trim();
+            string exe = txtExePath.Text.Trim();
+            if (string.IsNullOrEmpty(exe)) return null;
+            return Path.IsPathRooted(exe)
+                ? exe
+                : string.IsNullOrEmpty(dir) ? null : Path.Combine(dir, exe);
+        }
     }
 }

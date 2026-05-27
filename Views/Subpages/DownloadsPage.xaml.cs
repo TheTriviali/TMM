@@ -227,7 +227,7 @@ namespace TMM
             var iconTb = new TextBlock
             {
                 FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                FontSize = 14, Text = "",
+                FontSize = 14, Text = "", // ZipFolder
                 Foreground = (Brush)Application.Current.Resources["AccentBrush"],
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 8, 0)
@@ -249,9 +249,9 @@ namespace TMM
             Grid.SetColumn(namePanel, 1);
 
             var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            btnPanel.Children.Add(MakeIconButton("", "Open file location",
+            btnPanel.Children.Add(MakeIconButton("", "Open file location",
                 () => Process.Start("explorer.exe", $"/select,\"{filePath}\"")));
-            btnPanel.Children.Add(MakeIconButton("", "Delete archive", () =>
+            btnPanel.Children.Add(MakeIconButton("", "Delete archive", () =>
             {
                 try { File.Delete(filePath); RefreshArchiveList(); }
                 catch (Exception ex) { NotificationService.ShowWarning($"Could not delete: {ex.Message}"); }

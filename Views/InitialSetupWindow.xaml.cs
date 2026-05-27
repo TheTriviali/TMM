@@ -1,13 +1,16 @@
-using System.Linq;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Windows;
-using System.Windows.Input;
+using System.Windows.Controls;
+using System.Windows.Media;
+using TMM.Services;
 
 namespace TMM
 {
     public partial class InitialSetupWindow : TmmWindow
     {
         private readonly BackendCore _core;
+        private bool _suppressDropdownEvent;
 
         public InitialSetupWindow(BackendCore core)
         {
@@ -15,69 +18,103 @@ namespace TMM
             _core = core;
         }
 
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Bind GTA III series
-            rowIII.Bind(_core, GameProfile.III);
-            rowVC.Bind(_core, GameProfile.VC);
-            rowSA.Bind(_core, GameProfile.SA);
+            var ver = Assembly.GetExecutingAssembly().GetName().Version;
+            txtBrandVersion.Text = ver != null ? $"v{ver.Major}.{ver.Minor}.{ver.Build}" : "";
 
-            // Bind GTA IV family — browsing IV auto-derives TLaD/TBoGT paths.
-            rowIV.Bind(_core, GameProfile.IV);
-            rowTLaD.Bind(_core, GameProfile.TLaD);
-            rowTBoGT.Bind(_core, GameProfile.TBoGT);
+            var svc = LocalizationService.Instance;
+            var languages = svc.GetAvailableLanguages();
 
-            // When IV path changes and auto-derives siblings, refresh their rows.
-            rowIV.LinkedPathsChanged += async (_, _) =>
+            // Populate dropdown with display names
+            var items = new List<ComboBoxItem>();
+            foreach (var code in languages)
             {
-                await rowTLaD.RefreshAsync();
-                await rowTBoGT.RefreshAsync();
-            };
+                items.Add(new ComboBoxItem
+                {
+                    Content = svc.GetDisplayName(code),
+                    Tag = code
+                });
+            }
+            cmbLanguage.ItemsSource = items;
 
-            // Pre-populate via quick scan for any unmapped paths.
-            await Task.Run(() => _core.QuickScan());
-            await RefreshAllAsync();
+            // Select current language
+            ApplyLanguage(_core.Settings.CurrentLanguage, updateDropdown: true);
         }
 
-        private async Task RefreshAllAsync()
+        private void BtnQuickLang_Click(object sender, RoutedEventArgs e)
         {
-            await rowIII.RefreshAsync();
-            await rowVC.RefreshAsync();
-            await rowSA.RefreshAsync();
-            await rowIV.RefreshAsync();
-            await rowTLaD.RefreshAsync();
-            await rowTBoGT.RefreshAsync();
+            if (sender is Button btn && btn.Tag is string code)
+                ApplyLanguage(code, updateDropdown: true);
+        }
+
+        private void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_suppressDropdownEvent) return;
+            if (cmbLanguage.SelectedItem is ComboBoxItem item && item.Tag is string code)
+                ApplyLanguage(code, updateDropdown: false);
+        }
+
+        private void ApplyLanguage(string code, bool updateDropdown)
+        {
+            LocalizationService.Instance.SetLanguage(code);
+            _core.Settings.CurrentLanguage = code;
+            _core.SaveSettings();
+
+            // Highlight active quick-pick button
+            UpdateQuickPickState(code);
+
+            // Sync dropdown without re-firing the event
+            if (updateDropdown)
+            {
+                _suppressDropdownEvent = true;
+                foreach (ComboBoxItem item in cmbLanguage.Items)
+                {
+                    if (item.Tag as string == code)
+                    {
+                        cmbLanguage.SelectedItem = item;
+                        break;
+                    }
+                }
+                _suppressDropdownEvent = false;
+            }
+        }
+
+        private void UpdateQuickPickState(string activeCode)
+        {
+            HighlightQuickBtn(btnLangEn, activeCode == "en-US");
+            HighlightQuickBtn(btnLangEs, activeCode == "es-MX");
+        }
+
+        private static void HighlightQuickBtn(Button btn, bool active)
+        {
+            btn.ApplyTemplate();
+            if (btn.Template.FindName("bd", btn) is Border bd)
+            {
+                bd.BorderBrush = active
+                    ? (Brush)Application.Current.FindResource("AccentBrush")
+                    : (Brush)Application.Current.FindResource("SubTextBrush");
+                bd.Background = active
+                    ? (Brush)Application.Current.FindResource("AccentSoftBrush")
+                    : (Brush)Application.Current.FindResource("PanelBrush");
+            }
+        }
+
+        private void BtnSetupGame_Click(object sender, RoutedEventArgs e)
+        {
+            var picker = new FirstGamePickerWindow(_core) { Owner = this };
+            if (picker.ShowDialog() == true)
+            {
+                _core.Settings.FirstLaunch = false;
+                _core.SaveSettings();
+                DialogResult = true;
+                Close();
+            }
         }
 
         private new void BtnClose_Click(object sender, RoutedEventArgs e)
         {
-            bool anyReady = GameProfile.All.Any(_core.IsGameReady);
-            if (!anyReady)
-            {
-                var result = MessageBox.Show(
-                    "No games are mapped yet. TMM won't be able to manage mods until at least one game is located.\n\nClose anyway?",
-                    "No Games Mapped", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                if (result != MessageBoxResult.Yes) return;
-            }
             DialogResult = false;
-            Close();
-        }
-
-        private void BtnFinish_Click(object sender, RoutedEventArgs e)
-        {
-            bool anyReady = GameProfile.All.Any(_core.IsGameReady);
-            if (!anyReady)
-            {
-                MessageBox.Show(
-                    "You must locate at least one game before finishing setup. " +
-                    "TMM needs a path to know where to manage your mods.",
-                    "Setup Incomplete", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            _core.Settings.FirstLaunch = false;
-            _core.SaveSettings();
-            DialogResult = true;
             Close();
         }
     }

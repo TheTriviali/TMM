@@ -75,7 +75,7 @@ namespace TMM
 
             _customProfile = GameRegistry.Instance.GetGameProfile(_entry.Key)
                           ?? new GameProfile(_entry.Key, _entry.DisplayName, _entry.Key,
-                                             _entry.Key + ".exe", "", "");
+                                             _entry.Key + ".exe", "");
 
             _modsCustom = _core.Mods.TryGetValue(_entry.Key, out var existing)
                 ? existing
@@ -92,6 +92,7 @@ namespace TMM
             UpdateDeployButtonCustom();
             UpdateSidebarCustom();
             Cust_txtDiskSpace.Text = _core.GetDriveSpaceInfo();
+            await RefreshIntegrityAsync();
         }
 
         private void UpdateSidebarCustom()
@@ -100,6 +101,64 @@ namespace TMM
             Cust_txtSidebarDir.Text = string.IsNullOrEmpty(_customConfig.GameDirectory)
                 ? "Directory not set"
                 : _customConfig.GameDirectory;
+
+            if (!string.IsNullOrEmpty(_customConfig.NexusSlug))
+            {
+                Cust_btnNexus.Content = "NexusMods";
+                Cust_btnNexus.Tag    = $"https://www.nexusmods.com/{_customConfig.NexusSlug}/mods";
+            }
+            else
+            {
+                Cust_btnNexus.Content = "Find Mods";
+                Cust_btnNexus.Tag    = $"https://duckduckgo.com/?q={Uri.EscapeDataString(_customConfig.GameName + " mods")}";
+            }
+        }
+
+        private async Task RefreshIntegrityAsync()
+        {
+            bool configured = _customConfig.ExpectedExeBytes.HasValue
+                              || _customConfig.AcceptedExeMd5s.Count > 0;
+            if (!configured)
+            {
+                Cust_IntegrityBorder.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            string? exePath = ResolveExePath();
+            if (exePath is null)
+            {
+                Cust_IntegrityBorder.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            var result = await IntegrityChecker.CheckAsync(exePath, _customConfig);
+            Cust_IntegrityBorder.Visibility = Visibility.Visible;
+
+            (string label, Brush color) = result.State switch
+            {
+                IntegrityState.Ok            => ("✓ Integrity verified", Brushes.LightGreen),
+                IntegrityState.SizeMismatch  => ("⚠ Size mismatch",      new SolidColorBrush(Color.FromRgb(216, 163, 26))),
+                IntegrityState.Md5Mismatch   => ("⚠ MD5 mismatch",       new SolidColorBrush(Color.FromRgb(216, 163, 26))),
+                IntegrityState.FileMissing   => ("⚠ Exe missing",        new SolidColorBrush(Color.FromRgb(224, 112, 112))),
+                _                            => ("",                     Brushes.Gray),
+            };
+            Cust_txtIntegrityState.Text = label;
+            Cust_txtIntegrityState.Foreground = color;
+            Cust_txtIntegrityDetail.Text = result.Message;
+        }
+
+        private string? ResolveExePath()
+        {
+            string? exe = _customConfig.ExePath;
+            string dir = _customConfig.GameDirectory ?? "";
+            if (string.IsNullOrEmpty(exe))
+            {
+                // Fall back to GameProfile.ExeName (built-in games use just the dir + profile.ExeName)
+                if (string.IsNullOrEmpty(_customProfile.ExeName) || string.IsNullOrEmpty(dir))
+                    return null;
+                return Path.Combine(dir, _customProfile.ExeName);
+            }
+            return Path.IsPathRooted(exe) ? exe : Path.Combine(dir, exe);
         }
 
         private void UpdateDeployButtonCustom()
@@ -336,7 +395,7 @@ namespace TMM
                 "For help and documentation, visit the TMM GitHub repository.\n\nOpen in browser?",
                 "Help & Resources", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (r == MessageBoxResult.Yes)
-                ShellHelper.OpenUrl("https://github.com/noahd179/tgtamm");
+                ShellHelper.OpenUrl("https://github.com/TheTriviali/TMM");
         }
 
         private void BtnAbout_Click(object sender, RoutedEventArgs e)

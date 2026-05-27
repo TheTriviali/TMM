@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "tmm-game/1.1",
   "gameName": "Skyrim Anniversary Edition",
   "gameDirectory": "",
@@ -57,5 +57,6 @@
   },
   "description": "Built-in support for Skyrim Anniversary Edition (v1.6+). Routes ESP/ESM to Data\\, SKSE plugins to Data\\SKSE\\Plugins\\, and detects engine proxies (DXVK, ENB, ReShade) automatically.",
   "version": "1.1",
-  "libraryStatus": "PreAlpha"
+  "libraryStatus": "PreAlpha",
+  "nexusSlug": "skyrimspecialedition"
 }

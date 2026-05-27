@@ -1,6 +1,7 @@
 <UserControl x:Class="TMM.BackupsPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:helpers="clr-namespace:TMM.Helpers"
              Background="{DynamicResource BgBrush}">
     <Grid>
         <Grid.RowDefinitions>
@@ -8,20 +9,24 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Backups" FontSize="22" FontWeight="Bold"
-                   Foreground="{DynamicResource TextBrush}" Margin="28,24,28,16"/>
-
-        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
-                    Opacity="0.4">
-            <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="48"
-                       Foreground="{DynamicResource SubTextBrush}"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Text="No backups yet" FontSize="14"
-                       Foreground="{DynamicResource SubTextBrush}"
-                       HorizontalAlignment="Center" Margin="0,12,0,4"/>
-            <TextBlock Text="Backups are created automatically when you deploy mods" FontSize="11"
-                       Foreground="{DynamicResource SubTextBrush}"
-                       HorizontalAlignment="Center"/>
+        <!-- Title + game selector -->
+        <StackPanel Grid.Row="0" Margin="28,24,28,12">
+            <TextBlock Text="{helpers:Localization Backups_Title}" FontSize="22" FontWeight="Bold"
+                       Foreground="{DynamicResource TextBrush}" Margin="0,0,0,12"/>
+            <ComboBox x:Name="cmbGame" Width="260" HorizontalAlignment="Left" Height="30"
+                      SelectionChanged="CmbGame_SelectionChanged"/>
         </StackPanel>
+
+        <!-- Backup rows (or empty state) -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="backupRowsPanel" Margin="28,8,28,28"/>
+        </ScrollViewer>
+
+        <!-- Restore-in-progress overlay -->
+        <Grid x:Name="restoreOverlay" Grid.RowSpan="2" Visibility="Collapsed"
+              Background="#AA000000" Panel.ZIndex="10">
+            <TextBlock Text="Restoring…" Foreground="White" FontSize="16"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
     </Grid>
 </UserControl>

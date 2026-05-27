@@ -82,6 +82,19 @@ namespace TMM
         /// <summary>True if this is a built-in game profile shipped with TMM; false if user-created.</summary>
         public bool IsNative { get; set; } = false;
 
+        /// <summary>
+        /// Optional expected file size of the game executable, in bytes.
+        /// Null = no size check performed. Cheap to verify (no hashing).
+        /// </summary>
+        public long? ExpectedExeBytes { get; set; }
+
+        /// <summary>
+        /// Accepted MD5 hashes (lowercase hex) for the game executable.
+        /// Empty = no hash check. Multiple entries support downgrader variants
+        /// (a single profile can validate several known-good binaries).
+        /// </summary>
+        public List<string> AcceptedExeMd5s { get; set; } = new();
+
         /// <summary>Library card gradient start color, hex e.g. "#1B3A1B". Null = use theme default.</summary>
         public string? GradientStartHex { get; set; }
 
@@ -97,6 +110,13 @@ namespace TMM
         /// Null = use gradient banner.
         /// </summary>
         public string? CustomArtFileName { get; set; }
+
+        /// <summary>
+        /// NexusMods game slug (e.g. "grandtheftauto3").
+        /// When set, the Mod Manager sidebar links directly to https://www.nexusmods.com/{NexusSlug}/mods.
+        /// Null = sidebar falls back to a DuckDuckGo search for "{GameName} mods".
+        /// </summary>
+        public string? NexusSlug { get; set; }
 
         [JsonIgnore]
         public bool IsBuiltIn { get; set; }

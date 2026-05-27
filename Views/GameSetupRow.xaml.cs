@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using TMM.Services;
 
 namespace TMM
 {
@@ -66,46 +67,32 @@ namespace TMM
         public event EventHandler? LinkedPathsChanged;
 
         /// <summary>Refreshes the displayed path, status text, and status colour.</summary>
-        public async Task RefreshAsync()
+        public Task RefreshAsync()
         {
-            if (_core == null || _profile == null) return;
+            if (_core == null || _profile == null) return Task.CompletedTask;
 
             string path = _core.GetVanillaPath(_profile) ?? "";
             txtPath.Text = path;
 
+            var loc = LocalizationService.Instance;
+
             if (string.IsNullOrEmpty(path))
             {
-                lblStatus.Text = "Not Found / Not Installed";
+                lblStatus.Text = loc["GameSetupRow_NotFound"];
                 lblStatus.Foreground = Brushes.Gray;
-                return;
             }
-
-            if (!Directory.Exists(path) || Directory.GetFileSystemEntries(path).Length == 0)
+            else if (!Directory.Exists(path) || Directory.GetFileSystemEntries(path).Length == 0)
             {
-                lblStatus.Text = "Ghost Install: Folder is missing or empty!";
+                lblStatus.Text = loc["GameSetupRow_GhostInstall"];
                 lblStatus.Foreground = Brushes.Red;
-                return;
-            }
-
-            // IV-family games have no vanilla MD5 — skip the downgrade check entirely.
-            if (!_profile.HasExeCheck)
-            {
-                lblStatus.Text = "Ready for Modding";
-                lblStatus.Foreground = new SolidColorBrush(Color.FromRgb(78, 201, 176));
-                return;
-            }
-
-            var state = await _core.VerifyGameStatusAsync(_profile);
-            if (state == ExeStatus.Vanilla)
-            {
-                lblStatus.Text = "Steam API Detected (1.0 Downgrade Required)";
-                lblStatus.Foreground = new SolidColorBrush(Color.FromRgb(216, 163, 26));
             }
             else
             {
-                lblStatus.Text = "Ready for Modding";
+                lblStatus.Text = loc["GameSetupRow_Ready"];
                 lblStatus.Foreground = new SolidColorBrush(Color.FromRgb(78, 201, 176));
             }
+
+            return Task.CompletedTask;
         }
 
         // ── Action handlers ───────────────────────────────────────────────────
@@ -114,7 +101,7 @@ namespace TMM
         {
             if (_core == null || _profile == null) return;
 
-            lblStatus.Text = "Running Quick Scan...";
+            lblStatus.Text = LocalizationService.Instance["GameSetupRow_Scanning"];
             lblStatus.Foreground = Brushes.Cyan;
 
             await Task.Run(() => _core.QuickScan());

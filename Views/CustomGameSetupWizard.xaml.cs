@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
+using TMM.Services;
 
 namespace TMM
 {
@@ -26,20 +27,21 @@ namespace TMM
 
     public partial class CustomGameSetupWizard : TmmWindow
     {
-        private static readonly string[] StepTitles =
-        {
-            "Game Details",
-            "Mod Types",
-            "Routing Rules",
-            "Review & Save",
-        };
-        private static readonly string[] StepLabels =
-        {
+        private static string[] GetStepTitles() =>
+        [
+            LocalizationService.Instance["Step1_Title"],
+            LocalizationService.Instance["Step2_Title"],
+            LocalizationService.Instance["Step3_Title"],
+            LocalizationService.Instance["Step4_Title"],
+        ];
+
+        private static string[] GetStepLabels() =>
+        [
             "Step 1 of 4",
             "Step 2 of 4",
             "Step 3 of 4",
             "Step 4 of 4",
-        };
+        ];
 
         private int _step = 0; // 0-based
         private readonly CustomGameProfile _profile;
@@ -58,8 +60,6 @@ namespace TMM
                 : new CustomGameProfile();
 
             InitializeComponent();
-
-            if (_isEdit) txtWindowTitle.Text = "Edit Game";
 
             _steps = new IWizardStep[]
             {
@@ -92,8 +92,8 @@ namespace TMM
             page.LoadProfile(_profile);
 
             // Update header
-            txtStepLabel.Text = StepLabels[_step];
-            txtStepTitle.Text = StepTitles[_step];
+            txtStepLabel.Text = GetStepLabels()[_step];
+            txtStepTitle.Text = GetStepTitles()[_step];
 
             // Update step dots
             var dots = new[] { dot1, dot2, dot3, dot4 };
@@ -104,7 +104,9 @@ namespace TMM
 
             // Update buttons
             btnBack.Visibility = _step > 0 ? Visibility.Visible : Visibility.Collapsed;
-            btnNext.Content    = _step == _steps.Length - 1 ? "Save Profile" : "Next →";
+            btnNext.Content    = _step == _steps.Length - 1
+                ? LocalizationService.Instance["Wizard_Finish"]
+                : LocalizationService.Instance["Wizard_Next"];
 
             stepContent.Content = page;
             RefreshNextButton();
@@ -121,7 +123,7 @@ namespace TMM
 
         private string GetStepHint() => _step switch
         {
-            0 => "Enter a game name and a valid install directory to continue.",
+            0 => LocalizationService.Instance["Step1_RequiredHint"],
             _ => ""
         };
 

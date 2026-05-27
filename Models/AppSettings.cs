@@ -4,12 +4,9 @@ namespace TMM
 {
     public class AppSettings
     {
-        // Game paths: dynamically populated from GameRegistry.
-        // Initially populated with built-in games; custom games added as created.
-        public Dictionary<string, string?> GamePaths { get; set; } = new()
-        {
-            { "III", null }, { "VC", null }, { "SA", null }
-        };
+        // Game paths: populated lazily by BackendCore.LoadSettings (built-ins) and
+        // GameRegistry sync in InitializeAsync (custom games).
+        public Dictionary<string, string?> GamePaths { get; set; } = new();
 
         // Track which custom games exist (for cleanup and initialization)
         public List<string> CustomGameKeys { get; set; } = new();
@@ -39,7 +36,7 @@ namespace TMM
         public string? DefaultGameKey { get; set; }
 
         /// <summary>
-        /// Library view mode. One of: "grid" | "large" | "list" | "showcase".
+        /// Library view mode. One of: "grid" | "list" | "showcase".
         /// Default is "grid".
         /// </summary>
         public string LibraryViewMode { get; set; } = "grid";
@@ -56,17 +53,9 @@ namespace TMM
         public double WindowWidth  { get; set; } = 1280;
         public double WindowHeight { get; set; } = 672;
 
-        // ── Per-game deploy overrides ─────────────────────────────────────────
-        // When true for a game, deployment proceeds even if the exe is Vanilla (Steam build).
-        // Toggled via right-click on the play buttons in the toolbar.
-        public Dictionary<string, bool> DeployOverrides { get; set; } = new()
-        {
-            { "III", false }, { "VC", false }, { "SA", false }
-        };
-
-        // ── Multi-game (TMM) ───────────────────────────────────────────────────
-        // Track the last selected game for quick restoration on app launch.
-        public string? LastSelectedGameKey { get; set; } = null;
+        // ── Localization ────────────────────────────────────────────────────────
+        // Current language code (e.g., "en-US", "es-ES"). Loaded by LocalizationService at startup.
+        public string CurrentLanguage { get; set; } = "en-US";
 
     }
 }

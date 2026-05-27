@@ -29,6 +29,9 @@
     <EmbeddedResource Include="Assets\GameProfiles\cyberpunk_2077.tmmgame" />
     <EmbeddedResource Include="Assets\GameProfiles\red_dead_2.tmmgame" />
     <EmbeddedResource Include="Assets\GameProfiles\witcher_3.tmmgame" />
+    <!-- Language files (Localization) -->
+    <EmbeddedResource Include="Assets\Localization\en-US.json" />
+    <EmbeddedResource Include="Assets\Localization\es-MX.json" />
   </ItemGroup>
 
   <ItemGroup>

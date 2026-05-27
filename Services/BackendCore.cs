@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,7 +29,6 @@ namespace TMM
 
         public string AppDataPath { get; }
         public AppSettings Settings { get; private set; } = new();
-        public string Version { get; } = "2.0";
 
         // Per-game mod lists, looked up by GameProfile.Key.
         // Exposed as read-only; mutated internally via _modsDict.
@@ -51,6 +49,9 @@ namespace TMM
 
             Directory.CreateDirectory(AppDataPath);
             LoadSettings();
+
+            // Initialize localization with saved language preference
+            LocalizationService.Instance.SetLanguage(Settings.CurrentLanguage);
 
             foreach (var profile in GameProfile.All)
             {
@@ -85,7 +86,6 @@ namespace TMM
             foreach (var (key, _) in registry.GetCustomGames())
             {
                 Settings.GamePaths.TryAdd(key, null);
-                Settings.DeployOverrides.TryAdd(key, false);
                 if (!Settings.CustomGameKeys.Contains(key))
                     Settings.CustomGameKeys.Add(key);
             }
@@ -286,165 +286,6 @@ namespace TMM
             }
             catch (Exception ex) { Log($"Skip folder {root}: {ex.Message}"); }
             return "";
-        }
-
-        // ==========================================================
-        // GAME STATE VERIFICATION
-        // ==========================================================
-
-        public async Task<ExeStatus> VerifyGameStatusAsync(GameProfile profile)
-        {
-            // If an enabled mod in the modlist contains the game exe, use that
-            // for verification - it means the user has installed a downgraded exe
-            // as a mod, which is fully valid.
-            var list = Mods[profile.Key];
-            var exeMod = list
-                .Where(m => m.IsEnabled)
-                .OrderBy(m => m.LoadOrder)
-                .LastOrDefault(m => FindExeInMod(m.RawFolderPath, profile.ExeName) is not null);
-
-            if (exeMod is not null)
-            {
-                string modExePath = FindExeInMod(exeMod.RawFolderPath, profile.ExeName)!;
-                string modMd5 = await GetFileMD5Async(modExePath);
-                return profile.IsValidMd5(modMd5) ? ExeStatus.Downgraded : ExeStatus.Vanilla;
-            }
-
-            string? path = GetVanillaPath(profile);
-            if (string.IsNullOrEmpty(path)) return ExeStatus.Unknown;
-
-            string fullPath = Path.Combine(path, profile.ExeName);
-            if (!File.Exists(fullPath)) return ExeStatus.Unknown;
-
-            string md5 = await GetFileMD5Async(fullPath);
-            return profile.IsValidMd5(md5) ? ExeStatus.Downgraded : ExeStatus.Vanilla;
-        }
-
-        /// <summary>
-        /// Returns true if the game can be deployed even if the vanilla path is
-        /// a Steam install. True when either:
-        ///   (a) an enabled exe mod is in the modlist (provides the 1.0 binary), or
-        ///   (b) the user has explicitly toggled the per-game DeployOverride flag.
-        /// </summary>
-        public bool HasExeModOverride(GameProfile profile)
-        {
-            if (Settings.DeployOverrides.TryGetValue(profile.Key, out bool forced) && forced)
-                return true;
-
-            var list = Mods[profile.Key];
-            return list.Any(m => m.IsEnabled && FindExeInMod(m.RawFolderPath, profile.ExeName) is not null);
-        }
-
-        /// <summary>Toggles the per-game force-deploy override and persists settings.</summary>
-        public bool ToggleDeployOverride(GameProfile profile)
-        {
-            Settings.DeployOverrides.TryAdd(profile.Key, false);
-            Settings.DeployOverrides[profile.Key] = !Settings.DeployOverrides[profile.Key];
-            SaveSettings();
-            return Settings.DeployOverrides[profile.Key];
-        }
-
-        /// <summary>
-        /// Searches the mod folder recursively (up to 3 levels) for the game exe.
-        /// Handles zip archives that wrap content in a single top-level subdirectory.
-        /// </summary>
-        public static string? FindExeInMod(string modRoot, string exeName)
-        {
-            if (!Directory.Exists(modRoot)) return null;
-
-            // Check root first (most common case).
-            string rootExe = Path.Combine(modRoot, exeName);
-            if (File.Exists(rootExe)) return rootExe;
-
-            // Check one level deep (single-directory wrapper pattern common in zip archives).
-            foreach (var sub in Directory.GetDirectories(modRoot))
-            {
-                string sub1 = Path.Combine(sub, exeName);
-                if (File.Exists(sub1)) return sub1;
-
-                // Two levels deep (rare but covered).
-                foreach (var sub2dir in Directory.GetDirectories(sub))
-                {
-                    string sub2 = Path.Combine(sub2dir, exeName);
-                    if (File.Exists(sub2)) return sub2;
-                }
-            }
-            return null;
-        }
-
-        private static async Task<string> GetFileMD5Async(string filePath)
-        {
-            using var md5 = MD5.Create();
-            await using var stream = File.OpenRead(filePath);
-            byte[] hash = await md5.ComputeHashAsync(stream);
-            return Convert.ToHexString(hash).ToLowerInvariant();
-        }
-
-        /// <summary>
-        /// Returns the MD5 of the exe that will actually run during deployment.
-        /// If the modlist has an enabled mod whose folder contains the game exe,
-        /// that file's hash is returned instead of the vanilla exe's hash.
-        /// This lets diagnostics show whether the active downgraded exe is valid.
-        /// </summary>
-        public async Task<string> GetEffectiveMd5Async(GameProfile profile)
-        {
-            // Check modlist for an enabled mod that contains the game exe.
-            var list = Mods[profile.Key];
-            var exeMod = list
-                .Where(m => m.IsEnabled)
-                .OrderBy(m => m.LoadOrder)
-                .LastOrDefault(m => FindExeInMod(m.RawFolderPath, profile.ExeName) is not null);
-
-            if (exeMod is not null)
-            {
-                string modExe = FindExeInMod(exeMod.RawFolderPath, profile.ExeName)!;
-                return await GetFileMD5Async(modExe);
-            }
-
-            // Fall back to the vanilla path exe.
-            string? vanillaPath = GetVanillaPath(profile);
-            if (string.IsNullOrEmpty(vanillaPath)) return "(no path set)";
-            string exePath = Path.Combine(vanillaPath, profile.ExeName);
-            if (!File.Exists(exePath)) return "(exe not found)";
-            return await GetFileMD5Async(exePath);
-        }
-
-        /// <summary>
-        /// Returns a multi-line diagnostic string for the developer console.
-        /// Shows the effective exe source, its MD5, and whether it matches the
-        /// expected 1.0 hash.
-        /// </summary>
-        public async Task<string> GetMd5DiagnosticsAsync(GameProfile profile)
-        {
-            var lines = new System.Text.StringBuilder();
-            lines.AppendLine($"-- {profile.DisplayName} MD5 Diagnostics --");
-            // Show all accepted hashes so the user can verify their downgrader variant
-            foreach (var h in profile.AllValidMd5s)
-                lines.AppendLine($"  Accepted 1.0 MD5 : {h}");
-
-            string effective = await GetEffectiveMd5Async(profile);
-            lines.AppendLine($"  Active exe MD5   : {effective}");
-
-            bool match = profile.IsValidMd5(effective);
-            lines.AppendLine($"  Status           : {(match ? "[OK] MATCH - ready for direct deploy" : "[FAIL] MISMATCH - Steam or unknown build")}");
-
-            // Show which mod is providing the exe (if any).
-            var list = Mods[profile.Key];
-            var exeMod = list
-                .Where(m => m.IsEnabled)
-                .OrderBy(m => m.LoadOrder)
-                .LastOrDefault(m => FindExeInMod(m.RawFolderPath, profile.ExeName) is not null);
-
-            if (exeMod is not null)
-            {
-                string exePath = FindExeInMod(exeMod.RawFolderPath, profile.ExeName)!;
-                lines.AppendLine($"  Exe source mod   : [{exeMod.LoadOrder}] {exeMod.Name}");
-                lines.AppendLine($"  Exe path in mod  : {exePath.Replace(exeMod.RawFolderPath, "")}");
-            }
-            else
-                lines.AppendLine($"  Exe source       : Vanilla path ({GetVanillaPath(profile) ?? "unset"})");
-
-            return lines.ToString();
         }
 
         // ==========================================================

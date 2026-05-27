@@ -2,20 +2,21 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:TMM"
+             xmlns:helpers="clr-namespace:TMM.Helpers"
              Background="{DynamicResource BgBrush}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,24,28,24" MaxWidth="540">
 
-            <TextBlock Text="Settings" FontSize="22" FontWeight="Bold"
+            <TextBlock Text="{helpers:Localization Settings_Title}" FontSize="22" FontWeight="Bold"
                        Foreground="{DynamicResource TextBrush}" Margin="0,0,0,20"/>
 
             <!-- Appearance: 2-Tone Accent Colors -->
             <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
                     Padding="0,12,0,0" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Appearance" FontSize="13" FontWeight="SemiBold"
+                    <TextBlock Text="{helpers:Localization Settings_Appearance}" FontSize="13" FontWeight="SemiBold"
                                Foreground="#FF88EE" Margin="0,0,0,8"/>
-                    <TextBlock Text="Accent Preset" FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                    <TextBlock Text="{helpers:Localization Label_AccentPreset}" FontSize="11" Foreground="{DynamicResource SubTextBrush}"
                                Margin="0,0,0,4"/>
                     <ComboBox x:Name="cmbAccentPreset" Height="28" Margin="0,0,0,12"
                               Background="{DynamicResource ControlBgBrush}"
@@ -28,7 +29,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" Margin="0,0,6,0">
-                            <TextBlock Text="Primary Color" FontSize="10" Foreground="{DynamicResource SubTextBrush}"
+                            <TextBlock Text="{helpers:Localization Label_PrimaryColor}" FontSize="10" Foreground="{DynamicResource SubTextBrush}"
                                        Margin="0,0,0,4"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -47,7 +48,7 @@
                             </Grid>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Margin="6,0,0,0">
-                            <TextBlock Text="Secondary Color" FontSize="10" Foreground="{DynamicResource SubTextBrush}"
+                            <TextBlock Text="{helpers:Localization Label_SecondaryColor}" FontSize="10" Foreground="{DynamicResource SubTextBrush}"
                                        Margin="0,0,0,4"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -66,45 +67,9 @@
                             </Grid>
                         </StackPanel>
                     </Grid>
-                    <Button Content="Apply" Click="BtnApplyAccent_Click"
+                    <Button Content="{helpers:Localization Button_Apply}" Click="BtnApplyAccent_Click"
                             Height="28" Background="{DynamicResource PanelBrush}"
                             Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Steam Controls -->
-            <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
-                    Padding="0,12,0,0" Margin="0,0,0,16">
-                <StackPanel>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Steam Controls" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="#FF88EE" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="cmbSteamGame" Grid.Column="1" Width="150" SelectedIndex="0"
-                                  Background="{DynamicResource ControlBgBrush}"
-                                  Foreground="{DynamicResource TextBrush}"
-                                  BorderThickness="0" Padding="6,3">
-                            <ComboBoxItem Content="GTA III"        Tag="III"/>
-                            <ComboBoxItem Content="GTA Vice City"  Tag="VC"/>
-                            <ComboBoxItem Content="GTA San Andreas" Tag="SA"/>
-                            <ComboBoxItem Content="GTA IV"          Tag="IV"/>
-                        </ComboBox>
-                    </Grid>
-                    <UniformGrid Columns="3">
-                        <Button Content="[OK] Verify" Click="BtnSteamAction_Click" Tag="validate"
-                                Height="26" Margin="0,0,3,0" Background="{DynamicResource PanelBrush}"
-                                Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"
-                                ToolTip="Force Steam to verify file integrity"/>
-                        <Button Content="Install" Click="BtnSteamAction_Click" Tag="install"
-                                Height="26" Margin="3,0,3,0" Background="{DynamicResource PanelBrush}"
-                                Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                        <Button Content="Uninstall" Click="BtnSteamAction_Click" Tag="uninstall"
-                                Height="26" Margin="3,0,0,0" Background="#442222"
-                                Foreground="#FF5555" BorderThickness="0" Cursor="Hand"/>
-                    </UniformGrid>
                 </StackPanel>
             </Border>
 
@@ -112,17 +77,13 @@
             <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
                     Padding="0,12,0,0" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Diagnostics" FontSize="13" FontWeight="SemiBold"
+                    <TextBlock Text="{helpers:Localization Settings_Diagnostics}" FontSize="13" FontWeight="SemiBold"
                                Foreground="#FF88EE" Margin="0,0,0,8"/>
-                    <UniformGrid Columns="3">
-                        <Button Content="MD5 Check" Click="BtnMd5Check_Click"
+                    <UniformGrid Columns="2">
+                        <Button Content="{helpers:Localization Settings_ErrorLog}" Click="BtnOpenLog_Click"
                                 Height="26" Margin="0,0,3,0" Background="{DynamicResource PanelBrush}"
-                                Foreground="{DynamicResource AccentBrush}" BorderThickness="0" Cursor="Hand"
-                                ToolTip="Check exe MD5 — detects downgrade status"/>
-                        <Button Content="Error Log" Click="BtnOpenLog_Click"
-                                Height="26" Margin="3,0,3,0" Background="{DynamicResource PanelBrush}"
                                 Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                        <Button Content="Wipe Cache" Click="BtnWipeCache_Click"
+                        <Button Content="{helpers:Localization Settings_WipeCache}" Click="BtnWipeCache_Click"
                                 Height="26" Margin="3,0,0,0" Background="{DynamicResource PanelBrush}"
                                 Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
                     </UniformGrid>
@@ -137,13 +98,13 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Danger Zone" FontSize="12" FontWeight="SemiBold"
+                    <TextBlock Text="{helpers:Localization Settings_DangerZone}" FontSize="12" FontWeight="SemiBold"
                                Foreground="#FF5555" VerticalAlignment="Center"/>
                     <TextBlock x:Name="lblVersion" Grid.Column="1"
                                Foreground="{DynamicResource SubTextBrush}"
                                FontSize="10" VerticalAlignment="Center" Margin="0,0,12,0"
-                               Text="v1.2 Alpha"/>
-                    <Button Grid.Column="2" Content="Factory Reset" Click="BtnFactoryReset_Click"
+                               Text="v2.0"/>
+                    <Button Grid.Column="2" Content="{helpers:Localization Settings_FactoryReset}" Click="BtnFactoryReset_Click"
                             Height="28" Padding="16,0" Background="#442222" Foreground="#FF5555"
                             BorderThickness="0" Cursor="Hand"/>
                 </Grid>

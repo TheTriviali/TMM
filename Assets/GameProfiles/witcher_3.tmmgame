@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "tmm-game/1.1",
   "gameName": "The Witcher 3",
   "gameDirectory": "",
@@ -19,5 +19,6 @@
   },
   "description": "The Witcher 3 mod support — Alpha placeholder",
   "author": "TMM",
-  "version": "0.1"
+  "version": "0.1",
+  "nexusSlug": "witcher3"
 }
