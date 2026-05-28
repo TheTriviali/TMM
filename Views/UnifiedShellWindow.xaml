@@ -12,7 +12,7 @@
     <Window.Resources>
         <!-- Nav strip button style -->
         <Style x:Key="NavBtnStyle" TargetType="Button">
-            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="Background"      Value="{DynamicResource ControlBgBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Width"           Value="46"/>
             <Setter Property="Height"          Value="46"/>
@@ -21,12 +21,12 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8"
-                                Margin="2,2,2,2">
+                                Margin="4,3,4,3">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource ControlBgBrush}"/>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -132,13 +132,13 @@
 
     <!-- Master border -->
     <Border x:Name="MainWindowBorder" Background="{DynamicResource BgBrush}" CornerRadius="10"
-            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
             MouseLeftButtonDown="TitleBar_MouseDown">
         <Border>
             <Border.OpacityMask>
                 <VisualBrush>
                     <VisualBrush.Visual>
-                        <Border Background="White" CornerRadius="6"
+                        <Border Background="White" CornerRadius="8"
                                 Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Border}}"
                                 Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Border}}"/>
                     </VisualBrush.Visual>

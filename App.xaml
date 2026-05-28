@@ -23,7 +23,10 @@
         <SolidColorBrush x:Key="SubTextBrush" Color="#9B9B9B"/>
         <SolidColorBrush x:Key="ControlBgBrush" Color="#3C3C43"/>
         <SolidColorBrush x:Key="CheckeredRowBrush"  Color="#1AFFFFFF"/>
-        <SolidColorBrush x:Key="WindowBorderBrush" Color="#0883FF"/>
+        <LinearGradientBrush x:Key="WindowBorderBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#0883FF" Offset="0"/>
+            <GradientStop Color="#00D9FF" Offset="1"/>
+        </LinearGradientBrush>
         <SolidColorBrush x:Key="AccentLabelBrush"  Color="#0883FF"/>
         <SolidColorBrush x:Key="AccentSoftBrush"   Color="#1A0883FF"/>
 
