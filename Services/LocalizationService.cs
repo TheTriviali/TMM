@@ -55,13 +55,18 @@ namespace TMM.Services
         /// <summary>Set active language and load translations.</summary>
         public void SetLanguage(string languageCode)
         {
-            if (_currentLanguage == languageCode)
-                return;
-
-            // Load language if not cached
+            // Always ensure language is loaded (fixes bug where initial en-US never loaded)
             if (!_cache.ContainsKey(languageCode))
             {
                 LoadLanguage(languageCode);
+            }
+
+            // If already set, force a property-changed notification so bindings refresh
+            // (needed for first-launch when default _currentLanguage matches but cache was empty)
+            if (_currentLanguage == languageCode)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLanguage)));
+                return;
             }
 
             CurrentLanguage = languageCode;
