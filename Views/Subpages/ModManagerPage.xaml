@@ -29,6 +29,8 @@
         <!-- ──────────────────────────────────────────────────────── -->
         <ContextMenu x:Key="ModContextMenu">
             <MenuItem Header="{helpers:Localization ModManager_CtxRename}"        Click="MenuRename_Click"/>
+            <MenuItem Header="Set Group" Click="MenuSetGroup_Click"/>
+            <MenuItem Header="Clear Group" Click="MenuClearGroup_Click"/>
             <MenuItem Header="{helpers:Localization ModManager_CtxSetLoadOrder}"  Click="MenuSetLoadOrder_Click" FontWeight="Bold"/>
             <MenuItem Header="{helpers:Localization ModManager_CtxToggle}"        Click="MenuToggle_Click"/>
             <Separator/>
@@ -44,7 +46,8 @@
         </ContextMenu>
 
         <ContextMenu x:Key="EmptyListContextMenu">
-            <MenuItem Header="{helpers:Localization ModManager_CtxInstallMods}"   Click="BtnInstallModCustom_Click"/>
+                    <MenuItem Header="{helpers:Localization ModManager_CtxInstallMods}"   Click="BtnInstallModCustom_Click"/>
+            <MenuItem Header="Import from game folder" Click="BtnImportFromGame_Click"/>
             <MenuItem Header="{helpers:Localization ModManager_CtxRefreshList}"   Click="BtnRefreshCustom_Click"/>
             <Separator/>
             <MenuItem Header="{helpers:Localization ModManager_CtxOpenGameFolder}"   Click="MenuOpenGameFolder_Click"/>
@@ -231,6 +234,13 @@
                                        HorizontalAlignment="Center" Margin="0,2,0,0"/>
                         </StackPanel>
                         <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
+                            <Button Content="&#xE8B7;" Click="BtnImportFromGame_Click" ToolTip="Import from game folder"
+                                    Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
+                                    FontSize="18" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                            <TextBlock Text="Import" FontSize="10" Foreground="{DynamicResource SubTextBrush}"
+                                       HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                             <Button Content="&#xE70F;" Click="BtnEditConfigCustom_Click" ToolTip="{helpers:Localization ModManager_Tooltip_EditConfig}"
                                     Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
                                     FontSize="18" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
@@ -342,6 +352,12 @@
                                 Click="BtnClearSearchCustom_Click"/>
                     </Grid>
 
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right"
+                                Margin="0,34,0,0">
+                        <CheckBox x:Name="Cust_chkShowGroups" Content="Show groups"
+                                  Checked="Cust_ShowGroupsChanged" Unchecked="Cust_ShowGroupsChanged"/>
+                    </StackPanel>
+
                     <!-- Mod ListView -->
                     <Grid Grid.Row="1">
                         <ListView x:Name="Cust_ModList" Style="{StaticResource ModListStyle}"
@@ -364,6 +380,7 @@
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
                                     <GridViewColumn Header="{helpers:Localization ModManager_Col_Name}" Width="340" DisplayMemberBinding="{Binding Name}"/>
+                                    <GridViewColumn Header="Group" Width="140" DisplayMemberBinding="{Binding GroupName}"/>
                                     <GridViewColumn Header="{helpers:Localization ModManager_Col_Size}" Width="80" DisplayMemberBinding="{Binding SizeDisplay}"/>
                                     <GridViewColumn Header="{helpers:Localization ModManager_Col_Status}" Width="90">
                                         <GridViewColumn.CellTemplate>
@@ -374,6 +391,19 @@
                                     </GridViewColumn>
                                 </GridView>
                             </ListView.View>
+                            <ListView.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource HeaderBrush}" Padding="8,4" Margin="0,8,0,2">
+                                                <TextBlock Text="{Binding Name, Converter={StaticResource GroupNameDisplayConverter}}"
+                                                           Foreground="{DynamicResource AccentLabelBrush}"
+                                                           FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListView.GroupStyle>
                         </ListView>
                         <Canvas IsHitTestVisible="False">
                             <Rectangle x:Name="Cust_DropLine" Height="2" Fill="{DynamicResource AccentBrush}"

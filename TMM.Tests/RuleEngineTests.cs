@@ -27,8 +27,22 @@ public class RuleEngineTests
     {
         GameName      = "Grand Theft Auto III",
         GameDirectory = @"C:\FakeGTA3",
+        CompanionSiblings = new Dictionary<string, List<string>>
+        {
+            ["cleo"] = new() { "CLEO_TEXT", "CLEO_FONTS" },
+        },
         RoutingRules  =
         [
+            new RoutingRule
+            {
+                Name       = "ModLoader Tree",
+                Conditions =
+                [
+                    new Condition { Type = ConditionType.PathContains, Operator = ConditionOperator.StartsWith, Value = "modloader" },
+                ],
+                TargetPath = "modloader",
+                Priority   = 95,
+            },
             // Priority 80 — .asi AND the mod folder contains a "scripts" sub-dir
             new RoutingRule
             {
@@ -53,7 +67,12 @@ public class RuleEngineTests
             new RoutingRule
             {
                 Name       = "CLEO Script",
-                Conditions = [ new Condition { Type = ConditionType.FileExtension, Operator = ConditionOperator.Is, Value = ".cs" } ],
+                Conditions =
+                [
+                    new Condition { Type = ConditionType.FileExtension, Operator = ConditionOperator.Is, Value = ".cs",  Logic = LogicOperator.OR },
+                    new Condition { Type = ConditionType.FileExtension, Operator = ConditionOperator.Is, Value = ".cs4", Logic = LogicOperator.OR },
+                    new Condition { Type = ConditionType.FileExtension, Operator = ConditionOperator.Is, Value = ".cs5" },
+                ],
                 TargetPath = "cleo",
                 Priority   = 60,
             },
@@ -75,6 +94,7 @@ public class RuleEngineTests
                 IsDefault  = true,
             },
         ],
+        OverlayFolders = ["models", "data", "audio", "text", "anim", "modloader"],
     };
 
     // ── HasFolder condition ───────────────────────────────────────────────────
@@ -127,6 +147,23 @@ public class RuleEngineTests
         File.WriteAllText(csFile, "cs script");
 
         var matches = new RuleEngine().FindMatchingRules(csFile, modFolder, BuildGta3Profile());
+
+        Assert.Equal(2, matches.Count);
+        Assert.Contains(matches, r => r.Name == "CLEO Script");
+        Assert.Contains(matches, r => r.Name == "Default (game root)");
+    }
+
+    [Theory]
+    [InlineData(".cs4")]
+    [InlineData(".cs5")]
+    public void FindMatchingRules_CleoVariants_MatchCleoScriptRuleAndDefault(string extension)
+    {
+        using var tmp = new TempDirectory();
+        string modFolder = tmp.CreateSubDir("CleoMod");
+        string scriptFile = Path.Combine(modFolder, "myscript" + extension);
+        File.WriteAllText(scriptFile, "script");
+
+        var matches = new RuleEngine().FindMatchingRules(scriptFile, modFolder, BuildGta3Profile());
 
         Assert.Equal(2, matches.Count);
         Assert.Contains(matches, r => r.Name == "CLEO Script");
@@ -216,6 +253,22 @@ public class RuleEngineTests
 
         Assert.Single(cleoMatches);
         Assert.Empty(otherMatches);
+    }
+
+    [Fact]
+    public void FindMatchingRules_PathContains_StartsWith_MatchesRelativeModloaderPath()
+    {
+        var profile = BuildGta3Profile();
+
+        using var tmp = new TempDirectory();
+        string modFolder = tmp.CreateSubDir("Mod");
+        Directory.CreateDirectory(Path.Combine(modFolder, "modloader", "Speed"));
+        string filePath = Path.Combine(modFolder, "modloader", "Speed", "speed.asi");
+        File.WriteAllText(filePath, "mod");
+
+        var matches = new RuleEngine().FindMatchingRules(filePath, modFolder, profile);
+
+        Assert.Contains(matches, r => r.Name == "ModLoader Tree");
     }
 
     // ── FilenameMatches condition ─────────────────────────────────────────────

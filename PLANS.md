@@ -1,4 +1,4 @@
-# TMM — Active Plans
+﻿# TMM — Active Plans
 
 > Living plan doc. Each section is a self-contained brief a cold agent can execute.
 > Older routing-rules-refactor plans are archived (Phases 3/5/6 complete; see memory).
@@ -20,6 +20,28 @@
   Edit buttons on GameCard, hardcoded "Black" foreground on SelectBuiltinGameWindow, dead
   locale keys `GridView/LargeView/ListenView/ShowcaseView`, hardcoded "v2.0" strings,
   removed `task1_prompt.txt`).
+- **B2 progress (install-time plan freeze):**
+  - Mod metadata now also writes `_tmm/modinfo.json` alongside the legacy `modinfo.txt`, so the new frozen plan sidecar has a stable home next to the mod info.
+  - Added `DeploymentPlan.PlanVersion` plus plan save/load helpers in `BackendCore`.
+  - Persisted frozen plans to `ModsRaw_{key}/{ModName}/_tmm/deployplan.json`.
+  - Custom-game deploy preview now loads persisted plans and only falls back to live planning for legacy mods.
+  - Custom mod installs now capture a frozen plan immediately; refresh backfills missing plans.
+  - Routing-rule edits in the custom-game wizard now warn about stale plans and offer an explicit replan-all prompt.
+  - Direct deploy now records empty directories too, and plan-time layout overrides now cover overlay folders, `modloader` trees, grouped modloader paths, and CLEO companion `.ini` files.
+  - Custom game wizard Step 1/Step 4 now surface overlay-folder and companion-sibling metadata.
+- **B3 progress (first-touch baseline):**
+  - Added `Services/BaselineSnapshot.cs` for per-game baseline capture and storage.
+  - Deploy now captures first-touch state before overwriting files.
+  - Rollback now reads baseline snapshots first, then falls back to the legacy per-deploy manifest backup if a baseline record is missing.
+  - Added a regression test for stacked deploys restoring the original baseline instead of the previous mod state.
+- **B4 progress (overlay / empty-dir / symlink hardening):**
+  - Overlay-folder routing and group-aware `modloader` layout are already live in the planner.
+  - Deploy now records created directories in the rollback manifest and rollback removes empty directories when they are no longer needed.
+  - Install-time planning now fails loudly on symlinked mod sources instead of flattening them into the deploy plan.
+- **B5 progress (sync/import from existing install):**
+  - Added a `ModImporter` scan/import service plus an `ImportReviewWindow` so TMM can detect obvious mod files in an existing install and let the user approve them before moving anything.
+  - Import now seeds the first-touch baseline before moving files into `ModsRaw_{key}`.
+  - Imported mods are written back through the normal plan/deploy pipeline so the install state is restored after TMM takes ownership.
 - **GTA III/VC/SA deprecated cleanup pass:**
   - Deleted unreachable `Views/ArchiveExtractionWindow.xaml(.cs)`.
   - Stripped MD5/vanilla detection: `GameProfile.Vanilla10Md5` /`AdditionalValidMd5s`
@@ -62,6 +84,8 @@
 
 **Gotcha:** identify *all* mod-add paths before wiring `OnModAddedAsync` — search `_core.Mods.Add`, `RefreshAllModListsAsync`, archive extraction, drag-drop handlers. Missing one means some mods never get a plan.
 
+**Implemented so far:** `DeploymentPlan` persistence is in place, custom-game deploy uses frozen plans, custom installs capture plans immediately, refresh backfills missing plans, routing-rule edits prompt for a mass replan, mod metadata now has a `_tmm/modinfo.json` sidecar, the planner now knows about overlay folders, `modloader` trees, grouped modloader paths, empty directories, and CLEO companion `.ini` files, and the wizard exposes overlay/companion metadata. Remaining work is wiring any other mod-add paths and the bigger B3/B4/B5 foundations.
+
 ### B3 — First-touch baseline snapshot  (foundation)
 
 **Goal:** Capture the original bytes of any game file the first time TMM touches it. Rollback restores to that, not to the previous deploy.
@@ -82,6 +106,8 @@
 
 **Gotcha:** disk space. A baseline of a heavily-modded GTA SA could be several GB. Consider an opt-out for very large directories (warn user) or hash-based dedup (probably overkill for v1).
 
+**Implemented so far:** baseline capture is live in `BackendCore`, rollback prefers the baseline store and only falls back to per-deploy backups when needed, and the deploy integration now has a regression test proving stacked deploys still roll back to the original first-touch state.
+
 ### B4 — Folder-overlay deploy + rollback + empty-dir walking
 
 **Goal:** Mods that ship folders matching game folders (e.g. `models/`, `data/`) merge into the game folder instead of being routed by extension. Also fix silent gaps around empty directories.
@@ -100,6 +126,8 @@
 
 **Depends on:** B3 — without baseline.json, rollback of an overlay-mod can't restore vanilla files it overwrote.
 
+**Implemented so far:** overlay-folder routing and group-aware `modloader` remapping are already in the planner; direct deploy now carries empty directories through to the target and records them in rollback manifests; rollback removes empty directories when safe; and symlinked mod sources are rejected during planning.
+
 ### B1 — GTA III/VC/SA routing profile completeness
 
 **Goal:** Bring the three GTA III-series `.tmmgame` profiles up to modern Mod Loader conventions.
@@ -107,12 +135,12 @@
 **Files:** `Assets/GameProfiles/gta3.tmmgame`, `gtavc.tmmgame`, `gtasa.tmmgame`.
 
 **Per-game additions (all three):**
-- **New rule, priority 95**: any file under a top-level `modloader\` folder → preserve relative path (depends on B4's `PreserveRelativePath` mechanism). This catches `modloader\{modname}\*` and `modloader\{group}\{modname}\*` automatically.
+- **New rule, priority 95**: any file under a top-level `modloader\` folder → preserve relative path. This catches `modloader\{modname}\*` and `modloader\{group}\{modname}\*` automatically.
 - **Extend existing CLEO rule** to match `.cs`, `.cs4`, `.cs5`, `.fxt` (currently only `.cs` and `.fxt`).
-- **Add `.ini` companion handling**: routing-rule side just ensures `.ini` co-routes with its sibling `.cs/.cs4/.cs5` when their basenames match (heavy lifting happens at install-time companion detection — see B5).
+- **Add `.ini` companion handling**: routing-rule side ensures `.ini` co-routes with its sibling `.cs/.cs4/.cs5` when basenames match; install-time companion detection handles the pairing.
 - **Add `companionSiblings`** field to the profile: `{ "cleo": ["CLEO_TEXT", "CLEO_FONTS"] }`. Used by B5 import heuristic and by post-install plan validation.
 
-**Depends on:** B4 (the `PreserveRelativePath` rule kind must exist).
+**Implemented so far:** all three bundled GTA III/VC/SA profiles now include the `modloader` rule, CLEO variants, overlay folders, and CLEO companion sibling metadata; the planner understands the rules and routes CLEO `.ini` companions alongside the matching script destination.
 
 ### B5 — Sync/import from existing modded install
 
@@ -136,6 +164,9 @@
 
 **Gotcha:** "move not copy" means a failed import can leave the game dir in a half-state. Wrap the whole commit in a transaction (collect all file ops, validate, then execute; on failure, revert moves).
 
+**Implemented so far:** B5 now has a scan/review/import path in the Mod Manager, baseline seeding before move-out, and a restore deploy after import to keep the install state intact while TMM takes ownership. The split/merge/refinement UI is still ahead of us.
+The scanner now groups CLEO/script companions together via the game's companion-sibling map, keeps `modloader` trees intact as one candidate, flags loose root files as low-confidence, and the importer does a full move transaction with rollback if anything fails mid-import.
+
 ### B6 — Mod groups as nested deployment targets
 
 **Goal:** Let users group mods so the group name becomes a deployment-path segment (`modloader\{group}\{mod}\`).
@@ -150,6 +181,8 @@
 2. Adding/removing/renaming a group → regenerate the affected mods' `deployplan.json` via `OnModAddedAsync`. This is the *one* sanctioned plan invalidation per principle #1 (group change = re-install for plan purposes).
 3. Group affects only the `modloader\` deployment scheme. Files that deploy to game root (engine proxies, root ASIs by user choice) are unaffected.
 4. UI: ungrouped is default. "Show groups" toggle reveals collapsible headers. Drag a mod into a group header to assign; drag out to ungroup.
+
+**Implemented so far:** `ModItem.GroupName` is persisted in `_tmm/modinfo.json`, the Mod Manager shows a group column plus a "Show groups" toggle, and Set/Clear Group actions regenerate the affected mod's frozen plan.
 
 **Depends on:** B2 (plan persistence) — without it there's no defined moment to re-apply group rules.
 
@@ -347,3 +380,5 @@ own hints? Sonnet can't decide this without architectural input.
 - **O1 (2026-05-27):** Generic exe integrity verification — `ExpectedExeBytes` +
   `AcceptedExeMd5s` on `CustomGameProfile`, `IntegrityChecker` service, wizard Step 1
   Expander with auto-detect, Step 4 review summary, ModManagerPage sidebar status row.
+
+

@@ -8,6 +8,14 @@
   "steamAppId": "12100",
   "routingRules": [
     {
+      "name": "ModLoader Tree",
+      "conditions": [
+        { "type": "PathContains", "operator": "StartsWith", "value": "modloader" }
+      ],
+      "targetPath": "modloader",
+      "priority": 95
+    },
+    {
       "name": "ASI Plugin (scripts/ if exists)",
       "conditions": [
         { "type": "FileExtension", "operator": "Is", "value": ".asi", "logic": "AND" },
@@ -27,7 +35,9 @@
     {
       "name": "CLEO Script",
       "conditions": [
-        { "type": "FileExtension", "operator": "Is", "value": ".cs" }
+        { "type": "FileExtension", "operator": "Is", "value": ".cs", "logic": "OR" },
+        { "type": "FileExtension", "operator": "Is", "value": ".cs4", "logic": "OR" },
+        { "type": "FileExtension", "operator": "Is", "value": ".cs5" }
       ],
       "targetPath": "cleo",
       "priority": 60
@@ -48,6 +58,10 @@
       "isDefault": true
     }
   ],
+  "overlayFolders": ["models", "data", "audio", "text", "anim", "modloader"],
+  "companionSiblings": {
+    "cleo": ["CLEO_TEXT", "CLEO_FONTS"]
+  },
   "installerHints": {
     "engineProxyNames": ["dinput8.dll", "d3d9.dll"],
     "smartDllWizard": true

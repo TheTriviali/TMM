@@ -32,6 +32,7 @@ namespace TMM
         private CustomGameProfile _customConfig = null!;
         private ObservableCollection<ModItem> _modsCustom = new();
         private bool _pendingCustom;
+        private bool _showGroups;
         private Point _startCustom;
         private ModItem? _draggedCustom;
         private CancellationTokenSource? _deployCts;
@@ -89,6 +90,8 @@ namespace TMM
         private async Task RefreshCustomAsync()
         {
             await _core.RefreshAllModListsAsync();
+            RefreshCustomView();
+            await EnsureDeploymentPlansAsync();
             UpdateDeployButtonCustom();
             UpdateSidebarCustom();
             Cust_txtDiskSpace.Text = _core.GetDriveSpaceInfo();
@@ -189,6 +192,7 @@ namespace TMM
                 _modsCustom.Clear();
                 foreach (var m in saved.OrderBy(x => x.LoadOrder))
                     if (Directory.Exists(m.RawFolderPath)) _modsCustom.Add(m);
+                RefreshCustomView();
             }
             catch { }
         }
@@ -199,6 +203,34 @@ namespace TMM
             Directory.CreateDirectory(folder);
             File.WriteAllText(Path.Combine(folder, "modlist.json"),
                 JsonSerializer.Serialize(_modsCustom.ToList(), JsonHelper.PrettyOptions));
+        }
+
+        private void RefreshCustomView()
+        {
+            var view = CollectionViewSource.GetDefaultView(_modsCustom);
+            if (view is null) return;
+
+            string q = Cust_txtSearch.Text.Trim().ToLowerInvariant();
+            view.Filter = string.IsNullOrEmpty(q)
+                ? null
+                : obj => obj is ModItem m && m.Name.ToLowerInvariant().Contains(q);
+
+            using (view.DeferRefresh())
+            {
+                view.GroupDescriptions.Clear();
+                if (_showGroups)
+                    view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ModItem.GroupName)));
+            }
+        }
+
+        private async Task EnsureDeploymentPlansAsync()
+        {
+            foreach (var mod in _modsCustom.Where(m => Directory.Exists(m.RawFolderPath)))
+            {
+                string planPath = Path.Combine(mod.RawFolderPath, "_tmm", "deployplan.json");
+                if (File.Exists(planPath)) continue;
+                await _core.OnModAddedAsync(_customProfile.Key, mod.Name);
+            }
         }
 
         // ── Toolbar handlers ──────────────────────────────────────────────────────
@@ -252,11 +284,90 @@ namespace TMM
                 };
                 SyncModInfoToFolder(item);
                 _modsCustom.Add(item);
+                await _core.OnModAddedAsync(_customProfile.Key, modName);
                 NotificationService.ShowSuccess($"Installed '{modName}'.");
             }
             catch (Exception ex)
             {
                 NotificationService.ShowError($"Failed to install '{modName}': {ex.Message}");
+            }
+        }
+
+        private async void BtnImportFromGame_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_customConfig.GameDirectory) || !Directory.Exists(_customConfig.GameDirectory))
+            {
+                MessageBox.Show("Set the game directory first, then try import again.",
+                    "Import Not Available", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            ShowDeployOverlay("Scanning existing install...");
+            List<ModImportCandidate> candidates;
+            try
+            {
+                candidates = await new ModImporter().ScanAsync(_customConfig.GameDirectory, _customConfig, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                HideDeployOverlay();
+                NotificationService.ShowError($"Import scan failed: {ex.Message}");
+                return;
+            }
+            finally
+            {
+                HideDeployOverlay();
+            }
+
+            if (candidates.Count == 0)
+            {
+                MessageBox.Show("No obvious mod candidates were found in the current game folder.",
+                    "Import Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var review = new ImportReviewWindow(candidates) { Owner = Window.GetWindow(this) };
+            if (review.ShowDialog() != true)
+                return;
+
+            var selected = review.GetSelectedCandidates();
+            if (selected.Count == 0)
+                return;
+
+            if (MessageBox.Show(
+                    $"Move {selected.Count} detected mod(s) into TMM and redeploy them to preserve the current install?",
+                    "Import Existing Install",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question) != MessageBoxResult.Yes)
+                return;
+
+            ShowDeployOverlay("Importing existing install...");
+            try
+            {
+                var importedMods = await new ModImporter().ImportAsync(
+                    _core, _customProfile.Key, _customConfig.GameDirectory, _customConfig, selected, CancellationToken.None);
+
+                foreach (var mod in importedMods)
+                {
+                    SyncModInfoToFolder(mod);
+                    _modsCustom.Add(mod);
+                }
+
+                for (int i = 0; i < _modsCustom.Count; i++)
+                    _modsCustom[i].LoadOrder = i;
+
+                SaveModsCustom();
+                await _core.DeployCustomGameModsAsync(_customProfile, _customConfig, _modsCustom);
+                NotificationService.ShowSuccess($"Imported {importedMods.Count} mod(s).");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Import failed: {ex.Message}");
+            }
+            finally
+            {
+                HideDeployOverlay();
+                await RefreshCustomAsync();
             }
         }
 
@@ -282,12 +393,11 @@ namespace TMM
             List<(ModItem Mod, DeploymentPlan Plan)> plans;
             try
             {
-                var planner = new DeploymentPlanner();
                 plans = new List<(ModItem, DeploymentPlan)>(enabled.Count);
                 foreach (var mod in enabled)
                 {
                     if (!Directory.Exists(mod.RawFolderPath)) continue;
-                    plans.Add((mod, await planner.PlanDeploymentAsync(mod, _customConfig)));
+                    plans.Add((mod, await _core.GetDeploymentPlanAsync(_customProfile.Key, mod, _customConfig)));
                 }
             }
             finally
@@ -355,10 +465,41 @@ namespace TMM
 
         private async void BtnEditConfigCustom_Click(object sender, RoutedEventArgs e)
         {
+            var previousConfig = CloneProfile(_customConfig);
             var wizard = new CustomGameSetupWizard(_customConfig) { Owner = Window.GetWindow(this) };
             if (wizard.ShowDialog() != true || wizard.Result is null) return;
-            _customConfig = wizard.Result;
+            var updatedConfig = wizard.Result;
+            bool routingChanged = RoutingRulesChanged(previousConfig, updatedConfig);
+            _customConfig = updatedConfig;
             await GameRegistry.Instance.UpdateCustomGameAsync(_customProfile.Key, _customConfig);
+
+            if (routingChanged)
+            {
+                var affectedMods = _modsCustom.Where(m => Directory.Exists(m.RawFolderPath)).ToList();
+                if (affectedMods.Count > 0)
+                {
+                    var confirm = MessageBox.Show(
+                        $"{affectedMods.Count} existing mods have stale plans. Replan all now?",
+                        "Routing Rules Changed",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (confirm == MessageBoxResult.Yes)
+                    {
+                        ShowDeployOverlay("Replanning deployment plans...");
+                        try
+                        {
+                            foreach (var mod in affectedMods)
+                                await _core.OnModAddedAsync(_customProfile.Key, mod.Name);
+                        }
+                        finally
+                        {
+                            HideDeployOverlay();
+                        }
+                    }
+                }
+            }
+
             await RefreshCustomAsync();
         }
 
@@ -370,16 +511,19 @@ namespace TMM
 
         private void TxtSearchCustom_TextChanged(object sender, TextChangedEventArgs e)
         {
-            string q = Cust_txtSearch.Text.Trim().ToLowerInvariant();
-            CollectionViewSource.GetDefaultView(_modsCustom).Filter = string.IsNullOrEmpty(q)
-                ? null
-                : obj => obj is ModItem m && m.Name.ToLowerInvariant().Contains(q);
+            RefreshCustomView();
         }
 
         private void BtnClearSearchCustom_Click(object sender, RoutedEventArgs e)
         {
             Cust_txtSearch.Text = "";
-            CollectionViewSource.GetDefaultView(_modsCustom).Filter = null;
+            RefreshCustomView();
+        }
+
+        private void Cust_ShowGroupsChanged(object sender, RoutedEventArgs e)
+        {
+            _showGroups = Cust_chkShowGroups.IsChecked == true;
+            RefreshCustomView();
         }
 
         // ══════════════════════════════════════════════════════════════════════════
@@ -528,6 +672,41 @@ namespace TMM
             SaveModsCustom();
         }
 
+        private void MenuSetGroup_Click(object? sender, RoutedEventArgs e)
+        {
+            var mod = GetSelectedMod();
+            if (mod == null) return;
+
+            var win = new RenameWindow(mod.GroupName ?? "", "Set Group", "Group name:")
+            {
+                Owner = Window.GetWindow(this),
+            };
+            if (win.ShowDialog() != true) return;
+
+            mod.GroupName = string.IsNullOrWhiteSpace(win.NewName) ? null : win.NewName.Trim();
+            SyncModInfoToFolder(mod);
+            SaveModsCustom();
+            _pendingCustom = true;
+            UpdateDeployButtonCustom();
+            RefreshCustomView();
+            _ = ReplanGroupedModAsync(mod);
+        }
+
+        private void MenuClearGroup_Click(object? sender, RoutedEventArgs e)
+        {
+            var mod = GetSelectedMod();
+            if (mod == null) return;
+            if (string.IsNullOrWhiteSpace(mod.GroupName)) return;
+
+            mod.GroupName = null;
+            SyncModInfoToFolder(mod);
+            SaveModsCustom();
+            _pendingCustom = true;
+            UpdateDeployButtonCustom();
+            RefreshCustomView();
+            _ = ReplanGroupedModAsync(mod);
+        }
+
         private void MenuToggle_Click(object? sender, RoutedEventArgs e)
         {
             var mod = GetSelectedMod();
@@ -614,6 +793,26 @@ namespace TMM
             _pendingCustom = true;
             UpdateDeployButtonCustom();
             SaveModsCustom();
+        }
+
+        private async Task ReplanGroupedModAsync(ModItem mod)
+        {
+            if (!Directory.Exists(mod.RawFolderPath))
+                return;
+
+            try
+            {
+                ShowDeployOverlay("Updating deployment plan...");
+                await _core.OnModAddedAsync(_customProfile.Key, mod.Name);
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Failed to update plan for '{mod.Name}': {ex.Message}");
+            }
+            finally
+            {
+                HideDeployOverlay();
+            }
         }
 
         private void MenuOpenFolder_Click(object? sender, RoutedEventArgs e)
@@ -823,11 +1022,64 @@ namespace TMM
             try
             {
                 if (Directory.Exists(mod.RawFolderPath))
+                {
+                    string legacyPath = Path.Combine(mod.RawFolderPath, "modinfo.txt");
+                    File.WriteAllText(legacyPath, JsonSerializer.Serialize(mod, JsonHelper.PrettyOptions));
+
+                    string sidecarDir = Path.Combine(mod.RawFolderPath, "_tmm");
+                    Directory.CreateDirectory(sidecarDir);
                     File.WriteAllText(
-                        Path.Combine(mod.RawFolderPath, "modinfo.txt"),
+                        Path.Combine(sidecarDir, "modinfo.json"),
                         JsonSerializer.Serialize(mod, JsonHelper.PrettyOptions));
+                }
             }
             catch { /* best effort */ }
+        }
+
+        private static CustomGameProfile CloneProfile(CustomGameProfile src) => new()
+        {
+            GameName           = src.GameName,
+            ShortName          = src.ShortName,
+            GameDirectory      = src.GameDirectory,
+            ExePath            = src.ExePath,
+            SteamAppId         = src.SteamAppId,
+            ModTypes           = new(src.ModTypes),
+            RoutingRules       = new(src.RoutingRules),
+            OverlayFolders     = new(src.OverlayFolders),
+            CompanionSiblings  = src.CompanionSiblings.ToDictionary(
+                kvp => kvp.Key,
+                kvp => new List<string>(kvp.Value)),
+            InstallerHints     = src.InstallerHints,
+            LauncherCard       = src.LauncherCard,
+            Description        = src.Description,
+            Author             = src.Author,
+            Version            = src.Version,
+            ReleaseTag         = src.ReleaseTag,
+            CustomTag          = src.CustomTag,
+            Robustness         = src.Robustness,
+            IsNative           = src.IsNative,
+            ExpectedExeBytes   = src.ExpectedExeBytes,
+            AcceptedExeMd5s    = new(src.AcceptedExeMd5s),
+            GradientStartHex   = src.GradientStartHex,
+            GradientEndHex     = src.GradientEndHex,
+            LibraryStatus      = src.LibraryStatus,
+            CustomArtFileName   = src.CustomArtFileName,
+            NexusSlug          = src.NexusSlug,
+        };
+
+        private static bool RoutingRulesChanged(CustomGameProfile before, CustomGameProfile after) =>
+            SerializePlanRelevantProfile(before) != SerializePlanRelevantProfile(after);
+
+        private static string SerializePlanRelevantProfile(CustomGameProfile profile)
+        {
+            var parts = new List<string>
+            {
+                JsonSerializer.Serialize(profile.RoutingRules, JsonHelper.PrettyOptions),
+                JsonSerializer.Serialize(profile.OverlayFolders, JsonHelper.PrettyOptions),
+                JsonSerializer.Serialize(profile.CompanionSiblings, JsonHelper.PrettyOptions),
+            };
+            parts.AddRange(profile.ModTypes.Select(mt => $"{mt.Name}:{JsonSerializer.Serialize(mt.RoutingRules, JsonHelper.PrettyOptions)}"));
+            return string.Join("\n", parts);
         }
     }
 }

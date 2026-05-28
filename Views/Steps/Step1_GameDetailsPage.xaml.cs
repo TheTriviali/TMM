@@ -1,6 +1,7 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -31,6 +32,10 @@ namespace TMM
             txtExePath.Text    = profile.ExePath ?? "";
             txtSteamAppId.Text = profile.SteamAppId ?? "";
             txtNexusSlug.Text  = profile.NexusSlug ?? "";
+            txtOverlayFolders.Text = string.Join(", ", profile.OverlayFolders);
+            txtCompanionSiblings.Text = string.Join(Environment.NewLine,
+                profile.CompanionSiblings.Select(kvp =>
+                    $"{kvp.Key} = {string.Join(", ", kvp.Value)}"));
 
             txtExpectedBytes.Text = profile.ExpectedExeBytes?.ToString() ?? "";
             _md5s.Clear();
@@ -46,6 +51,8 @@ namespace TMM
             profile.ExePath       = NullIfBlank(txtExePath.Text);
             profile.SteamAppId    = NullIfBlank(txtSteamAppId.Text);
             profile.NexusSlug     = NullIfBlank(txtNexusSlug.Text);
+            profile.OverlayFolders = ParseCsvList(txtOverlayFolders.Text);
+            profile.CompanionSiblings = ParseCompanionMap(txtCompanionSiblings.Text);
 
             string sizeText = txtExpectedBytes.Text.Trim();
             profile.ExpectedExeBytes = long.TryParse(sizeText, out long bytes) && bytes > 0
@@ -134,6 +141,42 @@ namespace TMM
 
         private static string? NullIfBlank(string? s) =>
             string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+        private static System.Collections.Generic.List<string> ParseCsvList(string? text) =>
+            string.IsNullOrWhiteSpace(text)
+                ? new System.Collections.Generic.List<string>()
+                : text.Split(new[] { ',', ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                      .Select(x => x.Trim())
+                      .Where(x => !string.IsNullOrWhiteSpace(x))
+                      .Distinct(StringComparer.OrdinalIgnoreCase)
+                      .ToList();
+
+        private static System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> ParseCompanionMap(string? text)
+        {
+            var map = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(text)) return map;
+
+            foreach (string line in text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string[] parts = line.Split('=', 2, StringSplitOptions.TrimEntries);
+                if (parts.Length != 2) continue;
+
+                string key = parts[0].Trim();
+                if (string.IsNullOrWhiteSpace(key)) continue;
+
+                var siblings = parts[1]
+                    .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                if (siblings.Count > 0)
+                    map[key] = siblings;
+            }
+
+            return map;
+        }
 
         // ── Integrity handlers ────────────────────────────────────────────────
 

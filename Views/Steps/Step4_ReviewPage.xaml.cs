@@ -24,6 +24,8 @@ namespace TMM
 
             lblIntegrity.Text  = DescribeIntegrity(profile);
             lblNexusSlug.Text  = string.IsNullOrEmpty(profile.NexusSlug) ? "(not set)" : profile.NexusSlug;
+            lblOverlayFolders.Text = DescribeOverlayFolders(profile);
+            lblCompanionSiblings.Text = DescribeCompanionSiblings(profile);
 
             var modTypeSummaries = profile.ModTypes
                 .Select(mt =>
@@ -76,5 +78,16 @@ namespace TMM
             if (hashCount > 0) parts.Add($"{hashCount} MD5 hash{(hashCount == 1 ? "" : "es")}");
             return string.Join(" + ", parts);
         }
+
+        private static string DescribeOverlayFolders(CustomGameProfile profile) =>
+            profile.OverlayFolders.Count == 0
+                ? "(not set)"
+                : string.Join(", ", profile.OverlayFolders);
+
+        private static string DescribeCompanionSiblings(CustomGameProfile profile) =>
+            profile.CompanionSiblings.Count == 0
+                ? "(not set)"
+                : string.Join("; ", profile.CompanionSiblings.Select(kvp =>
+                    $"{kvp.Key}: {string.Join(", ", kvp.Value)}"));
     }
 }

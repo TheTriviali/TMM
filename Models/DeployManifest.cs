@@ -7,7 +7,8 @@ namespace TMM
         string GameKey,
         string GameDirectory,
         List<string> ModNames,
-        List<BackupEntry> Entries);
+        List<BackupEntry> Entries,
+        List<string>? Directories = null);
 
     public record BackupEntry(
         string RelativePath,

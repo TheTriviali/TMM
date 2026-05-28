@@ -111,6 +111,28 @@
             <TextBox x:Name="txtNexusSlug" Style="{StaticResource FieldBox}"
                      Margin="0,0,0,0" Width="260" HorizontalAlignment="Left"/>
 
+            <!-- Overlay / companion metadata -->
+            <Expander Header="Advanced layout metadata"
+                      Margin="0,20,0,0" Foreground="{DynamicResource TextBrush}"
+                      FontSize="12">
+                <StackPanel Margin="0,12,0,0">
+                    <TextBlock Text="Overlay folders"
+                               Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Text="Comma-separated top-level folders that should preserve their relative path."
+                               Style="{StaticResource FieldHint}"/>
+                    <TextBox x:Name="txtOverlayFolders" Style="{StaticResource FieldBox}"
+                             AcceptsReturn="False" Margin="0,0,0,14"/>
+
+                    <TextBlock Text="Companion sibling folders"
+                               Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Text="One mapping per line: folder = sibling1, sibling2"
+                               Style="{StaticResource FieldHint}"/>
+                    <TextBox x:Name="txtCompanionSiblings" Style="{StaticResource FieldBox}"
+                             AcceptsReturn="True" Height="88" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"/>
+                </StackPanel>
+            </Expander>
+
             <!-- Integrity Verification (optional, advanced) -->
             <Expander Header="{helpers:Localization Step1_Integrity_Header}"
                       Margin="0,24,0,0" Foreground="{DynamicResource TextBrush}"

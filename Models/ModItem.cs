@@ -53,6 +53,9 @@ namespace TMM
         /// <summary>Path to the packed archive file (if imported from .zip/.rar/.7z).</summary>
         public string PackedFilePath { get; set; } = string.Empty;
 
+        /// <summary>Optional group name used to nest the mod under a deployment group.</summary>
+        public string? GroupName { get; set; }
+
         /// <summary>
         /// Auto-detected mod type based on file contents.
         /// Null if type could not be determined.

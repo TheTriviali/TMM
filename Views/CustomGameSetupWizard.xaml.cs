@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using TMM.Services;
@@ -177,11 +178,16 @@ namespace TMM
         private static CustomGameProfile CloneProfile(CustomGameProfile src) => new()
         {
             GameName      = src.GameName,
+            ShortName     = src.ShortName,
             GameDirectory = src.GameDirectory,
             ExePath       = src.ExePath,
             SteamAppId    = src.SteamAppId,
             ModTypes      = new(src.ModTypes),
             RoutingRules  = new(src.RoutingRules),
+            OverlayFolders = new(src.OverlayFolders),
+            CompanionSiblings = src.CompanionSiblings.ToDictionary(
+                kvp => kvp.Key,
+                kvp => new List<string>(kvp.Value)),
             Robustness    = src.Robustness,
             ReleaseTag    = src.ReleaseTag,
             CustomTag     = src.CustomTag,
@@ -189,6 +195,13 @@ namespace TMM
             Version       = src.Version,
             Description   = src.Description,
             Author        = src.Author,
+            ExpectedExeBytes = src.ExpectedExeBytes,
+            AcceptedExeMd5s  = new(src.AcceptedExeMd5s),
+            GradientStartHex = src.GradientStartHex,
+            GradientEndHex   = src.GradientEndHex,
+            LibraryStatus    = src.LibraryStatus,
+            CustomArtFileName = src.CustomArtFileName,
+            NexusSlug        = src.NexusSlug,
         };
     }
 }

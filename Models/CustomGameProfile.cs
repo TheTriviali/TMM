@@ -62,6 +62,18 @@ namespace TMM
         /// </summary>
         public List<RoutingRule> RoutingRules { get; set; } = new();
 
+        /// <summary>
+        /// Top-level folder names that should be treated as overlays when found in a mod root.
+        /// Files beneath those folders preserve their relative path on deploy.
+        /// </summary>
+        public List<string> OverlayFolders { get; set; } = new();
+
+        /// <summary>
+        /// Known sibling folders that should be scanned for companion files during import.
+        /// Key = folder name that owns the main file type; value = allowed companion folders.
+        /// </summary>
+        public Dictionary<string, List<string>> CompanionSiblings { get; set; } = new();
+
         public InstallerHints? InstallerHints { get; set; }
         public LauncherCardConfig? LauncherCard { get; set; }
         public string? Description { get; set; }

@@ -1,3 +1,4 @@
+using TMM.Services;
 using TMM.Tests.Helpers;
 
 namespace TMM.Tests;
@@ -41,6 +42,42 @@ public class BackendCoreDeployTests
     /// guaranteed not to touch any real TMM data.
     /// </summary>
     private static string UniqueKey() => "ITEST_" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+
+    [Fact]
+    public async Task ModImporter_ScansLooseFilesAndModloaderFolders()
+    {
+        using var tmp = new TempDirectory();
+        string gameDir = tmp.CreateSubDir("GameDir");
+
+        File.WriteAllText(Path.Combine(gameDir, "dinput8.dll"), "ROOT");
+        Directory.CreateDirectory(Path.Combine(gameDir, "scripts"));
+        File.WriteAllText(Path.Combine(gameDir, "scripts", "myscript.cs"), "CS");
+        Directory.CreateDirectory(Path.Combine(gameDir, "CLEO_TEXT"));
+        File.WriteAllText(Path.Combine(gameDir, "CLEO_TEXT", "myscript.fxt"), "FXT");
+        Directory.CreateDirectory(Path.Combine(gameDir, "modloader", "Cars", "Speed"));
+        File.WriteAllText(Path.Combine(gameDir, "modloader", "Cars", "Speed", "speed.asi"), "MOD");
+
+        var profile = new CustomGameProfile
+        {
+            GameName = "Test Game",
+            CompanionSiblings = new Dictionary<string, List<string>>
+            {
+                ["cleo"] = new() { "CLEO_TEXT", "CLEO_FONTS" },
+            },
+        };
+
+        var importer = new ModImporter();
+        var candidates = await importer.ScanAsync(gameDir, profile);
+
+        var root = Assert.Single(candidates, c => c.Name.Equals("dinput8", StringComparison.OrdinalIgnoreCase));
+        Assert.NotNull(root.Warning);
+        var cleo = Assert.Single(candidates, c => c.Name.Equals("myscript", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(2, cleo.FileCount);
+        Assert.Null(cleo.GroupName);
+        Assert.Null(cleo.Warning);
+        Assert.Contains(candidates, c => c.Name.Equals("Speed", StringComparison.OrdinalIgnoreCase) &&
+                                        c.GroupName == "Cars");
+    }
 
     // ── Deploy: new file copied ───────────────────────────────────────────────
 
@@ -188,6 +225,85 @@ public class BackendCoreDeployTests
     }
 
     // ── Rollback: remove newly deployed file ─────────────────────────────────
+
+    [Fact]
+    public async Task RollbackDeployAsync_UsesFirstTouchBaselineAcrossMultipleDeploys()
+    {
+        using var tmp = new TempDirectory();
+        string gameDir = tmp.CreateSubDir("GameDir");
+
+        File.WriteAllText(Path.Combine(gameDir, "stacked.dll"), "ORIGINAL");
+        string firstMod = tmp.WriteFile("ModA/stacked.dll", "FIRST");
+        string secondMod = tmp.WriteFile("ModB/stacked.dll", "SECOND");
+
+        string gameKey = UniqueKey();
+        string backupDir = Path.Combine(Backend.BackupsPath, gameKey);
+        try
+        {
+            var firstDeploy = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["stacked.dll"] = firstMod,
+            };
+            await Backend.DeployFilesToGameDirAsync(gameKey, gameDir, firstDeploy, ["ModA"]);
+            Assert.Equal("FIRST", File.ReadAllText(Path.Combine(gameDir, "stacked.dll")));
+
+            var secondDeploy = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["stacked.dll"] = secondMod,
+            };
+            await Backend.DeployFilesToGameDirAsync(gameKey, gameDir, secondDeploy, ["ModB"]);
+            Assert.Equal("SECOND", File.ReadAllText(Path.Combine(gameDir, "stacked.dll")));
+
+            var latestManifest = Backend.GetRollbackManifests(gameKey).First();
+            await Backend.RollbackDeployAsync(latestManifest);
+
+            Assert.Equal("ORIGINAL", File.ReadAllText(Path.Combine(gameDir, "stacked.dll")));
+        }
+        finally
+        {
+            if (Directory.Exists(backupDir)) BackendCore.ForceDeleteDirectory(backupDir);
+        }
+    }
+
+    [Fact]
+    public async Task RollbackDeployAsync_RemovesEmptyDeployedDirectories()
+    {
+        using var tmp = new TempDirectory();
+        string gameDir = tmp.CreateSubDir("GameDir");
+        string srcFile = tmp.WriteFile("Mod/scripts/plugin.asi", "PLUGIN");
+
+        string gameKey = UniqueKey();
+        string backupDir = Path.Combine(Backend.BackupsPath, gameKey);
+        try
+        {
+            var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["scripts\\plugin.asi"] = srcFile,
+            };
+            var directories = new List<string>
+            {
+                Path.Combine(gameDir, "scripts"),
+                Path.Combine(gameDir, "scripts", "empty"),
+            };
+
+            await Backend.DeployFilesToGameDirAsync(gameKey, gameDir, fileMap, ["TestMod"], directories: directories);
+
+            Assert.True(Directory.Exists(Path.Combine(gameDir, "scripts")));
+            Assert.True(Directory.Exists(Path.Combine(gameDir, "scripts", "empty")));
+
+            var manifest = Backend.GetRollbackManifests(gameKey).First();
+            Assert.Contains("scripts", manifest.Directories ?? []);
+            Assert.Contains(Path.Combine("scripts", "empty"), manifest.Directories ?? []);
+
+            await Backend.RollbackDeployAsync(manifest);
+
+            Assert.False(Directory.Exists(Path.Combine(gameDir, "scripts", "empty")));
+        }
+        finally
+        {
+            if (Directory.Exists(backupDir)) BackendCore.ForceDeleteDirectory(backupDir);
+        }
+    }
 
     [Fact]
     public async Task RollbackDeployAsync_RemovesNewlyDeployedFile()

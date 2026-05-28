@@ -248,6 +248,8 @@ namespace TMM
                 ExePath        = config.ExePath?.Replace('\\', '/'),
                 SteamAppId     = config.SteamAppId,
                 RoutingRules   = config.RoutingRules.Count > 0 ? config.RoutingRules : null,
+                OverlayFolders = config.OverlayFolders.Count > 0 ? config.OverlayFolders : null,
+                CompanionSiblings = config.CompanionSiblings.Count > 0 ? config.CompanionSiblings : null,
                 InstallerHints = config.InstallerHints,
                 LauncherCard   = config.LauncherCard,
                 Description    = config.Description,

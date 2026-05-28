@@ -92,7 +92,7 @@ namespace TMM.Services
                 ConditionType.HasFolder      => EvalHasFolder(cond, modFolderPath),
                 ConditionType.FolderCount    => EvalFolderCount(cond, modFolderPath),
                 ConditionType.FileCount      => EvalFileCount(cond, modFolderPath),
-                ConditionType.PathContains   => EvalPathContains(cond, filePath),
+                ConditionType.PathContains   => EvalPathContains(cond, filePath, modFolderPath),
                 ConditionType.FilenameMatches => EvalFilenameMatches(cond, filePath),
                 _ => false,
             };
@@ -132,8 +132,22 @@ namespace TMM.Services
             return ApplyNumericOperator(cond.Operator, count, cond.Value);
         }
 
-        private static bool EvalPathContains(Condition cond, string filePath)
-            => ApplyStringOperator(cond.Operator, filePath, cond.Value, StringComparison.OrdinalIgnoreCase);
+        private static bool EvalPathContains(Condition cond, string filePath, string modFolderPath)
+        {
+            string value = NormalizePathFragment(cond.Value);
+
+            if (ApplyStringOperator(cond.Operator, NormalizePathFragment(filePath), value, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(modFolderPath))
+            {
+                string relativePath = NormalizePathFragment(Path.GetRelativePath(modFolderPath, filePath));
+                if (ApplyStringOperator(cond.Operator, relativePath, value, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
+        }
 
         private static bool EvalFilenameMatches(Condition cond, string filePath)
         {
@@ -173,5 +187,8 @@ namespace TMM.Services
                 _ => false,
             };
         }
+
+        private static string NormalizePathFragment(string path) =>
+            path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
     }
 }

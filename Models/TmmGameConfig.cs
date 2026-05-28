@@ -54,6 +54,8 @@ namespace TMM
 
         // ── New format ────────────────────────────────────────────────────────────
         public List<RoutingRule>? RoutingRules { get; set; }
+        public List<string>? OverlayFolders { get; set; }
+        public Dictionary<string, List<string>>? CompanionSiblings { get; set; }
 
         // ── Legacy format (read-only for backward compat, never written on export) ─
         public string? ModFileTypes { get; set; }
@@ -101,6 +103,8 @@ namespace TMM
                 Author         = export.Author,
                 Version        = System.Version.TryParse(export.Version, out var ver) ? ver : null,
                 RoutingRules   = export.RoutingRules ?? new(),
+                OverlayFolders = export.OverlayFolders ?? new(),
+                CompanionSiblings = export.CompanionSiblings ?? new(),
                 GradientStartHex = export.GradientStartHex ?? export.LauncherCard?.GradientStartHex,
                 GradientEndHex   = export.GradientEndHex   ?? export.LauncherCard?.GradientEndHex,
                 LibraryStatus    = status,

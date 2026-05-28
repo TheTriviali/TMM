@@ -28,8 +28,22 @@ public class DeploymentPlannerTests
     {
         GameName      = "Grand Theft Auto III",
         GameDirectory = gameDir,
+        CompanionSiblings = new Dictionary<string, List<string>>
+        {
+            ["cleo"] = new() { "CLEO_TEXT", "CLEO_FONTS" },
+        },
         RoutingRules  =
         [
+            new RoutingRule
+            {
+                Name       = "ModLoader Tree",
+                Conditions =
+                [
+                    new Condition { Type = ConditionType.PathContains, Operator = ConditionOperator.StartsWith, Value = "modloader" },
+                ],
+                TargetPath = "modloader",
+                Priority   = 95,
+            },
             new RoutingRule
             {
                 Name       = "ASI Plugin (scripts/ if exists)",
@@ -53,7 +67,12 @@ public class DeploymentPlannerTests
             new RoutingRule
             {
                 Name       = "CLEO Script",
-                Conditions = [ new Condition { Type = ConditionType.FileExtension, Operator = ConditionOperator.Is, Value = ".cs" } ],
+                Conditions =
+                [
+                    new Condition { Type = ConditionType.FileExtension, Operator = ConditionOperator.Is, Value = ".cs",  Logic = LogicOperator.OR },
+                    new Condition { Type = ConditionType.FileExtension, Operator = ConditionOperator.Is, Value = ".cs4", Logic = LogicOperator.OR },
+                    new Condition { Type = ConditionType.FileExtension, Operator = ConditionOperator.Is, Value = ".cs5" },
+                ],
                 TargetPath = "cleo",
                 Priority   = 60,
             },
@@ -66,6 +85,7 @@ public class DeploymentPlannerTests
                 IsDefault  = true,
             },
         ],
+        OverlayFolders = ["models", "data", "audio", "text", "anim", "modloader"],
     };
 
     private static ModItem MakeMod(string name, string folderPath) => new()
@@ -94,6 +114,67 @@ public class DeploymentPlannerTests
         Assert.Single(plan.Files);
         Assert.EndsWith(Path.Combine("cleo", "myscript.cs"), plan.Files[0].DestinationPath);
         Assert.True(plan.IsReady);
+    }
+
+    [Theory]
+    [InlineData(".cs4")]
+    [InlineData(".cs5")]
+    public async Task PlanDeployment_CleoVariants_RouteToCleoDirectory(string extension)
+    {
+        using var tmp = new TempDirectory();
+        string gameDir   = tmp.CreateSubDir("GameDir");
+        string modFolder = tmp.CreateSubDir("CleoMod");
+        File.WriteAllText(Path.Combine(modFolder, "myscript" + extension), "cleo");
+
+        var profile = BuildGta3Profile(gameDir);
+        var mod     = MakeMod("CleoMod", modFolder);
+
+        var plan = await new DeploymentPlanner().PlanDeploymentAsync(mod, profile);
+
+        Assert.Empty(plan.Warnings);
+        Assert.Single(plan.Files);
+        Assert.EndsWith(Path.Combine("cleo", "myscript" + extension), plan.Files[0].DestinationPath);
+    }
+
+    [Fact]
+    public async Task PlanDeployment_IniCompanion_FollowsMatchingCleoScript()
+    {
+        using var tmp = new TempDirectory();
+        string gameDir   = tmp.CreateSubDir("GameDir");
+        string modFolder = tmp.CreateSubDir("CleoMod");
+        File.WriteAllText(Path.Combine(modFolder, "myscript.cs"), "cleo");
+        Directory.CreateDirectory(Path.Combine(modFolder, "CLEO_TEXT"));
+        File.WriteAllText(Path.Combine(modFolder, "CLEO_TEXT", "myscript.ini"), "ini");
+
+        var profile = BuildGta3Profile(gameDir);
+        var mod     = MakeMod("CleoMod", modFolder);
+
+        var plan = await new DeploymentPlanner().PlanDeploymentAsync(mod, profile);
+
+        Assert.Equal(2, plan.Files.Count);
+        var scriptEntry = Assert.Single(plan.Files, f => f.SourcePath.EndsWith("myscript.cs", StringComparison.OrdinalIgnoreCase));
+        Assert.EndsWith(Path.Combine("cleo", "myscript.cs"), scriptEntry.DestinationPath);
+        var iniEntry = Assert.Single(plan.Files, f => f.SourcePath.EndsWith("myscript.ini", StringComparison.OrdinalIgnoreCase));
+        Assert.EndsWith(Path.Combine("cleo", "myscript.ini"), iniEntry.DestinationPath);
+    }
+
+    [Fact]
+    public async Task PlanDeployment_ModloaderTree_PreservesRelativePathAndGroup()
+    {
+        using var tmp = new TempDirectory();
+        string gameDir   = tmp.CreateSubDir("GameDir");
+        string modFolder = tmp.CreateSubDir("SpeedPack");
+        Directory.CreateDirectory(Path.Combine(modFolder, "modloader", "Speed"));
+        File.WriteAllText(Path.Combine(modFolder, "modloader", "Speed", "speed.asi"), "mod");
+
+        var profile = BuildGta3Profile(gameDir);
+        var mod = MakeMod("Speed", modFolder);
+        mod.GroupName = "Cars";
+
+        var plan = await new DeploymentPlanner().PlanDeploymentAsync(mod, profile);
+
+        Assert.Single(plan.Files);
+        Assert.EndsWith(Path.Combine("modloader", "Cars", "Speed", "speed.asi"), plan.Files[0].DestinationPath);
     }
 
     [Fact]

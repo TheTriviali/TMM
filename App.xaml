@@ -10,6 +10,7 @@
         <!-- Converters -->
         <local:NotificationTypeIconConverter x:Key="NotificationTypeIconConverter"/>
         <local:InverseBoolToVisConverter x:Key="InverseBoolToVisConverter"/>
+        <local:GroupNameDisplayConverter x:Key="GroupNameDisplayConverter"/>
         <helpers:LocalizationConverter x:Key="LocalizationConverter"/>
 
         <!-- Core brushes: WinUI dark mode + 2-tone custom accent (replaced live by ThemeEngine.ApplyTheme at startup) -->

@@ -35,6 +35,8 @@ namespace TMM
         private readonly Dictionary<string, ObservableCollection<ModItem>> _modsDict = new();
         public IReadOnlyDictionary<string, ObservableCollection<ModItem>> Mods => _modsDict;
 
+        private readonly BaselineSnapshotStore _baselineSnapshots;
+
         private static readonly HttpClient HttpClient = new();
 
         // ==========================================================
@@ -48,6 +50,7 @@ namespace TMM
                 "TMM");
 
             Directory.CreateDirectory(AppDataPath);
+            _baselineSnapshots = new BaselineSnapshotStore(AppDataPath);
             LoadSettings();
 
             // Initialize localization with saved language preference
@@ -308,7 +311,9 @@ namespace TMM
                 int order = 0;
                 foreach (string subFolder in Directory.GetDirectories(folder))
                 {
-                    string infoPath = Path.Combine(subFolder, "modinfo.txt");
+                    string infoPath = Path.Combine(subFolder, "_tmm", "modinfo.json");
+                    if (!File.Exists(infoPath))
+                        infoPath = Path.Combine(subFolder, "modinfo.txt");
                     if (File.Exists(infoPath))
                     {
                         try
@@ -382,6 +387,14 @@ namespace TMM
                 return "Space Info Unavailable";
             }
         }
+
+        /// <summary>
+        /// Seeds the first-touch baseline for a game directory by snapshotting
+        /// every file currently present. Used by import-from-install so rollback
+        /// can restore the original on-disk state.
+        /// </summary>
+        public Task SeedBaselineAsync(string gameKey, string gameDir, CancellationToken ct = default) =>
+            _baselineSnapshots.SeedExistingFilesAsync(gameKey, gameDir, ct);
 
         public static string FormatBytes(long bytes)
         {
@@ -468,6 +481,120 @@ namespace TMM
             return manifests;
         }
 
+        private string GetDeploymentPlanPath(string gameKey, string modName)
+        {
+            var profile = GameRegistry.Instance.GetGameProfile(gameKey) ?? GameProfile.ByKey(gameKey);
+            string rawFolderName = profile?.RawFolderName ?? $"ModsRaw{gameKey}";
+            return Path.Combine(AppDataPath, rawFolderName, modName, "_tmm", "deployplan.json");
+        }
+
+        private static DeploymentPlan? LoadDeploymentPlan(string planPath)
+        {
+            if (!File.Exists(planPath)) return null;
+
+            try
+            {
+                var plan = JsonSerializer.Deserialize<DeploymentPlan>(
+                    File.ReadAllText(planPath),
+                    JsonHelper.PrettyOptions);
+
+                return plan is not null && plan.PlanVersion == 1 ? plan : null;
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return null;
+            }
+        }
+
+        private static async Task SaveDeploymentPlanAsync(
+            string planPath,
+            DeploymentPlan plan,
+            CancellationToken ct = default)
+        {
+            string? directory = Path.GetDirectoryName(planPath);
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+
+            await File.WriteAllTextAsync(
+                planPath,
+                JsonSerializer.Serialize(plan, JsonHelper.PrettyOptions),
+                ct);
+        }
+
+        /// <summary>
+        /// Captures and persists a frozen deployment plan for a newly added mod.
+        /// </summary>
+        public async Task<DeploymentPlan> OnModAddedAsync(
+            string gameKey,
+            string modName,
+            CancellationToken ct = default)
+        {
+            var config = GameRegistry.Instance.GetCustomGameConfig(gameKey);
+            string planPath = GetDeploymentPlanPath(gameKey, modName);
+
+            if (config is null)
+            {
+                Log($"[Plan:{gameKey}] WARN: cannot capture deployment plan for '{modName}' because the game configuration is unavailable.");
+                return new DeploymentPlan { ModName = modName };
+            }
+
+            string? modFolder = Path.GetDirectoryName(Path.GetDirectoryName(planPath));
+            if (string.IsNullOrEmpty(modFolder) || !Directory.Exists(modFolder))
+            {
+                Log($"[Plan:{gameKey}] WARN: cannot capture deployment plan for '{modName}' because the mod folder is missing.");
+                return new DeploymentPlan { ModName = modName };
+            }
+
+            var mod = new ModItem
+            {
+                Name = modName,
+                RawFolderPath = modFolder,
+                IsEnabled = true,
+            };
+
+            var plan = await new DeploymentPlanner().PlanDeploymentAsync(mod, config, ct);
+            try
+            {
+                await SaveDeploymentPlanAsync(planPath, plan, ct);
+                Log($"[Plan:{gameKey}] Saved deployment plan for '{modName}' to {planPath}");
+            }
+            catch (IOException ex)
+            {
+                Log($"[Plan:{gameKey}] WARN: failed to save deployment plan for '{modName}': {ex.Message}");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Log($"[Plan:{gameKey}] WARN: failed to save deployment plan for '{modName}': {ex.Message}");
+            }
+            return plan;
+        }
+
+        /// <summary>
+        /// Returns a persisted plan for deployment, falling back to live planning for legacy mods.
+        /// </summary>
+        public async Task<DeploymentPlan> GetDeploymentPlanAsync(
+            string gameKey,
+            ModItem mod,
+            CustomGameProfile config,
+            CancellationToken ct = default)
+        {
+            string planPath = GetDeploymentPlanPath(gameKey, mod.Name);
+            var persisted = LoadDeploymentPlan(planPath);
+            if (persisted is not null)
+                return persisted;
+
+            Log($"[Deploy:{gameKey}] WARN: missing or stale deployment plan for '{mod.Name}'; using live planning.");
+            return await new DeploymentPlanner().PlanDeploymentAsync(mod, config, ct);
+        }
+
         public async Task RollbackDeployAsync(
             DeployManifest manifest,
             IProgress<DeploymentProgress>? progress = null,
@@ -480,6 +607,48 @@ namespace TMM
             {
                 ct.ThrowIfCancellationRequested();
                 string destFile = Path.Combine(manifest.GameDirectory, entry.RelativePath);
+                bool restoredFromBaseline = false;
+
+                if (_baselineSnapshots.TryGetEntry(manifest.GameKey, entry.RelativePath, out var baseline))
+                {
+                    if (baseline?.SnapshotFile is not null)
+                    {
+                        string baselinePath = _baselineSnapshots.GetSnapshotPath(manifest.GameKey, baseline.SnapshotFile);
+                        if (File.Exists(baselinePath))
+                        {
+                            string? destDir = Path.GetDirectoryName(destFile);
+                            if (!string.IsNullOrEmpty(destDir)) Directory.CreateDirectory(destDir);
+                            try { File.SetAttributes(destFile, FileAttributes.Normal); } catch { }
+                            await Task.Run(() => File.Copy(baselinePath, destFile, overwrite: true), ct);
+                            restoredFromBaseline = true;
+                        }
+                        else
+                        {
+                            Log($"[Rollback:{manifest.GameKey}] WARN: baseline snapshot missing for {entry.RelativePath}; falling back to manifest backup.");
+                        }
+                    }
+                    else
+                    {
+                        if (File.Exists(destFile))
+                        {
+                            try
+                            {
+                                File.SetAttributes(destFile, FileAttributes.Normal);
+                                File.Delete(destFile);
+                            }
+                            catch { /* best effort */ }
+                        }
+                        restoredFromBaseline = true;
+                    }
+                }
+
+                if (restoredFromBaseline)
+                {
+                    done++;
+                    if (done % 10 == 0 || done == total)
+                        progress?.Report(new($"Restoring {done}/{total}", done, total));
+                    continue;
+                }
 
                 if (entry.BackupFilePath is not null && File.Exists(entry.BackupFilePath))
                 {
@@ -503,6 +672,29 @@ namespace TMM
                 done++;
                 if (done % 10 == 0 || done == total)
                     progress?.Report(new($"Restoring {done}/{total}", done, total));
+            }
+
+            if (manifest.Directories is { Count: > 0 })
+            {
+                foreach (var dir in manifest.Directories.OrderByDescending(d => d.Length))
+                {
+                    ct.ThrowIfCancellationRequested();
+                    string targetDir = Path.Combine(manifest.GameDirectory, dir);
+                    if (!Directory.Exists(targetDir))
+                        continue;
+
+                    try
+                    {
+                        if (!Directory.EnumerateFileSystemEntries(targetDir).Any())
+                        {
+                            Directory.Delete(targetDir, recursive: false);
+                        }
+                    }
+                    catch
+                    {
+                        // Best effort. A directory may be shared with another mod or still in use.
+                    }
+                }
             }
 
             Log($"[Rollback:{manifest.GameKey}] Done.");
@@ -556,6 +748,7 @@ namespace TMM
             // Build flat file map: relative game-dir path -> winning source file.
             // ConditionalRoutes on the profile are applied here (e.g. .asi → plugins\).
             var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var directories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var mod in enabled)
             {
                 if (!Directory.Exists(mod.RawFolderPath))
@@ -569,10 +762,17 @@ namespace TMM
                     rel = ApplyConditionalRoutes(profile.ConditionalRoutes, gameDir, rel);
                     fileMap[rel] = file;
                 }
+
+                foreach (var dir in Directory.EnumerateDirectories(mod.RawFolderPath, "*", SearchOption.AllDirectories))
+                {
+                    string relDir = Path.GetRelativePath(mod.RawFolderPath, dir);
+                    relDir = ApplyConditionalRoutes(profile.ConditionalRoutes, gameDir, relDir);
+                    directories.Add(Path.GetFullPath(Path.Combine(gameDir, relDir)));
+                }
             }
 
             await DeployFilesToGameDirAsync(profile.Key, gameDir, fileMap,
-                enabled.Select(m => m.Name).ToList(), progress, ct);
+                enabled.Select(m => m.Name).ToList(), progress, ct, directories);
         }
 
         /// <summary>
@@ -604,14 +804,15 @@ namespace TMM
 
             Log($"[CustomDeploy:{profile.Key}] Starting - {enabled.Count} enabled, {disabled.Count} disabled");
 
-            // Build file map using DeploymentPlanner; higher FinalLoadOrder wins on destination conflict.
-            var planner = new DeploymentPlanner();
+            // Build file map from frozen install-time plans when available; higher
+            // FinalLoadOrder wins on destination conflict.
             var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var directories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var mod in enabled)
             {
                 if (!Directory.Exists(mod.RawFolderPath)) continue;
 
-                var plan = await planner.PlanDeploymentAsync(mod, config, ct);
+                var plan = await GetDeploymentPlanAsync(profile.Key, mod, config, ct);
 
                 foreach (var warning in plan.Warnings)
                     Log($"[CustomDeploy:{profile.Key}] WARN [{mod.Name}]: {warning.Message}");
@@ -621,10 +822,13 @@ namespace TMM
                     string rel = Path.GetRelativePath(gameDir, entry.DestinationPath);
                     fileMap[rel] = entry.SourcePath;
                 }
+
+                foreach (var dir in plan.Directories)
+                    directories.Add(dir);
             }
 
             await DeployFilesToGameDirAsync(profile.Key, gameDir, fileMap,
-                enabled.Select(m => m.Name).ToList(), progress, ct);
+                enabled.Select(m => m.Name).ToList(), progress, ct, directories);
         }
 
         /// <summary>
@@ -661,7 +865,8 @@ namespace TMM
             Dictionary<string, string> fileMap,
             List<string> modNames,
             IProgress<DeploymentProgress>? progress = null,
-            CancellationToken ct = default)
+            CancellationToken ct = default,
+            IEnumerable<string>? directories = null)
         {
             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             string backupDir = Path.Combine(BackupsPath, gameKey, timestamp);
@@ -670,6 +875,13 @@ namespace TMM
             var entries = new List<BackupEntry>();
             int total = fileMap.Count, done = 0;
 
+            foreach (var dir in directories ?? [])
+            {
+                ct.ThrowIfCancellationRequested();
+                if (!string.IsNullOrWhiteSpace(dir))
+                    Directory.CreateDirectory(dir);
+            }
+
             progress?.Report(new($"Deploying {total} files...", 0, total));
 
             foreach (var (rel, srcFile) in fileMap)
@@ -677,6 +889,14 @@ namespace TMM
                 ct.ThrowIfCancellationRequested();
 
                 string destFile = Path.Combine(gameDir, rel);
+                try
+                {
+                    await _baselineSnapshots.EnsureCapturedAsync(gameKey, gameDir, rel, ct);
+                }
+                catch (Exception ex)
+                {
+                    Log($"[Baseline:{gameKey}] WARN: failed to capture '{rel}': {ex.Message}");
+                }
                 string? destSubDir = Path.GetDirectoryName(destFile);
                 if (!string.IsNullOrEmpty(destSubDir)) Directory.CreateDirectory(destSubDir);
 
@@ -714,7 +934,13 @@ namespace TMM
                     progress?.Report(new($"Writing file {done}/{total}", done, total));
             }
 
-            var manifest = new DeployManifest(timestamp, gameKey, gameDir, modNames, entries);
+            var manifestDirectories = (directories ?? [])
+                .Where(dir => !string.IsNullOrWhiteSpace(dir))
+                .Select(dir => Path.GetRelativePath(gameDir, dir))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var manifest = new DeployManifest(timestamp, gameKey, gameDir, modNames, entries, manifestDirectories);
             File.WriteAllText(
                 Path.Combine(backupDir, "manifest.json"),
                 JsonSerializer.Serialize(manifest, JsonHelper.PrettyOptions));

@@ -93,6 +93,22 @@
                 <TextBlock Text="{helpers:Localization Step4_NexusSlug_Label}" Style="{StaticResource ReviewKey}"/>
                 <TextBlock x:Name="lblNexusSlug" Grid.Column="1" Style="{StaticResource ReviewVal}"/>
             </Grid>
+            <Grid Style="{StaticResource ReviewRow}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Overlay folders" Style="{StaticResource ReviewKey}"/>
+                <TextBlock x:Name="lblOverlayFolders" Grid.Column="1" Style="{StaticResource ReviewVal}"/>
+            </Grid>
+            <Grid Style="{StaticResource ReviewRow}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Companion folders" Style="{StaticResource ReviewKey}"/>
+                <TextBlock x:Name="lblCompanionSiblings" Grid.Column="1" Style="{StaticResource ReviewVal}"/>
+            </Grid>
 
             <!-- ── Mod Types ── -->
             <Border BorderBrush="{DynamicResource ControlBgBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
