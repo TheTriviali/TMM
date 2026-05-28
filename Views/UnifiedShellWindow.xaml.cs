@@ -68,7 +68,7 @@ namespace TMM
                 Left = _core.Settings.WindowLeft;
                 Top  = _core.Settings.WindowTop;
             }
-            if (_core.Settings.WindowWidth >= 900 && _core.Settings.WindowHeight >= 600)
+            if (_core.Settings.WindowWidth >= 800 && _core.Settings.WindowHeight >= 500)
             {
                 Width  = _core.Settings.WindowWidth;
                 Height = _core.Settings.WindowHeight;

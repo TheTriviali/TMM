@@ -50,8 +50,8 @@ namespace TMM
         // ── Window state ──────────────────────────────────────────────────────
         public double WindowLeft   { get; set; } = -1;
         public double WindowTop    { get; set; } = -1;
-        public double WindowWidth  { get; set; } = 1280;
-        public double WindowHeight { get; set; } = 672;
+        public double WindowWidth  { get; set; } = 1100;
+        public double WindowHeight { get; set; } = 720;
 
         // ── Localization ────────────────────────────────────────────────────────
         // Current language code (e.g., "en-US", "es-ES"). Loaded by LocalizationService at startup.
