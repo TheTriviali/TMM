@@ -11,7 +11,7 @@
         Loaded="Window_Loaded">
 
     <Border CornerRadius="10" Background="{DynamicResource BgBrush}"
-            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
             ClipToBounds="True">
         <Grid>
             <Grid.RowDefinitions>

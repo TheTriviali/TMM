@@ -97,17 +97,17 @@
 
         <!-- View-mode toggle button -->
         <Style x:Key="ViewModeBtnStyle" TargetType="Button">
-            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="Background"      Value="{DynamicResource ControlBgBrush}"/>
             <Setter Property="Foreground"      Value="{DynamicResource SubTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Width"           Value="32"/>
             <Setter Property="Height"          Value="28"/>
             <Setter Property="Cursor"          Value="Hand"/>
-            <Setter Property="Margin"          Value="1,0"/>
+            <Setter Property="Margin"          Value="2,0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
                             <TextBlock Text="{TemplateBinding Content}"
                                        FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -115,7 +115,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource ControlBgBrush}"/>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -432,7 +433,9 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <!-- Language selector -->
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                                <TextBlock Text="🌐" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="&#xF49A;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                           Foreground="{DynamicResource SubTextBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <ComboBox x:Name="cmbLanguage" Width="140" Height="22"
                                           Background="{DynamicResource ControlBgBrush}"
                                           Foreground="{DynamicResource TextBrush}"

@@ -9,12 +9,12 @@
         Loaded="Window_Loaded">
 
     <Border x:Name="RootBorder" CornerRadius="12" Background="{DynamicResource BgBrush}"
-            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1.5"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
             MouseLeftButtonDown="TitleBar_MouseDown">
         <Border.OpacityMask>
             <VisualBrush>
                 <VisualBrush.Visual>
-                    <Border Background="White" CornerRadius="11"
+                    <Border Background="White" CornerRadius="10"
                             Width="{Binding ActualWidth, ElementName=RootBorder}"
                             Height="{Binding ActualHeight, ElementName=RootBorder}"/>
                 </VisualBrush.Visual>
