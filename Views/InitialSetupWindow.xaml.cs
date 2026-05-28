@@ -41,8 +41,11 @@ namespace TMM
             }
             cmbLanguage.ItemsSource = items;
 
-            // Sync UI state (language is already set in constructor before InitializeComponent)
+            // Force SetLanguage again to refresh bindings after UI is loaded
             string currentLang = _core.Settings.CurrentLanguage ?? "en-US";
+            LocalizationService.Instance.SetLanguage(currentLang);
+
+            // Sync UI state
             UpdateQuickPickState(currentLang);
             foreach (ComboBoxItem item in cmbLanguage.Items)
             {
