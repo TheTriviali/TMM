@@ -226,6 +226,184 @@ inside the manager; this is the archive-list + install surface only.
 
 ---
 
+## Group E — Setup & download flow fixes  (Opus-triaged 2026-05-29, user-approved)
+
+> **Context.** User walked the cold-start flow (factory reset → "go to your library" → Downloads →
+> download SilentPatch III → Mod Manager → Install) and hit five rough edges. Opus diagnosed each
+> against the code; the two design forks were resolved by the user on 2026-05-29:
+> **(1) flow approach = "context-follow" (lightweight)** — Downloads & Mod Manager silently follow
+> the active/default game, no new persistent chrome; **(2) path setup = "inline banner + clickable
+> sidebar"** — no wizard/prompt changes. Build to those decisions; do not re-open them.
+>
+> Suggested order: **E2** (real bug) first, then **E1 / E5** (quick wins), then **E4** (needs a small
+> backend extraction), then **E3**. They're largely independent; E4 and E5 both touch the install
+> path so coordinate if done together.
+
+### E1 — Downloads page follows the active/default game (stop always defaulting to GTA III)  🟢 Haiku
+**Symptom:** opening the Downloads tab always pre-selects GTA III regardless of what the user is
+working on.
+
+**Root cause:** [Views/Subpages/DownloadsPage.xaml.cs](Views/Subpages/DownloadsPage.xaml.cs)
+`Initialize` (~line 60) picks `_entries.FirstOrDefault(e => e.IsDefault) ?? _entries[0]`, and the
+shell's `NavigateTo("Downloads")` ([Views/UnifiedShellWindow.xaml.cs](Views/UnifiedShellWindow.xaml.cs)
+~line 256) never tells the page which game is active — even though the shell already tracks
+`_activeModManagerEntry` (~line 21).
+
+**Changes:**
+1. Add a public method to `DownloadsPage`:
+   ```csharp
+   /// <summary>Pre-select a game in the downloads dropdown by key (no-op if not found).</summary>
+   public void SetActiveGame(string? gameKey)
+   {
+       if (string.IsNullOrEmpty(gameKey)) return;
+       var match = _entries.FirstOrDefault(e => e.Key == gameKey);
+       if (match != null) cmbGame.SelectedItem = match;
+   }
+   ```
+   (`cmbGame`'s `SelectionChanged` already updates `_selectedGameKey` + refreshes the archive list,
+   so no extra wiring.)
+2. In the shell's `NavigateTo` `case "Downloads":` block, **before** showing the page, call
+   `pageDownloads.SetActiveGame((_activeModManagerEntry ?? BuildLibraryEntries().FirstOrDefault(e => e.IsDefault && !e.IsPlaceholder))?.Key);`
+   so it follows the game being managed, falling back to the default.
+
+**Verify:** open Mod Manager on a non-III game, then click Downloads → dropdown shows that game.
+With no game managed but a default set → shows the default. Build clean.
+
+### E2 — Fix "Location is not available" + unify folder-open handlers  🔵 Sonnet  *(reproduce first)*
+**Symptom (screenshot):** right-clicking a mod → *Open mod(s) folder* throws Windows'
+"`…\TMM\ModsRawIII` is unavailable" dialog.
+
+**Diagnosis:** startup creates `ModsRaw{Key}` for every built-in game
+([Services/BackendCore.cs](Services/BackendCore.cs) ~line 66-73), so the folder normally exists. The
+error means a handler shelled out to a **missing** path. `ShellHelper.OpenFolder`
+([Helpers/Helpers.cs](Helpers/Helpers.cs) ~line 10) does a raw `Process.Start` with no existence
+check. The open-folder handlers in
+[Views/Subpages/ModManagerPage.xaml.cs](Views/Subpages/ModManagerPage.xaml.cs) are **inconsistent**:
+`MenuOpenModsFolder_Click` (~line 569) and `MenuOpenBackupFolder_Click` (~line 562) `CreateDirectory`
+first; `MenuOpenFolder_Click` (~line 545) guards on `Directory.Exists` and **silently does nothing**
+if missing (also bad UX); `MenuOpenGameFolder_Click` (~line 552) shows a message box. Most likely
+trigger: **`FactoryReset` wipes AppData without re-creating the base folders for the running session**
+(see `FactoryReset` in [Services/BackendCore.Settings.cs](Services/BackendCore.Settings.cs) ~line 47)
+— so until the next launch/re-init those `ModsRaw*` dirs are gone.
+
+**Changes (reproduce the exact path first, then):**
+1. Add a helper in `ShellHelper`:
+   ```csharp
+   /// <summary>Open a TMM-owned folder, creating it first so it always exists.</summary>
+   public static void OpenOwnedFolder(string path)
+   { Directory.CreateDirectory(path); OpenFolder(path); }
+   ```
+2. Route the **TMM-owned** folder handlers through it: `MenuOpenModsFolder_Click`,
+   `MenuOpenBackupFolder_Click`, the toolbar Files button (`BtnOpenAppData_Click`), and the new
+   Downloads-drawer `BtnOpenDownloadFolder_Click` (already create-then-open — make them all use the
+   helper for consistency).
+3. Fix `MenuOpenFolder_Click` (per-mod): if `mod.RawFolderPath` is missing, don't no-op silently —
+   fall back to opening the parent mods folder via `OpenOwnedFolder(Path.Combine(_core.AppDataPath, _customProfile.RawFolderName))`
+   (or show a toast "that mod's folder no longer exists"). Game folder handler keeps its message box
+   (external path TMM doesn't own).
+4. **Root-cause guard:** make `FactoryReset` either trigger an app restart, or re-run the base-folder
+   creation block from `BackendCore`'s ctor (`ModsRaw{Key}` per `GameProfile.All`, `Backups`,
+   `DownloadCache`) so a post-reset session isn't left with missing dirs. Pick whichever matches the
+   existing reset UX — check whether `FactoryReset` already prompts a restart.
+
+**While here, sanity-check a key-mismatch hypothesis:** confirm the Downloads dropdown and the Mod
+Manager resolve "GTA III" to the **same** game key (e.g. `III`, not a grouped `GTA_III_SERIES`). If
+they differ, an archive installs under one `ModsRaw*` while the manager reads another — surface that
+to Opus rather than papering over it.
+
+**Verify:** factory reset, then (without relaunching) Install a mod and use every Open-folder menu
+item — none should throw; missing TMM folders are created on demand. Build clean.
+
+### E3 — Inline "Set game folder" banner + clickable sidebar path  🔵 Sonnet
+**User ask:** *"path picking is awkward cuz u have to go into edit game inside the mod management
+window."* **Approved design = inline banner + clickable sidebar** (no wizard/prompt changes).
+
+**Current state:** the only way to set a built-in game's directory is the toolbar **Edit Config**
+button (`BtnEditConfigCustom_Click`, [Views/Subpages/ModManagerPage.Toolbar.cs](Views/Subpages/ModManagerPage.Toolbar.cs)
+~line 260). The sidebar shows static "Directory not set" text
+([Views/Subpages/ModManagerPage.xaml.cs](Views/Subpages/ModManagerPage.xaml.cs) ~line 114-117 sets
+`Cust_txtSidebarDir`). Readiness is gated on `GameDirectory` existing (~line 185-186).
+
+**Changes:**
+1. Add a dismissible-but-recurring **banner** at the top of the workspace column in
+   [Views/Subpages/ModManagerPage.xaml](Views/Subpages/ModManagerPage.xaml) (above the mod list,
+   inside the workspace `Grid.Column="1"`), `x:Name="Cust_SetFolderBanner"`, `Visibility="Collapsed"`:
+   accent-tinted bar reading *"📁 Set your {game} folder to deploy mods"* + a **[Browse…]** button.
+2. Show the banner whenever `string.IsNullOrEmpty(_customConfig.GameDirectory) || !Directory.Exists(_customConfig.GameDirectory)`;
+   hide it once a valid folder is set. Drive this from `UpdateSidebarCustom` (or a new
+   `UpdatePathAffordances`) so it re-evaluates on every refresh.
+3. **Browse handler:** open a folder picker (`Microsoft.Win32.OpenFolderDialog`, .NET 8+/WPF — confirm
+   it's available in this project; else use the existing folder-pick pattern from the wizard/Edit
+   Config). On pick: `_customConfig.GameDirectory = chosen; GameRegistry.Instance.SaveCustomGameSync(_customProfile.Key, _customConfig);`
+   for custom games, or the built-in equivalent (built-ins store the path in
+   `Settings.GamePaths[key]` — see `InitCustomGame` ~line 81-89 and `GetVanillaPath`; mirror how Edit
+   Config persists it). Then `await RefreshCustomAsync()`.
+4. Make the sidebar **"Directory not set"** text a clickable Button/hyperlink that invokes the same
+   Browse handler. When a path *is* set, keep showing it (clicking it can open the folder via
+   `ShellHelper.OpenOwnedFolder`/existing game-folder handler — optional).
+5. Localize new strings (en-US + es-MX): banner text, Browse.
+
+**Watch-out:** built-in vs custom path persistence differ (built-ins → `Settings.GamePaths`, customs →
+`CustomGameProfile.GameDirectory` via `GameRegistry`). Reuse exactly what `BtnEditConfigCustom_Click`
+does so both kinds persist correctly. **Standing rule:** this must also work for custom games added
+via the wizard (it does — same `_customConfig` path).
+
+**Verify:** open a built-in game with no path → banner + sidebar prompt appear; Browse sets the
+folder, banner disappears, deploy becomes available, path persists across restart. Repeat for a
+custom game. Build clean.
+
+### E4 — Install button on the Downloads page (extract a reusable install method)  🔵 Sonnet
+**User ask:** *"no obvious way to install"* after downloading on the Downloads page.
+
+**Current state:** the standalone Downloads page renders archive rows via
+`ArchiveRowHelper.BuildRow(file, RefreshArchiveList)` **without an install callback**
+([Views/Subpages/DownloadsPage.xaml.cs](Views/Subpages/DownloadsPage.xaml.cs) ~line 209-210), so rows
+have only Open-location + Delete. The install pipeline (`InstallModFileCustomAsync` +
+`OnModAddedAsync` + refresh) lives in
+[Views/Subpages/ModManagerPage.Toolbar.cs](Views/Subpages/ModManagerPage.Toolbar.cs) ~line 41 and is
+tightly bound to ModManagerPage state. `ArchiveRowHelper.BuildRow` **already supports** an
+`installCallback` (added in C1) — the C1 drawer uses it; the standalone page just doesn't pass one.
+
+**Changes:**
+1. **Extract** the archive-install core into a reusable `BackendCore` method, e.g.
+   `public async Task<bool> InstallArchiveForGameAsync(string gameKey, string archivePath)` that:
+   resolves the `GameProfile`/`CustomGameProfile` for `gameKey`, extracts into
+   `ModsRaw{Key}/{modName}` (reuse `ExtractArchiveSafeAsync`), writes `modinfo`, calls
+   `OnModAddedAsync`, and refreshes that game's mod list. Have `ModManagerPage.InstallModFileCustomAsync`
+   delegate to it (keep its UI-side notifications/proxy-DLL scan) so behavior stays identical and
+   there's a single source of truth — do **not** duplicate the extract logic.
+2. On the Downloads page, pass an `installCallback` to `BuildRow` that calls
+   `_core.InstallArchiveForGameAsync(_selectedGameKey, file)` then `RefreshArchiveList()`, plus a
+   success/failure toast ("Installed to {game}"). The button label should read **"Install"** (the
+   helper already styles it).
+3. Keep the install scoped to the **currently-selected** download game (`_selectedGameKey`), which
+   E1 now keeps in sync with the active game.
+
+**Verify:** download an archive on the Downloads page → each row shows Install → clicking it installs
+into the selected game and the mod appears in that game's Mod Manager list. Confirm the C1 drawer's
+install still works (shared method). Build clean.
+
+### E5 — Auto-open the Downloads drawer when archives are present  🟢 Haiku  *(refines C1)*
+**User ask:** *"click downloads in toolbar to show downloads list — it should be showing already cuz
+i started a download."*
+
+**Current state:** C1's `InitializeDownloadsDrawer`
+([Views/Subpages/ModManagerPage.Downloads.cs](Views/Subpages/ModManagerPage.Downloads.cs)) gates the
+toggle's *availability* on `Settings.HasUsedBuiltInDownloads` but always starts the drawer
+**closed** (`_downloadsDrawerOpen = false`).
+
+**Change:** in `InitializeDownloadsDrawer`, when the flag is set **and** this game's archive folder
+(`_core.GetModsArchivePath(_customProfile.Key)`) contains at least one `.zip/.rar/.7z`, start the
+drawer **open** (`_downloadsDrawerOpen = true; Cust_DownloadsBorder.Visibility = Visibility.Visible;`)
+and call `RefreshDownloadsDrawer()`. Otherwise keep it closed. Don't change the toggle's
+availability logic. Keep it cheap — a single `Directory.EnumerateFiles(...).Any(...)` guarded in a
+try/catch.
+
+**Verify:** download something for game X, open X's Mod Manager → drawer is already open showing the
+archive; a game with no archives opens with the drawer closed. Build clean.
+
+---
+
 ## Group D — Codebase health (standing)
 
 ### AUDIT1 — Periodic file-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ⏳ STANDING
