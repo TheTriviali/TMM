@@ -30,7 +30,7 @@ namespace TMM.Services
             public string LoadoutName { get; set; } = string.Empty;
             public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
             public List<string> ModNames { get; set; } = new();
-            public string TmmVersion { get; set; } = "v0.1-alpha-8";
+            public string TmmVersion { get; set; } = AppInfo.DisplayVersion;
         }
 
         /// <summary>

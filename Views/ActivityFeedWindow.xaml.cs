@@ -41,7 +41,5 @@ namespace TMM
             _core.Activity.Clear();
             Refresh();
         }
-
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

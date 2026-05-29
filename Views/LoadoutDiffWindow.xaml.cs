@@ -93,7 +93,5 @@ namespace TMM
             lvDiff.ItemsSource = rows;
             txtSummary.Text = $"{rows.Count} differences  ·  +{adds} added  ·  -{removes} removed  ·  {orderChanges} reordered";
         }
-
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

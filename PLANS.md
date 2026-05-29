@@ -386,12 +386,34 @@ own hints? Sonnet can't decide this without architectural input.
 - **D2: .tmmpack export** — `TmmPackBuilder` bundles a loadout (manifest + loadout.json + mod source folders) into a portable zip.
 - **D3: Loadout management** — Rename, delete, overwrite-confirmation flows in the loadout context menu. Bonus: `LoadoutDiffWindow` compares any two loadouts side-by-side (additions/removals/enable/disable/reorder).
 
+### Block D4 — .tmmpack import (DESIGNED 2026-05-29, ready for execution)
+
+**Goal:** Consume a `.tmmpack` produced by `TmmPackBuilder.ExportAsync` — reconstitute the bundled mods + loadout into the *currently selected* game. This closes the export-only gap found in the 2026-05-29 audit (you can build packs but can't load them).
+
+**Pack format recap** (`TmmPackBuilder`): zip with `manifest.json` (`Manifest`: Version, GameKey, GameName, LoadoutName, CreatedAt, ModNames, TmmVersion), `loadout.json` (`ModLoadout`), and `mods/{ModName}/...` (each mod's source minus `_tmm`).
+
+**Files:**
+- New `Services/TmmPackInstaller.cs` — `static Task<ImportResult> ImportAsync(BackendCore core, string packPath, string targetGameKey, IProgress<...>? p, CancellationToken ct)`.
+- `Views/Subpages/ModManagerPage.xaml(.cs)` — "Import .tmmpack…" button by the Loadouts toolbar + confirm dialog + handler.
+- `BackendCore` — add a `SaveLoadoutAsync(string gameKey, ModLoadout loadout)` overload (current one builds from `ModItem`s; import needs to write a `ModLoadout` directly).
+
+**Plan:**
+1. Open zip, read `manifest.json`. **Reject** `Manifest.Version > TmmPackBuilder.CurrentVersion` (forward-incompat) with a clear message.
+2. **Game-key reconciliation:** custom `GameKey`s are per-machine UUIDs, so the pack's key will *not* match locally. Import targets the **currently selected game**, never the pack's key, and never auto-creates a game. Confirm dialog: "This pack was made for '{manifest.GameName}'. Import its {ModNames.Count} mods into '{currentGame}'?"
+3. For each `mods/{ModName}/` entry: extract into `ModsRaw_{targetKey}/{ModName}/`. **Zip-slip guard:** verify each resolved entry path stays under the target mod folder (reject `..` traversal). Collision handling: reuse `ModImporter.MakeUniqueModName` semantics or prompt overwrite/skip/rename. Extract to a temp dir then move (transaction) so a corrupt zip can't half-populate.
+4. After each mod lands, fire `OnModAddedAsync(targetKey, modName)` to freeze a **fresh** `deployplan.json`. Do NOT trust any plan from the pack — plans are install-specific (principle #1); the pack deliberately omits `_tmm`.
+5. Reconstruct the loadout: read `loadout.json`, **remap `ModStates` keys** for any mods renamed on collision, then write via the new `SaveLoadoutAsync(gameKey, ModLoadout)` overload. Honor `LoadoutExists` (prompt overwrite).
+6. Refresh the mod list; offer "Apply this loadout now?" (calls `ApplyLoadoutAsync`).
+
+**Gotchas:** GameKey mismatch is the norm, not an error (step 2). Zip-slip validation is mandatory (step 3) — `mods/{ModName}` names come from another machine. Remap loadout keys whenever a collision renames a mod (step 5).
+
 ### Block E1 — Smart DLL Wizard (COMPLETED 2026-05-28)
 - `ProxyDllDetector` knows ~20 well-known proxy DLLs (dinput8, d3d9, dsound, ScriptHook variants, SKSE/F4SE loaders). Surfaces a notification + log entry on install.
 - E2 (auto-routing hint) and E3 (multi-proxy version conflict) remain on the backlog.
 
-### Block C4 — Smart Conflict Resolver UI (COMPLETED 2026-05-28)
+### Block C4 — Smart Conflict Resolver UI (COMPLETED 2026-05-28; build fixed 2026-05-29)
 - `ConflictResolverWindow` lets users pick a winner per-conflict, overriding the default highest-load-order behavior. Non-winners are auto-skipped via `FileDeployRow.Skip` in the deploy plan.
+- **2026-05-29 audit:** commit `b09c02a` shipped C4 with the supporting `ConflictAnalyzer` / `ConflictEntry` / `ConflictParticipant` types **missing** — master did not compile. Reconstructed as `Services/ConflictAnalyzer.cs` (groups enabled mods' plan files by destination; flags paths with ≥2 distinct writers; ranks participants by `FinalLoadOrder` so the resolver's default winner matches a plain Deploy). Build green, 52 tests pass.
 
 ### Block F — Polish & QoL (COMPLETED 2026-05-28)
 - **F1:** `Logger` service — 5 MB log rotation with 3 historical files.

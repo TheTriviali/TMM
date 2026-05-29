@@ -1158,6 +1158,11 @@ namespace TMM
             if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.NewName)) return;
 
             string name = dlg.NewName.Trim();
+            if (!BackendCore.IsValidLoadoutName(name))
+            {
+                NotificationService.ShowWarning("Loadout name can't contain \\ / : * ? \" < > |");
+                return;
+            }
             if (_core.LoadoutExists(_customProfile.Key, name))
             {
                 var result = MessageBox.Show($"A loadout named '{name}' already exists. Overwrite?",
@@ -1176,6 +1181,11 @@ namespace TMM
             if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.NewName) || dlg.NewName == oldName) return;
 
             string newName = dlg.NewName.Trim();
+            if (!BackendCore.IsValidLoadoutName(newName))
+            {
+                NotificationService.ShowWarning("Loadout name can't contain \\ / : * ? \" < > |");
+                return;
+            }
             if (_core.LoadoutExists(_customProfile.Key, newName))
             {
                 NotificationService.ShowWarning($"A loadout named '{newName}' already exists.");

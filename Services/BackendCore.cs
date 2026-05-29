@@ -729,60 +729,6 @@ namespace TMM
         // ==========================================================
 
         /// <summary>
-        /// Deploy enabled mods in load order directly to the game's installation
-        /// directory. Files that would be overwritten are backed up first so the
-        /// deploy can be rolled back. Higher LoadOrder wins on conflict.
-        /// </summary>
-        public async Task DeployModsAsync(
-            GameProfile profile,
-            IEnumerable<ModItem> mods,
-            IProgress<DeploymentProgress>? progress = null,
-            CancellationToken ct = default)
-        {
-            string? gameDir = GetVanillaPath(profile);
-            if (string.IsNullOrEmpty(gameDir) || !Directory.Exists(gameDir))
-                throw new InvalidOperationException($"Game directory for {profile.DisplayName} is missing.");
-
-            var allMods = mods.ToList();
-            new LoadOrderResolver().ResolveFinalLoadOrders(allMods);
-            var enabled = allMods.Where(m => m.IsEnabled).OrderBy(m => m.FinalLoadOrder).ToList();
-            var disabled = allMods.Where(m => !m.IsEnabled).ToList();
-
-            Log($"[Deploy:{profile.Key}] Starting - {enabled.Count} enabled, {disabled.Count} disabled");
-            foreach (var m in disabled)
-                Log($"[Deploy:{profile.Key}]   SKIP (disabled) [{m.FinalLoadOrder}] {m.Name}");
-
-            // Build flat file map: relative game-dir path -> winning source file.
-            // ConditionalRoutes on the profile are applied here (e.g. .asi → plugins\).
-            var fileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var directories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var mod in enabled)
-            {
-                if (!Directory.Exists(mod.RawFolderPath))
-                {
-                    Log($"[Deploy:{profile.Key}]   WARN: folder missing for [{mod.FinalLoadOrder}] {mod.Name}");
-                    continue;
-                }
-                foreach (var file in Directory.EnumerateFiles(mod.RawFolderPath, "*", SearchOption.AllDirectories))
-                {
-                    string rel = Path.GetRelativePath(mod.RawFolderPath, file);
-                    rel = ApplyConditionalRoutes(profile.ConditionalRoutes, gameDir, rel);
-                    fileMap[rel] = file;
-                }
-
-                foreach (var dir in Directory.EnumerateDirectories(mod.RawFolderPath, "*", SearchOption.AllDirectories))
-                {
-                    string relDir = Path.GetRelativePath(mod.RawFolderPath, dir);
-                    relDir = ApplyConditionalRoutes(profile.ConditionalRoutes, gameDir, relDir);
-                    directories.Add(Path.GetFullPath(Path.Combine(gameDir, relDir)));
-                }
-            }
-
-            await DeployFilesToGameDirAsync(profile.Key, gameDir, fileMap,
-                enabled.Select(m => m.Name).ToList(), progress, ct, directories);
-        }
-
-        /// <summary>
         /// Deploy enabled mods for a custom game directly to the game directory.
         /// RoutingRules in the config determine which subfolder each file lands in (first-match-wins).
         /// </summary>
@@ -836,29 +782,6 @@ namespace TMM
 
             await DeployFilesToGameDirAsync(profile.Key, gameDir, fileMap,
                 enabled.Select(m => m.Name).ToList(), progress, ct, directories);
-        }
-
-        /// <summary>
-        /// Applies profile-level ConditionalRoutes to a relative file path.
-        /// If the target extension matches a rule, the output path is re-routed
-        /// based on whether the specified sub-directory exists in the game dir.
-        /// </summary>
-        private static string ApplyConditionalRoutes(
-            IReadOnlyList<ConditionalRoute>? routes,
-            string gameDir,
-            string relPath)
-        {
-            if (routes == null || routes.Count == 0) return relPath;
-            string ext = Path.GetExtension(relPath).ToLowerInvariant();
-            foreach (var cond in routes)
-            {
-                if (!cond.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase)) continue;
-                string check = Path.Combine(gameDir, cond.CheckSubdir);
-                string routeTo = Directory.Exists(check) ? cond.RouteIfExists : cond.RouteIfMissing;
-                string fileName = Path.GetFileName(relPath);
-                return routeTo == "." ? fileName : Path.Combine(routeTo, fileName);
-            }
-            return relPath;
         }
 
         /// <summary>
@@ -1072,6 +995,15 @@ namespace TMM
         // LOADOUTS  (Block D)
         // ==========================================================
 
+        /// <summary>
+        /// True when <paramref name="name"/> is safe to use as a loadout filename:
+        /// non-empty after trimming and free of path separators / characters that are
+        /// illegal in a Windows filename.
+        /// </summary>
+        public static bool IsValidLoadoutName(string? name) =>
+            !string.IsNullOrWhiteSpace(name) &&
+            name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
+
         public string GetLoadoutsPath(string gameKey)
         {
             string path = Path.Combine(AppDataPath, $"Loadouts_{gameKey}");
@@ -1091,6 +1023,8 @@ namespace TMM
 
         public bool RenameLoadout(string gameKey, string oldName, string newName)
         {
+            if (!IsValidLoadoutName(newName))
+                throw new ArgumentException("Loadout name contains invalid characters.", nameof(newName));
             string dir = GetLoadoutsPath(gameKey);
             string src = Path.Combine(dir, $"{oldName}.json");
             string dst = Path.Combine(dir, $"{newName}.json");
@@ -1120,6 +1054,8 @@ namespace TMM
         /// </summary>
         public async Task SaveLoadoutAsync(string gameKey, string loadoutName, IEnumerable<ModItem> mods)
         {
+            if (!IsValidLoadoutName(loadoutName))
+                throw new ArgumentException("Loadout name contains invalid characters.", nameof(loadoutName));
             var loadout = new ModLoadout { Name = loadoutName };
             foreach (var m in mods)
                 loadout.ModStates[m.Name] = new ModLoadout.LoadoutModState(m.IsEnabled, m.LoadOrder);

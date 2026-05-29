@@ -256,15 +256,6 @@ namespace TMM.Services
             return key;
         }
 
-        private static string? GetCandidateGroup(string key)
-        {
-            if (!key.StartsWith("modloader\\", StringComparison.OrdinalIgnoreCase))
-                return null;
-
-            var parts = key.Split('\\');
-            return parts.Length >= 3 ? parts[1] : null;
-        }
-
         private static string GetSourceSummary(ImportFile file)
         {
             if (file.CandidateKey.StartsWith("modloader\\", StringComparison.OrdinalIgnoreCase))
