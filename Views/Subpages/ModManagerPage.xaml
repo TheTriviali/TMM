@@ -308,6 +308,10 @@
                                                Foreground="{DynamicResource SubTextBrush}"
                                                HorizontalAlignment="Center" TextAlignment="Center"
                                                TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    <Button x:Name="Cust_btnIntegrityLearnMore" Content="Learn more →" Click="BtnIntegrityLearnMore_Click"
+                                            FontSize="9" Padding="0,3" Margin="0,4,0,0"
+                                            Background="Transparent" Foreground="{DynamicResource AccentBrush}"
+                                            BorderThickness="0" Cursor="Hand" HorizontalAlignment="Center"/>
                                 </StackPanel>
                             </Border>
 

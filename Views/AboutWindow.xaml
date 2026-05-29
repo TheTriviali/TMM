@@ -147,6 +147,14 @@
 
                     <Border Height="1" Background="{DynamicResource SubTextBrush}" Opacity="0.15" Margin="0,0,0,14"/>
 
+                    <!-- Help & Links -->
+                    <TextBlock Text="Help &amp; Resources" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,8"/>
+                    <StackPanel>
+                        <Button x:Name="BtnFaq" Content="View FAQ" Click="BtnFaq_Click" Style="{StaticResource LinkBtnStyle}"/>
+                        <Button x:Name="BtnGitHub" Content="GitHub Repository" Click="BtnGitHub_Click" Style="{StaticResource LinkBtnStyle}"/>
+                    </StackPanel>
+
             </StackPanel>
 
             <!-- Footer -->

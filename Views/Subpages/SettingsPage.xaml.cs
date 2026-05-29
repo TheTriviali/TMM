@@ -72,15 +72,21 @@ namespace TMM
         {
             try
             {
-                var primary = (Color)ColorConverter.ConvertFromString(txtPrimaryColor.Text);
-                primaryColorPreview.Background = new SolidColorBrush(primary);
+                if (txtPrimaryColor != null)
+                {
+                    var primary = (Color)ColorConverter.ConvertFromString(txtPrimaryColor.Text);
+                    primaryColorPreview.Background = new SolidColorBrush(primary);
+                }
             }
             catch { }
 
             try
             {
-                var secondary = (Color)ColorConverter.ConvertFromString(txtSecondaryColor.Text);
-                secondaryColorPreview.Background = new SolidColorBrush(secondary);
+                if (txtSecondaryColor != null)
+                {
+                    var secondary = (Color)ColorConverter.ConvertFromString(txtSecondaryColor.Text);
+                    secondaryColorPreview.Background = new SolidColorBrush(secondary);
+                }
             }
             catch { }
         }

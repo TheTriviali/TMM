@@ -29,41 +29,53 @@ rest out to Sonnet/Haiku.
 
 ---
 
-## Group A — Integrity info + FAQ  (user request 1 & 2)
+## Group A — Integrity info + FAQ  (user request 1 & 2)  ✅ COMPLETE
 
-### A1 — Soften integrity mismatch to a blue "info" cue  🟢 Haiku
+### A1 — Soften integrity mismatch to a blue "info" cue  🟢 Haiku  ✅ COMPLETE
 **Goal:** A hash/size mismatch must never look alarming. Show a calm blue ℹ instead of an
 amber ⚠, with messaging that the exe simply differs from what the profile/pack author
 built for — mods may still work.
 
 **File:** [Views/Subpages/ModManagerPage.xaml.cs](Views/Subpages/ModManagerPage.xaml.cs) — `RefreshIntegrityAsync` (~line 120), the `result.State switch`.
 
-**Steps:**
-1. Change the `SizeMismatch` and `Md5Mismatch` arms to a blue brush (e.g. `Color.FromRgb(0x40, 0x9C, 0xFF)`) and an ℹ glyph + soft label, e.g. `"ℹ Executable differs from this profile's expected version"`.
-2. Set `Cust_txtIntegrityDetail` to a reassuring line: `"Your game .exe doesn't match what this profile was built for. Mods may still work — this is just informational."`
-3. Keep `Ok` → green ✓. Leave `FileMissing` amber (it's actionable: the path isn't set).
-4. Optionally add a "Learn more" link calling the same browser-open helper as the sidebar links, pointing at the FAQ integrity anchor (A3) — **defer the link until A2 lands.**
+**Completed Changes:**
+1. ✅ Changed `SizeMismatch` and `Md5Mismatch` arms to blue brush `Color.FromRgb(64, 156, 255)` with ℹ glyph and label `"ℹ Executable differs from this profile's expected version"`.
+2. ✅ Set `Cust_txtIntegrityDetail` to reassuring line: `"Your game .exe doesn't match what this profile was built for. Mods may still work — this is just informational."`
+3. ✅ Kept `Ok` → green ✓. Left `FileMissing` amber (it's actionable: the path isn't set).
+4. ⏭️ "Learn more" link deferred until A2 lands.
 
 **Gotcha:** the panel shows only when integrity is configured (`ExpectedExeBytes` or `AcceptedExeMd5s`). Don't change that gate.
 
-### A2 — Write the FAQ guide  🔵 Sonnet
+### A2 — Write the FAQ guide  🔵 Sonnet  ✅ COMPLETE
 **Goal:** A user-facing FAQ we can link to from inside the app.
 
-**File:** new `docs/FAQ.md` (create the `docs/` folder).
+**File:** `docs/FAQ.md` (created).
 
-**Sections (use `##` headings with stable anchors):**
-- **Integrity checks** (`#integrity`) — what the ℹ "executable differs" cue means; why TMM never blocks deploys on it; downgrader variants; warn-only.
-- **`.tmmpack` files** — what they bundle (loadout + mod sources); export/import; import targets the *currently selected* game (not the pack's original); collision renaming.
-- **Deploy, backup & rollback** — direct-deploy; first-touch baseline; what rollback restores; backups at `%APPDATA%\TMM\Backups`.
-- **Custom games & search hints** — the wizard; what search hints do (auto-locate a shared profile on another PC); users never edit JSON.
-- **Loadouts** — snapshots of enabled-state + order; apply/compare/export.
-- **Where TMM keeps files** — settings, mods, backups, baselines, loadouts paths.
+**Completed Content:**
+- ✅ **Integrity checks** — what the ℹ "executable differs" cue means; why TMM never blocks deploys; size vs MD5 checks; when to act.
+- ✅ **.tmmpack files** — what they bundle; how import targets the currently-selected game; collision renaming; export/import workflows.
+- ✅ **Deploy, backup & rollback** — the deploy preview & conflict resolution flow; baseline capture; per-deploy backups; rollback limits; safe-deploy philosophy.
+- ✅ **Mod types, routing, and conflicts** — routing rules and patterns; conflict detection and resolution; proxy DLL detection and routing.
+- ✅ **Custom games & search hints** — the wizard 4-step flow (Essentials, Mod Types, Routing, Advanced, Review); how search hints auto-locate games.
+- ✅ **Loadouts** — save/apply/compare/export/import; naming; favorites; organization.
+- ✅ **Mod favorites and organization** — starring mods, search, properties; finding & sorting.
+- ✅ **Mod import from existing folders** — scanning, candidate grouping, collision handling.
+- ✅ **Activity feed** — recent action tracking (20-entry feed).
+- ✅ **Where TMM keeps files** — `%APPDATA%\TMM\` breakdown with table: settings.json, ModsRaw, Backups, Baselines, Loadouts, CustomGames, TMM.log.
+- ✅ **Supported games** — built-in list + custom games note.
+- ✅ **Performance and storage** — mod storage, backup quota, log rotation.
+- ✅ **Troubleshooting** — game path, deploy issues, integrity, backup/rollback failures.
 
-Pull facts from [CHANGELOG.md](CHANGELOG.md) and [CLAUDE.md](CLAUDE.md). Plain-English, end-user voice.
+**Source:** Audited from CHANGELOG.md, CLAUDE.md, codebase exploration (TmmPackBuilder, TmmPackInstaller, ProxyDllDetector, ActivityLogger, IntegrityChecker, ModImporter, etc.). Tone is plain-English, end-user-focused.
 
-### A3 — Wire FAQ links in-app  🟢 Haiku  *(depends on A2)*
-1. Add a "Help / FAQ" entry to [Views/AboutWindow.xaml](Views/AboutWindow.xaml) opening the FAQ. Until docs ship with the app, link the GitHub blob URL `https://github.com/TheTriviali/TMM/blob/master/docs/FAQ.md` (`Process.Start` + `UseShellExecute = true`, same as the sidebar `BtnLink_Click`).
-2. Add the deferred "Learn more" link from A1 → FAQ `#integrity` anchor.
+### A3 — Wire FAQ links in-app  🟢 Haiku  ✅ COMPLETE  *(depends on A2)*
+1. ✅ Added "Help / Resources" section to AboutWindow.xaml with two link buttons:
+   - "View FAQ" → `https://github.com/TheTriviali/TMM/blob/master/docs/FAQ.md`
+   - "GitHub Repository" → `https://github.com/TheTriviali/TMM`
+2. ✅ Added BtnFaq_Click and BtnGitHub_Click handlers in AboutWindow.xaml.cs using ShellHelper.OpenUrl().
+3. ✅ Added "Learn more →" link to integrity panel in ModManagerPage.xaml (lines 300-315).
+4. ✅ Added BtnIntegrityLearnMore_Click handler pointing to FAQ `#integrity-checks` anchor.
+5. ✅ Build verified: no errors.
 
 ---
 
@@ -186,19 +198,64 @@ for built-ins. Low reward (it already works) — do last, carefully.
 
 ## Group E — Codebase health
 
-### AUDIT1 — File-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)
+### AUDIT1 — File-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ⏳ IN PROGRESS (Inventory phase)
 **Goal:** Keep the codebase from sprawling as features land. Periodic inventory + flag
 consolidation/splitting opportunities.
 
-**Baseline (2026-05-29):** 139 tracked files — **76 `.cs`**, **26 `.xaml`**, **11 `.tmmgame`**,
-7 project `.md`. Largest files to watch: `Views/Subpages/ModManagerPage.xaml.cs` (~1.3k lines —
-a split candidate: deploy / loadouts / import / integrity / groups are separable via
-`partial class`), `Services/BackendCore.cs` (~1.1k lines).
+**Baseline (2026-05-29):** 139 tracked files — **76 `.cs`**, **26 `.xaml`**, **11 `.tmmgame`**, 7 project `.md`. 
 
-**Steps:**
-1. **Inventory (Sonnet, mechanical):** counts by folder + the 10 largest source files by line count → a table in this section.
-2. **Flag (Opus judgment):** files >~800 lines mixing unrelated concerns (split via `partial`); near-empty/single-use files that could merge; orphaned/dead files (e.g. confirm nothing stranded after the `FirstGamePickerWindow` deletion). Cross-check `git ls-files`.
-3. Output a "keep / split / merge / delete" table; act only on high-confidence items, one PR each.
+**Updated Inventory (2026-05-29, post-A1/A2/A3):**
+- **Total source files:** 76 `.cs` (146 including generated), 26 `.xaml`, 11 `.tmmgame`, 12 `.md`
+- **Total size:** ~1.62 MB (source only)
+- **Folders:** Services (17 .cs), Models (14 .cs), Views (15+28 .cs), Steps (8+4 .cs), Subpages (12+6 .cs), Converters (4), Helpers (4+1), Theming (2), TMM.Tests (6)
 
-**Gotcha:** WPF code-behind splits must keep `partial class` + the XAML `x:Class` intact; don't
-move `InitializeComponent` wiring. Split only where it reduces real cognitive load — never for its own sake.
+**Top 20 largest source files (excluding generated .g.cs):**
+
+| File | Lines | Notes |
+|------|-------|-------|
+| ModManagerPage.xaml.cs | 1,160 | **SPLIT CANDIDATE** — deploy/loadouts/import/integrity/groups/sidebar |
+| BackendCore.cs | 1,033 | **SPLIT CANDIDATE** — deploy/rollback/baselines/loadouts/settings/initialization |
+| LibraryPage.xaml.cs | 578 | — |
+| UnifiedShellWindow.xaml.cs | 472 | — |
+| DeploymentPlanner.cs | 414 | — |
+| DeploymentPlannerTests.cs | 361 | — |
+| BackendCoreDeployTests.cs | 359 | — |
+| RuleEngineTests.cs | 333 | — |
+| ModImporter.cs | 292 | — |
+| GameCard.xaml.cs | 291 | — |
+| Step3_RoutingRulesPage.xaml.cs | 274 | — |
+| GameRegistry.cs | 273 | — |
+| DownloadsPage.xaml.cs | 251 | — |
+| Step1_GameDetailsPage.xaml.cs | 232 | — |
+| TmmGameConfig.cs | 195 | — |
+| BackupsPage.xaml.cs | 185 | — |
+| RuleEditorWindow.xaml.cs | 180 | — |
+| CustomGameSetupWizard.xaml.cs | 173 | Dead/replaced by WIZ2? **Confirm** |
+| LoadOrderResolverTests.cs | 172 | — |
+| RuleEngine.cs | 164 | — |
+
+**Observations:**
+- **ModManagerPage.xaml.cs (1,160 lines):** Exceeds 800-line threshold. Mixes: sidebar logic, integrity display, deploy UI, conflict resolver, loadouts, import UI, group management. **Candidate for `partial class` split:**
+  - `Sidebar.cs` — game/path/integrity display, links, disk space
+  - `Deploy.cs` — preview, conflict resolution, deployment flow
+  - `Loadouts.cs` — loadout UI and operations
+  - `Import.cs` — import candidate display and flow
+  - Keep main `ModManagerPage.xaml.cs` — mod list/grid, core events
+
+- **BackendCore.cs (1,033 lines):** Monolithic service. Mixes: deploy/rollback pipeline, settings load/save, mod list management, baselines, backups, integrity, loadouts, activity logging, game registry. **Candidate for `partial class` split:**
+  - `Deploy.cs` — deployment/rollback/plan execution
+  - `Backups.cs` — backup/baseline management
+  - `Loadouts.cs` — loadout I/O
+  - `Settings.cs` — settings load/save
+  - Keep main `BackendCore.cs` — initialization, mod list, core state
+
+- **Orphaned files (post-FirstGamePickerWindow deletion):** None detected; deletion was clean.
+
+- **Thin/single-use files:** None identified; even small files serve clear purposes.
+
+**Next steps (Opus judgment needed):**
+1. Confirm split strategy above (esp. BackendCore / ModManagerPage) aligns with user intent.
+2. If approved: split as `partial class` in new files, one PR per target file.
+3. Update references if any explicit cross-file dependencies emerge.
+
+**Gotcha:** WPF code-behind splits must keep `partial class` + the XAML `x:Class` intact; don't move `InitializeComponent` wiring. Split only where it reduces real cognitive load — never for its own sake.

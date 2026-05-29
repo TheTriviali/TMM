@@ -150,14 +150,19 @@ namespace TMM
             (string label, Brush color) = result.State switch
             {
                 IntegrityState.Ok            => ("✓ Integrity verified", Brushes.LightGreen),
-                IntegrityState.SizeMismatch  => ("⚠ Size mismatch",      new SolidColorBrush(Color.FromRgb(216, 163, 26))),
-                IntegrityState.Md5Mismatch   => ("⚠ MD5 mismatch",       new SolidColorBrush(Color.FromRgb(216, 163, 26))),
+                IntegrityState.SizeMismatch  => ("ℹ Executable differs from this profile's expected version", new SolidColorBrush(Color.FromRgb(64, 156, 255))),
+                IntegrityState.Md5Mismatch   => ("ℹ Executable differs from this profile's expected version", new SolidColorBrush(Color.FromRgb(64, 156, 255))),
                 IntegrityState.FileMissing   => ("⚠ Exe missing",        new SolidColorBrush(Color.FromRgb(224, 112, 112))),
                 _                            => ("",                     Brushes.Gray),
             };
             Cust_txtIntegrityState.Text = label;
             Cust_txtIntegrityState.Foreground = color;
-            Cust_txtIntegrityDetail.Text = result.Message;
+
+            // Override detail message for mismatch cases with reassuring text
+            if (result.State == IntegrityState.SizeMismatch || result.State == IntegrityState.Md5Mismatch)
+                Cust_txtIntegrityDetail.Text = "Your game .exe doesn't match what this profile was built for. Mods may still work — this is just informational.";
+            else
+                Cust_txtIntegrityDetail.Text = result.Message;
         }
 
         private string? ResolveExePath()
@@ -573,6 +578,9 @@ namespace TMM
             if (sender is Button btn && btn.Tag is string url && !string.IsNullOrEmpty(url))
                 ShellHelper.OpenUrl(url);
         }
+
+        private void BtnIntegrityLearnMore_Click(object sender, RoutedEventArgs e) =>
+            ShellHelper.OpenUrl("https://github.com/TheTriviali/TMM/blob/master/docs/FAQ.md#integrity-checks");
 
         // ── Deploy / Rollback helpers ─────────────────────────────────────────────
 
