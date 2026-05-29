@@ -29,9 +29,34 @@ namespace TMM
             Cust_pnlDownloadsToggle.Visibility  = vis;
             Cust_DownloadsSepToolbar.Visibility = vis;
 
-            // Drawer starts closed
+            // Auto-open drawer if archives are present for this game
             _downloadsDrawerOpen = false;
             Cust_DownloadsBorder.Visibility = Visibility.Collapsed;
+
+            if (hasFlag && _customProfile != null)
+            {
+                try
+                {
+                    string archiveDir = _core.GetModsArchivePath(_customProfile.Key);
+                    bool hasArchives = Directory.EnumerateFiles(archiveDir)
+                        .Any(f =>
+                        {
+                            string ext = Path.GetExtension(f).ToLowerInvariant();
+                            return ext is ".zip" or ".rar" or ".7z";
+                        });
+
+                    if (hasArchives)
+                    {
+                        _downloadsDrawerOpen = true;
+                        Cust_DownloadsBorder.Visibility = Visibility.Visible;
+                        RefreshDownloadsDrawer();
+                    }
+                }
+                catch
+                {
+                    // If there's an error checking archives, keep drawer closed
+                }
+            }
         }
 
         // ── Toggle handler ────────────────────────────────────────────────────────
