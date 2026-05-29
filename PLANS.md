@@ -111,15 +111,21 @@ void ClearHistory()                                                 // empties h
 ```
 **Verified:** build clean, 60/60 tests pass. NOTIF2/3/4 are now unblocked.
 
-### NOTIF2 — Settings toggle  🔵 Sonnet  *(depends on NOTIF1)*
+### NOTIF2 — Settings toggle  🔵 Sonnet  ✅ COMPLETE (2026-05-29)
 Add a "Verbose notifications" switch to [Views/Subpages/SettingsPage.xaml(.cs)](Views/Subpages/SettingsPage.xaml) bound to `Settings.VerboseNotifications`, saving via `core.SaveSettings()`. Mirror an existing toggle. Add locale keys to `en-US.json` + `es-MX.json`.
 
-### NOTIF3 — Notifications tab/page  🔵 Sonnet  *(depends on NOTIF1)*
+**Completed:** Added "Notifications" section to SettingsPage between Appearance and Diagnostics. CheckBox (`chkVerboseNotifications`) loads from `_core.Settings.VerboseNotifications` in ctor; `ChkVerboseNotifications_Click` writes back and calls `_core.SaveSettings()`. Locale keys `Settings_Notifications`, `Settings_VerboseNotifications`, `Settings_VerboseNotifications_Desc` added to both en-US.json and es-MX.json. Build clean; 59/60 tests pass (1 pre-existing flaky concurrency failure in TmmPackInstallerTests, unrelated).
+
+### NOTIF3 — Notifications tab/page  🔵 Sonnet  ✅ COMPLETE (2026-05-29)
 New `Views/Subpages/NotificationsPage.xaml(.cs)`; wire into [Views/UnifiedShellWindow.xaml(.cs)](Views/UnifiedShellWindow.xaml.cs) with a left-nav button + a `ContentPresenter` placeholder, instantiated in `Window_Loaded` exactly like `pageBackupsPlaceholder`/`_pageBackups` (~lines 84-89). Page = scrollable, newest-first list (level icon + color, message, source, timestamp), level filter (All/Info/Success/Warning/Error), and a "Clear history" button bound to the NOTIF1 history.
 **Gotcha:** don't duplicate the existing `ActivityFeedWindow` — leave it alone; note a future merge as follow-up.
 
-### NOTIF4 — Instrument low-level operations  🔵 Sonnet  *(depends on NOTIF1)*
+**Completed:** `NotificationsPage.xaml(.cs)` — header (title + filter ComboBox + Clear button), scrollable `ItemsControl` bound to a `ListCollectionView` over `NotificationService.History`, DataTemplate with DataTrigger-driven level icon (Segoe MDL2 glyphs) + color + source subline + `LocalTimeDisplay` timestamp, empty-state panel. `navBtnNotifications` (&#xEA8F; ActionCenter icon) added to shell nav between Backups and the separator; `pageNotificationsPlaceholder` ContentPresenter added. `NavigateTo`/`SetNavActive` updated. `NotificationItem.LocalTimeDisplay` computed property added (HH:mm:ss today, MM/dd HH:mm older). Locale keys `Page_Notifications`, `Notifications_*` added to both locale files. Build clean; 60/60 tests pass. **Follow-up:** merge with ActivityFeedWindow (low priority).
+
+### NOTIF4 — Instrument low-level operations  🔵 Sonnet  ✅ COMPLETE (2026-05-29)
 Sprinkle `NotificationService.ShowVerbose(...)` at representative sites so verbose mode is genuinely informative: AppData subfolder `CreateDirectory` (BackendCore ctor, GetLoadoutsPath, Baselines, Backups), `SaveSettings`, plan freeze (`OnModAddedAsync`), baseline capture, backup prune, deploy/rollback start/finish, import steps. Terse messages (`"Created Backups/III/20260529_…"`). Toasts only when verbose is on (NOTIF1 handles that).
+
+**Completed:** Added `ShowVerbose` at — BackendCore ctor: game ModsRaw subdirs (only when first created), DownloadCache, Backups; `SaveSettings`; `GetLoadoutsPath` (first create only); `OnModAddedAsync` plan freeze; `DeployFilesToGameDirAsync` start + finish (with backup count + timestamp); `RollbackDeployAsync` start + finish; `PruneOldBackups` per deleted dir; `ModImporter.ImportAsync` baseline seed, per-mod staging, completion. All use terse source-tagged messages. Build clean; 60/60 tests pass.
 
 ---
 
@@ -200,7 +206,7 @@ launcher) the old `CustomGameSetupWizard` modal once the page covers add + edit.
 
 ## Group D — Carried-forward backlog (pre-existing, still open)
 
-### D-B5 — Import review: split / merge / refine UI  🟣 Opus (design) → 🔵 Sonnet (build)  ✅ DESIGN APPROVED (2026-05-29) — ready to build
+### D-B5 — Import review: split / merge / refine UI  🟣 Opus (design) → 🔵 Sonnet (build)  ✅ COMPLETE (2026-05-29)
 The B5 importer ([Services/ModImporter.cs](Services/ModImporter.cs) + `ImportReviewWindow`) can
 scan/select/exclude/rename but cannot **split** one detected candidate into several or **merge**
 several into one.
@@ -272,6 +278,8 @@ Button/menu-driven (no drag-drop — matches the project's robust, minimal-code-
 (`en-US.json` + `es-MX.json`). Keep code-behind minimal; consider a thin VM but a window-level
 `ObservableCollection` is acceptable here given the existing pattern. **Lower priority — the core import
 path already works; this is refinement.**
+
+**Completed:** `ModImportCandidate` upgraded to `INotifyPropertyChanged`; `FilePaths` changed to `ObservableCollection<string>` (JSON-safe); `Guid Id` added; `HasWarning`, `FileCountDisplay` computed properties added. Window-private `ImportFileRow` VM added (AbsolutePath, RelativePath, IsChecked). `ImportReviewWindow` fully rewritten as master-detail: left `ListBox` (Extended selection, per-candidate IsSelected checkbox, name, file count subline, ⚠ badge, AccentSoftBrush selection highlight) + right pane (file list, "+ New mod from checked" split, "Move checked ▾" context-menu move, Name/Group editors, warning badge). `MergeSelected()` in left-pane footer. `gameDir` passed from call site for relative-path display. Guardrails: split blocked if it would leave 0 files; auto-removes 0-file candidates; Import button shows count + disables at 0. Locale keys added to both locale files. Build clean; 60/60 tests pass.
 
 ### D-E2 — Proxy-DLL auto-routing hint  🔵 Sonnet  ✅ COMPLETE
 `ProxyDllDetector` already flags proxy DLLs on install. E2: at plan time, when a detected proxy

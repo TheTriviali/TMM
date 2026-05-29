@@ -25,6 +25,18 @@ namespace TMM
         /// label shown in the Notifications tab. Empty for generic/UI-level notifications.
         /// </summary>
         public string Source { get; set; } = "";
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string LocalTimeDisplay
+        {
+            get
+            {
+                var local = CreatedAt.ToLocalTime();
+                return local.Date == DateTime.Today
+                    ? local.ToString("HH:mm:ss")
+                    : local.ToString("MM/dd HH:mm");
+            }
+        }
     }
 
     /// <summary>

@@ -4,9 +4,45 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
-## [Unreleased]
+## [v0.1-alpha-10] — 2026-05-29 *(Notifications, Add/Edit Game page, import review, first-run fixes)*
 
 ### Added
+- **Whole-program Add/Edit Game page (WIZ2):** New full-shell `Views/Subpages/AddGamePage.xaml(.cs)` replaces the cramped `CustomGameSetupWizard` modal as the primary add/edit UX. Stacks the four existing wizard step controls (`Step1`–`Step4`) in a `ScrollViewer` with a left jump-rail (Essentials / Mod Types / Routing / Review) and filled/empty completion dots. Live summary bar ("Ready — 2 mod types, 6 rules, integrity set") updates as fields change. Single **Create** / **Save** button, enabled when Step 1 is valid. Entry points: Library "➕ Add Game" button (new blank page), per-card ✎ pencil (edit mode, pre-filled), `InitialSetupWindow.Option2_Click` (sets `OpenAddGameAfterClose = true` and closes; shell navigates after dialog). `GameCard` gained an `EditRequested` event + `btnEdit` shown for non-built-in games. `LibraryPage` wires `EditGameRequested` through. ✎ pencil nav button added to the shell; `pageAddGamePlaceholder` injected exactly like other pages.
+- **Import review master-detail UI (D-B5):** `ImportReviewWindow` replaced with a master-detail
+  layout. Left pane: candidate list with `Extended` multi-selection (Ctrl/Shift), per-candidate
+  "include in import" checkbox, file count + source subline, ⚠ warning badge. Right pane: file
+  list for the focused candidate — each file has its own checkbox; **"+ New mod from checked"**
+  splits checked files into a new candidate; **"Move checked ▾"** opens a context menu to
+  reassign checked files to any other candidate. **"Merge selected"** in the left-pane footer
+  folds all multi-selected candidates into the first. Name and Group editors below the file list
+  replace old inline DataGrid editing. Import button shows live count of selected candidates and
+  disables at 0. `ModImportCandidate` upgraded to `INotifyPropertyChanged` with
+  `ObservableCollection<string> FilePaths` (deserialization-safe), stable `Guid Id`, and
+  `FileCountDisplay`/`HasWarning` computed properties. `gameDir` passed to ctor so file paths
+  display relative to the game folder. Locale keys added to `en-US.json` + `es-MX.json`.
+- **Proxy-DLL routing warning (D-E2):** At plan time, if `ProxyDllDetector.IsKnownProxy` matches a file whose resolved destination is a non-root subdirectory (e.g. `plugins\`), a non-blocking `DeploymentWarning` is added and surfaces in the `pnlWarnings` panel of `DeployPreviewWindow` — proxy DLLs must live at the game root to be picked up by the loader.
+- **Multi-proxy version conflict detection (D-E3):** New `ConflictAnalyzer.AnalyzeProxyConflicts` groups proxy DLL filenames across all enabled mods' plans and returns a `ConflictEntry` per shared name (e.g. two mods shipping `dinput8.dll`). `DeployPreviewWindow` appends results to `icWarnings`; `txtBlockingNote` shown only for actually-blocking rows. Catches a load-order footgun that is not a normal file conflict.
+- **Built-in games use SearchHints for QuickScan (D-O2r):** `gtaiv.tmmgame`, `gtatlad.tmmgame`, and `gtatbogt.tmmgame` gained `searchHints` arrays (III/VC/SA already had them). New `BackendCore.ScanBuiltInsBySearchHints()` calls `GetBuiltInCustomGames()` + `SetVanillaPath` (auto-derives TLaD/TBoGT when IV is found); runs in `QuickScan()` before the legacy loop so found games are skipped by the old loop. Hardcoded roots kept as fallback.
+- **Verbose instrumentation (NOTIF4):** `NotificationService.ShowVerbose` calls added at key
+  low-level sites — directory creation (first-time only: game ModsRaw subdirs, DownloadCache,
+  Backups, Loadouts per game); `SaveSettings`; plan freeze in `OnModAddedAsync`; deploy start/
+  finish (file count + backup count + timestamp); rollback start/finish; backup prune (per deleted
+  snapshot); import baseline seed, per-mod staging, and completion. All messages are terse and
+  source-tagged ("Deploy", "Rollback", "Plan", "Backup", "Baseline", "Import", "Init", "Settings").
+  When verbose mode is off (default), these write to history only — no toasts.
+- **Notifications page (NOTIF3):** New left-nav tab (bell/ActionCenter icon &#xEA8F;) opens a full-shell
+  Notifications page. Shows the persistent `NotificationService.History` in newest-first order;
+  each row displays the level icon + color (Info blue, Success green, Warning amber, Error red),
+  message, source subsystem, and local timestamp. Level filter (All/Info/Success/Warning/Error)
+  applies via a `ListCollectionView` predicate. "Clear history" button calls
+  `NotificationService.ClearHistory()`. Empty state shown when history is empty. `NotificationItem`
+  gained a `LocalTimeDisplay` computed property (HH:mm:ss today, MM/dd HH:mm older). Locale keys
+  added to both `en-US.json` and `es-MX.json`.
+- **Verbose notifications setting toggle (NOTIF2):** New "Notifications" section in Settings page
+  with a "Verbose notifications" checkbox. Loads from `Settings.VerboseNotifications` on open;
+  saves via `BackendCore.SaveSettings()` on change — no restart needed (the service reads the flag
+  live). Locale keys `Settings_Notifications`, `Settings_VerboseNotifications`,
+  `Settings_VerboseNotifications_Desc` added to `en-US.json` and `es-MX.json`.
 - **Notification history + verbose model (NOTIF1):** Notifications now have a persistent,
   browsable history separate from the transient toast queue. `NotificationService.History` is a
   newest-first in-memory ring (cap 500) whose 200-entry tail persists to
@@ -399,6 +435,10 @@ All notable changes to TMM are listed here, newest first.
 | v0.1-alpha-3 | 2026-05-23 | **Core Features, Test Routing, GameRegistry built-ins** | 15+ files |
 | v0.1-alpha-4 | 2026-05-23 | **Dead Window Removal, Code Consolidation** | 20+ files |
 | v0.1-alpha-6 | 2026-05-25 | **UI Refinements & Backend Stability** | 6 files |
+| v0.1-alpha-7 | 2026-05-27 | **UI Audit, GTA Deprecated Cleanup, BackupsPage** | 20+ files |
+| v0.1-alpha-8 | 2026-05-28 | **Loadouts, .tmmpack export, Smart DLL Wizard, Conflict Resolver** | 20+ files |
+| v0.1-alpha-9 | 2026-05-29 | **Build restore, audit cleanup, profile portability, .tmmpack import** | 15+ files |
+| v0.1-alpha-10 | 2026-05-29 | **Notifications, Add/Edit Game page, import review, first-run fixes** | 30+ files |
 
 ---
 

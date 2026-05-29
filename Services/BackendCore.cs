@@ -66,10 +66,18 @@ namespace TMM
             foreach (var profile in GameProfile.All)
             {
                 _modsDict[profile.Key] = new ObservableCollection<ModItem>();
-                Directory.CreateDirectory(Path.Combine(AppDataPath, profile.RawFolderName));
+                string modsDir = Path.Combine(AppDataPath, profile.RawFolderName);
+                bool modsNew = !Directory.Exists(modsDir);
+                Directory.CreateDirectory(modsDir);
+                if (modsNew) NotificationService.ShowVerbose($"Created {profile.RawFolderName}", "Init");
             }
+            bool cacheNew = !Directory.Exists(DownloadCachePath);
             Directory.CreateDirectory(DownloadCachePath);
+            if (cacheNew) NotificationService.ShowVerbose("Created DownloadCache directory", "Init");
+
+            bool backupsNew = !Directory.Exists(BackupsPath);
             Directory.CreateDirectory(BackupsPath);
+            if (backupsNew) NotificationService.ShowVerbose("Created Backups directory", "Init");
 
             if (!HttpClient.DefaultRequestHeaders.Contains("User-Agent"))
                 HttpClient.DefaultRequestHeaders.Add("User-Agent", "TMM-Mod-Manager");
@@ -148,6 +156,7 @@ namespace TMM
                 File.WriteAllText(
                     Path.Combine(AppDataPath, "settings.json"),
                     JsonSerializer.Serialize(Settings, JsonHelper.PrettyOptions));
+                NotificationService.ShowVerbose("Settings saved", "Settings");
             }
             catch (Exception ex) { Log($"SaveSettings failed: {ex.Message}"); }
         }
@@ -677,6 +686,7 @@ namespace TMM
             {
                 await SaveDeploymentPlanAsync(planPath, plan, ct);
                 Log($"[Plan:{gameKey}] Saved deployment plan for '{modName}' to {planPath}");
+                NotificationService.ShowVerbose($"Plan frozen: {modName} ({plan.Files.Count} files)", "Plan");
             }
             catch (IOException ex)
             {
@@ -714,6 +724,7 @@ namespace TMM
         {
             int total = manifest.Entries.Count, done = 0;
             Log($"[Rollback:{manifest.GameKey}] Restoring {total} entries from {manifest.Timestamp}");
+            NotificationService.ShowVerbose($"Rollback started: {manifest.GameKey} — {total} entries from {manifest.Timestamp}", "Rollback");
 
             foreach (var entry in manifest.Entries)
             {
@@ -810,6 +821,7 @@ namespace TMM
             }
 
             Log($"[Rollback:{manifest.GameKey}] Done.");
+            NotificationService.ShowVerbose($"Rollback complete: {manifest.GameKey} — {total} files restored", "Rollback");
         }
 
         private void PruneOldBackups(string gameKey, int keepCount = 3)
@@ -824,7 +836,11 @@ namespace TMM
 
             foreach (var dir in toDelete)
             {
-                try { ForceDeleteDirectory(dir); }
+                try
+                {
+                    ForceDeleteDirectory(dir);
+                    NotificationService.ShowVerbose($"Pruned backup: {gameKey}/{Path.GetFileName(dir)}", "Backup");
+                }
                 catch { /* skip if locked */ }
             }
         }
@@ -910,6 +926,8 @@ namespace TMM
             var entries = new List<BackupEntry>();
             int total = fileMap.Count, done = 0;
 
+            NotificationService.ShowVerbose($"Deploy started: {gameKey} — {total} files", "Deploy");
+
             foreach (var dir in directories ?? [])
             {
                 ct.ThrowIfCancellationRequested();
@@ -983,6 +1001,7 @@ namespace TMM
             PruneOldBackups(gameKey);
             int backedUp = entries.Count(e => e.BackupFilePath is not null);
             Log($"[Deploy:{gameKey}] Done - {done} files written, {backedUp} backed up, manifest saved.");
+            NotificationService.ShowVerbose($"Deploy complete: {gameKey} — {done} files, {backedUp} backed up to {timestamp}", "Deploy");
         }
 
         /// <summary>
@@ -1112,7 +1131,9 @@ namespace TMM
         public string GetLoadoutsPath(string gameKey)
         {
             string path = Path.Combine(AppDataPath, $"Loadouts_{gameKey}");
+            bool created = !Directory.Exists(path);
             Directory.CreateDirectory(path);
+            if (created) NotificationService.ShowVerbose($"Created Loadouts_{gameKey}", "Init");
             return path;
         }
 

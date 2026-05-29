@@ -351,7 +351,7 @@ namespace TMM
                 return;
             }
 
-            var review = new ImportReviewWindow(candidates) { Owner = Window.GetWindow(this) };
+            var review = new ImportReviewWindow(candidates, _customConfig.GameDirectory) { Owner = Window.GetWindow(this) };
             if (review.ShowDialog() != true)
                 return;
 

@@ -222,10 +222,47 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Dark theme CheckBox -->
+        <!-- Dark theme CheckBox: explicit template so checked state is visually clear without hover -->
         <Style TargetType="{x:Type CheckBox}">
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border x:Name="box"
+                                    Width="16" Height="16" CornerRadius="2"
+                                    BorderThickness="1"
+                                    BorderBrush="{DynamicResource SubTextBrush}"
+                                    Background="Transparent"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,8,0">
+                                <TextBlock x:Name="checkGlyph"
+                                           FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="12"
+                                           Text="&#xE73E;"
+                                           Visibility="Collapsed"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AccentTextBrush}"/>
+                            </Border>
+                            <ContentPresenter VerticalAlignment="Center" Content="{TemplateBinding Content}" RecognizesAccessKey="True"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="box" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="checkGlyph" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="checkGlyph" Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Dark theme ContextMenu / MenuItem -->

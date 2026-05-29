@@ -73,6 +73,24 @@
                 </StackPanel>
             </Border>
 
+            <!-- Notifications -->
+            <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                    Padding="0,12,0,0" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="{helpers:Localization Settings_Notifications}" FontSize="13" FontWeight="SemiBold"
+                               Foreground="#FF88EE" Margin="0,0,0,8"/>
+                    <CheckBox x:Name="chkVerboseNotifications" Click="ChkVerboseNotifications_Click"
+                              Foreground="{DynamicResource TextBrush}" Cursor="Hand">
+                        <StackPanel>
+                            <TextBlock Text="{helpers:Localization Settings_VerboseNotifications}"
+                                       Foreground="{DynamicResource TextBrush}" FontSize="12"/>
+                            <TextBlock Text="{helpers:Localization Settings_VerboseNotifications_Desc}"
+                                       Foreground="{DynamicResource SubTextBrush}" FontSize="10" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </CheckBox>
+                </StackPanel>
+            </Border>
+
             <!-- Diagnostics -->
             <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
                     Padding="0,12,0,0" Margin="0,0,0,16">

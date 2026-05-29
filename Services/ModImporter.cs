@@ -94,6 +94,7 @@ namespace TMM.Services
                 return [];
 
             await core.SeedBaselineAsync(gameKey, gameDir, ct);
+            NotificationService.ShowVerbose($"Seeded baseline for {gameKey}", "Baseline");
 
             string modsRoot = Path.Combine(
                 core.AppDataPath,
@@ -144,6 +145,7 @@ namespace TMM.Services
                         LoadOrder = importedMods.Count,
                         GroupName = candidate.GroupName,
                     });
+                    NotificationService.ShowVerbose($"Importing: {modName} ({candidate.FilePaths.Count} files)", "Import");
                 }
 
                 foreach (var (source, dest) in operations)
@@ -154,6 +156,7 @@ namespace TMM.Services
                 }
 
                 CleanupEmptyAncestors(gameDir, operations.Select(op => op.Source));
+                NotificationService.ShowVerbose($"Import complete: {importedMods.Count} mod(s) moved to {gameKey}", "Import");
 
                 return importedMods;
             }

@@ -24,6 +24,7 @@ namespace TMM
         private PathsPage? _pagePaths;
         private SettingsPage? _pageSettingsInstance;
         private AddGamePage? _pageAddGame;
+        private NotificationsPage? _pageNotifications;
 
         // Public property for child windows to access language selector
         public ComboBox CmbLanguage => cmbLanguage;
@@ -88,11 +89,13 @@ namespace TMM
             _pagePaths            = new PathsPage(_core);
             _pageSettingsInstance = new SettingsPage(_core);
             _pageAddGame          = new AddGamePage(_core);
+            _pageNotifications    = new NotificationsPage();
 
-            pageBackupsPlaceholder.Content   = _pageBackups;
-            pagePathsPlaceholder.Content     = _pagePaths;
-            pageSettings.Content             = _pageSettingsInstance;
-            pageAddGamePlaceholder.Content   = _pageAddGame;
+            pageBackupsPlaceholder.Content          = _pageBackups;
+            pagePathsPlaceholder.Content            = _pagePaths;
+            pageSettings.Content                    = _pageSettingsInstance;
+            pageAddGamePlaceholder.Content          = _pageAddGame;
+            pageNotificationsPlaceholder.Content    = _pageNotifications;
 
             _pageAddGame.Cancelled  += () => NavigateTo("Library");
             _pageAddGame.GameSaved  += async () =>
@@ -201,13 +204,14 @@ namespace TMM
         {
             _currentPage = page;
 
-            pageLibrary.Visibility            = Visibility.Collapsed;
-            pageModManager.Visibility         = Visibility.Collapsed;
-            pageDownloads.Visibility          = Visibility.Collapsed;
-            pageBackupsPlaceholder.Visibility = Visibility.Collapsed;
-            pagePathsPlaceholder.Visibility   = Visibility.Collapsed;
-            pageSettings.Visibility           = Visibility.Collapsed;
-            pageAddGamePlaceholder.Visibility = Visibility.Collapsed;
+            pageLibrary.Visibility                   = Visibility.Collapsed;
+            pageModManager.Visibility                = Visibility.Collapsed;
+            pageDownloads.Visibility                 = Visibility.Collapsed;
+            pageBackupsPlaceholder.Visibility        = Visibility.Collapsed;
+            pagePathsPlaceholder.Visibility          = Visibility.Collapsed;
+            pageSettings.Visibility                  = Visibility.Collapsed;
+            pageAddGamePlaceholder.Visibility        = Visibility.Collapsed;
+            pageNotificationsPlaceholder.Visibility  = Visibility.Collapsed;
 
             searchContainer.Visibility  = Visibility.Collapsed;
             viewModePanel.Visibility    = Visibility.Collapsed;
@@ -267,6 +271,11 @@ namespace TMM
                         ? " — Edit Game"
                         : " — Add a Game";
                     break;
+
+                case "Notifications":
+                    pageNotificationsPlaceholder.Visibility = Visibility.Visible;
+                    titleSubtext.Text = " — Notifications";
+                    break;
             }
 
             SetNavActive(page);
@@ -276,25 +285,27 @@ namespace TMM
         private void SetNavActive(string page)
         {
             // Reset all to default style
-            navBtnLibrary.Style   = (Style)Resources["NavBtnStyle"];
-            navBtnModMgr.Style    = (Style)Resources["NavBtnStyle"];
-            navBtnDownloads.Style = (Style)Resources["NavBtnStyle"];
-            navBtnBackups.Style   = (Style)Resources["NavBtnStyle"];
-            navBtnPaths.Style     = (Style)Resources["NavBtnStyle"];
-            navBtnSettings.Style  = (Style)Resources["NavBtnStyle"];
-            navBtnAddGame.Style   = (Style)Resources["NavBtnStyle"];
+            navBtnLibrary.Style       = (Style)Resources["NavBtnStyle"];
+            navBtnModMgr.Style        = (Style)Resources["NavBtnStyle"];
+            navBtnDownloads.Style     = (Style)Resources["NavBtnStyle"];
+            navBtnBackups.Style       = (Style)Resources["NavBtnStyle"];
+            navBtnNotifications.Style = (Style)Resources["NavBtnStyle"];
+            navBtnPaths.Style         = (Style)Resources["NavBtnStyle"];
+            navBtnSettings.Style      = (Style)Resources["NavBtnStyle"];
+            navBtnAddGame.Style       = (Style)Resources["NavBtnStyle"];
 
             // Highlight the active button
             var activeStyle = (Style)Resources["NavBtnActiveStyle"];
             switch (page)
             {
-                case "Library":    navBtnLibrary.Style   = activeStyle; break;
-                case "ModManager": navBtnModMgr.Style    = activeStyle; break;
-                case "Downloads":  navBtnDownloads.Style = activeStyle; break;
-                case "Backups":    navBtnBackups.Style   = activeStyle; break;
-                case "Paths":      navBtnPaths.Style     = activeStyle; break;
-                case "Settings":   navBtnSettings.Style  = activeStyle; break;
-                case "AddGame":    navBtnAddGame.Style   = activeStyle; break;
+                case "Library":       navBtnLibrary.Style       = activeStyle; break;
+                case "ModManager":    navBtnModMgr.Style        = activeStyle; break;
+                case "Downloads":     navBtnDownloads.Style     = activeStyle; break;
+                case "Backups":       navBtnBackups.Style       = activeStyle; break;
+                case "Notifications": navBtnNotifications.Style = activeStyle; break;
+                case "Paths":         navBtnPaths.Style         = activeStyle; break;
+                case "Settings":      navBtnSettings.Style      = activeStyle; break;
+                case "AddGame":       navBtnAddGame.Style       = activeStyle; break;
             }
         }
 

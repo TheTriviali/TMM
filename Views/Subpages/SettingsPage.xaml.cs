@@ -18,6 +18,7 @@ namespace TMM
             _core = core;
             InitializeComponent();
             InitializeAccentPresets();
+            chkVerboseNotifications.IsChecked = _core.Settings.VerboseNotifications;
 
             var ver = Assembly.GetExecutingAssembly().GetName().Version;
             if (ver != null) lblVersion.Text = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
@@ -117,6 +118,12 @@ namespace TMM
             {
                 NotificationService.ShowWarning($"Invalid color format: {ex.Message}");
             }
+        }
+
+        private void ChkVerboseNotifications_Click(object sender, RoutedEventArgs e)
+        {
+            _core.Settings.VerboseNotifications = chkVerboseNotifications.IsChecked == true;
+            _core.SaveSettings();
         }
 
         private void BtnOpenLog_Click(object sender, RoutedEventArgs e)

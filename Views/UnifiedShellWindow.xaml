@@ -211,6 +211,13 @@
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
+                            <!-- Notifications -->
+                            <Button x:Name="navBtnNotifications" Style="{StaticResource NavBtnStyle}"
+                                    ToolTip="Notifications" Click="NavBtn_Click" Tag="Notifications">
+                                <TextBlock Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                           Foreground="{DynamicResource SubTextBrush}"/>
+                            </Button>
+
                             <Border Height="1" Background="{DynamicResource SubTextBrush}"
                                     Opacity="0.2" Margin="6,8"/>
 
@@ -360,11 +367,12 @@
                         <!-- ═══ BACKUPS PAGE ═══ -->
                         <ContentPresenter x:Name="pageBackupsPlaceholder" Visibility="Collapsed"/>
 
-                        <!-- Paths, Settings, and AddGame are added dynamically in code-behind
-                             because their constructors require BackendCore -->
-                        <ContentPresenter x:Name="pagePathsPlaceholder"    Visibility="Collapsed"/>
-                        <ContentPresenter x:Name="pageSettings"            Visibility="Collapsed"/>
-                        <ContentPresenter x:Name="pageAddGamePlaceholder"  Visibility="Collapsed"/>
+                        <!-- Paths, Settings, AddGame, and Notifications are added dynamically
+                             in code-behind because their constructors require BackendCore -->
+                        <ContentPresenter x:Name="pagePathsPlaceholder"          Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageSettings"                  Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageAddGamePlaceholder"        Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageNotificationsPlaceholder"  Visibility="Collapsed"/>
 
                         <!-- ═══ CARD-CLICK MODAL OVERLAY ═══ -->
                         <Grid x:Name="cardModal" Visibility="Collapsed" Panel.ZIndex="90"
