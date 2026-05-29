@@ -137,27 +137,32 @@ Built-in game keys: `III` `VC` `SA` `IV` `TLAD` `TBOGT`. Custom games get auto-g
 
 ---
 
-## Recently Completed (v0.1-alpha-8)
+## Recently Completed (v0.1-alpha-9)
 
-✅ **Sync / import** — point TMM at a pre-modded game folder, auto-detect existing mods  
-✅ **Mod groups** — collapsible nested deployment (`modloader\GroupName\ModName\`)  
-✅ **Conflict resolution** — visual highlighting + per-conflict winner-override UI  
-✅ **Mod loadouts** — save, restore, rename, delete, export as `.tmmpack`, and diff side-by-side  
-✅ **Smart DLL wizard** — detects proxy DLLs (dinput8, d3d9, ScriptHook, SKSE, etc.) on install  
-✅ **Mod favorites** — star/pin key mods  
-✅ **Recent activity feed** — last 20 actions surfaced from the Backups page  
-✅ **Backup size monitoring** — quota badge when backups exceed configured threshold  
-✅ **Log rotation + crash log attach** — 5 MB cap with 3 rotations; recent log lines attached to crash reports  
+✅ **`.tmmpack` import** — load a shared pack into any game (zip-slip-safe, collision-handled, loadout rebuilt)  
+✅ **Profile search hints** — a shared `.tmmgame` carries default install locations and auto-locates the game on another PC  
+✅ **Restored GTA III/VC/SA integrity hashes** — vanilla/downgrader MD5s back in the bundled profiles  
+✅ **Unified onboarding** — language + game choice on one screen (was four dialogs)  
+✅ **Build restored + audit cleanup** — fixed a broken `master`, removed dead code, centralized the version string  
+
+### Earlier (v0.1-alpha-8 and before)
+
+✅ **Rules freeze at install** + **first-touch baseline** rollback (the two architectural guarantees, now real)  
+✅ **Sync / import** from a pre-modded game folder · **Mod groups** (`modloader\Group\Mod\`)  
+✅ **Folder-overlay deploy** · **Conflict resolution** (highlight + per-conflict winner override)  
+✅ **Mod loadouts** — save/restore/rename/delete, export `.tmmpack`, diff side-by-side  
+✅ **Smart DLL wizard** (proxy-DLL detection) · **Favorites** · **Recent activity feed**  
+✅ **Backup size monitoring** · **Log rotation + crash-log attach**  
 
 ## In Progress
 
-Active work toward v1.0:
+Active work toward v1.0 (see [PLANS.md](PLANS.md) for the model-tagged briefs):
 
-- **Folder-overlay deploy** — mods shipping with `models/`, `data/`, `audio/` folders that mirror game structure (currently routed by extension only)
-- **Smart DLL wizard E2/E3** — auto-routing hints from proxy detections; multi-proxy version conflicts
-- **First-launch flow polish** — collapse the four-dialog flow into one guided panel
-
-See [PLANS.md](PLANS.md) for the full roadmap.
+- **Verbose notifications + Notifications tab** — opt-in diagnostic feed, browsable in a dedicated page
+- **Whole-program add/edit-game experience** — replace the modal wizard with a full shell tab (✎)
+- **In-app FAQ** + softer, informational integrity messaging
+- **Smart DLL wizard E2/E3** — proxy-DLL auto-routing hints; multi-proxy version conflicts
+- **Import split/merge** — refine detected mods during sync/import
 
 ---
 
@@ -165,42 +170,27 @@ See [PLANS.md](PLANS.md) for the full roadmap.
 
 The honest list. TMM works, but it's pre-1.0 and these gaps are real:
 
-**Architecture (in flight):**
-- Routing rules re-evaluate on every deploy (the "freeze at install" guarantee in the docs above is the goal, not the current behavior — coming in B2)
-- Rollback uses per-deploy snapshots, not a true vanilla baseline. Stacking mods can lose the original files (B3 will fix this)
-- Mods with `models/`, `data/`, `audio/` folders that mirror game structure get routed by extension only, not merged as overlays (B4)
-- No way to import a pre-existing modded install — TMM has to start clean today (B5)
-- No mod groups / collapsible nesting yet (B6)
-
 **Deploy / rollback:**
-- No conflict detection — two mods writing the same destination file silently overwrites
-- Backup retention is hard-coded at 3 deploys, no UI to change it
-- Backups can balloon for large games (heavily modded SA: multi-GB) with no warning or quota
-- Empty mod-side directories are skipped on deploy
-- Symlinks in mod sources are not supported; behavior is unpredictable if encountered
+- Backup retention is hard-coded at 3 deploys per game — no UI to change it
 - No way to manually trigger a baseline re-capture if something gets out of sync
 
-**UI / UX:**
-- First-launch flow is four dialogs deep for one decision (language → game picker → built-in vs custom → setup)
-- Steam protocol launch not wired for custom game dashboards
-- "Find Mods" sidebar buttons currently point at generic Nexus/ModDB homepages (no per-game deep links)
-- Drag-drop into IV/TLaD/TBoGT shared folder structure has rough edges
-- Theme picker refresh from non-GTA dashboards is flaky
-- "Open Mods Store" context menu item is a stub (no implementation)
-- Theme manager window doesn't always refresh after a theme change
-- Some hard-coded English strings remain in XAML (incomplete localization coverage)
-- Wizard validation events aren't wired on Steps 2–4 (3 known CS0067 warnings)
-- No undo for individual mod removal — full rollback is the only escape
+**Custom games / import:**
+- Sync/import can detect, select, exclude, and rename mods, but can't yet **split** one detected candidate into several or **merge** several into one
+- Built-in GTA auto-scan still uses hardcoded Steam roots (custom games use portable `searchHints`); folding the built-in path onto search hints is pending
+- No "is this profile complete?" validator before saving
 
-**Custom games:**
-- Auto-scan (`QuickScan`) hardcodes GTA-specific paths; doesn't search custom games yet
-- Per-game search hints in `.tmmgame` profiles not implemented
-- No way to validate a `.tmmgame` profile is complete before saving it
+**Smart DLL wizard:**
+- Proxy DLLs are detected + flagged on install, but not yet auto-routed to game root (E2), and two mods shipping the same proxy DLL isn't called out as a distinct conflict (E3)
+
+**UI / UX:**
+- Notifications are transient toasts only — no browsable history or verbose/diagnostic mode yet (both planned)
+- Add/edit-game still uses a four-step modal wizard (a full-window experience is planned)
+- Some hard-coded English strings remain in advanced wizard fields (incomplete localization coverage)
+- Wizard validation events aren't wired on Steps 2–4 (3 intentional CS0067 warnings)
+- No undo for individual mod removal — rollback is the only escape
 
 **Other:**
-- No log rotation — `TMM.log` grows unbounded
 - One-click essentials downloader doesn't gracefully handle network failures mid-download
-- Crash handler exists but doesn't auto-attach the log to the dialog
 - No telemetry, no auto-update check, no version-pinning of mods
 
 ---

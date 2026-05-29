@@ -19,8 +19,10 @@ Direct-deploy: mods → game directories (no VFS).
 ## File Locations
 
 **Settings:** `%APPDATA%\TMM\settings.json`  
-**Mods:** `%APPDATA%\TMM\ModsRaw_{key}\{ModName}\`  
-**Backups:** `%APPDATA%\TMM\Backups\{key}\{timestamp}.json`  
+**Mods:** `%APPDATA%\TMM\ModsRaw_{key}\{ModName}\` (frozen plan in `_tmm\deployplan.json`)  
+**Backups:** `%APPDATA%\TMM\Backups\{key}\{timestamp}\manifest.json`  
+**Baselines:** `%APPDATA%\TMM\Baselines\{key}\baseline.json` (+ `snapshots\`)  
+**Loadouts:** `%APPDATA%\TMM\Loadouts_{key}\{Name}.json`  
 **Custom games:** `%APPDATA%\TMM\CustomGames\{key}.json`
 
 ---
@@ -34,10 +36,12 @@ Custom: `CUSTOM_abc123` (auto-generated UUID)
 
 ## Deploy Flow
 
-1. `BackendCore.DeployModsAsync` iterates enabled mods
-2. Files routed via `RoutingRule` (e.g., `.asi` → `plugins/`)
-3. Backup created before writing
-4. `DeployManifest` saved for rollback
+1. **Install:** `BackendCore.OnModAddedAsync` runs the routing rules **once** and freezes a `DeploymentPlan` to `ModsRaw_{key}/{ModName}/_tmm/deployplan.json`.
+2. **Deploy:** `ModManagerPage` → `DeployPreviewWindow` (`ConflictAnalyzer` surfaces cross-mod conflicts) → `BackendCore.DeployFilesToGameDirAsync` executes the saved plan (no re-evaluation).
+3. **Before overwrite:** first-touch baseline captured (`BaselineSnapshot`) + per-deploy backup.
+4. `DeployManifest` saved; rollback restores to the **baseline** (not the previous deploy).
+
+> `DeployModsAsync` (the old per-deploy live-planning path) was removed in v0.1-alpha-9.
 
 ---
 

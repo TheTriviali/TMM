@@ -20,11 +20,9 @@ flowchart TD
     B --> C[UnifiedShellWindow.Show]
     C --> D[Window_Loaded]
     D --> E{Settings.FirstLaunch?}
-    E -- yes --> F[InitialSetupWindow modal\nlanguage pick]
-    F --> G[FirstGamePickerWindow]
-    G --> H{Built-in or custom?}
-    H -- built-in --> I[SelectBuiltinGameWindow]
-    H -- custom --> J[CustomGameSetupWizard]
+    E -- yes --> F[InitialSetupWindow\nlanguage + two game-choice cards]
+    F -- built-in card --> I[SelectBuiltinGameWindow]
+    F -- custom card --> J[CustomGameSetupWizard]
     I --> K[await core.InitializeAsync]
     J --> K
     E -- no --> K
@@ -32,8 +30,9 @@ flowchart TD
     L --> M[Shell ready]
 ```
 
-**Refinement note (S7 in PLANS.md):** this is four dialogs deep for one decision.
-Candidate for merging `InitialSetupWindow` + `FirstGamePickerWindow`.
+**Updated v0.1-alpha-9 (S7 done):** `FirstGamePickerWindow` was removed; its built-in/custom
+choice cards now live directly in `InitialSetupWindow` below the language picker — one screen
+instead of two.
 
 ---
 
