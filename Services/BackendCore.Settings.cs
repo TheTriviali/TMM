@@ -68,6 +68,12 @@ namespace TMM
                 // Non-fatal - settings are gone, remaining files are harmless on next launch.
                 try { Log($"FactoryReset partial failure: {ex.Message}"); } catch { }
             }
+
+            // Recreate base folders so the running session isn't left with missing dirs
+            foreach (var profile in GameProfile.All)
+                Directory.CreateDirectory(Path.Combine(AppDataPath, profile.RawFolderName));
+            Directory.CreateDirectory(DownloadCachePath);
+            Directory.CreateDirectory(BackupsPath);
         }
 
         public void OpenAppData() => Process.Start("explorer.exe", AppDataPath);

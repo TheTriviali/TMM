@@ -270,7 +270,7 @@ namespace TMM
             => new AboutWindow(_core) { Owner = Window.GetWindow(this) }.ShowDialog();
 
         private void BtnOpenAppData_Click(object sender, RoutedEventArgs e)
-            => _core.OpenAppData();
+            => ShellHelper.OpenOwnedFolder(_core.AppDataPath);
 
         private void BtnLink_Click(object sender, RoutedEventArgs e)
         {
@@ -545,8 +545,16 @@ namespace TMM
         private void MenuOpenFolder_Click(object? sender, RoutedEventArgs e)
         {
             var mod = GetSelectedMod();
-            if (mod != null && Directory.Exists(mod.RawFolderPath))
-                ShellHelper.OpenFolder(mod.RawFolderPath);
+            if (mod != null)
+            {
+                if (Directory.Exists(mod.RawFolderPath))
+                    ShellHelper.OpenFolder(mod.RawFolderPath);
+                else if (_customProfile != null)
+                {
+                    // Mod folder is missing; fall back to parent mods folder
+                    ShellHelper.OpenOwnedFolder(Path.Combine(_core.AppDataPath, _customProfile.RawFolderName));
+                }
+            }
         }
 
         private void MenuOpenGameFolder_Click(object? sender, RoutedEventArgs e)
@@ -562,16 +570,14 @@ namespace TMM
         private void MenuOpenBackupFolder_Click(object? sender, RoutedEventArgs e)
         {
             string path = Path.Combine(_core.BackupsPath, _customProfile?.Key ?? "");
-            Directory.CreateDirectory(path);
-            ShellHelper.OpenFolder(path);
+            ShellHelper.OpenOwnedFolder(path);
         }
 
         private void MenuOpenModsFolder_Click(object? sender, RoutedEventArgs e)
         {
             if (_customProfile == null) return;
             string path = Path.Combine(_core.AppDataPath, _customProfile.RawFolderName);
-            Directory.CreateDirectory(path);
-            ShellHelper.OpenFolder(path);
+            ShellHelper.OpenOwnedFolder(path);
         }
 
         private void MenuProperties_Click(object? sender, RoutedEventArgs e)

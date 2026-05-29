@@ -306,7 +306,7 @@ namespace TMM
         private void BtnOpenArchiveFolder_Click(object sender, RoutedEventArgs e)
         {
             if (_core == null || string.IsNullOrEmpty(_selectedGameKey)) return;
-            Process.Start("explorer.exe", _core.GetModsArchivePath(_selectedGameKey));
+            ShellHelper.OpenOwnedFolder(_core.GetModsArchivePath(_selectedGameKey));
         }
     }
 }

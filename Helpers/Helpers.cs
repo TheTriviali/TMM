@@ -10,6 +10,13 @@ namespace TMM
         public static void OpenFolder(string path) =>
             Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true, Verb = "open" });
 
+        /// <summary>Open a TMM-owned folder, creating it first so it always exists.</summary>
+        public static void OpenOwnedFolder(string path)
+        {
+            System.IO.Directory.CreateDirectory(path);
+            OpenFolder(path);
+        }
+
         public static void OpenUrl(string url) =>
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }

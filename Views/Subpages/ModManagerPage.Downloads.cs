@@ -112,7 +112,7 @@ namespace TMM
         {
             if (_customProfile == null) return;
             string dir = _core.GetModsArchivePath(_customProfile.Key);
-            Process.Start("explorer.exe", dir);
+            ShellHelper.OpenOwnedFolder(dir);
         }
     }
 }
