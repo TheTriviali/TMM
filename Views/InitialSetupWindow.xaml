@@ -47,26 +47,26 @@
                                 <DropShadowEffect Color="Black" Opacity="0.25" BlurRadius="6" ShadowDepth="1"/>
                             </TextBlock.Effect>
                         </TextBlock>
-                        <TextBlock Text="Mod Management Made Simple"
+                        <TextBlock Text="{helpers:Localization Setup_Tagline}"
                                    FontSize="11" Foreground="White" Opacity="0.78"
                                    HorizontalAlignment="Center" Margin="0,0,0,36" TextAlignment="Center"/>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                 <TextBlock Text="✓" Foreground="White" Opacity="0.85"
                                            FontWeight="Bold" Margin="0,0,10,0" FontSize="12"/>
-                                <TextBlock Text="Direct-deploy, no VFS"
+                                <TextBlock Text="{helpers:Localization Setup_Feature_DirectDeploy}"
                                            Foreground="White" Opacity="0.72" FontSize="12"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                 <TextBlock Text="✓" Foreground="White" Opacity="0.85"
                                            FontWeight="Bold" Margin="0,0,10,0" FontSize="12"/>
-                                <TextBlock Text="GTA III series built-in"
+                                <TextBlock Text="{helpers:Localization Setup_Feature_BuiltinGames}"
                                            Foreground="White" Opacity="0.72" FontSize="12"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="✓" Foreground="White" Opacity="0.85"
                                            FontWeight="Bold" Margin="0,0,10,0" FontSize="12"/>
-                                <TextBlock Text="Custom game profiles"
+                                <TextBlock Text="{helpers:Localization Setup_Feature_CustomProfiles}"
                                            Foreground="White" Opacity="0.72" FontSize="12"/>
                             </StackPanel>
                         </StackPanel>

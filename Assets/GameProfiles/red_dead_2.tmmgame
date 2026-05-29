@@ -1,14 +1,27 @@
-﻿{
+{
   "$schema": "tmm-game/1.1",
   "gameName": "Red Dead Redemption 2",
   "gameDirectory": "",
   "exePath": "RDR2.exe",
   "steamAppId": "1174180",
-  "routingRules": [
-    { "extensionPattern": ".asi", "destination": "." },
-    { "extensionPattern": ".dll", "destination": "." },
-    { "extensionPattern": "*",    "destination": "." }
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/Red Dead Redemption 2",
+    "SteamLibrary/steamapps/common/Red Dead Redemption 2",
+    "Steam/steamapps/common/Red Dead Redemption 2"
   ],
+  "routingRules": [
+    {
+      "name": "Default (game root)",
+      "conditions": [],
+      "targetPath": ".",
+      "priority": 10,
+      "isDefault": true
+    }
+  ],
+  "installerHints": {
+    "engineProxyNames": ["dinput8.dll", "d3d11.dll", "version.dll"],
+    "smartDllWizard": true
+  },
   "gradientStartHex": "#2E0A0A",
   "gradientEndHex": "#1A0505",
   "libraryStatus": "PreAlpha",
@@ -17,8 +30,8 @@
     "subtitle": "The Frontier",
     "iconGlyph": "&#xE7FC;"
   },
-  "description": "Red Dead Redemption 2 mod support — Alpha placeholder",
+  "description": "Red Dead Redemption 2 mod support — most mods deploy to game root alongside RDR2.exe.",
   "author": "TMM",
-  "version": "0.1",
+  "version": "0.2",
   "nexusSlug": "reddeadredemption2"
 }

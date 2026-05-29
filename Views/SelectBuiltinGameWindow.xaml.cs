@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -61,8 +60,10 @@ namespace TMM
 
         private void UpdateDoneButtonState()
         {
-            bool anyReady = GameProfile.All.Any(_core.IsGameReady);
-            BtnDone.IsEnabled = anyReady;
+            // Done is always enabled — users can proceed without a path configured and
+            // set it later from the Library. Keeping Done gated on IsGameReady blocked
+            // first-run on machines without GTA installed.
+            BtnDone.IsEnabled = true;
         }
 
         private new void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)

@@ -112,7 +112,7 @@ namespace TMM
         {
             Cust_txtSidebarGameName.Text = _customConfig.GameName;
             Cust_txtSidebarDir.Text = string.IsNullOrEmpty(_customConfig.GameDirectory)
-                ? "Directory not set"
+                ? TMM.Services.LocalizationService.Instance["ModManager_DirectoryNotSet"]
                 : _customConfig.GameDirectory;
 
             if (!string.IsNullOrEmpty(_customConfig.NexusSlug))
@@ -856,7 +856,7 @@ namespace TMM
             if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
                 ShellHelper.OpenFolder(path);
             else
-                MessageBox.Show("Game folder is not set or missing.", "Folder Not Found",
+                MessageBox.Show(TMM.Services.LocalizationService.Instance["ModManager_FolderNotSet"], "Folder Not Found",
                     MessageBoxButton.OK, MessageBoxImage.Information);
         }
 

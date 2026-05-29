@@ -291,7 +291,7 @@ files still load. Regression test: `TMM.Tests/TmmGameOptionsTests.cs` (2 cases).
 rules deserialize to empty `RoutingRule` objects (the flat keys map to no property), so their
 routing is silently non-functional. Not the reported bug, but a real latent defect.
 
-### F2 — Welcome-window colored sidebar never localizes  🟢 Haiku
+### F2 — Welcome-window colored sidebar never localizes  🟢 Haiku  ✅ COMPLETE (2026-05-29)
 **Symptom:** Switching language on the welcome screen updates the right pane but the colored
 left branding panel stays English.
 
@@ -306,7 +306,7 @@ and `es-MX.json`, and swap the four literals to `{helpers:Localization …}`. Mi
 keys' tone. **Gotcha:** the tagline `"GTA III series built-in"` is now slightly inaccurate given
 the broader game roster — consider rewording to something game-agnostic when you add the key.
 
-### F3 — "Select a Built-in Game" / "Create a Custom Game" cards don't work  🔵 Sonnet
+### F3 — "Select a Built-in Game" / "Create a Custom Game" cards don't work  🔵 Sonnet  ✅ COMPLETE (2026-05-29)
 **Symptom:** Clicking either welcome-window card (`Picker_BuiltinTitle` / `Picker_CustomTitle`)
 appears to do nothing / not complete setup.
 
@@ -331,7 +331,7 @@ Each only calls `CompleteSetup()` when the dialog returns `true`.
 **Deliverable:** reproduce, identify which hypothesis holds, fix so both cards reliably advance
 first-run setup. Add a note to UIFLOWS.md if the first-launch flow changes.
 
-### F4 — "Directory not set" hardcoded (never localizes)  🟢 Haiku
+### F4 — "Directory not set" hardcoded (never localizes)  🟢 Haiku  ✅ COMPLETE (2026-05-29)
 **Root cause:** [Views/Subpages/ModManagerPage.xaml.cs:115](Views/Subpages/ModManagerPage.xaml.cs:115)
 sets `Cust_txtSidebarDir.Text = "Directory not set"` as a literal.
 
@@ -343,7 +343,7 @@ the `MessageBox` at ModManagerPage.xaml.cs:859 ("Game folder is not set or missi
 **Gotcha:** this row is set in code-behind, not XAML, so it won't live-update on language switch
 unless re-run — acceptable since the sidebar repopulates on game selection.
 
-### F5 — Flat-schema built-in profiles have non-functional routing  🔵 Sonnet  *(latent, surfaced during F1)*
+### F5 — Flat-schema built-in profiles have non-functional routing  🔵 Sonnet  ✅ COMPLETE (2026-05-29)
 **Symptom (latent):** Skyrim/FNV/Cyberpunk/RDR2/Witcher 3 load and appear in the library, but their
 `routingRules` use a flat `ruleName`/`extensionPattern`/`destination`/`fallbackDestination`/`checkSubdir`
 schema that maps to **no** property on the current `RoutingRule` model (which expects

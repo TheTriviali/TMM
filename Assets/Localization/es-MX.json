@@ -198,6 +198,10 @@
   "Setup_OrMore": "o elige de la lista completa",
   "Setup_SetupBtn": "Configura tu primer juego",
   "Setup_Skip": "Omitir por ahora",
+  "Setup_Tagline": "Gestión de Mods Simplificada",
+  "Setup_Feature_DirectDeploy": "Deploy directo, sin VFS",
+  "Setup_Feature_BuiltinGames": "Perfiles de juego integrados",
+  "Setup_Feature_CustomProfiles": "Perfiles de juego personalizados",
 
   "Picker_Heading": "¿Qué te gustaría hacer?",
   "Picker_BuiltinTitle": "Seleccionar un juego incluido",
@@ -245,6 +249,8 @@
   "Library_Empty_Title": "No hay juegos en la biblioteca",
   "Library_Empty_Subtitle": "Haz clic en ➕ para agregar tu primer juego",
 
+  "ModManager_DirectoryNotSet": "Directorio no configurado",
+  "ModManager_FolderNotSet": "La carpeta del juego no está configurada o no existe.",
   "ModManager_DropHere": "Suelta Mods Aquí",
   "ModManager_Back": "Atrás",
   "ModManager_Sidebar": "Panel",

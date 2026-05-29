@@ -8,14 +8,26 @@ All notable changes to TMM are listed here, newest first.
 
 ### Fixed
 - **All six GTA built-in profiles silently failed to load (critical, F1):** On a fresh launch only
-  the five flat-schema games (Skyrim/FNV/Cyberpunk/RDR2/Witcher 3) appeared — GTA III/VC/SA/IV/TLaD/TBoGT
-  were missing. `JsonHelper.TmmGameOptions` lacked a `JsonStringEnumConverter`, so the GTA profiles'
-  condition-based `routingRules` (enum names like `"PathContains"`/`"StartsWith"`/`"AND"`) threw on
-  deserialize and were swallowed by the catch in `GameRegistry.LoadBuiltInProfilesAsync`. Added the
-  converter (accepts both string and numeric enum forms, so older numeric exports still load) plus a
-  `TmmGameOptionsTests` regression (57/57 tests pass). Remaining first-run issues (welcome-sidebar
-  localization, setup-card behavior, hardcoded "Directory not set", flat-schema routing) are tracked
-  as Group F in PLANS.md.
+  the five flat-schema games appeared — GTA III/VC/SA/IV/TLaD/TBoGT were missing. `JsonHelper.TmmGameOptions`
+  lacked a `JsonStringEnumConverter`; the GTA profiles' condition-based `routingRules` (enum names like
+  `"PathContains"`, `"StartsWith"`, `"AND"`) threw on deserialize and were swallowed. Added the converter
+  (accepts string and numeric forms) plus a `TmmGameOptionsTests` regression.
+- **"Select a Built-in Game" / "Create a Custom Game" cards couldn't complete setup (F3):**
+  `SelectBuiltinGameWindow.BtnDone` was gated on `GameProfile.All.Any(IsGameReady)` — on a fresh machine
+  without GTA installed the button was permanently greyed out, so first-run setup could never be completed.
+  Done is now always enabled; users can proceed without configuring a path and do so later from the Library.
+- **Welcome-window left panel stayed English on language switch (F2):** The four branding strings
+  (`"Mod Management Made Simple"`, `"Direct-deploy, no VFS"`, `"GTA III series built-in"`, `"Custom game profiles"`)
+  were hardcoded literals; swapped to `{helpers:Localization}` bindings. Updated "GTA III series built-in"
+  to game-agnostic `Setup_Feature_BuiltinGames`. New keys added to `en-US.json` and `es-MX.json`.
+- **"Directory not set" never localized (F4):** Hardcoded literal in `ModManagerPage.xaml.cs:115` and
+  the matching open-folder `MessageBox` replaced with `LocalizationService.Instance[key]` lookups.
+  New keys: `ModManager_DirectoryNotSet`, `ModManager_FolderNotSet` in both locale files.
+- **Five non-GTA built-in profiles had non-functional routing (F5):** Skyrim/FNV/Cyberpunk/RDR2/Witcher 3
+  used a flat `extensionPattern`/`destination` schema that mapped to no property on `RoutingRule`, so
+  routing rules deserialized to empty objects. Rewrote all five to the condition-based schema (same as
+  GTA profiles). Skyrim's SKSE conditional rule (HasFolder check) preserved. Added `BuiltInProfilesTests`
+  with three cases covering all 11 profiles; 60/60 tests pass.
 
 ---
 

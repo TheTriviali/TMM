@@ -1,13 +1,39 @@
-﻿{
+{
   "$schema": "tmm-game/1.1",
   "gameName": "The Witcher 3",
   "gameDirectory": "",
   "exePath": "bin\\x64\\witcher3.exe",
   "steamAppId": "292030",
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/The Witcher 3",
+    "SteamLibrary/steamapps/common/The Witcher 3",
+    "Steam/steamapps/common/The Witcher 3",
+    "GOG Games/The Witcher 3 Wild Hunt"
+  ],
   "routingRules": [
-    { "extensionPattern": ".bundle", "destination": "Mods" },
-    { "extensionPattern": ".xml",    "destination": "Mods" },
-    { "extensionPattern": "*",       "destination": "." }
+    {
+      "name": "Bundle",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".bundle" }
+      ],
+      "targetPath": "Mods",
+      "priority": 80
+    },
+    {
+      "name": "XML",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".xml" }
+      ],
+      "targetPath": "Mods",
+      "priority": 80
+    },
+    {
+      "name": "Default (game root)",
+      "conditions": [],
+      "targetPath": ".",
+      "priority": 10,
+      "isDefault": true
+    }
   ],
   "gradientStartHex": "#0A2E14",
   "gradientEndHex": "#051A0A",
@@ -17,8 +43,8 @@
     "subtitle": "Wild Hunt",
     "iconGlyph": "&#xE7FC;"
   },
-  "description": "The Witcher 3 mod support — Alpha placeholder",
+  "description": "The Witcher 3 mod support — routes .bundle and .xml to Mods\\, everything else to game root.",
   "author": "TMM",
-  "version": "0.1",
+  "version": "0.2",
   "nexusSlug": "witcher3"
 }

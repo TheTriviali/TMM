@@ -1,47 +1,86 @@
-﻿{
+{
   "$schema": "tmm-game/1.1",
   "gameName": "Skyrim Anniversary Edition",
   "gameDirectory": "",
   "exePath": "SkyrimSE.exe",
   "steamAppId": "489830",
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/Skyrim Special Edition",
+    "SteamLibrary/steamapps/common/Skyrim Special Edition",
+    "Steam/steamapps/common/Skyrim Special Edition"
+  ],
   "routingRules": [
     {
-      "ruleName": "SKSE Plugins",
-      "extensionPattern": ".dll",
-      "checkSubdir": "Data\\SKSE",
-      "destination": "Data\\SKSE\\Plugins",
-      "fallbackDestination": "."
+      "name": "SKSE Plugin (if Data\\SKSE exists)",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".dll", "logic": "AND" },
+        { "type": "HasFolder",     "operator": "Is", "value": "Data\\SKSE" }
+      ],
+      "targetPath": "Data\\SKSE\\Plugins",
+      "priority": 90
     },
     {
-      "ruleName": "ESP/ESM/ESL Plugins",
-      "extensionPattern": ".esp",
-      "destination": "Data"
+      "name": "ESP Plugin",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".esp" }
+      ],
+      "targetPath": "Data",
+      "priority": 80
     },
     {
-      "extensionPattern": ".esm",
-      "destination": "Data"
+      "name": "ESM Master",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".esm" }
+      ],
+      "targetPath": "Data",
+      "priority": 80
     },
     {
-      "extensionPattern": ".esl",
-      "destination": "Data"
+      "name": "ESL Light Plugin",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".esl" }
+      ],
+      "targetPath": "Data",
+      "priority": 80
     },
     {
-      "ruleName": "BSA Archives",
-      "extensionPattern": ".bsa",
-      "destination": "Data"
+      "name": "BSA Archive",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".bsa" }
+      ],
+      "targetPath": "Data",
+      "priority": 80
     },
     {
-      "extensionPattern": ".ba2",
-      "destination": "Data"
+      "name": "BA2 Archive",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".ba2" }
+      ],
+      "targetPath": "Data",
+      "priority": 80
     },
     {
-      "ruleName": "Papyrus Scripts",
-      "extensionPattern": ".pex",
-      "destination": "Data\\Scripts"
+      "name": "Papyrus Compiled Script",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".pex" }
+      ],
+      "targetPath": "Data\\Scripts",
+      "priority": 75
     },
     {
-      "extensionPattern": ".psc",
-      "destination": "Data\\Scripts\\Source"
+      "name": "Papyrus Source",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".psc" }
+      ],
+      "targetPath": "Data\\Scripts\\Source",
+      "priority": 75
+    },
+    {
+      "name": "Default (game root)",
+      "conditions": [],
+      "targetPath": ".",
+      "priority": 10,
+      "isDefault": true
     }
   ],
   "installerHints": {
@@ -52,11 +91,10 @@
   "launcherCard": {
     "displayName": "Skyrim AE",
     "subtitle": "Anniversary Edition",
-    "iconGlyph": "&#xE7FC;",
-    "accentColor": null
+    "iconGlyph": "&#xE7FC;"
   },
-  "description": "Built-in support for Skyrim Anniversary Edition (v1.6+). Routes ESP/ESM to Data\\, SKSE plugins to Data\\SKSE\\Plugins\\, and detects engine proxies (DXVK, ENB, ReShade) automatically.",
-  "version": "1.1",
+  "description": "Skyrim Anniversary Edition (v1.6+). Routes ESP/ESM/ESL/BSA to Data\\, SKSE plugins to Data\\SKSE\\Plugins\\ (when SKSE is installed), Papyrus scripts to Data\\Scripts\\.",
+  "version": "1.2",
   "libraryStatus": "PreAlpha",
   "nexusSlug": "skyrimspecialedition"
 }

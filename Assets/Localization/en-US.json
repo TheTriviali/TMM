@@ -198,6 +198,10 @@
   "Setup_OrMore": "or choose from the full list",
   "Setup_SetupBtn": "Set Up Your First Game",
   "Setup_Skip": "Skip for now",
+  "Setup_Tagline": "Mod Management Made Simple",
+  "Setup_Feature_DirectDeploy": "Direct-deploy, no VFS",
+  "Setup_Feature_BuiltinGames": "Built-in game profiles",
+  "Setup_Feature_CustomProfiles": "Custom game profiles",
 
   "Picker_Heading": "Which would you like to do?",
   "Picker_BuiltinTitle": "Select a Built-in Game",
@@ -245,6 +249,8 @@
   "Library_Empty_Title": "No games in library",
   "Library_Empty_Subtitle": "Click ➕ to add your first game",
 
+  "ModManager_DirectoryNotSet": "Directory not set",
+  "ModManager_FolderNotSet": "Game folder is not set or missing.",
   "ModManager_DropHere": "Drop Mods Here",
   "ModManager_Back": "Back",
   "ModManager_Sidebar": "Sidebar",

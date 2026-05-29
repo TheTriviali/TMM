@@ -1,14 +1,47 @@
-﻿{
+{
   "$schema": "tmm-game/1.1",
   "gameName": "Fallout: New Vegas",
   "gameDirectory": "",
   "exePath": "FalloutNV.exe",
   "steamAppId": "22380",
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/Fallout New Vegas",
+    "SteamLibrary/steamapps/common/Fallout New Vegas",
+    "Steam/steamapps/common/Fallout New Vegas",
+    "GOG Games/Fallout New Vegas"
+  ],
   "routingRules": [
-    { "extensionPattern": ".esp", "destination": "Data" },
-    { "extensionPattern": ".esm", "destination": "Data" },
-    { "extensionPattern": ".bsa", "destination": "Data" },
-    { "extensionPattern": "*",    "destination": "." }
+    {
+      "name": "ESP Plugin",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".esp" }
+      ],
+      "targetPath": "Data",
+      "priority": 80
+    },
+    {
+      "name": "ESM Master",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".esm" }
+      ],
+      "targetPath": "Data",
+      "priority": 80
+    },
+    {
+      "name": "BSA Archive",
+      "conditions": [
+        { "type": "FileExtension", "operator": "Is", "value": ".bsa" }
+      ],
+      "targetPath": "Data",
+      "priority": 80
+    },
+    {
+      "name": "Default (game root)",
+      "conditions": [],
+      "targetPath": ".",
+      "priority": 10,
+      "isDefault": true
+    }
   ],
   "gradientStartHex": "#3A2008",
   "gradientEndHex": "#1E1004",
@@ -18,8 +51,8 @@
     "subtitle": "Mojave Wasteland",
     "iconGlyph": "&#xE7FC;"
   },
-  "description": "Fallout: New Vegas mod support — Alpha placeholder",
+  "description": "Fallout: New Vegas mod support — routes ESP/ESM/BSA to Data\\, everything else to game root.",
   "author": "TMM",
-  "version": "0.1",
+  "version": "0.2",
   "nexusSlug": "newvegas"
 }
