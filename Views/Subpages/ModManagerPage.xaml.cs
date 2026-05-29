@@ -94,6 +94,7 @@ namespace TMM
 
             Cust_ModList.ItemsSource = _modsCustom;
             LoadModsFromJsonCustom();
+            InitializeDownloadsDrawer();
             _ = RefreshCustomAsync();
         }
 

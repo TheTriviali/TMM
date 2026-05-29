@@ -132,6 +132,12 @@ namespace TMM
                 if (op.State == CoreWebView2DownloadState.Completed)
                     Dispatcher.Invoke(() =>
                     {
+                        // First-use flag: unlock the Downloads drawer in ModManagerPage
+                        if (_core != null && !_core.Settings.HasUsedBuiltInDownloads)
+                        {
+                            _core.Settings.HasUsedBuiltInDownloads = true;
+                            _core.SaveSettings();
+                        }
                         RefreshArchiveList();
                         NotificationService.ShowSuccess($"Saved: {Path.GetFileName(destPath)}");
                     });
@@ -201,9 +207,10 @@ namespace TMM
             }
 
             foreach (string file in files)
-                archiveList.Children.Add(BuildArchiveRow(file));
+                archiveList.Children.Add(ArchiveRowHelper.BuildRow(file, RefreshArchiveList));
         }
 
+        // kept for future extension; shared rendering lives in ArchiveRowHelper
         private UIElement BuildArchiveRow(string filePath)
         {
             string fname  = Path.GetFileName(filePath);

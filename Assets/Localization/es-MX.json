@@ -272,6 +272,10 @@
   "Library_Empty_Title": "No hay juegos en la biblioteca",
   "Library_Empty_Subtitle": "Haz clic en ➕ para agregar tu primer juego",
 
+  "ModManager_Downloads": "Descargas",
+  "ModManager_Downloads_OpenFolder": "Abrir carpeta de archivos",
+  "ModManager_Downloads_Empty": "No hay archivos aún.\nLos archivos .zip/.rar/.7z\naparecerán aquí.",
+
   "Card_Play": "Jugar",
   "Card_Manage": "Administrar",
   "Card_Default": "Predeterminado",

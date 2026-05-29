@@ -73,5 +73,12 @@ namespace TMM
         /// still recorded to history but stay silent. See NotificationService.ShowVerbose.
         /// </summary>
         public bool VerboseNotifications { get; set; } = false;
+
+        /// <summary>
+        /// Set to true the first time the built-in WebView2 download interceptor successfully
+        /// saves a mod archive. Gates visibility of the Downloads drawer in ModManagerPage so
+        /// users who never use built-in downloads see no new UI.
+        /// </summary>
+        public bool HasUsedBuiltInDownloads { get; set; } = false;
     }
 }
