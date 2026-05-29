@@ -64,6 +64,14 @@ namespace TMM
             }
         }
 
+        /// <summary>Pre-select a game in the downloads dropdown by key (no-op if not found).</summary>
+        public void SetActiveGame(string? gameKey)
+        {
+            if (string.IsNullOrEmpty(gameKey)) return;
+            var match = _entries.FirstOrDefault(e => e.Key == gameKey);
+            if (match != null) cmbGame.SelectedItem = match;
+        }
+
         // ── Visibility trigger — init WebView2 on first show ──────────────────────
 
         private void Page_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)

@@ -254,6 +254,10 @@ namespace TMM
                     break;
 
                 case "Downloads":
+                    // Pre-select the active/default game so Downloads follows what the user is working on
+                    var activeKey = _activeModManagerEntry?.Key
+                        ?? BuildLibraryEntries().FirstOrDefault(e => e.IsDefault && !e.IsPlaceholder)?.Key;
+                    pageDownloads.SetActiveGame(activeKey);
                     pageDownloads.Visibility    = Visibility.Visible;
                     downloadsNavBar.Visibility  = Visibility.Visible;
                     titleSubtext.Text           = " — Downloads";
