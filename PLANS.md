@@ -107,12 +107,16 @@ Sprinkle `NotificationService.ShowVerbose(...)` at representative sites so verbo
 
 ## Group C — Whole-program add/edit-game experience  (user request 3)
 
-### WIZ1 — Whole-program add/edit-game: design + mockup approval  🟣 Opus
+### WIZ1 — Whole-program add/edit-game: design + mockup approval  🟣 Opus  ✅ APPROVED (2026-05-29)
 **Goal (revised per user, 2026-05-29):** Make adding/editing a game feel like a *full part of
 the program*, not a cramped modal. Approved direction: a **dedicated shell tab** ("Add / Edit
 Game", ✎ pencil icon in the left nav) at full shell scale, reusing the existing four
 `IWizardStep` UserControls as stacked sections. Edit reuses the same tab, pre-filled, opened by
-a ✎ pencil on each Library game card. **Get final approval before WIZ2.**
+a ✎ pencil on each Library game card.
+
+**Section default-state decision (user-confirmed 2026-05-29):** **Essentials expanded; the rest
+are scroll-to anchors via the jump-rail — NOT collapsed accordions.** All four sections render
+open in the scroller; the jump-rail `BringIntoView`s each one. WIZ2 is now unblocked.
 
 **Mockup — full shell scale (~1100×720), hosted as a shell page:**
 
@@ -259,3 +263,95 @@ consolidation/splitting opportunities.
 3. Update references if any explicit cross-file dependencies emerge.
 
 **Gotcha:** WPF code-behind splits must keep `partial class` + the XAML `x:Class` intact; don't move `InitializeComponent` wiring. Split only where it reduces real cognitive load — never for its own sake.
+
+---
+
+## Group F — Factory-reset / first-run bug fixes  (user report, 2026-05-29)
+
+> Reported after a factory reset (fresh AppData). Root-caused by Opus 4.8 the same day.
+> These are correctness bugs, not features — fix before more feature work where they overlap.
+
+### F1 — Only 5 games load; all six GTA built-ins missing  🟢 Haiku  ✅ COMPLETE (2026-05-29)
+**Symptom:** On a fresh launch only Skyrim, Fallout NV, Cyberpunk 2077, RDR2, and Witcher 3
+appear. The six GTA profiles (III/VC/SA/IV/TLaD/TBoGT) — the app's core games — never load.
+
+**Root cause:** `JsonHelper.TmmGameOptions` ([Helpers/Helpers.cs](Helpers/Helpers.cs:34)) had no
+`JsonStringEnumConverter`. The GTA `.tmmgame` profiles use **condition-based** `routingRules`
+whose `type`/`operator`/`logic` are enum *names* (`"PathContains"`, `"StartsWith"`, `"AND"`).
+System.Text.Json rejects string→enum without that converter, so each GTA profile threw inside
+the `try` in `GameRegistry.LoadBuiltInProfilesAsync` and was silently swallowed (Debug.WriteLine
+only). The 5 that loaded use the older **flat** schema (`extensionPattern`/`destination`) with no
+`conditions`, so no enum parsing occurred.
+
+**Fix landed:** added `Converters = { new JsonStringEnumConverter() }` to `TmmGameOptions`. The
+converter accepts both string and numeric enum forms, so previously-exported numeric `.tmmgame`
+files still load. Regression test: `TMM.Tests/TmmGameOptionsTests.cs` (2 cases). 57/57 tests pass.
+
+**Follow-up noted (separate brief, see F5):** the 5 flat-schema profiles *load* but their routing
+rules deserialize to empty `RoutingRule` objects (the flat keys map to no property), so their
+routing is silently non-functional. Not the reported bug, but a real latent defect.
+
+### F2 — Welcome-window colored sidebar never localizes  🟢 Haiku
+**Symptom:** Switching language on the welcome screen updates the right pane but the colored
+left branding panel stays English.
+
+**Root cause:** the left panel in [Views/InitialSetupWindow.xaml](Views/InitialSetupWindow.xaml)
+(lines ~50–71) uses hardcoded `Text="..."` literals — `"Mod Management Made Simple"`,
+`"Direct-deploy, no VFS"`, `"GTA III series built-in"`, `"Custom game profiles"` — instead of
+`{helpers:Localization …}` bindings like the rest of the window.
+
+**Fix:** add locale keys (e.g. `Setup_Tagline`, `Setup_Feature_DirectDeploy`,
+`Setup_Feature_GtaBuiltin`, `Setup_Feature_CustomProfiles`) to both `Assets/Localization/en-US.json`
+and `es-MX.json`, and swap the four literals to `{helpers:Localization …}`. Mirror the existing
+keys' tone. **Gotcha:** the tagline `"GTA III series built-in"` is now slightly inaccurate given
+the broader game roster — consider rewording to something game-agnostic when you add the key.
+
+### F3 — "Select a Built-in Game" / "Create a Custom Game" cards don't work  🔵 Sonnet
+**Symptom:** Clicking either welcome-window card (`Picker_BuiltinTitle` / `Picker_CustomTitle`)
+appears to do nothing / not complete setup.
+
+**Status:** NOT yet root-caused — needs a runtime repro on a fresh AppData. The handlers exist and
+look correct: `Option1_Click` opens `SelectBuiltinGameWindow`, `Option2_Click` opens
+`CustomGameSetupWizard` ([Views/InitialSetupWindow.xaml.cs:131-143](Views/InitialSetupWindow.xaml.cs)).
+Each only calls `CompleteSetup()` when the dialog returns `true`.
+
+**Hypotheses to check, in order:**
+1. **Dialog opens but can't be completed.** `SelectBuiltinGameWindow.BtnDone` only enables when
+   `GameProfile.All.Any(_core.IsGameReady)` — on a machine with no GTA install detected, Done stays
+   disabled, so the only exits are Cancel/X (→ `DialogResult=false` → no `CompleteSetup`). To the
+   user that reads as "doesn't work." Consider allowing the window to close successfully even with
+   no path set (you can configure paths later), or make the empty case obvious.
+2. **Unhandled exception on open** (swallowed or crashes the window) — e.g. a missing resource or
+   `QuickScan` throwing on a clean machine. Run the app, click each card, watch `TMM.log` + the
+   debug output.
+3. **`CustomGameSetupWizard` is the legacy modal** flagged for retirement by WIZ2. Once WIZ2 lands,
+   `Option2_Click` should route to the new `AddGamePage` instead — coordinate so this fix isn't
+   thrown away. If WIZ2 is imminent, F3's custom-game half may fold into it.
+
+**Deliverable:** reproduce, identify which hypothesis holds, fix so both cards reliably advance
+first-run setup. Add a note to UIFLOWS.md if the first-launch flow changes.
+
+### F4 — "Directory not set" hardcoded (never localizes)  🟢 Haiku
+**Root cause:** [Views/Subpages/ModManagerPage.xaml.cs:115](Views/Subpages/ModManagerPage.xaml.cs:115)
+sets `Cust_txtSidebarDir.Text = "Directory not set"` as a literal.
+
+**Fix:** add a `ModManager_DirectoryNotSet` key to `en-US.json` + `es-MX.json` and read it via
+`LocalizationService.Instance["ModManager_DirectoryNotSet"]`. **While you're here**, two sibling
+hardcoded strings deserve the same treatment (lower priority, mention don't necessarily fix):
+the `MessageBox` at ModManagerPage.xaml.cs:859 ("Game folder is not set or missing.") and the
+`"(not set)"`/`"(none)"` literals in [Views/Steps/Step4_ReviewPage.xaml.cs](Views/Steps/Step4_ReviewPage.xaml.cs).
+**Gotcha:** this row is set in code-behind, not XAML, so it won't live-update on language switch
+unless re-run — acceptable since the sidebar repopulates on game selection.
+
+### F5 — Flat-schema built-in profiles have non-functional routing  🔵 Sonnet  *(latent, surfaced during F1)*
+**Symptom (latent):** Skyrim/FNV/Cyberpunk/RDR2/Witcher 3 load and appear in the library, but their
+`routingRules` use a flat `ruleName`/`extensionPattern`/`destination`/`fallbackDestination`/`checkSubdir`
+schema that maps to **no** property on the current `RoutingRule` model (which expects
+`conditions`/`targetPath`/`priority`). They deserialize into empty `RoutingRule` objects, so mods
+for those games route nowhere meaningful.
+
+**Decision needed (Opus):** either (a) rewrite the 5 flat profiles to the condition-based schema the
+GTA profiles use (preferred — single schema, and F1's converter already supports it), or (b) teach
+`ProfileMigration`/`RoutingRule` to read the flat schema. Recommend (a): convert the 5 JSON files,
+add one regression test asserting each bundled profile yields non-empty, well-formed rules. Verify
+in [Models/RoutingRule.cs](Models/RoutingRule.cs) + [Services/DeploymentPlanner.cs](Services/DeploymentPlanner.cs).

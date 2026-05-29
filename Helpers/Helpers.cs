@@ -35,7 +35,12 @@ namespace TMM
         {
             WriteIndented = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
+            // Routing-rule conditions store their enums as strings ("PathContains",
+            // "StartsWith", "AND", ...). Without this converter every bundled profile
+            // that uses condition-based routingRules (all six GTA profiles) throws on
+            // deserialize and is silently dropped, so only the flat-schema games load.
+            Converters = { new JsonStringEnumConverter() }
         };
     }
 }

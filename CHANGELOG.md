@@ -4,6 +4,21 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **All six GTA built-in profiles silently failed to load (critical, F1):** On a fresh launch only
+  the five flat-schema games (Skyrim/FNV/Cyberpunk/RDR2/Witcher 3) appeared — GTA III/VC/SA/IV/TLaD/TBoGT
+  were missing. `JsonHelper.TmmGameOptions` lacked a `JsonStringEnumConverter`, so the GTA profiles'
+  condition-based `routingRules` (enum names like `"PathContains"`/`"StartsWith"`/`"AND"`) threw on
+  deserialize and were swallowed by the catch in `GameRegistry.LoadBuiltInProfilesAsync`. Added the
+  converter (accepts both string and numeric enum forms, so older numeric exports still load) plus a
+  `TmmGameOptionsTests` regression (57/57 tests pass). Remaining first-run issues (welcome-sidebar
+  localization, setup-card behavior, hardcoded "Directory not set", flat-schema routing) are tracked
+  as Group F in PLANS.md.
+
+---
+
 ## [v0.1-alpha-9] — 2026-05-29 *(Build restore, audit cleanup, profile portability, .tmmpack import)*
 
 ### Fixed
