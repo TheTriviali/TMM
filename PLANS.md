@@ -71,7 +71,7 @@ mods next time."). On **Yes**: `_core.Settings.DefaultGameKey = entry.Key; _core
 then `RefreshLibrary();`. Either way, continue into the existing manage navigation. Localize the
 prompt strings (en-US + es-MX). Ask only once (the guard naturally stops asking once a default exists).
 
-### A3 — Launch into the default game's Mod Manager instead of the Library  🟢 Haiku  *(depends on A2 for a default to exist)*
+### A3 — Launch into the default game's Mod Manager instead of the Library  ✅ DONE
 **User ask:** *"if a game is set as default the manager should show that game's mod manager page
 rather than loading to library."*
 
