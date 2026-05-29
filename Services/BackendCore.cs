@@ -275,8 +275,78 @@ namespace TMM
                     }
                 }
             }
+
+            ScanCustomGamesBySearchHints();
+
             SaveSettings();
             Log("--- Quick Scan Finished ---");
+        }
+
+        /// <summary>
+        /// Detects custom games on this machine using each profile's <see cref="CustomGameProfile.SearchHints"/>.
+        /// This is what lets a shared .tmmgame profile auto-locate the game on another person's system:
+        /// the profile travels with a list of default install locations, and Quick Scan probes them
+        /// (relative to every fixed drive) for the configured executable.
+        /// </summary>
+        private void ScanCustomGamesBySearchHints()
+        {
+            var drives = DriveInfo.GetDrives()
+                .Where(d => d.IsReady && d.DriveType == DriveType.Fixed)
+                .ToList();
+
+            foreach (var (key, config) in GameRegistry.Instance.GetCustomGames())
+            {
+                // Already located on this machine — nothing to do.
+                if (!string.IsNullOrEmpty(config.GameDirectory) && Directory.Exists(config.GameDirectory))
+                    continue;
+                if (config.SearchHints.Count == 0 || string.IsNullOrEmpty(config.ExePath))
+                    continue;
+
+                string exeName = Path.GetFileName(config.ExePath);
+                if (string.IsNullOrEmpty(exeName)) continue;
+
+                string? found = ProbeSearchHints(drives, config.SearchHints, exeName);
+                if (found is null) continue;
+
+                Log($"[QUICK] Located custom game '{config.GameName}' via search hint: {found}");
+                config.GameDirectory = found;
+                try { GameRegistry.Instance.SaveCustomGameSync(key, config); }
+                catch (Exception ex) { Log($"[QUICK] WARN: failed to persist '{key}': {ex.Message}"); }
+            }
+        }
+
+        /// <summary>
+        /// Probes each <paramref name="hints"/> path (relative to every drive root) for a folder that
+        /// directly contains <paramref name="exeName"/>, or whose immediate subfolder does. Returns the
+        /// containing directory, or null if not found.
+        /// </summary>
+        private string? ProbeSearchHints(IEnumerable<DriveInfo> drives, IEnumerable<string> hints, string exeName)
+        {
+            foreach (var drive in drives)
+            {
+                foreach (var hint in hints)
+                {
+                    if (string.IsNullOrWhiteSpace(hint)) continue;
+
+                    // Hints use forward slashes for portability; normalize to the platform separator.
+                    string normalized = hint.Replace('/', Path.DirectorySeparatorChar)
+                                            .Replace('\\', Path.DirectorySeparatorChar)
+                                            .TrimStart(Path.DirectorySeparatorChar);
+                    string candidate = Path.Combine(drive.Name, normalized);
+
+                    try
+                    {
+                        if (!Directory.Exists(candidate)) continue;
+                        if (File.Exists(Path.Combine(candidate, exeName)))
+                            return candidate;
+
+                        string nested = ScanForExe(candidate, exeName);
+                        if (!string.IsNullOrEmpty(nested)) return nested;
+                    }
+                    catch (Exception ex) { Log($"[QUICK] Skip hint {candidate}: {ex.Message}"); }
+                }
+            }
+            return null;
         }
 
         private string ScanForExe(string root, string exeName)
@@ -1062,6 +1132,20 @@ namespace TMM
             string path = Path.Combine(GetLoadoutsPath(gameKey), $"{loadoutName}.json");
             await File.WriteAllTextAsync(path, JsonSerializer.Serialize(loadout, JsonHelper.PrettyOptions));
             Logger.Info($"Saved loadout '{loadoutName}' ({loadout.ModStates.Count} mods) for {gameKey}");
+        }
+
+        /// <summary>
+        /// Persists an already-built <see cref="ModLoadout"/> verbatim (used by .tmmpack import,
+        /// which carries its own enabled-state + order map). Uses <see cref="ModLoadout.Name"/>
+        /// as the filename.
+        /// </summary>
+        public async Task SaveLoadoutAsync(string gameKey, ModLoadout loadout)
+        {
+            if (!IsValidLoadoutName(loadout.Name))
+                throw new ArgumentException("Loadout name contains invalid characters.", nameof(loadout));
+            string path = Path.Combine(GetLoadoutsPath(gameKey), $"{loadout.Name}.json");
+            await File.WriteAllTextAsync(path, JsonSerializer.Serialize(loadout, JsonHelper.PrettyOptions));
+            Logger.Info($"Saved loadout '{loadout.Name}' ({loadout.ModStates.Count} mods) for {gameKey}");
         }
 
         public async Task ApplyLoadoutAsync(string gameKey, string loadoutName, ObservableCollection<ModItem> currentMods)

@@ -197,33 +197,70 @@
 
                     <Border Height="1" Background="{DynamicResource ControlBgBrush}" Margin="0,0,0,24"/>
 
-                    <!-- CTA — text updates live on language switch -->
-                    <Button x:Name="btnSetupGame" Click="BtnSetupGame_Click"
-                            Height="46" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Stretch">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="bd" CornerRadius="8"
-                                        Background="{DynamicResource AccentGradientBrush}">
-                                    <StackPanel Orientation="Horizontal"
-                                                HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="{helpers:Localization Setup_SetupBtn}"
-                                                   Foreground="White" FontSize="14"
-                                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        <TextBlock Text="  →" Foreground="White" Opacity="0.65"
-                                                   FontSize="14" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                                <ControlTemplate.Triggers>
+                    <!-- Game choice cards (merged from the former FirstGamePickerWindow) -->
+                    <Border x:Name="opt1" CornerRadius="8" Padding="16,12" Margin="0,0,0,10"
+                            MouseLeftButtonUp="Option1_Click" Cursor="Hand"
+                            BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bd" Property="Opacity" Value="0.82"/>
+                                        <Setter Property="Background" Value="{DynamicResource ControlBgBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                     </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="bd" Property="Opacity" Value="0.65"/>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="36" Height="36" CornerRadius="8"
+                                    Background="{DynamicResource AccentSoftBrush}"
+                                    Margin="0,0,14,0" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{helpers:Localization Picker_BuiltinTitle}"
+                                           FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextBrush}" Margin="0,0,0,3"/>
+                                <TextBlock Text="{helpers:Localization Picker_BuiltinDesc}"
+                                           FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="opt2" CornerRadius="8" Padding="16,12"
+                            MouseLeftButtonUp="Option2_Click" Cursor="Hand"
+                            BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource ControlBgBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                     </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="36" Height="36" CornerRadius="8"
+                                    Background="{DynamicResource AccentSoftBrush}"
+                                    Margin="0,0,14,0" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{helpers:Localization Picker_CustomTitle}"
+                                           FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextBrush}" Margin="0,0,0,3"/>
+                                <TextBlock Text="{helpers:Localization Picker_CustomDesc}"
+                                           FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
 
                     <!-- Skip button — text updates live -->
                     <Button Click="BtnClose_Click" Margin="0,12,0,0"

@@ -129,6 +129,14 @@
                                Style="{StaticResource FieldHint}"/>
                     <TextBox x:Name="txtCompanionSiblings" Style="{StaticResource FieldBox}"
                              AcceptsReturn="True" Height="88" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto" Margin="0,0,0,14"/>
+
+                    <TextBlock Text="Search hints (auto-detect locations)"
+                               Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Text="One install path per line, relative to a drive root (e.g. Steam/steamapps/common/My Game). Lets a shared profile auto-locate the game on another PC during Quick Scan."
+                               Style="{StaticResource FieldHint}"/>
+                    <TextBox x:Name="txtSearchHints" Style="{StaticResource FieldBox}"
+                             AcceptsReturn="True" Height="72" TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Auto"/>
                 </StackPanel>
             </Expander>

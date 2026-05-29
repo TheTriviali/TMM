@@ -6,6 +6,15 @@
   "gameDirectory": "",
   "exePath": "gta-vc.exe",
   "steamAppId": "12110",
+  "acceptedExeMd5s": [
+    "8f3707edaa361957c70f8b13998816f1",
+    "167a5c8b31b3e0dbefa033ca24453d4e"
+  ],
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/Grand Theft Auto Vice City",
+    "SteamLibrary/steamapps/common/Grand Theft Auto Vice City",
+    "Steam/steamapps/common/Grand Theft Auto Vice City"
+  ],
   "routingRules": [
     {
       "name": "ModLoader Tree",

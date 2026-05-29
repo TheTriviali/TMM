@@ -78,6 +78,16 @@ namespace TMM
                           ?? new GameProfile(_entry.Key, _entry.DisplayName, _entry.Key,
                                              _entry.Key + ".exe", "");
 
+            // Built-in profiles keep their resolved path in Settings.GamePaths (set by Quick
+            // Scan / setup), not in config.GameDirectory. Sync it so the unified panel's deploy
+            // button, sidebar path, and integrity check all resolve for built-in games too.
+            if (string.IsNullOrEmpty(_customConfig.GameDirectory))
+            {
+                var resolved = _core.GetVanillaPath(_customProfile);
+                if (!string.IsNullOrEmpty(resolved))
+                    _customConfig.GameDirectory = resolved;
+            }
+
             _modsCustom = _core.Mods.TryGetValue(_entry.Key, out var existing)
                 ? existing
                 : new ObservableCollection<ModItem>();
@@ -1104,6 +1114,10 @@ namespace TMM
             saveItem.Click += async (_, _) => await SaveLoadoutFlow();
             menu.Items.Add(saveItem);
 
+            var importItem = new MenuItem { Header = "Import .tmmpack..." };
+            importItem.Click += async (_, _) => await ImportPackFlow();
+            menu.Items.Add(importItem);
+
             var loadouts = _core.ListLoadouts(_customProfile.Key).OrderBy(n => n).ToList();
             if (loadouts.Count >= 2)
             {
@@ -1173,6 +1187,54 @@ namespace TMM
             await _core.SaveLoadoutAsync(_customProfile.Key, name, _modsCustom);
             _core.Activity.Record(ActivityKind.LoadoutSaved, _customProfile.Key, _customConfig.GameName, $"Saved '{name}'", _modsCustom.Count);
             NotificationService.ShowSuccess($"Saved loadout '{name}'");
+        }
+
+        private async Task ImportPackFlow()
+        {
+            var ofd = new OpenFileDialog
+            {
+                Title  = "Import .tmmpack",
+                Filter = "TMM pack (*.tmmpack)|*.tmmpack|All files (*.*)|*.*",
+            };
+            if (ofd.ShowDialog() != true) return;
+
+            TmmPackBuilder.Manifest manifest;
+            try
+            {
+                manifest = TmmPackInstaller.ReadManifest(ofd.FileName);
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Couldn't read pack: {ex.Message}");
+                return;
+            }
+
+            var confirm = MessageBox.Show(
+                $"This pack was made for '{manifest.GameName}' and contains {manifest.ModNames.Count} mod(s) " +
+                $"(loadout '{manifest.LoadoutName}').\n\nImport into '{_customConfig.GameName}'?",
+                "Import .tmmpack", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes) return;
+
+            ShowDeployOverlay("Importing pack...");
+            try
+            {
+                var result = await TmmPackInstaller.ImportAsync(_core, ofd.FileName, _customProfile.Key);
+                _core.Activity.Record(ActivityKind.Import, _customProfile.Key, _customConfig.GameName,
+                    $"Imported pack '{result.LoadoutName}'", result.ModsImported);
+                string renamedNote = result.RenamedMods.Count > 0
+                    ? $" ({result.RenamedMods.Count} renamed to avoid collisions)" : "";
+                NotificationService.ShowSuccess(
+                    $"Imported {result.ModsImported} mod(s){renamedNote}. Loadout: '{result.LoadoutName}'");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Import failed: {ex.Message}");
+            }
+            finally
+            {
+                HideDeployOverlay();
+                await RefreshCustomAsync();
+            }
         }
 
         private void RenameLoadoutFlow(string oldName)

@@ -238,6 +238,19 @@ namespace TMM
 
         public async Task ReloadCustomGamesAsync() => await LoadCustomGamesAsync();
 
+        /// <summary>
+        /// Synchronously persists an already-registered custom game's config to disk.
+        /// Used by Quick Scan, which runs on a background thread and mutates the in-memory
+        /// config in place (e.g. filling in a detected GameDirectory). No-op for built-in
+        /// profiles, which are embedded resources with no CustomGames/ file.
+        /// </summary>
+        public void SaveCustomGameSync(string key, CustomGameProfile config)
+        {
+            if (config.IsBuiltIn || string.IsNullOrEmpty(_customGamesPath)) return;
+            var filePath = Path.Combine(_customGamesPath, $"{key}.json");
+            File.WriteAllText(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
+        }
+
         /// <summary>Export a CustomGameProfile to a .tmmgame file (camelCase JSON, new format).</summary>
         public static async Task ExportConfigAsync(CustomGameProfile config, string destPath)
         {
@@ -250,6 +263,10 @@ namespace TMM
                 RoutingRules   = config.RoutingRules.Count > 0 ? config.RoutingRules : null,
                 OverlayFolders = config.OverlayFolders.Count > 0 ? config.OverlayFolders : null,
                 CompanionSiblings = config.CompanionSiblings.Count > 0 ? config.CompanionSiblings : null,
+                SearchHints    = config.SearchHints.Count > 0 ? config.SearchHints : null,
+                NexusSlug      = config.NexusSlug,
+                ExpectedExeBytes = config.ExpectedExeBytes,
+                AcceptedExeMd5s  = config.AcceptedExeMd5s.Count > 0 ? config.AcceptedExeMd5s : null,
                 InstallerHints = config.InstallerHints,
                 LauncherCard   = config.LauncherCard,
                 Description    = config.Description,

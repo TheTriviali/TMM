@@ -6,6 +6,12 @@
   "gameDirectory": "",
   "exePath": "gta-sa.exe",
   "steamAppId": "12120",
+  "acceptedExeMd5s": ["00eb2056583dfa6a4ca79dedf70df5e9"],
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/Grand Theft Auto San Andreas",
+    "SteamLibrary/steamapps/common/Grand Theft Auto San Andreas",
+    "Steam/steamapps/common/Grand Theft Auto San Andreas"
+  ],
   "routingRules": [
     {
       "name": "ModLoader Tree",

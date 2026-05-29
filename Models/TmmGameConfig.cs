@@ -57,6 +57,18 @@ namespace TMM
         public List<string>? OverlayFolders { get; set; }
         public Dictionary<string, List<string>>? CompanionSiblings { get; set; }
 
+        /// <summary>Default install locations to probe during Quick Scan (relative to each drive root).</summary>
+        public List<string>? SearchHints { get; set; }
+
+        /// <summary>NexusMods game slug — drives the Mod Manager sidebar "find mods" link.</summary>
+        public string? NexusSlug { get; set; }
+
+        /// <summary>Optional expected size (bytes) of the game executable for the integrity check.</summary>
+        public long? ExpectedExeBytes { get; set; }
+
+        /// <summary>Accepted MD5 hashes (lowercase hex) for the game executable.</summary>
+        public List<string>? AcceptedExeMd5s { get; set; }
+
         // ── Legacy format (read-only for backward compat, never written on export) ─
         public string? ModFileTypes { get; set; }
         public Dictionary<string, string>? OutputDirectories { get; set; }
@@ -105,6 +117,10 @@ namespace TMM
                 RoutingRules   = export.RoutingRules ?? new(),
                 OverlayFolders = export.OverlayFolders ?? new(),
                 CompanionSiblings = export.CompanionSiblings ?? new(),
+                SearchHints    = export.SearchHints ?? new(),
+                NexusSlug      = export.NexusSlug,
+                ExpectedExeBytes = export.ExpectedExeBytes,
+                AcceptedExeMd5s  = export.AcceptedExeMd5s ?? new(),
                 GradientStartHex = export.GradientStartHex ?? export.LauncherCard?.GradientStartHex,
                 GradientEndHex   = export.GradientEndHex   ?? export.LauncherCard?.GradientEndHex,
                 LibraryStatus    = status,

@@ -6,6 +6,12 @@
   "gameDirectory": "",
   "exePath": "gta3.exe",
   "steamAppId": "12100",
+  "acceptedExeMd5s": ["85414bf9eb414d00ad81062360f0db1f"],
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/Grand Theft Auto 3",
+    "SteamLibrary/steamapps/common/Grand Theft Auto 3",
+    "Steam/steamapps/common/Grand Theft Auto 3"
+  ],
   "routingRules": [
     {
       "name": "ModLoader Tree",

@@ -292,7 +292,12 @@ Comment claims `"grid" | "large" | "list" | "showcase"`. Only `grid`/`list`/`sho
 are implemented (see `UnifiedShellWindow.BtnViewMode_Click`). Drop `large` from the
 comment.
 
-### ~~S6 — Sidebar "find mods" links are generic homepages~~ ✅ DONE (2026-05-27)
+### ~~S6 — Sidebar "find mods" links are generic homepages~~ ✅ DONE (2026-05-27; wire-up fixed 2026-05-29)
+
+**2026-05-29:** the sidebar (NexusSlug → NexusMods, else DuckDuckGo) was wired, but
+`ProfileMigration.FromExport` never copied `NexusSlug` (or the integrity fields) from the
+`.tmmgame`, so built-in profiles' `nexusSlug` was silently dropped. Added the mappings in
+`TmmGameConfig.cs` (export ↔ profile) so shared/built-in profiles now carry it.
 
 **File:** [Views/Subpages/ModManagerPage.xaml:284-295](Views/Subpages/ModManagerPage.xaml#L284)
 
@@ -306,12 +311,11 @@ built-in `GameProfile` records, and rewrite the Nexus button to
 `https://www.nexusmods.com/games/{slug}`. Hide buttons for games with no slug. ModDB
 has no clean per-game slug, so drop that button.
 
-### S7 — First-launch flow consolidation (cosmetic; low priority)
+### ~~S7 — First-launch flow consolidation~~ ✅ DONE (2026-05-29)
 
-Currently: `App.OnStartup` → `UnifiedShellWindow` → `InitialSetupWindow` (modal) →
-`FirstGamePickerWindow` → `SelectBuiltinGameWindow` *or* `CustomGameSetupWizard`.
-Four dialogs deep for one decision. Merge `InitialSetupWindow` + `FirstGamePickerWindow`
-into one screen (language at top, two big cards below). Defer unless a user complains.
+`FirstGamePickerWindow` deleted; its two choice cards (built-in / custom) merged directly
+into `InitialSetupWindow` below the language picker. First-launch is now one screen →
+`SelectBuiltinGameWindow` *or* `CustomGameSetupWizard` (three dialogs, down from four).
 
 ---
 
@@ -342,21 +346,28 @@ Shipped as a generic per-game feature replacing the deleted GTA-MD5 logic.
 
 **Built-in games:** the `.tmmgame` profiles in `Assets/GameProfiles/` are deserialized as
 `CustomGameProfile`, so the new fields are automatically available — just unpopulated until
-someone fills them in. To re-establish the old GTA III/VC/SA downgrader checks, edit those
-files and add `expectedExeBytes` + `acceptedExeMd5s` (the old hashes are in git history at
-`Models/GameProfile.cs` before the 2026-05-27 cleanup commit if you want them back).
+someone fills them in.
 
-### O2 — Strip more hardcoded GTA-specific paths from `BackendCore.QuickScan`
+**2026-05-29:** the GTA III/VC/SA vanilla MD5s were restored as `acceptedExeMd5s` in the
+three `.tmmgame` profiles (recovered from commit `eb2b953`; VC also carries its ModDB v1.0
+downgrader variant). `ProfileMigration.FromExport` now maps `acceptedExeMd5s` /
+`expectedExeBytes`, and `ModManagerPage.InitCustomGame` syncs a built-in game's resolved
+path into `config.GameDirectory` so the integrity panel actually renders for built-ins.
 
-[Services/BackendCore.cs:210+](Services/BackendCore.cs#L210) — `QuickScan` hardcodes
-`Grand Theft Auto IV\GTAIV`, `SteamLibrary\steamapps\common`, `Rockstar Games\`, etc.
-The IV-family auto-derivation (TLaD/TBoGT inside IV folder) is legitimate game-layout
-convenience, but the path roots are GTA-specific.
+### O2 — Generic QuickScan via SearchHints ✅ DONE (2026-05-29)
 
-**Design question:** how does QuickScan work for arbitrary custom games? Maybe
-custom games declare a `SearchHints: string[]` array in their `.tmmgame` profile,
-and `QuickScan` iterates `GameProfile.All` + custom profiles, using each profile's
-own hints? Sonnet can't decide this without architectural input.
+**Shipped (the `SearchHints` design):** `CustomGameProfile.SearchHints` (a list of
+install paths relative to a drive root) is now editable in wizard Step 1, reviewed in
+Step 4, and round-tripped through `.tmmgame`. `BackendCore.QuickScan` gained
+`ScanCustomGamesBySearchHints` — for every custom game not yet located on this machine,
+it probes each hint across all fixed drives for the configured exe and persists the
+detected `GameDirectory` (via `GameRegistry.SaveCustomGameSync`). This is what lets a
+shared `.tmmgame` auto-locate the game on another person's system. Built-in GTA `.tmmgame`
+profiles ship with `searchHints` too.
+
+**Residual (minor):** the built-in GTA scan branch still uses its original hardcoded Steam
+roots + IV-family episode nesting. That works and is left as-is; the new generic path
+covers custom/shared games. Folding the built-in branch onto SearchHints is a future tidy-up.
 
 ---
 
@@ -386,9 +397,11 @@ own hints? Sonnet can't decide this without architectural input.
 - **D2: .tmmpack export** — `TmmPackBuilder` bundles a loadout (manifest + loadout.json + mod source folders) into a portable zip.
 - **D3: Loadout management** — Rename, delete, overwrite-confirmation flows in the loadout context menu. Bonus: `LoadoutDiffWindow` compares any two loadouts side-by-side (additions/removals/enable/disable/reorder).
 
-### Block D4 — .tmmpack import (DESIGNED 2026-05-29, ready for execution)
+### Block D4 — .tmmpack import (COMPLETED 2026-05-29)
 
-**Goal:** Consume a `.tmmpack` produced by `TmmPackBuilder.ExportAsync` — reconstitute the bundled mods + loadout into the *currently selected* game. This closes the export-only gap found in the 2026-05-29 audit (you can build packs but can't load them).
+**Shipped:** `Services/TmmPackInstaller.cs` — `ReadManifest` (for the confirm prompt) + `ImportAsync`. Extracts `mods/{ModName}/` into the target game's `ModsRaw_{key}` with a zip-slip guard, collision-safe unique mod names, a forward-version reject, per-mod `OnModAddedAsync` plan freeze, and loadout reconstruction (remapping renamed mods) via a new `BackendCore.SaveLoadoutAsync(gameKey, ModLoadout)` overload. Wired as "Import .tmmpack…" in the Loadouts menu ([ModManagerPage.ImportPackFlow](Views/Subpages/ModManagerPage.xaml.cs)). Tests in `TmmPackInstallerTests`. Closes the export-only gap. Original design brief below.
+
+**Goal:** Consume a `.tmmpack` produced by `TmmPackBuilder.ExportAsync` — reconstitute the bundled mods + loadout into the *currently selected* game.
 
 **Pack format recap** (`TmmPackBuilder`): zip with `manifest.json` (`Manifest`: Version, GameKey, GameName, LoadoutName, CreatedAt, ModNames, TmmVersion), `loadout.json` (`ModLoadout`), and `mods/{ModName}/...` (each mod's source minus `_tmm`).
 

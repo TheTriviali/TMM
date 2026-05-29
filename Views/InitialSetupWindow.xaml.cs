@@ -128,16 +128,26 @@ namespace TMM
             }
         }
 
-        private void BtnSetupGame_Click(object sender, RoutedEventArgs e)
+        private void Option1_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            var picker = new FirstGamePickerWindow(_core) { Owner = this };
-            if (picker.ShowDialog() == true)
-            {
-                _core.Settings.FirstLaunch = false;
-                _core.SaveSettings();
-                DialogResult = true;
-                Close();
-            }
+            // Built-in game picker
+            var picker = new SelectBuiltinGameWindow(_core) { Owner = this };
+            if (picker.ShowDialog() == true) CompleteSetup();
+        }
+
+        private void Option2_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // Custom game setup wizard
+            var wizard = new CustomGameSetupWizard() { Owner = this };
+            if (wizard.ShowDialog() == true) CompleteSetup();
+        }
+
+        private void CompleteSetup()
+        {
+            _core.Settings.FirstLaunch = false;
+            _core.SaveSettings();
+            DialogResult = true;
+            Close();
         }
 
         private new void BtnClose_Click(object sender, RoutedEventArgs e)

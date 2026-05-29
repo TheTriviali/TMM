@@ -26,6 +26,9 @@ namespace TMM
             lblNexusSlug.Text  = string.IsNullOrEmpty(profile.NexusSlug) ? "(not set)" : profile.NexusSlug;
             lblOverlayFolders.Text = DescribeOverlayFolders(profile);
             lblCompanionSiblings.Text = DescribeCompanionSiblings(profile);
+            lblSearchHints.Text = profile.SearchHints.Count == 0
+                ? "(not set)"
+                : string.Join("; ", profile.SearchHints);
 
             var modTypeSummaries = profile.ModTypes
                 .Select(mt =>

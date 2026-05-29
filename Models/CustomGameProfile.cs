@@ -74,6 +74,14 @@ namespace TMM
         /// </summary>
         public Dictionary<string, List<string>> CompanionSiblings { get; set; } = new();
 
+        /// <summary>
+        /// Default install locations to probe during Quick Scan, relative to each fixed drive
+        /// root (e.g. "Steam/steamapps/common/My Game"). Lets a shared profile auto-detect the
+        /// game on another person's system. The folder that contains (or whose immediate
+        /// subfolder contains) the executable named by <see cref="ExePath"/> is treated as a match.
+        /// </summary>
+        public List<string> SearchHints { get; set; } = new();
+
         public InstallerHints? InstallerHints { get; set; }
         public LauncherCardConfig? LauncherCard { get; set; }
         public string? Description { get; set; }

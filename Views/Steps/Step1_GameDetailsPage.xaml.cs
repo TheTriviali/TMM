@@ -36,6 +36,7 @@ namespace TMM
             txtCompanionSiblings.Text = string.Join(Environment.NewLine,
                 profile.CompanionSiblings.Select(kvp =>
                     $"{kvp.Key} = {string.Join(", ", kvp.Value)}"));
+            txtSearchHints.Text = string.Join(Environment.NewLine, profile.SearchHints);
 
             txtExpectedBytes.Text = profile.ExpectedExeBytes?.ToString() ?? "";
             _md5s.Clear();
@@ -53,6 +54,7 @@ namespace TMM
             profile.NexusSlug     = NullIfBlank(txtNexusSlug.Text);
             profile.OverlayFolders = ParseCsvList(txtOverlayFolders.Text);
             profile.CompanionSiblings = ParseCompanionMap(txtCompanionSiblings.Text);
+            profile.SearchHints = ParseLineList(txtSearchHints.Text);
 
             string sizeText = txtExpectedBytes.Text.Trim();
             profile.ExpectedExeBytes = long.TryParse(sizeText, out long bytes) && bytes > 0
@@ -146,6 +148,16 @@ namespace TMM
             string.IsNullOrWhiteSpace(text)
                 ? new System.Collections.Generic.List<string>()
                 : text.Split(new[] { ',', ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                      .Select(x => x.Trim())
+                      .Where(x => !string.IsNullOrWhiteSpace(x))
+                      .Distinct(StringComparer.OrdinalIgnoreCase)
+                      .ToList();
+
+        // Newline-only split — search-hint paths may legitimately contain commas/spaces.
+        private static System.Collections.Generic.List<string> ParseLineList(string? text) =>
+            string.IsNullOrWhiteSpace(text)
+                ? new System.Collections.Generic.List<string>()
+                : text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
                       .Select(x => x.Trim())
                       .Where(x => !string.IsNullOrWhiteSpace(x))
                       .Distinct(StringComparer.OrdinalIgnoreCase)
