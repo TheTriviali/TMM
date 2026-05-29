@@ -28,6 +28,8 @@
         <!-- Context menus                                            -->
         <!-- ──────────────────────────────────────────────────────── -->
         <ContextMenu x:Key="ModContextMenu">
+            <MenuItem Header="Toggle Favorite" Click="MenuToggleFavorite_Click"/>
+            <Separator/>
             <MenuItem Header="{helpers:Localization ModManager_CtxRename}"        Click="MenuRename_Click"/>
             <MenuItem Header="Set Group" Click="MenuSetGroup_Click"/>
             <MenuItem Header="Clear Group" Click="MenuClearGroup_Click"/>
@@ -241,6 +243,13 @@
                                        HorizontalAlignment="Center" Margin="0,2,0,0"/>
                         </StackPanel>
                         <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
+                            <Button Content="&#xE71D;" Click="BtnLoadouts_Click" ToolTip="Mod Loadouts"
+                                    Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
+                                    FontSize="18" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                            <TextBlock Text="Loadouts" FontSize="10" Foreground="{DynamicResource SubTextBrush}"
+                                       HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                             <Button Content="&#xE70F;" Click="BtnEditConfigCustom_Click" ToolTip="{helpers:Localization ModManager_Tooltip_EditConfig}"
                                     Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
                                     FontSize="18" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
@@ -376,6 +385,19 @@
                                             <DataTemplate>
                                                 <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
                                                           Checked="ModCheckBox_Changed" Unchecked="ModCheckBox_Changed"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="" Width="28">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                        Click="StarButton_Click" Tag="{Binding}"
+                                                        ToolTip="Toggle favorite">
+                                                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                               Text="{Binding IsFavorite, Converter={StaticResource StarGlyphConverter}}"
+                                                               Foreground="{Binding IsFavorite, Converter={StaticResource StarColorConverter}}"/>
+                                                </Button>
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>

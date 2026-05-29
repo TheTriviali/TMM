@@ -286,9 +286,19 @@ namespace TMM
                 _modsCustom.Add(item);
                 await _core.OnModAddedAsync(_customProfile.Key, modName);
                 NotificationService.ShowSuccess($"Installed '{modName}'.");
+                _core.Activity.Record(ActivityKind.ModAdded, _customProfile.Key, _customConfig.GameName, $"Installed '{modName}'");
+
+                var proxies = ProxyDllDetector.Scan(destFolder);
+                if (proxies.Count > 0)
+                {
+                    string proxyList = string.Join(", ", proxies.Select(p => p.FileName));
+                    NotificationService.ShowInfo($"'{modName}' contains proxy loader(s): {proxyList}");
+                    Logger.Info($"Proxy DLL detected in '{modName}': {string.Join("; ", proxies.Select(p => $"{p.FileName} ({p.Reason})"))}");
+                }
             }
             catch (Exception ex)
             {
+                Logger.Error($"Failed to install '{modName}'", ex);
                 NotificationService.ShowError($"Failed to install '{modName}': {ex.Message}");
             }
         }
@@ -1080,6 +1090,160 @@ namespace TMM
             };
             parts.AddRange(profile.ModTypes.Select(mt => $"{mt.Name}:{JsonSerializer.Serialize(mt.RoutingRules, JsonHelper.PrettyOptions)}"));
             return string.Join("\n", parts);
+        }
+
+        // ====================================================================
+        //  LOADOUTS  (Block D)
+        // ====================================================================
+
+        private void BtnLoadouts_Click(object sender, RoutedEventArgs e)
+        {
+            var menu = new ContextMenu();
+
+            var saveItem = new MenuItem { Header = "Save Current Loadout..." };
+            saveItem.Click += async (_, _) => await SaveLoadoutFlow();
+            menu.Items.Add(saveItem);
+
+            var loadouts = _core.ListLoadouts(_customProfile.Key).OrderBy(n => n).ToList();
+            if (loadouts.Count >= 2)
+            {
+                var diffItem = new MenuItem { Header = "Compare Loadouts..." };
+                diffItem.Click += (_, _) =>
+                    new LoadoutDiffWindow(_core, _customProfile.Key, loadouts) { Owner = Window.GetWindow(this) }.ShowDialog();
+                menu.Items.Add(diffItem);
+            }
+
+            if (loadouts.Count > 0)
+            {
+                menu.Items.Add(new Separator());
+                foreach (var name in loadouts)
+                {
+                    var item = new MenuItem { Header = name };
+
+                    var applyItem = new MenuItem { Header = "Apply" };
+                    applyItem.Click += async (_, _) =>
+                    {
+                        await _core.ApplyLoadoutAsync(_customProfile.Key, name, _modsCustom);
+                        SaveModsCustom();
+                        _core.Activity.Record(ActivityKind.LoadoutApplied, _customProfile.Key, _customConfig.GameName, $"Applied '{name}'");
+                        NotificationService.ShowSuccess($"Applied loadout '{name}'");
+                    };
+                    item.Items.Add(applyItem);
+
+                    var renameItem = new MenuItem { Header = "Rename..." };
+                    renameItem.Click += (_, _) => RenameLoadoutFlow(name);
+                    item.Items.Add(renameItem);
+
+                    var exportItem = new MenuItem { Header = "Export as .tmmpack..." };
+                    exportItem.Click += async (_, _) => await ExportLoadoutFlow(name);
+                    item.Items.Add(exportItem);
+
+                    item.Items.Add(new Separator());
+
+                    var deleteItem = new MenuItem { Header = "Delete", Foreground = Brushes.IndianRed };
+                    deleteItem.Click += (_, _) => DeleteLoadoutFlow(name);
+                    item.Items.Add(deleteItem);
+
+                    menu.Items.Add(item);
+                }
+            }
+
+            menu.PlacementTarget = sender as Button;
+            menu.IsOpen = true;
+        }
+
+        private async Task SaveLoadoutFlow()
+        {
+            var dlg = new RenameWindow("", "Save Loadout", "Name:") { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.NewName)) return;
+
+            string name = dlg.NewName.Trim();
+            if (_core.LoadoutExists(_customProfile.Key, name))
+            {
+                var result = MessageBox.Show($"A loadout named '{name}' already exists. Overwrite?",
+                    "Confirm Overwrite", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (result != MessageBoxResult.Yes) return;
+            }
+
+            await _core.SaveLoadoutAsync(_customProfile.Key, name, _modsCustom);
+            _core.Activity.Record(ActivityKind.LoadoutSaved, _customProfile.Key, _customConfig.GameName, $"Saved '{name}'", _modsCustom.Count);
+            NotificationService.ShowSuccess($"Saved loadout '{name}'");
+        }
+
+        private void RenameLoadoutFlow(string oldName)
+        {
+            var dlg = new RenameWindow(oldName, "Rename Loadout", "New name:") { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.NewName) || dlg.NewName == oldName) return;
+
+            string newName = dlg.NewName.Trim();
+            if (_core.LoadoutExists(_customProfile.Key, newName))
+            {
+                NotificationService.ShowWarning($"A loadout named '{newName}' already exists.");
+                return;
+            }
+
+            if (_core.RenameLoadout(_customProfile.Key, oldName, newName))
+                NotificationService.ShowSuccess($"Renamed to '{newName}'");
+            else
+                NotificationService.ShowError("Rename failed.");
+        }
+
+        private void DeleteLoadoutFlow(string name)
+        {
+            var result = MessageBox.Show($"Delete loadout '{name}'? This cannot be undone.",
+                "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result != MessageBoxResult.Yes) return;
+
+            if (_core.DeleteLoadout(_customProfile.Key, name))
+                NotificationService.ShowSuccess($"Deleted '{name}'");
+            else
+                NotificationService.ShowError("Delete failed.");
+        }
+
+        private async Task ExportLoadoutFlow(string loadoutName)
+        {
+            var sfd = new SaveFileDialog
+            {
+                Filter   = "TMM Pack|*.tmmpack",
+                FileName = $"{loadoutName}.tmmpack",
+                Title    = "Export Loadout",
+            };
+            if (sfd.ShowDialog() != true) return;
+
+            try
+            {
+                int modCount = await TmmPackBuilder.ExportAsync(
+                    _core, _customProfile.Key, _customConfig.GameName, loadoutName, sfd.FileName);
+                NotificationService.ShowSuccess($"Exported '{loadoutName}' ({modCount} mods)");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Export failed for loadout '{loadoutName}'", ex);
+                NotificationService.ShowError($"Export failed: {ex.Message}");
+            }
+        }
+
+        // ====================================================================
+        //  FAVORITES  (Block F polish)
+        // ====================================================================
+
+        private void StarButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is ModItem mod)
+            {
+                mod.IsFavorite = !mod.IsFavorite;
+                SaveModsCustom();
+            }
+        }
+
+        private void MenuToggleFavorite_Click(object sender, RoutedEventArgs e)
+        {
+            if (Cust_ModList.SelectedItem is ModItem mod)
+            {
+                mod.IsFavorite = !mod.IsFavorite;
+                SaveModsCustom();
+                NotificationService.ShowInfo(mod.IsFavorite ? $"Starred '{mod.Name}'" : $"Unstarred '{mod.Name}'");
+            }
         }
     }
 }

@@ -57,5 +57,12 @@ namespace TMM
         // Current language code (e.g., "en-US", "es-ES"). Loaded by LocalizationService at startup.
         public string CurrentLanguage { get; set; } = "en-US";
 
+        // ── Recent activity feed ────────────────────────────────────────────────
+        /// <summary>Rolling log of recent user actions (capped at 20 entries, newest first).</summary>
+        public List<ActivityEntry> RecentActivity { get; set; } = new();
+
+        // ── Backup quota ────────────────────────────────────────────────────────
+        /// <summary>Warn user when total backup folder size exceeds this many bytes (default 5 GB).</summary>
+        public long BackupSizeWarnBytes { get; set; } = 5L * 1024 * 1024 * 1024;
     }
 }

@@ -9,10 +9,23 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Title + game selector -->
+        <!-- Title + game selector + size summary -->
         <StackPanel Grid.Row="0" Margin="28,24,28,12">
-            <TextBlock Text="{helpers:Localization Backups_Title}" FontSize="22" FontWeight="Bold"
-                       Foreground="{DynamicResource TextBrush}" Margin="0,0,0,12"/>
+            <Grid Margin="0,0,0,12">
+                <TextBlock Text="{helpers:Localization Backups_Title}" FontSize="22" FontWeight="Bold"
+                           Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock x:Name="txtBackupSize" FontSize="12"
+                               Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center"/>
+                    <Border x:Name="warnBadge" Visibility="Collapsed" Margin="10,0,0,0"
+                            Background="#553311" CornerRadius="3" Padding="8,3" VerticalAlignment="Center">
+                        <TextBlock Text="Over quota" FontSize="11" Foreground="#FFAA66"/>
+                    </Border>
+                    <Button Content="Recent activity" Click="BtnActivity_Click" Margin="14,0,0,0"
+                            Padding="12,4" Background="{DynamicResource ControlBgBrush}"
+                            Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
             <ComboBox x:Name="cmbGame" Width="260" HorizontalAlignment="Left" Height="30"
                       SelectionChanged="CmbGame_SelectionChanged"/>
         </StackPanel>

@@ -15,6 +15,7 @@ namespace TMM
     {
         private readonly string _gameDir;
         private readonly List<FileDeployRow> _rows;
+        private readonly List<ConflictEntry> _conflicts;
 
         public DeployPreviewWindow(
             List<(ModItem Mod, DeploymentPlan Plan)> plans,
@@ -23,6 +24,15 @@ namespace TMM
             InitializeComponent();
             _gameDir = gameDir;
             _rows = BuildRows(plans);
+
+            _conflicts = new ConflictAnalyzer().Analyze(plans);
+            var conflictSet = _conflicts
+                .Select(c => c.DestinationPath)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in _rows)
+                if (conflictSet.Contains(row.DestinationPath))
+                    row.HasConflict = true;
+
             Populate();
         }
 
@@ -109,6 +119,10 @@ namespace TMM
 
             // Disable Deploy if nothing to deploy
             btnDeploy.IsEnabled = deployable > 0;
+
+            // Show the resolve button when there are overlapping-destination conflicts
+            if (_conflicts.Count > 0)
+                btnResolveConflicts.Visibility = Visibility.Visible;
         }
 
         // ── Handlers ───────────────────────────────────────────────────────────────
@@ -118,6 +132,24 @@ namespace TMM
 
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
             => DialogResult = false;
+
+        private void BtnResolveConflicts_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new ConflictResolverWindow(_conflicts, _gameDir) { Owner = this };
+            if (dlg.ShowDialog() != true) return;
+
+            foreach (var (dest, winnerMod) in dlg.WinnerOverrides)
+            {
+                foreach (var row in _rows.Where(r =>
+                    !r.IsBlocking &&
+                    r.DestinationPath.Equals(dest, StringComparison.OrdinalIgnoreCase)))
+                {
+                    row.Skip = row.ModName != winnerMod;
+                }
+            }
+
+            lvFiles.Items.Refresh();
+        }
     }
 
     /// <summary>Row model for the deploy preview list. Mutable so the user can toggle Skip.</summary>
@@ -130,6 +162,9 @@ namespace TMM
         public bool   Skip            { get; set; }
         public bool   IsBlocking      { get; set; }
         public string ConflictMessage { get; set; } = "";
+
+        /// <summary>True when another mod also writes to <see cref="DestinationPath"/>. Surfaces orange highlight.</summary>
+        public bool   HasConflict     { get; set; }
 
         public string FileName => string.IsNullOrEmpty(SourcePath)
             ? "(unknown)" : Path.GetFileName(SourcePath);

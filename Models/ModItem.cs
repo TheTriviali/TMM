@@ -47,6 +47,14 @@ namespace TMM
             set { if (_loadOrder != value) { _loadOrder = value; OnPropertyChanged(); } }
         }
 
+        private bool _isFavorite = false;
+        /// <summary>True if user has starred this mod. Favorites pin to top of the list regardless of sort.</summary>
+        public bool IsFavorite
+        {
+            get => _isFavorite;
+            set { if (_isFavorite != value) { _isFavorite = value; OnPropertyChanged(); } }
+        }
+
         /// <summary>Path to the mod's folder in ModsRaw{gameKey}/.</summary>
         public string RawFolderPath { get; set; } = string.Empty;
 

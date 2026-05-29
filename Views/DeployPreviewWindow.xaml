@@ -164,6 +164,11 @@
                            Foreground="#FFCC88" FontSize="12" VerticalAlignment="Center"
                            Text="Blocking conflicts are highlighted — those files will be skipped."/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="btnResolveConflicts" Content="Resolve conflicts..."
+                            Visibility="Collapsed" Height="30" Margin="0,0,8,0"
+                            Padding="14,0" Click="BtnResolveConflicts_Click"
+                            Background="{DynamicResource ControlBgBrush}"
+                            Foreground="{DynamicResource TextBrush}"/>
                     <Button Content="Cancel" Width="82" Height="30"
                             Margin="0,0,8,0"
                             Click="BtnCancel_Click"/>

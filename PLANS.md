@@ -381,4 +381,23 @@ own hints? Sonnet can't decide this without architectural input.
   `AcceptedExeMd5s` on `CustomGameProfile`, `IntegrityChecker` service, wizard Step 1
   Expander with auto-detect, Step 4 review summary, ModManagerPage sidebar status row.
 
+### Block D — Mod Loadouts (COMPLETED 2026-05-28)
+- **D1: Loadout snapshots** — `ModLoadout` + `BackendCore.SaveLoadoutAsync/ApplyLoadoutAsync`. Save/restore enabled states + load order.
+- **D2: .tmmpack export** — `TmmPackBuilder` bundles a loadout (manifest + loadout.json + mod source folders) into a portable zip.
+- **D3: Loadout management** — Rename, delete, overwrite-confirmation flows in the loadout context menu. Bonus: `LoadoutDiffWindow` compares any two loadouts side-by-side (additions/removals/enable/disable/reorder).
+
+### Block E1 — Smart DLL Wizard (COMPLETED 2026-05-28)
+- `ProxyDllDetector` knows ~20 well-known proxy DLLs (dinput8, d3d9, dsound, ScriptHook variants, SKSE/F4SE loaders). Surfaces a notification + log entry on install.
+- E2 (auto-routing hint) and E3 (multi-proxy version conflict) remain on the backlog.
+
+### Block C4 — Smart Conflict Resolver UI (COMPLETED 2026-05-28)
+- `ConflictResolverWindow` lets users pick a winner per-conflict, overriding the default highest-load-order behavior. Non-winners are auto-skipped via `FileDeployRow.Skip` in the deploy plan.
+
+### Block F — Polish & QoL (COMPLETED 2026-05-28)
+- **F1:** `Logger` service — 5 MB log rotation with 3 historical files.
+- **F2:** Crash dialog embeds last 40 log lines into the clipboard report.
+- **F3:** Backup size monitoring — `BackendCore.GetTotalBackupSize` + `BackupsPage` quota badge against `Settings.BackupSizeWarnBytes` (default 5 GB).
+- **F4:** Recent activity feed — `ActivityLogger` + `ActivityFeedWindow` surface the last 20 deploys/rollbacks/imports/loadout ops; persisted in `AppSettings.RecentActivity`.
+- **F5:** Mod favorites — `ModItem.IsFavorite` + clickable star column + context-menu toggle.
+
 

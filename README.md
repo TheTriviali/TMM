@@ -137,14 +137,25 @@ Built-in game keys: `III` `VC` `SA` `IV` `TLAD` `TBOGT`. Custom games get auto-g
 
 ---
 
+## Recently Completed (v0.1-alpha-8)
+
+✅ **Sync / import** — point TMM at a pre-modded game folder, auto-detect existing mods  
+✅ **Mod groups** — collapsible nested deployment (`modloader\GroupName\ModName\`)  
+✅ **Conflict resolution** — visual highlighting + per-conflict winner-override UI  
+✅ **Mod loadouts** — save, restore, rename, delete, export as `.tmmpack`, and diff side-by-side  
+✅ **Smart DLL wizard** — detects proxy DLLs (dinput8, d3d9, ScriptHook, SKSE, etc.) on install  
+✅ **Mod favorites** — star/pin key mods  
+✅ **Recent activity feed** — last 20 actions surfaced from the Backups page  
+✅ **Backup size monitoring** — quota badge when backups exceed configured threshold  
+✅ **Log rotation + crash log attach** — 5 MB cap with 3 rotations; recent log lines attached to crash reports  
+
 ## In Progress
 
 Active work toward v1.0:
 
-- **Sync / import** — point TMM at a pre-modded game folder, have it detect and import existing mods into managed form
 - **Folder-overlay deploy** — mods shipping with `models/`, `data/`, `audio/` folders that mirror game structure (currently routed by extension only)
-- **Mod groups** — collapsible nested deployment (`modloader\GroupName\ModName\`)
-- **Conflict resolution** — warn when two mods write to the same destination
+- **Smart DLL wizard E2/E3** — auto-routing hints from proxy detections; multi-proxy version conflicts
+- **First-launch flow polish** — collapse the four-dialog flow into one guided panel
 
 See [PLANS.md](PLANS.md) for the full roadmap.
 

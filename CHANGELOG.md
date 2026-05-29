@@ -4,6 +4,35 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [v0.1-alpha-8] — 2026-05-28 *(Block D complete + Block E1 + Block F polish)*
+
+### Added — Loadouts (Block D)
+- **D1 — Loadout snapshots:** Save/load enabled states + ordering via `BackendCore.SaveLoadoutAsync` / `ApplyLoadoutAsync`. New `Loadouts_{gameKey}/{Name}.json` files persist per-game.
+- **D2 — .tmmpack export:** `TmmPackBuilder` bundles a loadout (manifest + loadout.json + mod source folders) into a portable archive.
+- **D3 — Loadout management:** Rename, delete, overwrite confirmation, per-loadout submenu in the new Loadouts toolbar button.
+- **Loadout diff viewer:** `LoadoutDiffWindow` compares two loadouts side-by-side — additions, removals, enable/disable changes, load-order reorders.
+
+### Added — Smart DLL Wizard (Block E1)
+- **Proxy DLL detection:** `ProxyDllDetector` flags ~20 known proxy DLLs (dinput8, d3d9, dsound, ScriptHook variants, SKSE/F4SE loaders) during mod install. Logs detection details and surfaces a toast.
+
+### Added — Conflict Resolution (C4)
+- **Smart conflict resolver UI:** `ConflictResolverWindow` lets users pick a winner per-conflict, overriding the highest-load-order default. Non-winners are auto-skipped in the deploy plan.
+
+### Added — Quality of Life (Block F)
+- **Mod favorites:** Star/pin mods with a clickable column + context-menu toggle. Persisted on `ModItem.IsFavorite`.
+- **Recent activity feed:** `ActivityLogger` records the last 20 deploys/rollbacks/imports/loadout operations; `ActivityFeedWindow` surfaces them from the BackupsPage.
+- **Backup size monitoring:** BackupsPage shows total backup folder size with an "Over quota" badge once `Settings.BackupSizeWarnBytes` is exceeded (default 5 GB).
+- **Loadout overwrite confirmation:** Saving a loadout with an existing name now prompts before overwriting.
+
+### Added — Reliability
+- **Log rotation:** New `Logger` service caps `TMM.log` at 5 MB and rotates up to 3 historical files. Co-exists with legacy `BackendCore.Log` path.
+- **Crash dialog log attach:** Recent 40 log lines are appended to the clipboard report when the unexpected-error dialog fires.
+
+### Internal
+- **GitHub repository:** Project canonicalized at `TheTriviali/TMM`.
+
+---
+
 ## [v0.1-alpha-7] — 2026-05-27 *(UI Audit, GTA Deprecated Cleanup & BackupsPage)*
 
 ### Added

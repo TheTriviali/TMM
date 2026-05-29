@@ -32,6 +32,21 @@ namespace TMM
                 var def = games.FirstOrDefault(e => e.IsDefault) ?? games[0];
                 cmbGame.SelectedItem = def;
             }
+
+            RefreshBackupSize();
+        }
+
+        private void RefreshBackupSize()
+        {
+            long total = _core.GetTotalBackupSize();
+            long quota = _core.Settings.BackupSizeWarnBytes;
+            txtBackupSize.Text = $"Total backups: {BackendCore.FormatBytes(total)} / quota {BackendCore.FormatBytes(quota)}";
+            warnBadge.Visibility = total > quota ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void BtnActivity_Click(object sender, RoutedEventArgs e)
+        {
+            new ActivityFeedWindow(_core) { Owner = Window.GetWindow(this) }.ShowDialog();
         }
 
         private void CmbGame_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -170,15 +185,18 @@ namespace TMM
             try
             {
                 await _core.RollbackDeployAsync(manifest, new Progress<DeploymentProgress>(_ => { }));
+                _core.Activity.Record(ActivityKind.Rollback, manifest.GameKey, displayName, $"Restored backup from {timeStr}", manifest.Entries.Count);
                 NotificationService.ShowSuccess($"{displayName} restored.");
             }
             catch (Exception ex)
             {
+                Logger.Error("Restore failed", ex);
                 NotificationService.ShowError($"Restore failed: {ex.Message}");
             }
             finally
             {
                 restoreOverlay.Visibility = Visibility.Collapsed;
+                RefreshBackupSize();
             }
         }
 
