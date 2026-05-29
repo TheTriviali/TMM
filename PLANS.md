@@ -92,7 +92,7 @@ returns to the Library, so the user isn't trapped.
 
 ## Group B — Library card & showcase visual polish
 
-### B1 — Redesign GameCard action affordances: bigger, labeled, reorder-discoverable  🟣 Opus (design + mockup) → 🔵 Sonnet (build)
+### B1 — Redesign GameCard action affordances: bigger, labeled, reorder-discoverable  ✅ DONE (commit bb82dbf)
 **User ask:** *"right now all the small buttons don't really do anything — make 'em bigger,
 label 'em, think about what would be most useful to have. i.e. I want them to be reorderable."*
 
@@ -103,22 +103,51 @@ top-left default checkbox and a top-right status chip. Reorder already works via
 ([LibraryPage.xaml.cs](Views/Subpages/LibraryPage.xaml.cs): `GridCard_*` and `ListGrip_*`), but
 it isn't discoverable and the user didn't realize it exists.
 
-**🟣 Opus design pass (needs user approval before build):** propose a card layout where the
-**primary** actions are large and labeled (at minimum Play and Manage), secondary actions
-(Default, Archive, Edit) are still reachable but de-emphasized, and **reordering is obvious**
-(visible drag grip in both grid and list, or explicit move controls). Decide what belongs on the
-face vs. a "⋯" overflow/right-click menu so the card doesn't get noisy. Kill the dead Export
-button (or wire it). Produce an ASCII mockup for card mode AND list mode; get the user's sign-off.
+**✅ APPROVED DESIGN (Opus 4.8, signed off 2026-05-29) — frozen, build to this:**
 
-**🔵 Sonnet build (after approval):** implement the approved layout in `GameCard.xaml(.cs)`.
-Keep the existing event surface (`PlayRequested`, `ManageRequested`, `ArchiveToggled`,
-`DefaultToggled`, `EditRequested`, `CardClicked`) — `LibraryPage.CreateCard` wires them and the
-shell handles them; don't break those signatures. Preserve `OnCardBodyClick`'s button-suppression
-walk (it ignores clicks that land on a `Button` or the default checkbox). Localize all new labels
-(en-US + es-MX). Build clean; manually verify Play/Manage/Default/Archive/Edit all still fire and
-drag-reorder still persists via `OrderChanged`.
+Promote the two everyday verbs to large **labeled** buttons; demote rare actions into a `⋯`
+overflow (also wired as right-click, consistent with the existing `MenuSetArt`/`MenuRemoveArt`
+context menu); keep **Default** as a persistent **labeled toggle** on the card face (it's a state,
+not an action — and A2/A3 made default-game central to navigation); make the **drag grip visible**.
 
-### B2 — Showcase view: fix horizontal symmetry  🔵 Sonnet
+*Card mode (240×160):*
+```
+┌──────────────────────────────────┐
+│ ⠿                          ◖BETA◗ │  drag grip (faint → solid on hover) · status chip
+│           GRAND THEFT             │
+│            AUTO: III              │  title (unchanged)
+│  ★ Default                    ⋯  │  default = pill toggle (labeled) · overflow
+│  ┌──────────────┐ ┌─────────────┐│
+│  │   ▶  Play    │ │  ☰  Manage  ││  two labeled primary buttons (~28px tall)
+│  └──────────────┘ └─────────────┘│
+├──────────────────────────────────┤
+│ Rockstar · 2001           12 mods │  info strip (unchanged)
+└──────────────────────────────────┘
+```
+*List mode (full-width × 72px):* `⠿  ★Default-toggle  Title [BETA] subtitle  N mods  ●  [▶ Play] [☰ Manage]  ⋯` — grip stays visible (already is); Play/Manage gain labels; Edit/Export/Archive move into the same `⋯` overflow.
+
+*`⋯` overflow contents (both modes):* **Edit** (custom only) · **Export profile (.tmmgame)**
+(custom only) · separator · **Archive / Unarchive / Remove** (existing 3-way logic verbatim).
+
+*Export is WIRED (not removed):* the backend already exists — `GameRegistry.ExportConfigAsync`
+([Services/GameRegistry.cs](Services/GameRegistry.cs) ~line 255). Replace the no-op `BtnExport_Click`
+([Views/Controls/GameCard.xaml.cs](Views/Controls/GameCard.xaml.cs) ~line 277) with a `SaveFileDialog`
+(filter `*.tmmgame`, default name = sanitized DisplayName) → resolve the entry's `CustomGameProfile`
+via `Core` + the entry's game key → `await GameRegistry.ExportConfigAsync(profile, dlg.FileName)` →
+success/failure toast via `NotificationService`. Custom-only (the button already gates on `isCustom`).
+
+**🔵 Sonnet build:** implement the approved layout in `GameCard.xaml(.cs)`. Keep the existing
+event surface (`PlayRequested`, `ManageRequested`, `ArchiveToggled`, `DefaultToggled`,
+`EditRequested`, `CardClicked`) — `LibraryPage.CreateCard` wires them and the shell handles them;
+don't break those signatures. The `⋯` items route to those same handlers. Preserve
+`OnCardBodyClick`'s button-suppression walk (it ignores clicks landing on a `Button` or the default
+checkbox — the toggle + overflow are `Button`s, so it still holds). Localize all new labels
+(Play / Manage / Default / Edit / Export / Archive, en-US + es-MX). Build clean; manually verify
+Play/Manage/Default/Archive/Edit all still fire, Export writes a valid `.tmmgame`, and drag-reorder
+still persists via `OrderChanged`. **When done: build clean, verify, then commit** (e.g.
+`feat: B1 — labeled GameCard actions + overflow menu, wire Export`).
+
+### B2 — Showcase view: fix horizontal symmetry  ✅ DONE (commit be59e55)
 **User ask:** *"I'd prefer showcase view to have more horizontal symmetry, it just looks a little
 weird right now."*
 
@@ -148,7 +177,7 @@ margin/alignment tweaks, stop and escalate to 🟣 Opus for a mockup.
 
 ## Group C — In-manager downloads panel
 
-### C1 — Embed a hidable Downloads panel in the Mod Manager  🟣 Opus (design + mockup) → 🔵 Sonnet (build)
+### C1 — Embed a hidable Downloads panel in the Mod Manager  ✅ DONE (commit bb53882)
 **User ask:** *"the user should have a downloads panel in the mod manager interface that is easily
 hidable, maybe only show if the user actually uses the built-in download function for now."*
 
@@ -158,27 +187,42 @@ browser + a built-in `DownloadFileAsync` path on `BackendCore`. The Mod Manager
 ([Views/Subpages/ModManagerPage.xaml](Views/Subpages/ModManagerPage.xaml) + partials) has a
 collapsible sidebar and a deploy overlay but no downloads surface.
 
-**🟣 Opus design pass (needs user approval before build):** decide
-1. **Where** the panel docks inside ModManager (e.g. a right-hand drawer mirroring the existing
-   sidebar toggle) and how it's shown/hidden (a toolbar toggle button).
-2. **What it shows** — likely active/recent built-in downloads with progress, and a one-click
-   "install to this game" once a download finishes. Reuse `DownloadsPage` plumbing where possible
-   rather than duplicating the browser; this panel is about the *built-in download function*, not a
-   second web browser.
-3. **The "only show if used" rule** — define the trigger (e.g. the toggle/panel only appears once
-   the user has initiated at least one built-in download this session, or a persisted
-   `Settings.HasUsedBuiltInDownloads` flag) so the panel stays hidden for users who don't use it.
-   Produce an ASCII mockup of the docked + hidden states and confirm with the user.
+**✅ APPROVED DESIGN (Opus 4.8, signed off 2026-05-29) — frozen, build to this:**
 
-**🔵 Sonnet build (after approval):** implement per the approved design. Keep ModManager
+This panel is the **archive-list half** of `DownloadsPage`, scoped to the game being managed —
+**NOT a second browser**. The "built-in download function" = the WebView2 interceptor
+([Views/Subpages/DownloadsPage.xaml.cs](Views/Subpages/DownloadsPage.xaml.cs) ~line 115,
+`OnDownloadStarting`) that drops `.zip/.rar/.7z` into each game's archive folder
+(`GetModsArchivePath(key)`).
+
+1. **Where:** a **right-hand drawer** = a new 3rd column in the ModManager content grid
+   ([Views/Subpages/ModManagerPage.xaml](Views/Subpages/ModManagerPage.xaml) ~line 281, currently
+   2 cols: sidebar + workspace), structurally mirroring the collapsible left sidebar. Shown/hidden
+   by a `⭳` toggle button on the **right side of the toolbar** (the left side has the sidebar
+   toggle, `BtnToggleSidebarCustom_Click` ~line 191).
+2. **What it shows:** (a) active/recent downloads with a progress bar (subscribe to the same
+   `CoreWebView2DownloadOperation.StateChanged` the page uses); (b) completed archives in *this
+   game's* folder — **reuse `BuildArchiveRow`'s rendering by extracting it to a shared helper**, do
+   not duplicate; (c) **Install → this game** button per finished archive, routing into the existing
+   install pipeline (`BtnInstallModCustom_Click`'s path) pre-targeted to the current game key — this
+   is the panel's main value-add; (d) footer **Open archive folder** (reuse `BtnOpenArchiveFolder_Click`).
+3. **"Only show if used" trigger — APPROVED: persisted flag.** Add
+   `Settings.HasUsedBuiltInDownloads` (bool, default false), set `true` the first time the WebView2
+   interceptor successfully saves an archive (in `OnDownloadStarting`'s Completed handler), then
+   `SaveSettings()`. When the flag is false, the toolbar `⭳` toggle **and** the drawer column are
+   **absent entirely** (not merely collapsed) — users who never download see nothing new. Once true,
+   the toggle is available across restarts; the drawer itself still defaults to hidden until toggled.
+
+**🔵 Sonnet build:** implement per the approved design. Keep ModManager
 code-behind minimal and put the panel logic in an appropriate partial (the page was split into
 `ModManagerPage.Toolbar.cs` / `.Loadouts.cs`; add a `ModManagerPage.Downloads.cs` partial if it
 earns its own concern). Localize new strings (en-US + es-MX). Don't regress the standalone
 Downloads page. Build clean; verify the panel hides by default, appears once the built-in download
-function is used, and toggles cleanly.
+function is used, and toggles cleanly. **When done: build clean, verify, then commit** (e.g.
+`feat: C1 — hidable in-manager Downloads drawer`).
 
-**Note:** this is the most speculative item — pin down scope with the user in the Opus pass before
-writing code, and resist rebuilding the whole browser inside the manager.
+**Note:** scope was pinned in the approved design above — resist rebuilding the whole browser
+inside the manager; this is the archive-list + install surface only.
 
 ---
 
