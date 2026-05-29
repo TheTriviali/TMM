@@ -272,6 +272,17 @@
   "Library_Empty_Title": "No hay juegos en la biblioteca",
   "Library_Empty_Subtitle": "Haz clic en ➕ para agregar tu primer juego",
 
+  "Card_Play": "Jugar",
+  "Card_Manage": "Administrar",
+  "Card_Default": "Predeterminado",
+  "Card_Edit": "Editar",
+  "Card_ExportProfile": "Exportar perfil",
+  "Card_Archive": "Archivar",
+  "Card_Unarchive": "Desarchivar",
+  "Card_Remove": "Eliminar",
+  "Card_SetArtwork": "Establecer imagen",
+  "Card_RemoveArtwork": "Quitar imagen",
+
   "ModManager_DirectoryNotSet": "Directorio no configurado",
   "ModManager_FolderNotSet": "La carpeta del juego no está configurada o no existe.",
   "ModManager_DropHere": "Suelta Mods Aquí",

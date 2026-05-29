@@ -1,10 +1,12 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
+using TMM.Services;
 
 namespace TMM
 {
@@ -35,15 +37,11 @@ namespace TMM
                 _isListMode = value;
                 cardModeRoot.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
                 listModeRoot.Visibility = value ? Visibility.Visible   : Visibility.Collapsed;
-                // Hide card-mode overlays (default checkbox + status chip) in list mode
-                // — list mode has its own inline versions of both
-                defaultCheckbox.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
-                // statusChip visibility is managed by ApplyStatusChip; re-apply after mode switch
+                // Status chip is card-mode-only; list mode has an inline pill
                 if (Entry != null) ApplyStatusChip(Entry.Status);
                 // List mode: flat border, no hover scale
                 cardBorder.CornerRadius = value ? new CornerRadius(8) : new CornerRadius(10);
                 cardBorder.BorderThickness = value ? new Thickness(1) : new Thickness(1.5);
-                // Disable drop shadow in list mode
                 if (cardBorder.Effect is DropShadowEffect dse)
                     dse.Opacity = value ? 0.15 : 0.35;
             }
@@ -71,12 +69,11 @@ namespace TMM
 
         private void OnCardBodyClick(object sender, MouseButtonEventArgs e)
         {
-            // Don't fire if a button or the default checkbox was clicked
+            // Suppress if a Button (covers Default, Overflow, Play, Manage, etc.)
             var src = e.OriginalSource as DependencyObject;
             while (src != null && src != this)
             {
                 if (src is Button) return;
-                if (src == defaultCheckbox || src == listDefaultCheckbox) return;
                 src = VisualTreeHelper.GetParent(src);
             }
             if (Entry != null) CardClicked?.Invoke(Entry);
@@ -93,9 +90,9 @@ namespace TMM
         public void ApplyEntry(LibraryEntry entry)
         {
             // ── Card mode ──
-            txtArtTitle.Text  = entry.DisplayName;
-            txtSubtitle.Text  = entry.Subtitle;
-            txtModCount.Text  = entry.ModCount > 0 ? $"{entry.ModCount} mods" : "";
+            txtArtTitle.Text = entry.DisplayName;
+            txtSubtitle.Text = entry.Subtitle;
+            txtModCount.Text = entry.ModCount > 0 ? $"{entry.ModCount} mods" : "";
 
             // ── List mode ──
             listTxtTitle.Text    = entry.DisplayName;
@@ -120,21 +117,16 @@ namespace TMM
             double baseOpacity = entry.IsPlaceholder ? 0.72 : entry.IsArchived ? 0.55 : 1.0;
             Opacity = baseOpacity;
             archivedOverlay.Visibility = entry.IsArchived ? Visibility.Visible : Visibility.Collapsed;
-            // List-mode archived badge (inline with subtitle)
             listArchivedTag.Visibility = entry.IsArchived ? Visibility.Visible : Visibility.Collapsed;
 
-            // ── Default checkbox (card + list modes) ──
+            // ── Default pill (card + list modes) ──
             ApplyDefaultState(entry.IsDefault);
 
-            // ── Archive / delete button (card + list) ──
-            ApplyArchiveButton(entry);
-
-            // ── Edit / Export buttons (custom games only) ──
+            // ── Overflow menu items ──
             bool isCustom = entry.GameKeys.Length == 1
                 && GameProfile.ByKey(entry.GameKeys[0]) == null
                 && !entry.IsPlaceholder;
-            btnEdit.Visibility   = isCustom ? Visibility.Visible : Visibility.Collapsed;
-            btnExport.Visibility = isCustom ? Visibility.Visible : Visibility.Collapsed;
+            ApplyOverflowMenu(entry, isCustom);
 
             // ── Custom artwork ──
             string? artPath = Core?.GetLibraryArtPath(entry.Key);
@@ -156,52 +148,53 @@ namespace TMM
 
         private void ApplyDefaultState(bool isDefault)
         {
-            if (isDefault && Application.Current.Resources["AccentBrush"] is Brush accent)
-            {
-                defaultCheckbox.Background     = accent;
-                defaultCheckbox.BorderBrush    = accent;
-                listDefaultCheckbox.Background  = accent;
-                listDefaultCheckbox.BorderBrush = accent;
-            }
-            else
-            {
-                var transp = Brushes.Transparent;
-                var dim    = new SolidColorBrush(Color.FromArgb(102, 255, 255, 255));
-                defaultCheckbox.Background     = transp;
-                defaultCheckbox.BorderBrush    = dim;
-                listDefaultCheckbox.Background  = transp;
-                listDefaultCheckbox.BorderBrush = dim;
-            }
-            defaultCheckmark.Visibility     = isDefault ? Visibility.Visible : Visibility.Collapsed;
-            listDefaultCheckmark.Visibility = isDefault ? Visibility.Visible : Visibility.Collapsed;
+            var accentBrush = Application.Current.Resources["AccentBrush"] as Brush;
+            var dimBg       = new SolidColorBrush(Color.FromArgb(25, 255, 255, 255));
+            var dimBorder   = new SolidColorBrush(Color.FromArgb(60, 255, 255, 255));
+            var noBorder    = Brushes.Transparent;
+
+            UpdateDefaultPill(
+                btnDefaultCard,
+                "defaultCardPillBg", "defaultCardStar",
+                isDefault, accentBrush, dimBg, dimBorder, noBorder);
+
+            UpdateDefaultPill(
+                listBtnDefault,
+                "defaultListPillBg", "defaultListStar",
+                isDefault, accentBrush, dimBg, dimBorder, noBorder);
         }
 
-        private void ApplyArchiveButton(LibraryEntry entry)
+        private static void UpdateDefaultPill(
+            Button? btn,
+            string bgName, string starName,
+            bool isDefault,
+            Brush? accentBrush, Brush dimBg, Brush dimBorder, Brush noBorder)
         {
-            string icon;
-            string tip;
-            if (entry.IsArchived)
+            if (btn?.Template == null) return;
+
+            var bg = btn.Template.FindName(bgName, btn) as Border;
+            if (bg != null)
             {
-                icon = "↩"; tip = "Unarchive game";
-            }
-            else if (entry.IsPlaceholder)
-            {
-                icon = "✕"; tip = "Remove placeholder";
-            }
-            else
-            {
-                icon = "⊟"; tip = "Archive game";
+                bg.Background  = isDefault ? accentBrush ?? Brushes.Cyan : dimBg;
+                bg.BorderBrush = isDefault ? noBorder : dimBorder;
             }
 
-            // Card mode button
-            var cardArchiveIcon = btnArchiveOrDelete.Template?.FindName("archiveIcon", btnArchiveOrDelete) as TextBlock;
-            if (cardArchiveIcon != null) cardArchiveIcon.Text = icon;
-            btnArchiveOrDelete.ToolTip = tip;
+            var star = btn.Template.FindName(starName, btn) as TextBlock;
+            if (star != null) star.Text = isDefault ? "★" : "☆";
+        }
 
-            // List mode button
-            var listAIcon = listBtnArchiveOrDelete.Template?.FindName("listArchiveIcon", listBtnArchiveOrDelete) as TextBlock;
-            if (listAIcon != null) listAIcon.Text = icon;
-            listBtnArchiveOrDelete.ToolTip = tip;
+        private void ApplyOverflowMenu(LibraryEntry entry, bool isCustom)
+        {
+            if (menuEdit  != null) menuEdit.Visibility  = isCustom ? Visibility.Visible : Visibility.Collapsed;
+            if (menuExport != null) menuExport.Visibility = isCustom ? Visibility.Visible : Visibility.Collapsed;
+            if (menuSepCustom != null) menuSepCustom.Visibility = isCustom ? Visibility.Visible : Visibility.Collapsed;
+
+            if (menuArchive != null)
+            {
+                menuArchive.Header = entry.IsArchived    ? LocalizationService.Instance["Card_Unarchive"]
+                                   : entry.IsPlaceholder ? LocalizationService.Instance["Card_Remove"]
+                                   :                       LocalizationService.Instance["Card_Archive"];
+            }
         }
 
         private void ApplyStatusChip(ReleaseStatus status)
@@ -223,12 +216,10 @@ namespace TMM
             };
             var bgBrush = new SolidColorBrush(Color.FromArgb(217, chipColor.R, chipColor.G, chipColor.B));
 
-            // Card-mode overlay (top-right) — hidden when in list mode
             statusChip.Visibility = _isListMode ? Visibility.Collapsed : Visibility.Visible;
             statusChip.Background = bgBrush;
             txtStatus.Text        = label;
 
-            // List-mode inline pill
             listStatusPill.Visibility = _isListMode ? Visibility.Visible : Visibility.Collapsed;
             listStatusPill.Background = bgBrush;
             listTxtStatus.Text        = label;
@@ -236,7 +227,7 @@ namespace TMM
 
         private void AnimateHover(bool entering)
         {
-            if (_isListMode) return; // no scale in list mode
+            if (_isListMode) return;
 
             var overlayAnim = new DoubleAnimation(entering ? 0.08 : 0, TimeSpan.FromMilliseconds(120));
             hoverOverlay.Background = new SolidColorBrush(Colors.White);
@@ -268,39 +259,72 @@ namespace TMM
             if (Entry != null) ManageRequested?.Invoke(Entry);
         }
 
+        private void BtnDefault_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (Entry != null) DefaultToggled?.Invoke(Entry, !Entry.IsDefault);
+        }
+
+        private void BtnOverflow_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (ContextMenu == null) return;
+            ContextMenu.PlacementTarget = sender as UIElement ?? this;
+            ContextMenu.Placement = PlacementMode.Bottom;
+            ContextMenu.IsOpen = true;
+        }
+
         private void BtnEdit_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
             if (Entry != null) EditRequested?.Invoke(Entry);
         }
 
-        private void BtnExport_Click(object sender, RoutedEventArgs e)
+        private async void BtnExport_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
-            // TODO: export dialog
+            if (Entry == null) return;
+
+            var key = Entry.GameKeys.Length == 1 ? Entry.GameKeys[0] : null;
+            if (key is null) return;
+
+            var profile = GameRegistry.Instance.GetCustomGameConfig(key);
+            if (profile is null) return;
+
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title    = $"Export {Entry.DisplayName}",
+                Filter   = "TMM Game Profile (*.tmmgame)|*.tmmgame",
+                FileName = SanitizeFileName(Entry.DisplayName),
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                await GameRegistry.ExportConfigAsync(profile, dlg.FileName);
+                NotificationService.ShowSuccess("Profile exported");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Export failed: {ex.Message}");
+            }
         }
 
         private void BtnArchiveOrDelete_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
             if (Entry == null) return;
-            if (Entry.IsArchived)      ArchiveToggled?.Invoke(Entry, false);
+            if (Entry.IsArchived)         ArchiveToggled?.Invoke(Entry, false);
             else if (Entry.IsPlaceholder) DeleteRequested?.Invoke(Entry);
-            else                       ArchiveToggled?.Invoke(Entry, true);
-        }
-
-        private void DefaultCheckbox_Click(object sender, MouseButtonEventArgs e)
-        {
-            e.Handled = true;
-            if (Entry != null) DefaultToggled?.Invoke(Entry, !Entry.IsDefault);
+            else                          ArchiveToggled?.Invoke(Entry, true);
         }
 
         // ── Public helpers ────────────────────────────────────────────────────────
 
-        /// <summary>Returns the drag handle border for use in list-mode drag-drop.</summary>
+        /// <summary>Returns the drag handle border for list-mode drag-drop wiring.</summary>
         public Border GetListDragHandle() => listDragHandle;
 
-        // ── Context menu ──────────────────────────────────────────────────────────
+        // ── Context menu (artwork) ────────────────────────────────────────────────
 
         private void MenuSetArt_Click(object sender, RoutedEventArgs e)
         {
@@ -328,7 +352,14 @@ namespace TMM
             NotificationService.ShowSuccess("Artwork removed — using gradient");
         }
 
-        // ── Static helper ─────────────────────────────────────────────────────────
+        // ── Static helpers ────────────────────────────────────────────────────────
+
+        private static string SanitizeFileName(string name)
+        {
+            foreach (var c in System.IO.Path.GetInvalidFileNameChars())
+                name = name.Replace(c, '_');
+            return name;
+        }
 
         private static bool TryParseHex(string hex, out Color color)
         {
