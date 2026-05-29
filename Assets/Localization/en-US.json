@@ -272,6 +272,8 @@
   "Library_Empty_Title": "No games in library",
   "Library_Empty_Subtitle": "Click ➕ to add your first game",
 
+  "ModManager_SetGameFolder": "Set your game folder to deploy mods",
+  "ModManager_Browse": "Browse…",
   "ModManager_Downloads": "Downloads",
   "ModManager_Downloads_OpenFolder": "Open archive folder",
   "ModManager_Downloads_Empty": "No archives yet.\nDownloaded .zip/.rar/.7z files\nwill appear here.",

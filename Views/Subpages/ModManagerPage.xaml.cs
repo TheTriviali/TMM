@@ -126,6 +126,41 @@ namespace TMM
                 Cust_btnNexus.Content = "Find Mods";
                 Cust_btnNexus.Tag    = $"https://duckduckgo.com/?q={Uri.EscapeDataString(_customConfig.GameName + " mods")}";
             }
+
+            // Update folder-set banner visibility
+            UpdatePathAffordances();
+        }
+
+        private void UpdatePathAffordances()
+        {
+            bool isPathSet = !string.IsNullOrEmpty(_customConfig.GameDirectory) &&
+                             Directory.Exists(_customConfig.GameDirectory);
+            Cust_SetFolderBanner.Visibility = isPathSet ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private async void BtnBrowseGameFolder_Click(object sender, RoutedEventArgs e)
+        {
+            if (_customProfile == null) return;
+
+            var dlg = new Microsoft.Win32.OpenFolderDialog { Title = $"Select {_customConfig.GameName} Folder" };
+            if (dlg.ShowDialog() != true) return;
+
+            // Distinguish between built-in and custom games.
+            var builtInProfile = GameProfile.All.FirstOrDefault(p => p.Key == _customProfile.Key);
+            if (builtInProfile != null)
+            {
+                // Built-in game: persist via Settings.GamePaths
+                _core.SetVanillaPath(builtInProfile, dlg.FolderName);
+            }
+            else
+            {
+                // Custom game: persist via GameRegistry
+                _customConfig.GameDirectory = dlg.FolderName;
+                GameRegistry.Instance.SaveCustomGameSync(_customProfile.Key, _customConfig);
+            }
+
+            await RefreshCustomAsync();
+            NotificationService.ShowSuccess($"Game folder set to {Path.GetFileName(dlg.FolderName)}");
         }
 
         private async Task RefreshIntegrityAsync()

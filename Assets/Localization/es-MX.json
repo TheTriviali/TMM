@@ -272,6 +272,8 @@
   "Library_Empty_Title": "No hay juegos en la biblioteca",
   "Library_Empty_Subtitle": "Haz clic en ➕ para agregar tu primer juego",
 
+  "ModManager_SetGameFolder": "Establece la carpeta del juego para implementar mods",
+  "ModManager_Browse": "Examinar...",
   "ModManager_Downloads": "Descargas",
   "ModManager_Downloads_OpenFolder": "Abrir carpeta de archivos",
   "ModManager_Downloads_Empty": "No hay archivos aún.\nLos archivos .zip/.rar/.7z\naparecerán aquí.",

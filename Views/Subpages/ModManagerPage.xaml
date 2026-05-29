@@ -309,9 +309,15 @@
                                        Foreground="{DynamicResource AccentLabelBrush}"
                                        FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"
                                        TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,4"/>
-                            <TextBlock x:Name="Cust_txtSidebarDir" Text="—"
-                                       Foreground="{DynamicResource SubTextBrush}" FontSize="9"
-                                       TextWrapping="Wrap" TextAlignment="Center" Opacity="0.7" Margin="0,0,0,12"/>
+                            <!-- Folder path: button if not set, clickable text if set -->
+                            <Button x:Name="Cust_btnSidebarDir" Click="BtnBrowseGameFolder_Click"
+                                    Background="Transparent" BorderThickness="0" Padding="4,3"
+                                    Cursor="Hand" Margin="0,0,0,12"
+                                    ToolTip="Click to set or change the game folder">
+                                <TextBlock x:Name="Cust_txtSidebarDir" Text="—"
+                                           Foreground="{DynamicResource SubTextBrush}" FontSize="9"
+                                           TextWrapping="Wrap" TextAlignment="Center" Opacity="0.7"/>
+                            </Button>
 
                             <!-- Integrity status (hidden when profile has no integrity configured) -->
                             <Border x:Name="Cust_IntegrityBorder" Visibility="Collapsed"
@@ -360,11 +366,36 @@
                 <Grid Grid.Column="1" Margin="10,8,10,10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
+                    <!-- Set folder banner (hidden when path is valid) -->
+                    <Border x:Name="Cust_SetFolderBanner" Grid.Row="0"
+                            Background="{DynamicResource AccentBrush}" CornerRadius="5"
+                            Padding="12,8" Margin="0,0,0,8" Visibility="Collapsed">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       x:Name="Cust_txtSetFolderMsg"
+                                       Text="{helpers:Localization ModManager_SetGameFolder}"
+                                       Foreground="{DynamicResource AccentTextBrush}" FontSize="11"
+                                       VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="{helpers:Localization ModManager_Browse}" Click="BtnBrowseGameFolder_Click"
+                                    Margin="12,0,0,0" Padding="10,4"
+                                    Foreground="{DynamicResource AccentTextBrush}"
+                                    Background="Transparent" BorderThickness="1"
+                                    BorderBrush="{DynamicResource AccentTextBrush}"
+                                    FontSize="10" FontWeight="SemiBold"
+                                    Cursor="Hand"/>
+                        </Grid>
+                    </Border>
+
                     <!-- Search -->
-                    <Grid Grid.Row="0" Margin="0,0,0,6">
+                    <Grid Grid.Row="1" Margin="0,0,0,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
@@ -382,14 +413,14 @@
                                 Click="BtnClearSearchCustom_Click"/>
                     </Grid>
 
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right"
-                                Margin="0,34,0,0">
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right"
+                                Margin="0,0,0,0">
                         <CheckBox x:Name="Cust_chkShowGroups" Content="Show groups"
                                   Checked="Cust_ShowGroupsChanged" Unchecked="Cust_ShowGroupsChanged"/>
                     </StackPanel>
 
                     <!-- Mod ListView -->
-                    <Grid Grid.Row="1">
+                    <Grid Grid.Row="2">
                         <ListView x:Name="Cust_ModList" Style="{StaticResource ModListStyle}"
                                   Template="{StaticResource WatermarkCustom}"
                                   SelectionMode="Extended"
