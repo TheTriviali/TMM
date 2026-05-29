@@ -16,6 +16,7 @@ namespace TMM
         private readonly string _gameDir;
         private readonly List<FileDeployRow> _rows;
         private readonly List<ConflictEntry> _conflicts;
+        private readonly List<ConflictEntry> _proxyConflicts;
 
         public DeployPreviewWindow(
             List<(ModItem Mod, DeploymentPlan Plan)> plans,
@@ -25,7 +26,9 @@ namespace TMM
             _gameDir = gameDir;
             _rows = BuildRows(plans);
 
-            _conflicts = new ConflictAnalyzer().Analyze(plans);
+            var analyzer = new ConflictAnalyzer();
+            _conflicts      = analyzer.Analyze(plans);
+            _proxyConflicts = analyzer.AnalyzeProxyConflicts(plans);
             var conflictSet = _conflicts
                 .Select(c => c.DestinationPath)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -104,17 +107,27 @@ namespace TMM
                 ? $"{deployable} file(s) ready · {blocking} conflict(s) will be skipped"
                 : $"{deployable} file(s) ready to deploy";
 
-            // Collect all warning text: blocking rows + non-blocking plan warnings
+            // Collect all warning text: blocking rows + proxy DLL conflicts
             var warningLines = _rows
                 .Where(r => r.IsBlocking && !string.IsNullOrEmpty(r.ConflictMessage))
                 .Select(r => $"[{r.ModName}] {r.ConflictMessage}")
                 .ToList();
 
+            foreach (var pc in _proxyConflicts)
+            {
+                string mods = string.Join(", ", pc.Participants.Select(p => p.ModName));
+                warningLines.Add($"Proxy DLL conflict: '{pc.DestinationPath}' included by {mods} — only one loader will activate. Disable the others.");
+            }
+
             if (warningLines.Count > 0)
             {
                 pnlWarnings.Visibility  = Visibility.Visible;
-                txtBlockingNote.Visibility = Visibility.Visible;
                 icWarnings.ItemsSource  = warningLines;
+            }
+
+            if (_rows.Any(r => r.IsBlocking))
+            {
+                txtBlockingNote.Visibility = Visibility.Visible;
             }
 
             // Disable Deploy if nothing to deploy

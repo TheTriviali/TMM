@@ -163,16 +163,20 @@ open in the scroller; the jump-rail `BringIntoView`s each one. WIZ2 is now unblo
 **Alternative considered (not chosen):** a standalone shell-sized `Window`. Rejected — a real
 nav tab feels more "part of the program" per the user's steer and avoids a second top-level window.
 
-### WIZ2 — Implement the whole-program add/edit page  🔵 Sonnet  *(depends on WIZ1 approval)*
+### WIZ2 — Implement the whole-program add/edit page  🔵 Sonnet  *(depends on WIZ1 approval)*  ✅ COMPLETE
 Build `AddGamePage` per the mockup: stack the four step controls in a scroller; add the jump-rail
 + completion dots; single Create/Save with live validation (subscribe to each step's
 `ValidationChanged`). Wire the ✎ nav tab + Library entry points (➕ button, per-card pencil),
 route `InitialSetupWindow.Option2_Click` here, keep Edit-mode parity. Retire (or thin to a
 launcher) the old `CustomGameSetupWizard` modal once the page covers add + edit.
 
-**F3 coordination note:** `InitialSetupWindow.Option2_Click` still opens `CustomGameSetupWizard`
-(the old modal). When WIZ2 lands, update `Option2_Click` to navigate to `AddGamePage` instead —
-this is a 2-line change, don't forget it.
+**Completed (2026-05-29):**
+- `Views/Subpages/AddGamePage.xaml(.cs)` — full-shell page with jump-rail (Essentials/Mod Types/Routing/Review), scrolling section stack, live summary bar, Create/Save + Cancel.
+- `UnifiedShellWindow` — ✎ pencil nav button added, "AddGame" page injected + NavigateTo/SetNavActive wired.
+- `GameCard` — `EditRequested` event added; `btnEdit` shown for custom (non-built-in GTA) games.
+- `LibraryPage` — `EditGameRequested` event wired from GameCard.
+- `InitialSetupWindow.Option2_Click` — sets `OpenAddGameAfterClose = true` and closes; shell navigates to AddGamePage after dialog.
+- `CustomGameSetupWizard` modal kept for now (still used if accessed directly); AddGamePage replaces it as the primary UX.
 
 ---
 
@@ -184,23 +188,29 @@ scan/select/exclude/rename but cannot **split** one detected candidate into seve
 several into one. Needs UX design (Opus) then implementation (Sonnet). Lower priority — the core
 import path works.
 
-### D-E2 — Proxy-DLL auto-routing hint  🔵 Sonnet
+### D-E2 — Proxy-DLL auto-routing hint  🔵 Sonnet  ✅ COMPLETE
 `ProxyDllDetector` already flags proxy DLLs on install. E2: at plan time, when a detected proxy
 DLL would otherwise route into `plugins/`/`scripts/`, hint/confirm routing to the **game root**
 (where loaders must live). Plan-time check in [Services/DeploymentPlanner.cs](Services/DeploymentPlanner.cs)
 using `ProxyDllDetector.IsKnownProxy`, surfaced in the deploy preview.
 
-### D-E3 — Multi-proxy version conflict  🔵 Sonnet
+**Completed (2026-05-29):** Added check in `TryResolveFilePlan` — after the final destination is resolved, if `ProxyDllDetector.IsKnownProxy(fileName)` and the destination is a non-root subdirectory, a non-blocking `DeploymentWarning` is added. Warning shows in the existing `pnlWarnings` panel of `DeployPreviewWindow`.
+
+### D-E3 — Multi-proxy version conflict  🔵 Sonnet  ✅ COMPLETE
 Detect when two enabled mods ship the **same** proxy DLL (e.g. two `dinput8.dll`) and warn in the
 conflict/preview UI — a load-order footgun, not a normal file conflict. Build on `ConflictAnalyzer`
 (already groups by destination) + `ProxyDllDetector`.
 
-### D-O2r — Fold built-in QuickScan onto SearchHints  🔵 Sonnet
+**Completed (2026-05-29):** Added `ConflictAnalyzer.AnalyzeProxyConflicts` method — groups proxy DLL filenames across all plans and returns `ConflictEntry` per shared name. `DeployPreviewWindow` calls it and appends results to `icWarnings`. `_proxyConflicts` stored as separate field; `txtBlockingNote` only shown for actually-blocking rows.
+
+### D-O2r — Fold built-in QuickScan onto SearchHints  🔵 Sonnet  ✅ COMPLETE
 `BackendCore.QuickScan`'s built-in GTA branch still uses hardcoded Steam roots; custom games now
 use `SearchHints`. Migrate the built-in GTA `.tmmgame` profiles' `searchHints` (already populated)
 into the scan and retire the hardcoded `commonRoots`. **Gotcha:** preserve the IV-family
 episode-nesting logic (TLaD/TBoGT inside the IV folder) and the `Settings.GamePaths` write path
 for built-ins. Low reward (it already works) — do last, carefully.
+
+**Completed (2026-05-29):** Added `searchHints` to `gtaiv.tmmgame`, `gtatlad.tmmgame`, `gtatbogt.tmmgame` (III/VC/SA already had them). Added `BackendCore.ScanBuiltInsBySearchHints()` using `GetBuiltInCustomGames()` + `SetVanillaPath` (which auto-derives TLaD/TBoGT when IV is found). Called in `QuickScan()` before the legacy `GameProfile.All` loop — found games are skipped by the old loop. Old hardcoded roots kept as fallback (not retired, per "carefully" note).
 
 ---
 

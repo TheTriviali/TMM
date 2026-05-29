@@ -56,6 +56,7 @@ namespace TMM
         public event Action<LibraryEntry>? ManageRequested;
         public event Action<LibraryEntry, bool>? ArchiveToggled;
         public event Action<LibraryEntry>? DeleteRequested;
+        public event Action<LibraryEntry>? EditRequested;
         public event Action<LibraryEntry, bool>? DefaultToggled;
 
         // ── Constructor ───────────────────────────────────────────────────────────
@@ -128,10 +129,11 @@ namespace TMM
             // ── Archive / delete button (card + list) ──
             ApplyArchiveButton(entry);
 
-            // ── Export button (custom games only) ──
+            // ── Edit / Export buttons (custom games only) ──
             bool isCustom = entry.GameKeys.Length == 1
                 && GameProfile.ByKey(entry.GameKeys[0]) == null
                 && !entry.IsPlaceholder;
+            btnEdit.Visibility   = isCustom ? Visibility.Visible : Visibility.Collapsed;
             btnExport.Visibility = isCustom ? Visibility.Visible : Visibility.Collapsed;
 
             // ── Custom artwork ──
@@ -269,7 +271,7 @@ namespace TMM
         private void BtnEdit_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
-            // TODO: open game-profile editor
+            if (Entry != null) EditRequested?.Invoke(Entry);
         }
 
         private void BtnExport_Click(object sender, RoutedEventArgs e)

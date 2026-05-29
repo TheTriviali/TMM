@@ -6,6 +6,15 @@
   "gameDirectory": "",
   "exePath": "TLAD.exe",
   "steamAppId": "",
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/Grand Theft Auto IV/GTAIV/TLaD",
+    "Program Files (x86)/Steam/steamapps/common/Grand Theft Auto IV/GTAIV/TLAD",
+    "SteamLibrary/steamapps/common/Grand Theft Auto IV/GTAIV/TLaD",
+    "SteamLibrary/steamapps/common/Grand Theft Auto IV/GTAIV/TLAD",
+    "Steam/steamapps/common/Grand Theft Auto IV/GTAIV/TLaD",
+    "Games/Grand Theft Auto IV/GTAIV/TLaD",
+    "Rockstar Games/Grand Theft Auto IV/GTAIV/TLaD"
+  ],
   "routingRules": [
     {
       "name": "ASI Plugin (plugins/ if exists)",

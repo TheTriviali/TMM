@@ -6,6 +6,15 @@
   "gameDirectory": "",
   "exePath": "EFLC.exe",
   "steamAppId": "",
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/Grand Theft Auto IV/GTAIV/EFLC",
+    "Program Files (x86)/Steam/steamapps/common/Grand Theft Auto IV/GTAIV/TBoGT",
+    "SteamLibrary/steamapps/common/Grand Theft Auto IV/GTAIV/EFLC",
+    "SteamLibrary/steamapps/common/Grand Theft Auto IV/GTAIV/TBoGT",
+    "Steam/steamapps/common/Grand Theft Auto IV/GTAIV/EFLC",
+    "Games/Grand Theft Auto IV/GTAIV/EFLC",
+    "Rockstar Games/Grand Theft Auto IV/GTAIV/EFLC"
+  ],
   "routingRules": [
     {
       "name": "ASI Plugin (plugins/ if exists)",

@@ -6,6 +6,13 @@
   "gameDirectory": "",
   "exePath": "GTAIV.exe",
   "steamAppId": "12210",
+  "searchHints": [
+    "Program Files (x86)/Steam/steamapps/common/Grand Theft Auto IV/GTAIV",
+    "SteamLibrary/steamapps/common/Grand Theft Auto IV/GTAIV",
+    "Steam/steamapps/common/Grand Theft Auto IV/GTAIV",
+    "Games/Grand Theft Auto IV/GTAIV",
+    "Rockstar Games/Grand Theft Auto IV/GTAIV"
+  ],
   "routingRules": [
     {
       "name": "ASI Plugin (plugins/ if exists)",

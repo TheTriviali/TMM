@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace TMM.Services
@@ -88,6 +89,60 @@ namespace TMM.Services
                 .Select(kvp => new ConflictEntry
                 {
                     DestinationPath = kvp.Key,
+                    Participants    = kvp.Value.Values
+                        .OrderByDescending(p => p.LoadOrder)
+                        .ToList(),
+                })
+                .OrderBy(c => c.DestinationPath, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Detects when two or more enabled mods each include the same proxy/loader DLL by filename
+        /// (e.g. two mods both ship <c>dinput8.dll</c>). Unlike a normal file conflict, these may
+        /// route to different destinations yet still collide at load time — only the one the OS
+        /// actually loads will activate. Surfaces the issue so the user can disable one.
+        /// </summary>
+        /// <returns>
+        /// One <see cref="ConflictEntry"/> per shared proxy DLL name. The
+        /// <see cref="ConflictEntry.DestinationPath"/> field repurposed to hold the DLL filename.
+        /// </returns>
+        public List<ConflictEntry> AnalyzeProxyConflicts(List<(ModItem Mod, DeploymentPlan Plan)> plans)
+        {
+            var byProxy = new Dictionary<string, Dictionary<string, ConflictParticipant>>(
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (var (mod, plan) in plans)
+            {
+                foreach (var entry in plan.Files)
+                {
+                    if (entry.Skip) continue;
+                    string name = Path.GetFileName(entry.SourcePath);
+                    if (!ProxyDllDetector.IsKnownProxy(name)) continue;
+
+                    if (!byProxy.TryGetValue(name, out var writers))
+                    {
+                        writers = new Dictionary<string, ConflictParticipant>(StringComparer.OrdinalIgnoreCase);
+                        byProxy[name] = writers;
+                    }
+
+                    if (!writers.ContainsKey(mod.Name))
+                    {
+                        writers[mod.Name] = new ConflictParticipant
+                        {
+                            ModName    = mod.Name,
+                            LoadOrder  = mod.FinalLoadOrder != 0 ? mod.FinalLoadOrder : mod.LoadOrder,
+                            SourcePath = entry.SourcePath,
+                        };
+                    }
+                }
+            }
+
+            return byProxy
+                .Where(kvp => kvp.Value.Count > 1)
+                .Select(kvp => new ConflictEntry
+                {
+                    DestinationPath = kvp.Key,  // DLL filename, not a path
                     Participants    = kvp.Value.Values
                         .OrderByDescending(p => p.LoadOrder)
                         .ToList(),

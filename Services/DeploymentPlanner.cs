@@ -222,6 +222,25 @@ namespace TMM.Services
                 ? ResolveChosenDestination(mod, gameProfile, file, chosen)
                 : ResolveDefaultDestination(mod, gameProfile, file);
 
+            // Proxy-DLL hint: known loader/proxy DLLs must sit beside the game exe (game root).
+            // If routing placed this file inside a subdirectory, warn — don't block, as the user
+            // may have intentionally placed it elsewhere.
+            string fileName = Path.GetFileName(file.AbsolutePath);
+            if (ProxyDllDetector.IsKnownProxy(fileName))
+            {
+                string destDir = Path.GetDirectoryName(destination) ?? gameProfile.GameDirectory;
+                if (!destDir.Equals(gameProfile.GameDirectory, StringComparison.OrdinalIgnoreCase))
+                {
+                    string rel = Path.GetRelativePath(gameProfile.GameDirectory, destDir);
+                    warnings.Add(new DeploymentWarning
+                    {
+                        Message    = $"'{fileName}' is a proxy/loader DLL that usually needs to be in the game root, but is routed to '{rel}\\'. Move it to the game root if the loader does not activate.",
+                        FilePath   = file.AbsolutePath,
+                        IsBlocking = false,
+                    });
+                }
+            }
+
             return new FileDeploymentEntry
             {
                 SourcePath = file.AbsolutePath,

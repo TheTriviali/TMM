@@ -221,6 +221,13 @@
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
+                            <!-- Add / Edit Game -->
+                            <Button x:Name="navBtnAddGame" Style="{StaticResource NavBtnStyle}"
+                                    ToolTip="Add / Edit Game" Click="NavBtn_Click" Tag="AddGame">
+                                <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                           Foreground="{DynamicResource SubTextBrush}"/>
+                            </Button>
+
                         </StackPanel>
                     </DockPanel>
                 </Border>
@@ -353,10 +360,11 @@
                         <!-- ═══ BACKUPS PAGE ═══ -->
                         <ContentPresenter x:Name="pageBackupsPlaceholder" Visibility="Collapsed"/>
 
-                        <!-- Paths and Settings are added dynamically in code-behind
+                        <!-- Paths, Settings, and AddGame are added dynamically in code-behind
                              because their constructors require BackendCore -->
-                        <ContentPresenter x:Name="pagePathsPlaceholder" Visibility="Collapsed"/>
-                        <ContentPresenter x:Name="pageSettings"         Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pagePathsPlaceholder"    Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageSettings"            Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageAddGamePlaceholder"  Visibility="Collapsed"/>
 
                         <!-- ═══ CARD-CLICK MODAL OVERLAY ═══ -->
                         <Grid x:Name="cardModal" Visibility="Collapsed" Panel.ZIndex="90"

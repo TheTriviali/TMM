@@ -218,6 +218,8 @@ namespace TMM
         {
             Log("--- Starting Quick Scan ---");
 
+            ScanBuiltInsBySearchHints();
+
             foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady && d.DriveType == DriveType.Fixed))
             {
                 foreach (var profile in GameProfile.All)
@@ -280,6 +282,36 @@ namespace TMM
 
             SaveSettings();
             Log("--- Quick Scan Finished ---");
+        }
+
+        /// <summary>
+        /// Detects built-in game profiles using their <see cref="CustomGameProfile.SearchHints"/>.
+        /// Runs before the legacy hardcoded-roots loop so that games already found are skipped there.
+        /// Uses <see cref="SetVanillaPath"/> so that finding GTA IV auto-derives TLaD/TBoGT paths.
+        /// </summary>
+        private void ScanBuiltInsBySearchHints()
+        {
+            var drives = DriveInfo.GetDrives()
+                .Where(d => d.IsReady && d.DriveType == DriveType.Fixed)
+                .ToList();
+
+            foreach (var (key, config) in GameRegistry.Instance.GetBuiltInCustomGames())
+            {
+                if (config.SearchHints.Count == 0 || string.IsNullOrEmpty(config.ExePath)) continue;
+
+                var profile = GameRegistry.Instance.GetGameProfile(key);
+                if (profile is null) continue;
+                if (!string.IsNullOrEmpty(GetVanillaPath(profile))) continue;
+
+                string exeName = Path.GetFileName(config.ExePath);
+                if (string.IsNullOrEmpty(exeName)) continue;
+
+                string? found = ProbeSearchHints(drives, config.SearchHints, exeName);
+                if (found is null) continue;
+
+                Log($"[QUICK] Located built-in '{config.GameName}' via search hint: {found}");
+                SetVanillaPath(profile, found);
+            }
         }
 
         /// <summary>

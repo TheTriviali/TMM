@@ -23,6 +23,7 @@ namespace TMM
         private BackupsPage? _pageBackups;
         private PathsPage? _pagePaths;
         private SettingsPage? _pageSettingsInstance;
+        private AddGamePage? _pageAddGame;
 
         // Public property for child windows to access language selector
         public ComboBox CmbLanguage => cmbLanguage;
@@ -45,7 +46,8 @@ namespace TMM
             pageLibrary.ArchiveToggled  += OnArchiveToggled;
             pageLibrary.DefaultToggled  += OnDefaultToggled;
             pageLibrary.OrderChanged    += OnOrderChanged;
-            pageLibrary.AddGameRequested += OnAddGameRequested;
+            pageLibrary.AddGameRequested  += OnAddGameRequested;
+            pageLibrary.EditGameRequested += OnEditGameRequested;
         }
 
         // ── Loaded ────────────────────────────────────────────────────────────────
@@ -74,9 +76,10 @@ namespace TMM
                 Height = _core.Settings.WindowHeight;
             }
 
+            InitialSetupWindow? setup = null;
             if (_core.Settings.FirstLaunch)
             {
-                var setup = new InitialSetupWindow(_core) { Owner = this };
+                setup = new InitialSetupWindow(_core) { Owner = this };
                 setup.ShowDialog();
             }
 
@@ -84,9 +87,20 @@ namespace TMM
             _pageBackups          = new BackupsPage(_core);
             _pagePaths            = new PathsPage(_core);
             _pageSettingsInstance = new SettingsPage(_core);
-            pageBackupsPlaceholder.Content = _pageBackups;
-            pagePathsPlaceholder.Content   = _pagePaths;
-            pageSettings.Content           = _pageSettingsInstance;
+            _pageAddGame          = new AddGamePage(_core);
+
+            pageBackupsPlaceholder.Content   = _pageBackups;
+            pagePathsPlaceholder.Content     = _pagePaths;
+            pageSettings.Content             = _pageSettingsInstance;
+            pageAddGamePlaceholder.Content   = _pageAddGame;
+
+            _pageAddGame.Cancelled  += () => NavigateTo("Library");
+            _pageAddGame.GameSaved  += async () =>
+            {
+                await _core.InitializeAsync();
+                RefreshLibrary();
+                NavigateTo("Library");
+            };
 
             // Build library entries from all known games
             await _core.InitializeAsync();
@@ -101,7 +115,15 @@ namespace TMM
             pageLibrary.SetViewMode(_core.Settings.LibraryViewMode);
             UpdateViewModeButtonStyles(_core.Settings.LibraryViewMode);
 
-            SetNavActive("Library");
+            if (setup?.OpenAddGameAfterClose == true)
+            {
+                _pageAddGame?.LoadForAdd();
+                NavigateTo("AddGame");
+            }
+            else
+            {
+                SetNavActive("Library");
+            }
         }
 
         // ── Window chrome ─────────────────────────────────────────────────────────
@@ -179,12 +201,13 @@ namespace TMM
         {
             _currentPage = page;
 
-            pageLibrary.Visibility       = Visibility.Collapsed;
-            pageModManager.Visibility    = Visibility.Collapsed;
-            pageDownloads.Visibility     = Visibility.Collapsed;
+            pageLibrary.Visibility            = Visibility.Collapsed;
+            pageModManager.Visibility         = Visibility.Collapsed;
+            pageDownloads.Visibility          = Visibility.Collapsed;
             pageBackupsPlaceholder.Visibility = Visibility.Collapsed;
-            pagePathsPlaceholder.Visibility = Visibility.Collapsed;
-            pageSettings.Visibility      = Visibility.Collapsed;
+            pagePathsPlaceholder.Visibility   = Visibility.Collapsed;
+            pageSettings.Visibility           = Visibility.Collapsed;
+            pageAddGamePlaceholder.Visibility = Visibility.Collapsed;
 
             searchContainer.Visibility  = Visibility.Collapsed;
             viewModePanel.Visibility    = Visibility.Collapsed;
@@ -237,6 +260,13 @@ namespace TMM
                     pageSettings.Visibility = Visibility.Visible;
                     titleSubtext.Text       = " — Settings";
                     break;
+
+                case "AddGame":
+                    pageAddGamePlaceholder.Visibility = Visibility.Visible;
+                    titleSubtext.Text = _pageAddGame?.IsEditMode == true
+                        ? " — Edit Game"
+                        : " — Add a Game";
+                    break;
             }
 
             SetNavActive(page);
@@ -252,6 +282,7 @@ namespace TMM
             navBtnBackups.Style   = (Style)Resources["NavBtnStyle"];
             navBtnPaths.Style     = (Style)Resources["NavBtnStyle"];
             navBtnSettings.Style  = (Style)Resources["NavBtnStyle"];
+            navBtnAddGame.Style   = (Style)Resources["NavBtnStyle"];
 
             // Highlight the active button
             var activeStyle = (Style)Resources["NavBtnActiveStyle"];
@@ -263,6 +294,7 @@ namespace TMM
                 case "Backups":    navBtnBackups.Style   = activeStyle; break;
                 case "Paths":      navBtnPaths.Style     = activeStyle; break;
                 case "Settings":   navBtnSettings.Style  = activeStyle; break;
+                case "AddGame":    navBtnAddGame.Style   = activeStyle; break;
             }
         }
 
@@ -525,27 +557,22 @@ namespace TMM
             return count;
         }
 
-        // ── Add-game flow ─────────────────────────────────────────────────────────
+        // ── Add / Edit game flow ──────────────────────────────────────────────────
 
-        private async void OnAddGameRequested()
+        private void OnAddGameRequested()
         {
-            var wizard = new CustomGameSetupWizard { Owner = this };
-            if (wizard.ShowDialog() != true || wizard.Result is null) return;
+            if (_pageAddGame is null) return;
+            _pageAddGame.LoadForAdd();
+            NavigateTo("AddGame");
+        }
 
-            try
-            {
-                await GameRegistry.Instance.AddCustomGameAsync(wizard.Result);
-
-                // Re-init registers the new key in BackendCore.Mods and creates the mod folder.
-                await _core.InitializeAsync();
-
-                RefreshLibrary();
-                NotificationService.ShowSuccess($"'{wizard.Result.GameName}' added.");
-            }
-            catch (Exception ex)
-            {
-                NotificationService.ShowError($"Could not save game: {ex.Message}");
-            }
+        private void OnEditGameRequested(LibraryEntry entry)
+        {
+            if (_pageAddGame is null) return;
+            var config = GameRegistry.Instance.GetCustomGameConfig(entry.Key);
+            if (config is null) return;
+            _pageAddGame.LoadForEdit(entry.Key, config);
+            NavigateTo("AddGame");
         }
 
     }

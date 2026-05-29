@@ -12,6 +12,9 @@ namespace TMM
         private readonly BackendCore _core;
         private bool _suppressDropdownEvent;
 
+        /// <summary>True when Option2 (custom game) was chosen; shell should navigate to AddGamePage.</summary>
+        public bool OpenAddGameAfterClose { get; private set; }
+
         public InitialSetupWindow(BackendCore core)
         {
             _core = core;
@@ -137,9 +140,9 @@ namespace TMM
 
         private void Option2_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            // Custom game setup wizard
-            var wizard = new CustomGameSetupWizard() { Owner = this };
-            if (wizard.ShowDialog() == true) CompleteSetup();
+            // Navigate to the AddGamePage in the main shell after closing initial setup
+            OpenAddGameAfterClose = true;
+            CompleteSetup();
         }
 
         private void CompleteSetup()
