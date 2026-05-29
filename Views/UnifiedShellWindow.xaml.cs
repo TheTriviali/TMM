@@ -125,6 +125,16 @@ namespace TMM
             }
             else
             {
+                // Check for default game
+                if (!string.IsNullOrEmpty(_core.Settings.DefaultGameKey))
+                {
+                    var defaultEntry = entries.FirstOrDefault(e => e.IsDefault && !e.IsPlaceholder);
+                    if (defaultEntry != null)
+                    {
+                        OnManageRequested(defaultEntry);
+                        return;
+                    }
+                }
                 SetNavActive("Library");
             }
         }
@@ -457,6 +467,20 @@ namespace TMM
 
         private void OnManageRequested(LibraryEntry entry)
         {
+            // Prompt to set default if none is set
+            if (string.IsNullOrEmpty(_core.Settings.DefaultGameKey) && !entry.IsPlaceholder)
+            {
+                var svc = LocalizationService.Instance;
+                string title = svc["Prompt_SetDefault_Title"];
+                string message = string.Format(svc["Prompt_SetDefault_Message"], entry.DisplayName);
+                if (MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    _core.Settings.DefaultGameKey = entry.Key;
+                    _core.SaveSettings();
+                    RefreshLibrary();
+                }
+            }
+
             _activeModManagerEntry = entry;
             pageModManager.LoadEntry(entry, _core);
             UpdateModManagerNavTip();
