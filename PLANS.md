@@ -309,9 +309,18 @@ for built-ins. Low reward (it already works) — do last, carefully.
 
 ## Group E — Codebase health
 
-### AUDIT1 — File-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ⏳ IN PROGRESS (Inventory phase)
+### AUDIT1 — File-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ✅ COMPLETE (2026-05-29)
 **Goal:** Keep the codebase from sprawling as features land. Periodic inventory + flag
 consolidation/splitting opportunities.
+
+**Split executed (2026-05-29):** The two split candidates were broken into `partial class` files
+along concern boundaries (no behavior change; build clean, 60/60 tests pass):
+- `BackendCore.cs` (1,033 → ~520) → `BackendCore.Settings.cs` (settings + game-path), `BackendCore.Deploy.cs`
+  (plan freeze/load + deploy/rollback pipeline), `BackendCore.Backups.cs` (backup storage, baselines,
+  rollback manifests), `BackendCore.Loadouts.cs` (loadout I/O).
+- `ModManagerPage.xaml.cs` (1,160 → 835) → `ModManagerPage.Toolbar.cs` (install/import/deploy/rollback/
+  launch/edit-config/search handlers), `ModManagerPage.Loadouts.cs` (loadout menu + flows).
+- Main files retain core state, init, mod-list/grid interaction, drag-drop, and shared helpers.
 
 **Baseline (2026-05-29):** 139 tracked files — **76 `.cs`**, **26 `.xaml`**, **11 `.tmmgame`**, 7 project `.md`. 
 
