@@ -40,50 +40,33 @@ namespace TMM
 
         private async Task InstallModFileCustomAsync(string archivePath)
         {
-            string ext        = Path.GetExtension(archivePath).ToLowerInvariant();
-            string modName    = Path.GetFileNameWithoutExtension(archivePath);
+            string modName = Path.GetFileNameWithoutExtension(archivePath);
             string destFolder = Path.Combine(_core.AppDataPath, _customProfile.RawFolderName, modName);
 
             if (Directory.Exists(destFolder))
             {
                 if (MessageBox.Show($"A mod named '{modName}' already exists. Overwrite?",
                         "Mod Exists", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
-                BackendCore.ForceDeleteDirectory(destFolder);
             }
-            Directory.CreateDirectory(destFolder);
 
-            try
+            var item = await _core.InstallArchiveForGameAsync(_customProfile.Key, archivePath, CancellationToken.None);
+            if (item is null)
             {
-                if (ext is ".zip" or ".rar" or ".7z")
-                    await BackendCore.ExtractArchiveSafeAsync(archivePath, destFolder, CancellationToken.None);
-                else
-                    File.Copy(archivePath, Path.Combine(destFolder, Path.GetFileName(archivePath)), overwrite: true);
-
-                var item = new ModItem
-                {
-                    Name          = modName,
-                    IsEnabled     = true,
-                    LoadOrder     = _modsCustom.Count,
-                    RawFolderPath = destFolder
-                };
-                SyncModInfoToFolder(item);
-                _modsCustom.Add(item);
-                await _core.OnModAddedAsync(_customProfile.Key, modName);
-                NotificationService.ShowSuccess($"Installed '{modName}'.");
-                _core.Activity.Record(ActivityKind.ModAdded, _customProfile.Key, _customConfig.GameName, $"Installed '{modName}'");
-
-                var proxies = ProxyDllDetector.Scan(destFolder);
-                if (proxies.Count > 0)
-                {
-                    string proxyList = string.Join(", ", proxies.Select(p => p.FileName));
-                    NotificationService.ShowInfo($"'{modName}' contains proxy loader(s): {proxyList}");
-                    Logger.Info($"Proxy DLL detected in '{modName}': {string.Join("; ", proxies.Select(p => $"{p.FileName} ({p.Reason})"))}");
-                }
+                NotificationService.ShowError($"Failed to install '{modName}'.");
+                return;
             }
-            catch (Exception ex)
+
+            item.LoadOrder = _modsCustom.Count;
+            _modsCustom.Add(item);
+            NotificationService.ShowSuccess($"Installed '{modName}'.");
+            _core.Activity.Record(ActivityKind.ModAdded, _customProfile.Key, _customConfig.GameName, $"Installed '{modName}'");
+
+            var proxies = ProxyDllDetector.Scan(item.RawFolderPath);
+            if (proxies.Count > 0)
             {
-                Logger.Error($"Failed to install '{modName}'", ex);
-                NotificationService.ShowError($"Failed to install '{modName}': {ex.Message}");
+                string proxyList = string.Join(", ", proxies.Select(p => p.FileName));
+                NotificationService.ShowInfo($"'{modName}' contains proxy loader(s): {proxyList}");
+                Logger.Info($"Proxy DLL detected in '{modName}': {string.Join("; ", proxies.Select(p => $"{p.FileName} ({p.Reason})"))}");
             }
         }
 

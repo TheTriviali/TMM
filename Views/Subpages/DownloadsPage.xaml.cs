@@ -215,7 +215,22 @@ namespace TMM
             }
 
             foreach (string file in files)
-                archiveList.Children.Add(ArchiveRowHelper.BuildRow(file, RefreshArchiveList));
+                archiveList.Children.Add(ArchiveRowHelper.BuildRow(file, RefreshArchiveList, InstallFromDownloadsAsync));
+        }
+
+        private async System.Threading.Tasks.Task InstallFromDownloadsAsync(string archivePath)
+        {
+            if (_core is null || string.IsNullOrEmpty(_selectedGameKey)) return;
+
+            var modName = Path.GetFileNameWithoutExtension(archivePath);
+            var item = await _core.InstallArchiveForGameAsync(_selectedGameKey, archivePath, System.Threading.CancellationToken.None);
+
+            if (item is not null)
+                NotificationService.ShowSuccess($"Installed '{modName}' to {_selectedGameKey}");
+            else
+                NotificationService.ShowError($"Failed to install '{modName}'");
+
+            RefreshArchiveList();
         }
 
         // kept for future extension; shared rendering lives in ArchiveRowHelper

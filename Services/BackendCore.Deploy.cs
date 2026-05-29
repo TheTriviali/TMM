@@ -112,6 +112,76 @@ namespace TMM
         }
 
         /// <summary>
+        /// Installs an archive file as a mod for the given game.
+        /// Extracts the archive, creates mod metadata, and triggers deployment plan generation.
+        /// Returns the created ModItem on success, or null on failure.
+        /// </summary>
+        public async Task<ModItem?> InstallArchiveForGameAsync(
+            string gameKey,
+            string archivePath,
+            CancellationToken ct = default)
+        {
+            string modName = Path.GetFileNameWithoutExtension(archivePath);
+            var profile = GameRegistry.Instance.GetGameProfile(gameKey) ?? GameProfile.ByKey(gameKey);
+
+            if (profile is null)
+            {
+                Log($"[Install:{gameKey}] Failed to resolve game profile for key '{gameKey}'");
+                return null;
+            }
+
+            string rawFolderName = profile.RawFolderName;
+            string destFolder = Path.Combine(AppDataPath, rawFolderName, modName);
+
+            try
+            {
+                // Create destination folder
+                if (Directory.Exists(destFolder))
+                    ForceDeleteDirectory(destFolder);
+                Directory.CreateDirectory(destFolder);
+
+                // Extract archive
+                string ext = Path.GetExtension(archivePath).ToLowerInvariant();
+                if (ext is ".zip" or ".rar" or ".7z")
+                    await ExtractArchiveSafeAsync(archivePath, destFolder, ct);
+                else
+                    File.Copy(archivePath, Path.Combine(destFolder, Path.GetFileName(archivePath)), overwrite: true);
+
+                // Create and persist mod metadata
+                var item = new ModItem
+                {
+                    Name = modName,
+                    IsEnabled = true,
+                    LoadOrder = 0,
+                    RawFolderPath = destFolder
+                };
+
+                // Write modinfo files
+                string legacyPath = Path.Combine(destFolder, "modinfo.txt");
+                File.WriteAllText(legacyPath, JsonSerializer.Serialize(item, JsonHelper.PrettyOptions));
+
+                string sidecarDir = Path.Combine(destFolder, "_tmm");
+                Directory.CreateDirectory(sidecarDir);
+                File.WriteAllText(
+                    Path.Combine(sidecarDir, "modinfo.json"),
+                    JsonSerializer.Serialize(item, JsonHelper.PrettyOptions));
+
+                // Generate deployment plan
+                await OnModAddedAsync(gameKey, modName, ct);
+
+                Log($"[Install:{gameKey}] Successfully installed '{modName}' from {Path.GetFileName(archivePath)}");
+                return item;
+            }
+            catch (Exception ex)
+            {
+                Log($"[Install:{gameKey}] Failed to install '{modName}': {ex.Message}");
+                // Cleanup on failure
+                try { if (Directory.Exists(destFolder)) ForceDeleteDirectory(destFolder); } catch { }
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Returns a persisted plan for deployment, falling back to live planning for legacy mods.
         /// </summary>
         public async Task<DeploymentPlan> GetDeploymentPlanAsync(
