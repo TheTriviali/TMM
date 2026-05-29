@@ -57,6 +57,9 @@ namespace TMM
             _baselineSnapshots = new BaselineSnapshotStore(AppDataPath);
             LoadSettings();
 
+            // Wire the notification history/persistence + live verbose-mode provider.
+            NotificationService.Initialize(AppDataPath, () => Settings.VerboseNotifications);
+
             // Initialize localization with saved language preference
             LocalizationService.Instance.SetLanguage(Settings.CurrentLanguage);
 

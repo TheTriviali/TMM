@@ -64,5 +64,14 @@ namespace TMM
         // ── Backup quota ────────────────────────────────────────────────────────
         /// <summary>Warn user when total backup folder size exceeds this many bytes (default 5 GB).</summary>
         public long BackupSizeWarnBytes { get; set; } = 5L * 1024 * 1024 * 1024;
+
+        // ── Notifications ─────────────────────────────────────────────────────────
+        /// <summary>
+        /// When true, low-level/verbose operations (folder creation, plan freeze, baseline
+        /// capture, backup prune, import steps, etc.) raise a toast in addition to being
+        /// recorded in the notification history. When false (default) those operations are
+        /// still recorded to history but stay silent. See NotificationService.ShowVerbose.
+        /// </summary>
+        public bool VerboseNotifications { get; set; } = false;
     }
 }

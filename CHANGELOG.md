@@ -6,6 +6,16 @@ All notable changes to TMM are listed here, newest first.
 
 ## [Unreleased]
 
+### Added
+- **Notification history + verbose model (NOTIF1):** Notifications now have a persistent,
+  browsable history separate from the transient toast queue. `NotificationService.History` is a
+  newest-first in-memory ring (cap 500) whose 200-entry tail persists to
+  `%APPDATA%\TMM\notifications.json` and survives restarts. `NotificationItem` gained a `Source`
+  label; every `Show*` records to history. New `ShowVerbose(message, source)` always records but
+  only raises a toast when the new `Settings.VerboseNotifications` flag (default off) is enabled —
+  read live so a runtime toggle needs no restart. All collection mutations marshal to the UI
+  dispatcher so background callers are safe. Unblocks the Notifications tab + verbose instrumentation.
+
 ### Fixed
 - **All six GTA built-in profiles silently failed to load (critical, F1):** On a fresh launch only
   the five flat-schema games appeared — GTA III/VC/SA/IV/TLaD/TBoGT were missing. `JsonHelper.TmmGameOptions`

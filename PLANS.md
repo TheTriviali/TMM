@@ -83,15 +83,33 @@ built for — mods may still work.
 
 > Do **NOTIF1 (Opus) first** — it sets the data model the other three build on.
 
-### NOTIF1 — Notification history + verbose model  🟣 Opus
+### NOTIF1 — Notification history + verbose model  🟣 Opus  ✅ COMPLETE (2026-05-29)
 **Goal:** Decide and build the storage/eventing model so notifications are (a) optionally
-verbose, (b) browsable in bulk. **Lock these decisions:**
-- Separate the transient **toast queue** (auto-expiring, already in `NotificationService.Queue`) from a **persistent history** the tab reads.
-- Recommended: in-memory ring (cap ~500) in `NotificationService`, *plus* a persisted tail (~200) at `%APPDATA%\TMM\notifications.json` so history survives restarts (rotation feel like `Logger`).
-- Add a `source` string + reuse `NotificationType` as level. Every `Show*` records to history; a new `ShowVerbose(msg, source)` records always but raises a toast only when `Settings.VerboseNotifications` is true.
+verbose, (b) browsable in bulk.
 
-**Files:** [Services/NotificationService.cs](Services/NotificationService.cs), [Models/AppSettings.cs](Models/AppSettings.cs).
-**Deliverable:** extended `NotificationService` API + persistence + `AppSettings.VerboseNotifications` (default `false`). Hand NOTIF2/3/4 the finished API.
+**Decisions locked + shipped:**
+- Transient **toast queue** (`NotificationService.Queue`) kept as-is; auto-expiring behavior unchanged.
+- New **persistent history** (`NotificationService.History`): in-memory `ObservableCollection`,
+  newest-first, cap `HistoryCapacity = 500`. A tail of `PersistTail = 200` mirrors to
+  `%APPDATA%\TMM\notifications.json` (rewritten on each record; loaded on `Initialize`).
+- `NotificationItem` gained a `Source` string (free-form subsystem label). `NotificationType` reused as level.
+- `Settings.VerboseNotifications` added (default `false`).
+- `Initialize(appDataPath, Func<bool> verboseEnabled)` wired in `BackendCore` ctor after `LoadSettings`;
+  the `Func<bool>` reads settings **live** so a runtime toggle (NOTIF2) takes effect with no restart.
+- All UI-collection mutations marshal to `Application.Current.Dispatcher` → safe to call from background threads.
+
+**Finished API for NOTIF2/3/4:**
+```csharp
+ObservableCollection<NotificationItem> NotificationService.Queue    // transient toasts
+ObservableCollection<NotificationItem> NotificationService.History  // bind the tab here (newest-first)
+bool NotificationService.IsVerbose                                  // live verbose state
+void Show(message, type=Info, durationMs=3500, source="")           // toast + history
+void ShowSuccess/ShowWarning/ShowError/ShowInfo(message, source="") // toast + history
+void ShowVerbose(message, source, type=Info)                        // history always; toast only if IsVerbose
+void ClearHistory()                                                 // empties history + persists
+// NotificationItem { Message, Type, DurationMs, CreatedAt(UTC), Source }
+```
+**Verified:** build clean, 60/60 tests pass. NOTIF2/3/4 are now unblocked.
 
 ### NOTIF2 — Settings toggle  🔵 Sonnet  *(depends on NOTIF1)*
 Add a "Verbose notifications" switch to [Views/Subpages/SettingsPage.xaml(.cs)](Views/Subpages/SettingsPage.xaml) bound to `Settings.VerboseNotifications`, saving via `core.SaveSettings()`. Mirror an existing toggle. Add locale keys to `en-US.json` + `es-MX.json`.
@@ -182,11 +200,78 @@ launcher) the old `CustomGameSetupWizard` modal once the page covers add + edit.
 
 ## Group D — Carried-forward backlog (pre-existing, still open)
 
-### D-B5 — Import review: split / merge / refine UI  🟣 Opus → 🔵 Sonnet
+### D-B5 — Import review: split / merge / refine UI  🟣 Opus (design) → 🔵 Sonnet (build)  ✅ DESIGN APPROVED (2026-05-29) — ready to build
 The B5 importer ([Services/ModImporter.cs](Services/ModImporter.cs) + `ImportReviewWindow`) can
 scan/select/exclude/rename but cannot **split** one detected candidate into several or **merge**
-several into one. Needs UX design (Opus) then implementation (Sonnet). Lower priority — the core
-import path works.
+several into one.
+
+**Key enabler (de-risks the whole brief):** `ModImporter.ImportAsync` is already *purely file-list
+driven* — it iterates each `candidate.FilePaths` and moves them into a per-mod folder. So split/merge
+is **entirely a review-window concern**: it is in-memory reshuffling of which `FilePaths` live in
+which `ModImportCandidate`. **No changes to `ScanAsync`/`ImportAsync`/move logic.**
+
+**Approved direction (Opus 4.8):** replace the single flat DataGrid with a **master-detail** layout.
+Left = candidate list (the buckets). Right = the files inside the focused candidate, each individually
+checkable. Split pulls checked files out into a new bucket; merge folds multiple buckets into one.
+Button/menu-driven (no drag-drop — matches the project's robust, minimal-code-behind ethos).
+
+**Mockup (~980×620, same window footprint):**
+
+```
++------------------------------------------------------------------------+
+| Review detected mod candidates                                         |
+| Select what TMM should manage. Split a bundle apart, or merge related  |
+| files into one mod.                                                    |
++--------------------------+---------------------------------------------+
+| CANDIDATES               |  FILES IN "OpenAllInteriors"                |
+| [x] OpenAllInteriors     |  [+ New mod from checked]  [Move checked ▾] |
+|     3 files · scripts\   |  +---------------------------------------+  |
+| [x] SkyGfx            ⚠  |  | [x] scripts\OpenAllInteriors.asi      |  |
+|     2 files · (root)     |  | [x] scripts\OpenAllInteriors.ini      |  |
+| [ ] ginput.ini           |  | [ ] scripts\unrelated_helper.cs       |  |
+|     1 file  · (root)     |  +---------------------------------------+  |
+|                          |                                             |
+|                          |  Name   [OpenAllInteriors______________]    |
+| [Merge selected ▾]       |  Group  [__________________]   ⚠ warning    |
+| (Ctrl/Shift multi-select)|                                             |
++--------------------------+---------------------------------------------+
+|                                          [Cancel]   [Import 2 mods]     |
++------------------------------------------------------------------------+
+```
+
+**Mechanics:**
+- **Left pane** — `ListBox`/`DataGrid` of candidates. Each row: select `CheckBox` (`IsSelected`, drives
+  import), name, `"{FileCount} files · {SourceSummary}"` subline, ⚠ glyph when `Warning != null`.
+  Supports `Extended` selection (Ctrl/Shift) so multiple rows can be picked for **Merge**.
+  Focused row drives the right pane.
+- **Right pane** — list of the focused candidate's files (relative path), each with its own `CheckBox`
+  (transient UI check, *not* `IsSelected`). Two actions over the checked files:
+  - **+ New mod from checked** → **Split**: removes checked files from the focused candidate, creates a
+    new `ModImportCandidate` containing them (auto-named from the first file's stem), selects+focuses it.
+  - **Move checked ▾** → reassigns checked files into another existing candidate (menu lists the others).
+- **Merge selected ▾** (left pane footer) → folds all left-pane-selected candidates into the first:
+  concatenates `FilePaths` (dedup by path), keeps the first's `Name`/`GroupName`, drops the others.
+- **Name / Group editors** below the file list edit the focused candidate (replaces today's inline
+  DataGrid text editing — cleaner, and leaves room for the warning line).
+- **Guardrails:** moving/splitting always removes files from the source so every file belongs to exactly
+  one candidate; a candidate that reaches **0 files is auto-removed**; the Import button label reflects the
+  count of `IsSelected` candidates and disables at 0.
+
+**Model/VM deltas (the only code outside the window):**
+- [Models/ModImportCandidate.cs](Models/ModImportCandidate.cs): implement `INotifyPropertyChanged`; make
+  `FilePaths` an `ObservableCollection<string>` and raise `PropertyChanged` for `FileCount` on change; add
+  a stable `Guid Id` (identity survives moves/menus). `Name`/`GroupName`/`IsSelected` raise change too.
+- New tiny row VM `ImportFileRow { string RelativePath; string AbsolutePath; bool IsChecked }` for the
+  right pane (window-private is fine).
+- [Views/ImportReviewWindow.xaml(.cs)](Views/ImportReviewWindow.xaml.cs): the master-detail layout +
+  `SplitCheckedFiles()`, `MoveCheckedFilesTo(target)`, `MergeSelected()`. Pure in-memory ops on the
+  `ObservableCollection<ModImportCandidate>`. `RelativePath` for display = derive from `AbsolutePath`
+  against the scanned `gameDir` (pass `gameDir` into the ctor; it's already known at the call site).
+
+**Sonnet brief:** implement exactly the above. No `ModImporter` service changes. Localize new strings
+(`en-US.json` + `es-MX.json`). Keep code-behind minimal; consider a thin VM but a window-level
+`ObservableCollection` is acceptable here given the existing pattern. **Lower priority — the core import
+path already works; this is refinement.**
 
 ### D-E2 — Proxy-DLL auto-routing hint  🔵 Sonnet  ✅ COMPLETE
 `ProxyDllDetector` already flags proxy DLLs on install. E2: at plan time, when a detected proxy
