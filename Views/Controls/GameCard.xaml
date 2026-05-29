@@ -270,7 +270,7 @@
                         <Border x:Name="listArchivedTag"
                                 CornerRadius="2" Padding="4,1" Margin="0,0,5,0"
                                 Background="#1FFFFFFF" Visibility="Collapsed">
-                            <TextBlock Text="ARCHIVED" FontSize="8" FontWeight="Bold"
+                            <TextBlock Text="Archived" FontSize="8" FontWeight="Bold"
                                        Foreground="#A0FFFFFF" VerticalAlignment="Center"/>
                         </Border>
                         <!-- Status pill (inline, colored) -->
