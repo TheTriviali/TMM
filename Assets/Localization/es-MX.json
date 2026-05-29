@@ -214,9 +214,12 @@
   "Setup_Feature_BuiltinGames": "Perfiles de juego integrados",
   "Setup_Feature_CustomProfiles": "Perfiles de juego personalizados",
 
+  "Prompt_SetDefault_Title": "¿Establecer como predeterminado?",
+  "Prompt_SetDefault_Message": "¿Establecer {0} como tu juego predeterminado? TMM abrirá directamente sus mods la próxima vez.",
+
   "Picker_Heading": "¿Qué te gustaría hacer?",
-  "Picker_BuiltinTitle": "Seleccionar un juego incluido",
-  "Picker_BuiltinDesc": "GTA III, Vice City, San Andreas, GTA IV y más",
+  "Picker_BuiltinTitle": "Ve a tu biblioteca",
+  "Picker_BuiltinDesc": "Ve todos los juegos compatibles y elige uno para configurar",
   "Picker_CustomTitle": "Crear un juego personalizado",
   "Picker_CustomDesc": "Configura Skyrim, Fallout u otro juego",
 

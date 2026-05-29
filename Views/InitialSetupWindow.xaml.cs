@@ -141,9 +141,7 @@ namespace TMM
 
         private void Option1_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            // Built-in game picker
-            var picker = new SelectBuiltinGameWindow(_core) { Owner = this };
-            if (picker.ShowDialog() == true) CompleteSetup();
+            CompleteSetup();
         }
 
         private void Option2_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)

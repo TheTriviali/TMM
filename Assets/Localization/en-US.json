@@ -214,9 +214,12 @@
   "Setup_Feature_BuiltinGames": "Built-in game profiles",
   "Setup_Feature_CustomProfiles": "Custom game profiles",
 
+  "Prompt_SetDefault_Title": "Set as Default?",
+  "Prompt_SetDefault_Message": "Set {0} as your default game? TMM will open straight to its mods next time.",
+
   "Picker_Heading": "Which would you like to do?",
-  "Picker_BuiltinTitle": "Select a Built-in Game",
-  "Picker_BuiltinDesc": "GTA III, Vice City, San Andreas, GTA IV, and more",
+  "Picker_BuiltinTitle": "Go to Your Library",
+  "Picker_BuiltinDesc": "See all supported games and pick one to set up",
   "Picker_CustomTitle": "Create a Custom Game",
   "Picker_CustomDesc": "Set up Skyrim, Fallout, or any other game",
 
