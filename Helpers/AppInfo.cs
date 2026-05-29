@@ -7,7 +7,7 @@ namespace TMM
     /// </summary>
     public static class AppInfo
     {
-        /// <summary>User-facing version label, e.g. "v0.1-alpha-8".</summary>
-        public const string DisplayVersion = "v0.1-alpha-8";
+        /// <summary>User-facing version label, e.g. "v0.1-alpha-9".</summary>
+        public const string DisplayVersion = "v0.1-alpha-9";
     }
 }

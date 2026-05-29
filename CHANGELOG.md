@@ -4,6 +4,30 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [v0.1-alpha-9] — 2026-05-29 *(Build restore, audit cleanup, profile portability, .tmmpack import)*
+
+### Fixed
+- **Broken build (critical):** Commit `b09c02a` shipped a non-compiling `master` — the C4 conflict resolver referenced `ConflictAnalyzer` / `ConflictEntry` / `ConflictParticipant` from `DeployPreviewWindow` and `ConflictResolverWindow`, but those types were never committed. Reconstructed in `Services/ConflictAnalyzer.cs` (groups enabled mods' plan files by destination, flags paths with ≥2 distinct writers, ranks participants by `FinalLoadOrder` so the resolver's default winner matches a plain Deploy).
+- **`.tmmgame` fields silently dropped:** `ProfileMigration.FromExport` never mapped `NexusSlug`, `AcceptedExeMd5s`, or `ExpectedExeBytes`, so those profile fields were lost on load (the sidebar "find mods" Nexus link never worked for built-in games). Added the mappings, plus `SearchHints`, across `TmmGameExport` / `FromExport` / `ExportConfigAsync`.
+- **Integrity panel never showed for built-in games:** `ModManagerPage.InitCustomGame` now syncs a built-in game's resolved path (`Settings.GamePaths`) into `config.GameDirectory`, so the integrity panel, sidebar path, and deploy button resolve for built-ins too.
+- **2 CS0108 warnings:** Removed redundant local `BtnClose_Click` overrides in `ActivityFeedWindow` and `LoadoutDiffWindow` (both inherit the identical `TmmWindow` handler).
+
+### Added
+- **`.tmmpack` import (D4):** `Services/TmmPackInstaller.cs` (`ReadManifest` + `ImportAsync`) consumes a pack into the currently-selected game — extracts mods into `ModsRaw_{key}` with a zip-slip guard, collision-safe unique names, a forward-version reject, a per-mod `OnModAddedAsync` plan freeze, and loadout reconstruction (remapping renamed mods). New `BackendCore.SaveLoadoutAsync(gameKey, ModLoadout)` overload. Wired as "Import .tmmpack…" in the Loadouts menu. Closes the export-only gap.
+- **Profile search hints (O2):** `CustomGameProfile.SearchHints` — default install locations (relative to a drive root) that travel inside a shared `.tmmgame`. `QuickScan` now probes them across every fixed drive for the configured exe and auto-fills the game directory, so a shared profile self-locates on another machine. Editable in wizard Step 1, reviewed in Step 4.
+- **Restored GTA III/VC/SA integrity hashes (O1):** `acceptedExeMd5s` re-added to the three bundled profiles (recovered from commit `eb2b953`; Vice City keeps its ModDB v1.0 downgrader variant).
+- **Loadout name validation:** `BackendCore.IsValidLoadoutName` rejects filenames with illegal characters in save/rename, with graceful UI messaging.
+- **UI flow charts:** New `UIFLOWS.md` — Mermaid diagrams for startup/first-launch, navigation, the add-game wizard, install→plan-freeze, deploy+conflict-resolve, rollback, import, and loadouts.
+
+### Changed
+- **Unified onboarding (S7):** Deleted `FirstGamePickerWindow`; its built-in/custom choice cards merged into `InitialSetupWindow` (language + game choice on one screen, one fewer dialog).
+- **Centralized version string:** New `Helpers/AppInfo.DisplayVersion` is the single source, consumed by `TmmPackBuilder` and `AboutWindow` (which previously showed a misleading `v1.0.0` for an alpha build).
+
+### Removed
+- **Dead code:** `BackendCore.DeployModsAsync` (no callers — legacy built-in path superseded by the unified custom path) and its only consumer `ApplyConditionalRoutes`; `ModImporter.GetCandidateGroup` (unused).
+
+---
+
 ## [v0.1-alpha-8] — 2026-05-28 *(Block D complete + Block E1 + Block F polish)*
 
 ### Added — Loadouts (Block D)
