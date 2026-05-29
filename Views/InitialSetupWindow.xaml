@@ -199,6 +199,7 @@
 
                     <!-- Game choice cards (merged from the former FirstGamePickerWindow) -->
                     <Border x:Name="opt1" CornerRadius="8" Padding="16,12" Margin="0,0,0,10"
+                            MouseLeftButtonDown="Card_MouseDown"
                             MouseLeftButtonUp="Option1_Click" Cursor="Hand"
                             BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1">
                         <Border.Style>
@@ -231,6 +232,7 @@
                     </Border>
 
                     <Border x:Name="opt2" CornerRadius="8" Padding="16,12"
+                            MouseLeftButtonDown="Card_MouseDown"
                             MouseLeftButtonUp="Option2_Click" Cursor="Hand"
                             BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1">
                         <Border.Style>

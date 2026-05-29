@@ -131,6 +131,14 @@ namespace TMM
             }
         }
 
+        /// <summary>
+        /// Marks the press on an option card as handled so it doesn't bubble up to
+        /// <c>RootBorder.TitleBar_MouseDown</c>, whose <c>DragMove()</c> would otherwise
+        /// capture the mouse and swallow the card's <c>MouseLeftButtonUp</c> click.
+        /// </summary>
+        private void Card_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+            => e.Handled = true;
+
         private void Option1_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             // Built-in game picker

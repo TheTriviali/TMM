@@ -14,384 +14,179 @@
 
 ## Model legend & delegation guidance
 
-Each brief is tagged with the model I'd hand it to:
+Each brief is tagged with the model to hand it to. **Prefer the lowest capable model.**
 
 - 🟢 **Haiku** — trivial, fully-specified, single-file mechanical edits. No judgment.
 - 🔵 **Sonnet** — moderate, well-specified, multi-file but no open design questions.
-- 🟣 **Opus** — needs design judgment, cross-cutting architecture, or UX decisions /
-  a mockup the user must approve first.
+- 🟣 **Opus** — needs design judgment, cross-cutting architecture, or a mockup the user
+  must approve first.
 
-**My opinion (Opus 4.8):** delegation is worth it here. The bulk is mechanical or
-well-specified (🟢/🔵). Only three pieces genuinely need Opus: the notification-store
-design (NOTIF1), the whole-program add/edit-game layout (WIZ1), and the B5 import-refinement
-UX. Do those 🟣 briefs first (they unblock the 🔵 work that depends on them), then fan the
-rest out to Sonnet/Haiku.
+**Suggested order:** do Group A (three Haiku quick-wins) first — they're independent and
+unblock nothing. Then Group B and C, each of which needs an Opus design pass the user must
+approve before the Sonnet build.
 
 ---
 
-## Group A — Integrity info + FAQ  (user request 1 & 2)  ✅ COMPLETE
+## Group A — Welcome flow + default-game navigation  (all 🟢 Haiku)
 
-### A1 — Soften integrity mismatch to a blue "info" cue  🟢 Haiku  ✅ COMPLETE
-**Goal:** A hash/size mismatch must never look alarming. Show a calm blue ℹ instead of an
-amber ⚠, with messaging that the exe simply differs from what the profile/pack author
-built for — mods may still work.
+> These three are small, well-specified, and independent. Knock them out first.
 
-**File:** [Views/Subpages/ModManagerPage.xaml.cs](Views/Subpages/ModManagerPage.xaml.cs) — `RefreshIntegrityAsync` (~line 120), the `result.State switch`.
+### A1 — Welcome: "built-in" option just opens the Library; retire the picker + Skip  🟢 Haiku
+**User ask:** *"'select a built in game' interface is clunky — scrap it and just show the
+library if they hit that button, removing the need for the skip."*
 
-**Completed Changes:**
-1. ✅ Changed `SizeMismatch` and `Md5Mismatch` arms to blue brush `Color.FromRgb(64, 156, 255)` with ℹ glyph and label `"ℹ Executable differs from this profile's expected version"`.
-2. ✅ Set `Cust_txtIntegrityDetail` to reassuring line: `"Your game .exe doesn't match what this profile was built for. Mods may still work — this is just informational."`
-3. ✅ Kept `Ok` → green ✓. Left `FileMissing` amber (it's actionable: the path isn't set).
-4. ⏭️ "Learn more" link deferred until A2 lands.
+**Current behavior:** [Views/InitialSetupWindow.xaml.cs](Views/InitialSetupWindow.xaml.cs)
+`Option1_Click` opens `SelectBuiltinGameWindow` as a modal; `BtnClose_Click` is the "Skip"
+path. The Library ([Views/Subpages/LibraryPage.xaml](Views/Subpages/LibraryPage.xaml)) already
+lists every built-in game as a card, so the picker is redundant.
 
-**Gotcha:** the panel shows only when integrity is configured (`ExpectedExeBytes` or `AcceptedExeMd5s`). Don't change that gate.
+**Changes:**
+1. `Option1_Click` → just call `CompleteSetup()` (which sets `FirstLaunch=false`,
+   `DialogResult=true`, closes). No window. Leave `OpenAddGameAfterClose=false` so the shell
+   lands on the Library (see `UnifiedShellWindow.Window_Loaded` ~line 121-129).
+2. Remove the **Skip** button from `InitialSetupWindow.xaml` (the `BtnClose_Click` button near
+   line 266 in the right panel) — the built-in card now fills that role. Keep the small **X**
+   close overlay (top-right, line 306) so the dialog is still dismissible.
+3. Relabel the opt1 card copy so it reads as "browse the library", not "pick one game". Update
+   locale keys `Picker_BuiltinTitle` / `Picker_BuiltinDesc` in **both** `Assets/Locales/en-US.json`
+   and `es-MX.json` (e.g. *"Go to your library" / "See all supported games and pick one to set up"*).
+4. Delete `Views/SelectBuiltinGameWindow.xaml` + `.xaml.cs` (only referenced by `Option1_Click`).
+   Confirm no other reference with a project-wide search for `SelectBuiltinGameWindow` before deleting.
 
-### A2 — Write the FAQ guide  🔵 Sonnet  ✅ COMPLETE
-**Goal:** A user-facing FAQ we can link to from inside the app.
+**Verify:** fresh-launch (`/run --fresh`) shows the welcome screen; clicking the first card
+closes it and shows the Library; clicking the second still routes to Add Game; the X still closes.
 
-**File:** `docs/FAQ.md` (created).
+### A2 — Prompt to set a default when managing a game with no default set  🟢 Haiku
+**User ask:** *"if someone picks to manage a game and no default is set the program should ask
+the user if they wanna set that first game as default or not."*
 
-**Completed Content:**
-- ✅ **Integrity checks** — what the ℹ "executable differs" cue means; why TMM never blocks deploys; size vs MD5 checks; when to act.
-- ✅ **.tmmpack files** — what they bundle; how import targets the currently-selected game; collision renaming; export/import workflows.
-- ✅ **Deploy, backup & rollback** — the deploy preview & conflict resolution flow; baseline capture; per-deploy backups; rollback limits; safe-deploy philosophy.
-- ✅ **Mod types, routing, and conflicts** — routing rules and patterns; conflict detection and resolution; proxy DLL detection and routing.
-- ✅ **Custom games & search hints** — the wizard 4-step flow (Essentials, Mod Types, Routing, Advanced, Review); how search hints auto-locate games.
-- ✅ **Loadouts** — save/apply/compare/export/import; naming; favorites; organization.
-- ✅ **Mod favorites and organization** — starring mods, search, properties; finding & sorting.
-- ✅ **Mod import from existing folders** — scanning, candidate grouping, collision handling.
-- ✅ **Activity feed** — recent action tracking (20-entry feed).
-- ✅ **Where TMM keeps files** — `%APPDATA%\TMM\` breakdown with table: settings.json, ModsRaw, Backups, Baselines, Loadouts, CustomGames, TMM.log.
-- ✅ **Supported games** — built-in list + custom games note.
-- ✅ **Performance and storage** — mod storage, backup quota, log rotation.
-- ✅ **Troubleshooting** — game path, deploy issues, integrity, backup/rollback failures.
+**File:** [Views/UnifiedShellWindow.xaml.cs](Views/UnifiedShellWindow.xaml.cs) → `OnManageRequested`
+(~line 458). `Settings.DefaultGameKey` (string?) already exists; `OnDefaultToggled` (~line 488)
+shows the set/clear pattern.
 
-**Source:** Audited from CHANGELOG.md, CLAUDE.md, codebase exploration (TmmPackBuilder, TmmPackInstaller, ProxyDllDetector, ActivityLogger, IntegrityChecker, ModImporter, etc.). Tone is plain-English, end-user-focused.
+**Change:** at the top of `OnManageRequested(entry)`, if
+`string.IsNullOrEmpty(_core.Settings.DefaultGameKey)` and `!entry.IsPlaceholder`, show a Yes/No
+`MessageBox` ("Set **{entry.DisplayName}** as your default game? TMM will open straight to its
+mods next time."). On **Yes**: `_core.Settings.DefaultGameKey = entry.Key; _core.SaveSettings();`
+then `RefreshLibrary();`. Either way, continue into the existing manage navigation. Localize the
+prompt strings (en-US + es-MX). Ask only once (the guard naturally stops asking once a default exists).
 
-### A3 — Wire FAQ links in-app  🟢 Haiku  ✅ COMPLETE  *(depends on A2)*
-1. ✅ Added "Help / Resources" section to AboutWindow.xaml with two link buttons:
-   - "View FAQ" → `https://github.com/TheTriviali/TMM/blob/master/docs/FAQ.md`
-   - "GitHub Repository" → `https://github.com/TheTriviali/TMM`
-2. ✅ Added BtnFaq_Click and BtnGitHub_Click handlers in AboutWindow.xaml.cs using ShellHelper.OpenUrl().
-3. ✅ Added "Learn more →" link to integrity panel in ModManagerPage.xaml (lines 300-315).
-4. ✅ Added BtnIntegrityLearnMore_Click handler pointing to FAQ `#integrity-checks` anchor.
-5. ✅ Build verified: no errors.
+### A3 — Launch into the default game's Mod Manager instead of the Library  🟢 Haiku  *(depends on A2 for a default to exist)*
+**User ask:** *"if a game is set as default the manager should show that game's mod manager page
+rather than loading to library."*
 
----
+**File:** [Views/UnifiedShellWindow.xaml.cs](Views/UnifiedShellWindow.xaml.cs) → `Window_Loaded`,
+the final `if (setup?.OpenAddGameAfterClose == true) … else SetNavActive("Library")` block (~line 121-129).
 
-## Group B — Verbose notifications + Notifications tab  (user request 4)
+**Change:** in the `else` branch, before falling back to the Library, check for a resolvable
+default: find the entry in `BuildLibraryEntries()` where `IsDefault && !IsPlaceholder`. If found,
+call `OnManageRequested(defaultEntry)` (which loads the page + navigates to ModManager) instead of
+`SetNavActive("Library")`. If not found, keep the Library fallback. Do **not** redirect when
+`OpenAddGameAfterClose` is true (the add-game flow wins). `pageModManager.BackRequested` already
+returns to the Library, so the user isn't trapped.
 
-> Do **NOTIF1 (Opus) first** — it sets the data model the other three build on.
-
-### NOTIF1 — Notification history + verbose model  🟣 Opus  ✅ COMPLETE (2026-05-29)
-**Goal:** Decide and build the storage/eventing model so notifications are (a) optionally
-verbose, (b) browsable in bulk.
-
-**Decisions locked + shipped:**
-- Transient **toast queue** (`NotificationService.Queue`) kept as-is; auto-expiring behavior unchanged.
-- New **persistent history** (`NotificationService.History`): in-memory `ObservableCollection`,
-  newest-first, cap `HistoryCapacity = 500`. A tail of `PersistTail = 200` mirrors to
-  `%APPDATA%\TMM\notifications.json` (rewritten on each record; loaded on `Initialize`).
-- `NotificationItem` gained a `Source` string (free-form subsystem label). `NotificationType` reused as level.
-- `Settings.VerboseNotifications` added (default `false`).
-- `Initialize(appDataPath, Func<bool> verboseEnabled)` wired in `BackendCore` ctor after `LoadSettings`;
-  the `Func<bool>` reads settings **live** so a runtime toggle (NOTIF2) takes effect with no restart.
-- All UI-collection mutations marshal to `Application.Current.Dispatcher` → safe to call from background threads.
-
-**Finished API for NOTIF2/3/4:**
-```csharp
-ObservableCollection<NotificationItem> NotificationService.Queue    // transient toasts
-ObservableCollection<NotificationItem> NotificationService.History  // bind the tab here (newest-first)
-bool NotificationService.IsVerbose                                  // live verbose state
-void Show(message, type=Info, durationMs=3500, source="")           // toast + history
-void ShowSuccess/ShowWarning/ShowError/ShowInfo(message, source="") // toast + history
-void ShowVerbose(message, source, type=Info)                        // history always; toast only if IsVerbose
-void ClearHistory()                                                 // empties history + persists
-// NotificationItem { Message, Type, DurationMs, CreatedAt(UTC), Source }
-```
-**Verified:** build clean, 60/60 tests pass. NOTIF2/3/4 are now unblocked.
-
-### NOTIF2 — Settings toggle  🔵 Sonnet  ✅ COMPLETE (2026-05-29)
-Add a "Verbose notifications" switch to [Views/Subpages/SettingsPage.xaml(.cs)](Views/Subpages/SettingsPage.xaml) bound to `Settings.VerboseNotifications`, saving via `core.SaveSettings()`. Mirror an existing toggle. Add locale keys to `en-US.json` + `es-MX.json`.
-
-**Completed:** Added "Notifications" section to SettingsPage between Appearance and Diagnostics. CheckBox (`chkVerboseNotifications`) loads from `_core.Settings.VerboseNotifications` in ctor; `ChkVerboseNotifications_Click` writes back and calls `_core.SaveSettings()`. Locale keys `Settings_Notifications`, `Settings_VerboseNotifications`, `Settings_VerboseNotifications_Desc` added to both en-US.json and es-MX.json. Build clean; 59/60 tests pass (1 pre-existing flaky concurrency failure in TmmPackInstallerTests, unrelated).
-
-### NOTIF3 — Notifications tab/page  🔵 Sonnet  ✅ COMPLETE (2026-05-29)
-New `Views/Subpages/NotificationsPage.xaml(.cs)`; wire into [Views/UnifiedShellWindow.xaml(.cs)](Views/UnifiedShellWindow.xaml.cs) with a left-nav button + a `ContentPresenter` placeholder, instantiated in `Window_Loaded` exactly like `pageBackupsPlaceholder`/`_pageBackups` (~lines 84-89). Page = scrollable, newest-first list (level icon + color, message, source, timestamp), level filter (All/Info/Success/Warning/Error), and a "Clear history" button bound to the NOTIF1 history.
-**Gotcha:** don't duplicate the existing `ActivityFeedWindow` — leave it alone; note a future merge as follow-up.
-
-**Completed:** `NotificationsPage.xaml(.cs)` — header (title + filter ComboBox + Clear button), scrollable `ItemsControl` bound to a `ListCollectionView` over `NotificationService.History`, DataTemplate with DataTrigger-driven level icon (Segoe MDL2 glyphs) + color + source subline + `LocalTimeDisplay` timestamp, empty-state panel. `navBtnNotifications` (&#xEA8F; ActionCenter icon) added to shell nav between Backups and the separator; `pageNotificationsPlaceholder` ContentPresenter added. `NavigateTo`/`SetNavActive` updated. `NotificationItem.LocalTimeDisplay` computed property added (HH:mm:ss today, MM/dd HH:mm older). Locale keys `Page_Notifications`, `Notifications_*` added to both locale files. Build clean; 60/60 tests pass. **Follow-up:** merge with ActivityFeedWindow (low priority).
-
-### NOTIF4 — Instrument low-level operations  🔵 Sonnet  ✅ COMPLETE (2026-05-29)
-Sprinkle `NotificationService.ShowVerbose(...)` at representative sites so verbose mode is genuinely informative: AppData subfolder `CreateDirectory` (BackendCore ctor, GetLoadoutsPath, Baselines, Backups), `SaveSettings`, plan freeze (`OnModAddedAsync`), baseline capture, backup prune, deploy/rollback start/finish, import steps. Terse messages (`"Created Backups/III/20260529_…"`). Toasts only when verbose is on (NOTIF1 handles that).
-
-**Completed:** Added `ShowVerbose` at — BackendCore ctor: game ModsRaw subdirs (only when first created), DownloadCache, Backups; `SaveSettings`; `GetLoadoutsPath` (first create only); `OnModAddedAsync` plan freeze; `DeployFilesToGameDirAsync` start + finish (with backup count + timestamp); `RollbackDeployAsync` start + finish; `PruneOldBackups` per deleted dir; `ModImporter.ImportAsync` baseline seed, per-mod staging, completion. All use terse source-tagged messages. Build clean; 60/60 tests pass.
+**Verify:** set a default, restart → opens on that game's Mod Manager; clear the default, restart
+→ opens on the Library.
 
 ---
 
-## Group C — Whole-program add/edit-game experience  (user request 3)
+## Group B — Library card & showcase visual polish
 
-### WIZ1 — Whole-program add/edit-game: design + mockup approval  🟣 Opus  ✅ APPROVED (2026-05-29)
-**Goal (revised per user, 2026-05-29):** Make adding/editing a game feel like a *full part of
-the program*, not a cramped modal. Approved direction: a **dedicated shell tab** ("Add / Edit
-Game", ✎ pencil icon in the left nav) at full shell scale, reusing the existing four
-`IWizardStep` UserControls as stacked sections. Edit reuses the same tab, pre-filled, opened by
-a ✎ pencil on each Library game card.
+### B1 — Redesign GameCard action affordances: bigger, labeled, reorder-discoverable  🟣 Opus (design + mockup) → 🔵 Sonnet (build)
+**User ask:** *"right now all the small buttons don't really do anything — make 'em bigger,
+label 'em, think about what would be most useful to have. i.e. I want them to be reorderable."*
 
-**Section default-state decision (user-confirmed 2026-05-29):** **Essentials expanded; the rest
-are scroll-to anchors via the jump-rail — NOT collapsed accordions.** All four sections render
-open in the scroller; the jump-rail `BringIntoView`s each one. WIZ2 is now unblocked.
+**Current state:** [Views/Controls/GameCard.xaml](Views/Controls/GameCard.xaml) has five 24×24
+(card mode) / 26×26 (list mode) icon-only buttons crammed bottom-right: Play `▶`, Manage `☰`,
+Edit `⚙` (custom only), Export `↑` (custom only, no-op TODO), Archive/Delete `⊟`. There's also a
+top-left default checkbox and a top-right status chip. Reorder already works via drag
+([LibraryPage.xaml.cs](Views/Subpages/LibraryPage.xaml.cs): `GridCard_*` and `ListGrip_*`), but
+it isn't discoverable and the user didn't realize it exists.
 
-**Mockup — full shell scale (~1100×720), hosted as a shell page:**
+**🟣 Opus design pass (needs user approval before build):** propose a card layout where the
+**primary** actions are large and labeled (at minimum Play and Manage), secondary actions
+(Default, Archive, Edit) are still reachable but de-emphasized, and **reordering is obvious**
+(visible drag grip in both grid and list, or explicit move controls). Decide what belongs on the
+face vs. a "⋯" overflow/right-click menu so the card doesn't get noisy. Kill the dead Export
+button (or wire it). Produce an ASCII mockup for card mode AND list mode; get the user's sign-off.
 
-```
-+-----------+-----------------------------------------------------------------+
-|  TMM      |   Add a Game                                  Editing: (new)     |
-| Library   |  +------------+                                                  |
-| Mods      |  |* Essentials|  ESSENTIALS                                      |
-| Backups   |  |o Mod Types |  Game name   [____________________________]      |
-| Notifs    |  |o Routing   |  Install dir [_______________________] [Browse]  |
-| Settings  |  |o Advanced  |  Executable  [_______________________] [Browse]  |
-| > Add /   |  |o Review    |  Steam AppId [______]   Nexus [_____________]    |
-|   Edit  <-|  |            |  [ check: directory found | integrity optional ] |
-| (active)  |  | jump-rail; |                                                  |
-|           |  | dots=done  |  MOD TYPES                            [+ add]     |
-|           |  |            |  - ASI Plugin (.asi)                 [edit] [x]   |
-|           |  |            |  - CLEO Script (.cs .cs4 .fxt)       [edit] [x]   |
-|           |  |            |                                                  |
-|           |  |            |  ROUTING RULES                        [+ rule]   |
-|           |  |            |  > ModLoader Tree -> modloader\        (p95)      |
-|           |  |            |  > .asi -> scripts\ if exists          (p80)      |
-|           |  |            |  > Default -> game root                (p10)      |
-|           |  |            |                                                  |
-|           |  |            |  ADVANCED  overlay - companions - hints - integ  |
-|           |  |            |  REVIEW    robustness - tag - native flag        |
-|           |  +------------+                                                  |
-|           |   live summary: "Ready - 2 mod types, 6 rules, integrity set"    |
-|           |                                          [Cancel]  [Create]      |
-+-----------+-----------------------------------------------------------------+
-```
+**🔵 Sonnet build (after approval):** implement the approved layout in `GameCard.xaml(.cs)`.
+Keep the existing event surface (`PlayRequested`, `ManageRequested`, `ArchiveToggled`,
+`DefaultToggled`, `EditRequested`, `CardClicked`) — `LibraryPage.CreateCard` wires them and the
+shell handles them; don't break those signatures. Preserve `OnCardBodyClick`'s button-suppression
+walk (it ignores clicks that land on a `Button` or the default checkbox). Localize all new labels
+(en-US + es-MX). Build clean; manually verify Play/Manage/Default/Archive/Edit all still fire and
+drag-reorder still persists via `OrderChanged`.
 
-**Mechanics:**
-- New shell page `Views/Subpages/AddGamePage.xaml(.cs)`, injected like `BackupsPage`
-  (UnifiedShellWindow.xaml.cs ~84-89) with a ✎-pencil nav button.
-- Hosts a `ScrollViewer` stacking the four existing step controls as sections — each already
-  does `LoadProfile`/`SaveProfile`/`IsValid`/`ValidationChanged` (near-zero rework).
-- Inner **jump-rail** (left of the form): anchors that `BringIntoView` each section, with a
-  filled/empty dot for completion. **Not** gated steps — free navigation.
-- No Next/Back. Single **Create** (or **Save** in edit mode), live-enabled when `Step1.IsValid`.
-- Entry points: Library "➕ Add Game" → blank page; per-card ✎ pencil → page pre-filled (the
-  wizard ctor already accepts an existing profile); `InitialSetupWindow.Option2_Click` routes here.
-- **Default section state:** Essentials expanded; the rest as scroll-to sections.
+### B2 — Showcase view: fix horizontal symmetry  🔵 Sonnet
+**User ask:** *"I'd prefer showcase view to have more horizontal symmetry, it just looks a little
+weird right now."*
 
-**Alternative considered (not chosen):** a standalone shell-sized `Window`. Rejected — a real
-nav tab feels more "part of the program" per the user's steer and avoids a second top-level window.
+**File:** [Views/Subpages/LibraryPage.xaml](Views/Subpages/LibraryPage.xaml) (the
+`showcaseScrollViewer` / hero + `carouselPanel` section) and `RenderShowcaseView` /
+`ApplyShowcaseHero` in [LibraryPage.xaml.cs](Views/Subpages/LibraryPage.xaml.cs) (~line 350-414).
+Layout today = a hero block (cover on the left, meta/stats on the right) above a left-aligned
+horizontal carousel of 140×186 portrait cards with prev/next chevrons.
 
-### WIZ2 — Implement the whole-program add/edit page  🔵 Sonnet  *(depends on WIZ1 approval)*  ✅ COMPLETE
-Build `AddGamePage` per the mockup: stack the four step controls in a scroller; add the jump-rail
-+ completion dots; single Create/Save with live validation (subscribe to each step's
-`ValidationChanged`). Wire the ✎ nav tab + Library entry points (➕ button, per-card pencil),
-route `InitialSetupWindow.Option2_Click` here, keep Edit-mode parity. Retire (or thin to a
-launcher) the old `CustomGameSetupWizard` modal once the page covers add + edit.
+**Direction (Opus 4.8, no separate design pass needed):** the imbalance is that the hero and the
+carousel don't share a common centered content column and the left/right gutters differ. Make it
+symmetric:
+- Constrain the hero + carousel to a single shared max-width content column, **horizontally
+  centered** in the page, with equal left/right margins.
+- Center the carousel row within that column (currently left-aligned); keep the prev/next chevrons
+  balanced on each side at equal insets.
+- Equalize the hero's internal split (cover vs. meta) and vertical paddings so the two halves read
+  as a balanced pair.
+- Don't change the carousel scroll math (`CardStep`, `BtnCarousel*_Click`) beyond what centering
+  requires.
 
-**Completed (2026-05-29):**
-- `Views/Subpages/AddGamePage.xaml(.cs)` — full-shell page with jump-rail (Essentials/Mod Types/Routing/Review), scrolling section stack, live summary bar, Create/Save + Cancel.
-- `UnifiedShellWindow` — ✎ pencil nav button added, "AddGame" page injected + NavigateTo/SetNavActive wired.
-- `GameCard` — `EditRequested` event added; `btnEdit` shown for custom (non-built-in GTA) games.
-- `LibraryPage` — `EditGameRequested` event wired from GameCard.
-- `InitialSetupWindow.Option2_Click` — sets `OpenAddGameAfterClose = true` and closes; shell navigates to AddGamePage after dialog.
-- `CustomGameSetupWizard` modal kept for now (still used if accessed directly); AddGamePage replaces it as the primary UX.
+**Acceptance:** at a few window widths the hero and carousel are centered with matching gutters and
+nothing hugs the left edge. If achieving balance needs a real layout rethink rather than
+margin/alignment tweaks, stop and escalate to 🟣 Opus for a mockup.
 
 ---
 
-## Group D — Carried-forward backlog (pre-existing, still open)
+## Group C — In-manager downloads panel
 
-### D-B5 — Import review: split / merge / refine UI  🟣 Opus (design) → 🔵 Sonnet (build)  ✅ COMPLETE (2026-05-29)
-The B5 importer ([Services/ModImporter.cs](Services/ModImporter.cs) + `ImportReviewWindow`) can
-scan/select/exclude/rename but cannot **split** one detected candidate into several or **merge**
-several into one.
+### C1 — Embed a hidable Downloads panel in the Mod Manager  🟣 Opus (design + mockup) → 🔵 Sonnet (build)
+**User ask:** *"the user should have a downloads panel in the mod manager interface that is easily
+hidable, maybe only show if the user actually uses the built-in download function for now."*
 
-**Key enabler (de-risks the whole brief):** `ModImporter.ImportAsync` is already *purely file-list
-driven* — it iterates each `candidate.FilePaths` and moves them into a per-mod folder. So split/merge
-is **entirely a review-window concern**: it is in-memory reshuffling of which `FilePaths` live in
-which `ModImportCandidate`. **No changes to `ScanAsync`/`ImportAsync`/move logic.**
+**Current state:** Downloads is its own shell page (`pageDownloads`, nav button `navBtnDownloads`,
+[Views/Subpages/DownloadsPage.xaml.cs](Views/Subpages/DownloadsPage.xaml.cs)) with an embedded
+browser + a built-in `DownloadFileAsync` path on `BackendCore`. The Mod Manager
+([Views/Subpages/ModManagerPage.xaml](Views/Subpages/ModManagerPage.xaml) + partials) has a
+collapsible sidebar and a deploy overlay but no downloads surface.
 
-**Approved direction (Opus 4.8):** replace the single flat DataGrid with a **master-detail** layout.
-Left = candidate list (the buckets). Right = the files inside the focused candidate, each individually
-checkable. Split pulls checked files out into a new bucket; merge folds multiple buckets into one.
-Button/menu-driven (no drag-drop — matches the project's robust, minimal-code-behind ethos).
+**🟣 Opus design pass (needs user approval before build):** decide
+1. **Where** the panel docks inside ModManager (e.g. a right-hand drawer mirroring the existing
+   sidebar toggle) and how it's shown/hidden (a toolbar toggle button).
+2. **What it shows** — likely active/recent built-in downloads with progress, and a one-click
+   "install to this game" once a download finishes. Reuse `DownloadsPage` plumbing where possible
+   rather than duplicating the browser; this panel is about the *built-in download function*, not a
+   second web browser.
+3. **The "only show if used" rule** — define the trigger (e.g. the toggle/panel only appears once
+   the user has initiated at least one built-in download this session, or a persisted
+   `Settings.HasUsedBuiltInDownloads` flag) so the panel stays hidden for users who don't use it.
+   Produce an ASCII mockup of the docked + hidden states and confirm with the user.
 
-**Mockup (~980×620, same window footprint):**
+**🔵 Sonnet build (after approval):** implement per the approved design. Keep ModManager
+code-behind minimal and put the panel logic in an appropriate partial (the page was split into
+`ModManagerPage.Toolbar.cs` / `.Loadouts.cs`; add a `ModManagerPage.Downloads.cs` partial if it
+earns its own concern). Localize new strings (en-US + es-MX). Don't regress the standalone
+Downloads page. Build clean; verify the panel hides by default, appears once the built-in download
+function is used, and toggles cleanly.
 
-```
-+------------------------------------------------------------------------+
-| Review detected mod candidates                                         |
-| Select what TMM should manage. Split a bundle apart, or merge related  |
-| files into one mod.                                                    |
-+--------------------------+---------------------------------------------+
-| CANDIDATES               |  FILES IN "OpenAllInteriors"                |
-| [x] OpenAllInteriors     |  [+ New mod from checked]  [Move checked ▾] |
-|     3 files · scripts\   |  +---------------------------------------+  |
-| [x] SkyGfx            ⚠  |  | [x] scripts\OpenAllInteriors.asi      |  |
-|     2 files · (root)     |  | [x] scripts\OpenAllInteriors.ini      |  |
-| [ ] ginput.ini           |  | [ ] scripts\unrelated_helper.cs       |  |
-|     1 file  · (root)     |  +---------------------------------------+  |
-|                          |                                             |
-|                          |  Name   [OpenAllInteriors______________]    |
-| [Merge selected ▾]       |  Group  [__________________]   ⚠ warning    |
-| (Ctrl/Shift multi-select)|                                             |
-+--------------------------+---------------------------------------------+
-|                                          [Cancel]   [Import 2 mods]     |
-+------------------------------------------------------------------------+
-```
-
-**Mechanics:**
-- **Left pane** — `ListBox`/`DataGrid` of candidates. Each row: select `CheckBox` (`IsSelected`, drives
-  import), name, `"{FileCount} files · {SourceSummary}"` subline, ⚠ glyph when `Warning != null`.
-  Supports `Extended` selection (Ctrl/Shift) so multiple rows can be picked for **Merge**.
-  Focused row drives the right pane.
-- **Right pane** — list of the focused candidate's files (relative path), each with its own `CheckBox`
-  (transient UI check, *not* `IsSelected`). Two actions over the checked files:
-  - **+ New mod from checked** → **Split**: removes checked files from the focused candidate, creates a
-    new `ModImportCandidate` containing them (auto-named from the first file's stem), selects+focuses it.
-  - **Move checked ▾** → reassigns checked files into another existing candidate (menu lists the others).
-- **Merge selected ▾** (left pane footer) → folds all left-pane-selected candidates into the first:
-  concatenates `FilePaths` (dedup by path), keeps the first's `Name`/`GroupName`, drops the others.
-- **Name / Group editors** below the file list edit the focused candidate (replaces today's inline
-  DataGrid text editing — cleaner, and leaves room for the warning line).
-- **Guardrails:** moving/splitting always removes files from the source so every file belongs to exactly
-  one candidate; a candidate that reaches **0 files is auto-removed**; the Import button label reflects the
-  count of `IsSelected` candidates and disables at 0.
-
-**Model/VM deltas (the only code outside the window):**
-- [Models/ModImportCandidate.cs](Models/ModImportCandidate.cs): implement `INotifyPropertyChanged`; make
-  `FilePaths` an `ObservableCollection<string>` and raise `PropertyChanged` for `FileCount` on change; add
-  a stable `Guid Id` (identity survives moves/menus). `Name`/`GroupName`/`IsSelected` raise change too.
-- New tiny row VM `ImportFileRow { string RelativePath; string AbsolutePath; bool IsChecked }` for the
-  right pane (window-private is fine).
-- [Views/ImportReviewWindow.xaml(.cs)](Views/ImportReviewWindow.xaml.cs): the master-detail layout +
-  `SplitCheckedFiles()`, `MoveCheckedFilesTo(target)`, `MergeSelected()`. Pure in-memory ops on the
-  `ObservableCollection<ModImportCandidate>`. `RelativePath` for display = derive from `AbsolutePath`
-  against the scanned `gameDir` (pass `gameDir` into the ctor; it's already known at the call site).
-
-**Sonnet brief:** implement exactly the above. No `ModImporter` service changes. Localize new strings
-(`en-US.json` + `es-MX.json`). Keep code-behind minimal; consider a thin VM but a window-level
-`ObservableCollection` is acceptable here given the existing pattern. **Lower priority — the core import
-path already works; this is refinement.**
-
-**Completed:** `ModImportCandidate` upgraded to `INotifyPropertyChanged`; `FilePaths` changed to `ObservableCollection<string>` (JSON-safe); `Guid Id` added; `HasWarning`, `FileCountDisplay` computed properties added. Window-private `ImportFileRow` VM added (AbsolutePath, RelativePath, IsChecked). `ImportReviewWindow` fully rewritten as master-detail: left `ListBox` (Extended selection, per-candidate IsSelected checkbox, name, file count subline, ⚠ badge, AccentSoftBrush selection highlight) + right pane (file list, "+ New mod from checked" split, "Move checked ▾" context-menu move, Name/Group editors, warning badge). `MergeSelected()` in left-pane footer. `gameDir` passed from call site for relative-path display. Guardrails: split blocked if it would leave 0 files; auto-removes 0-file candidates; Import button shows count + disables at 0. Locale keys added to both locale files. Build clean; 60/60 tests pass.
-
-### D-E2 — Proxy-DLL auto-routing hint  🔵 Sonnet  ✅ COMPLETE
-`ProxyDllDetector` already flags proxy DLLs on install. E2: at plan time, when a detected proxy
-DLL would otherwise route into `plugins/`/`scripts/`, hint/confirm routing to the **game root**
-(where loaders must live). Plan-time check in [Services/DeploymentPlanner.cs](Services/DeploymentPlanner.cs)
-using `ProxyDllDetector.IsKnownProxy`, surfaced in the deploy preview.
-
-**Completed (2026-05-29):** Added check in `TryResolveFilePlan` — after the final destination is resolved, if `ProxyDllDetector.IsKnownProxy(fileName)` and the destination is a non-root subdirectory, a non-blocking `DeploymentWarning` is added. Warning shows in the existing `pnlWarnings` panel of `DeployPreviewWindow`.
-
-### D-E3 — Multi-proxy version conflict  🔵 Sonnet  ✅ COMPLETE
-Detect when two enabled mods ship the **same** proxy DLL (e.g. two `dinput8.dll`) and warn in the
-conflict/preview UI — a load-order footgun, not a normal file conflict. Build on `ConflictAnalyzer`
-(already groups by destination) + `ProxyDllDetector`.
-
-**Completed (2026-05-29):** Added `ConflictAnalyzer.AnalyzeProxyConflicts` method — groups proxy DLL filenames across all plans and returns `ConflictEntry` per shared name. `DeployPreviewWindow` calls it and appends results to `icWarnings`. `_proxyConflicts` stored as separate field; `txtBlockingNote` only shown for actually-blocking rows.
-
-### D-O2r — Fold built-in QuickScan onto SearchHints  🔵 Sonnet  ✅ COMPLETE
-`BackendCore.QuickScan`'s built-in GTA branch still uses hardcoded Steam roots; custom games now
-use `SearchHints`. Migrate the built-in GTA `.tmmgame` profiles' `searchHints` (already populated)
-into the scan and retire the hardcoded `commonRoots`. **Gotcha:** preserve the IV-family
-episode-nesting logic (TLaD/TBoGT inside the IV folder) and the `Settings.GamePaths` write path
-for built-ins. Low reward (it already works) — do last, carefully.
-
-**Completed (2026-05-29):** Added `searchHints` to `gtaiv.tmmgame`, `gtatlad.tmmgame`, `gtatbogt.tmmgame` (III/VC/SA already had them). Added `BackendCore.ScanBuiltInsBySearchHints()` using `GetBuiltInCustomGames()` + `SetVanillaPath` (which auto-derives TLaD/TBoGT when IV is found). Called in `QuickScan()` before the legacy `GameProfile.All` loop — found games are skipped by the old loop. Old hardcoded roots kept as fallback (not retired, per "carefully" note).
+**Note:** this is the most speculative item — pin down scope with the user in the Opus pass before
+writing code, and resist rebuilding the whole browser inside the manager.
 
 ---
 
-## Group E — Codebase health
+## Group D — Codebase health (standing)
 
-### AUDIT1 — File-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ✅ COMPLETE (2026-05-29)
-**Goal:** Keep the codebase from sprawling as features land. Periodic inventory + flag
-consolidation/splitting opportunities.
-
-**Split executed (2026-05-29):** The two split candidates were broken into `partial class` files
-along concern boundaries (no behavior change; build clean, 60/60 tests pass):
-- `BackendCore.cs` (1,033 → ~520) → `BackendCore.Settings.cs` (settings + game-path), `BackendCore.Deploy.cs`
-  (plan freeze/load + deploy/rollback pipeline), `BackendCore.Backups.cs` (backup storage, baselines,
-  rollback manifests), `BackendCore.Loadouts.cs` (loadout I/O).
-- `ModManagerPage.xaml.cs` (1,160 → 835) → `ModManagerPage.Toolbar.cs` (install/import/deploy/rollback/
-  launch/edit-config/search handlers), `ModManagerPage.Loadouts.cs` (loadout menu + flows).
-- Main files retain core state, init, mod-list/grid interaction, drag-drop, and shared helpers.
-
-**Baseline (2026-05-29):** 139 tracked files — **76 `.cs`**, **26 `.xaml`**, **11 `.tmmgame`**, 7 project `.md`. 
-
-**Updated Inventory (2026-05-29, post-A1/A2/A3/F1-F5):**
-- **Total source files:** 78 `.cs` (148 including generated), 26 `.xaml`, 11 `.tmmgame`, 12 `.md`
-- **Tests:** 60 passing (added `TmmGameOptionsTests.cs` + `BuiltInProfilesTests.cs` this session)
-- **Folders:** Services (17 .cs), Models (14 .cs), Views (15+28 .cs), Steps (8+4 .cs), Subpages (12+6 .cs), Converters (4), Helpers (4+1), Theming (2), TMM.Tests (8)
-
-**Top 20 largest source files (excluding generated .g.cs):**
-
-| File | Lines | Notes |
-|------|-------|-------|
-| ModManagerPage.xaml.cs | 1,160 | **SPLIT CANDIDATE** — deploy/loadouts/import/integrity/groups/sidebar |
-| BackendCore.cs | 1,033 | **SPLIT CANDIDATE** — deploy/rollback/baselines/loadouts/settings/initialization |
-| LibraryPage.xaml.cs | 578 | — |
-| UnifiedShellWindow.xaml.cs | 472 | — |
-| DeploymentPlanner.cs | 414 | — |
-| DeploymentPlannerTests.cs | 361 | — |
-| BackendCoreDeployTests.cs | 359 | — |
-| RuleEngineTests.cs | 333 | — |
-| ModImporter.cs | 292 | — |
-| GameCard.xaml.cs | 291 | — |
-| Step3_RoutingRulesPage.xaml.cs | 274 | — |
-| GameRegistry.cs | 273 | — |
-| DownloadsPage.xaml.cs | 251 | — |
-| Step1_GameDetailsPage.xaml.cs | 232 | — |
-| TmmGameConfig.cs | 195 | — |
-| BackupsPage.xaml.cs | 185 | — |
-| RuleEditorWindow.xaml.cs | 180 | — |
-| CustomGameSetupWizard.xaml.cs | 173 | Dead/replaced by WIZ2? **Confirm** |
-| LoadOrderResolverTests.cs | 172 | — |
-| RuleEngine.cs | 164 | — |
-
-**Observations:**
-- **ModManagerPage.xaml.cs (1,160 lines):** Exceeds 800-line threshold. Mixes: sidebar logic, integrity display, deploy UI, conflict resolver, loadouts, import UI, group management. **Candidate for `partial class` split:**
-  - `Sidebar.cs` — game/path/integrity display, links, disk space
-  - `Deploy.cs` — preview, conflict resolution, deployment flow
-  - `Loadouts.cs` — loadout UI and operations
-  - `Import.cs` — import candidate display and flow
-  - Keep main `ModManagerPage.xaml.cs` — mod list/grid, core events
-
-- **BackendCore.cs (1,033 lines):** Monolithic service. Mixes: deploy/rollback pipeline, settings load/save, mod list management, baselines, backups, integrity, loadouts, activity logging, game registry. **Candidate for `partial class` split:**
-  - `Deploy.cs` — deployment/rollback/plan execution
-  - `Backups.cs` — backup/baseline management
-  - `Loadouts.cs` — loadout I/O
-  - `Settings.cs` — settings load/save
-  - Keep main `BackendCore.cs` — initialization, mod list, core state
-
-- **Orphaned files (post-FirstGamePickerWindow deletion):** None detected; deletion was clean.
-
-- **Thin/single-use files:** None identified; even small files serve clear purposes.
-
-**Next steps (Opus judgment needed):**
-1. Confirm split strategy above (esp. BackendCore / ModManagerPage) aligns with user intent.
-2. If approved: split as `partial class` in new files, one PR per target file.
-3. Update references if any explicit cross-file dependencies emerge.
-
-**Gotcha:** WPF code-behind splits must keep `partial class` + the XAML `x:Class` intact; don't move `InitializeComponent` wiring. Split only where it reduces real cognitive load — never for its own sake.
-
----
-
-## Group F — Factory-reset / first-run bug fixes  ✅ COMPLETE (2026-05-29)
-
-All five issues reported after a factory reset. Full detail in CHANGELOG [Unreleased].
-
-| Brief | Fix |
-|-------|-----|
-| F1 🟢 | `JsonHelper.TmmGameOptions` lacked `JsonStringEnumConverter` → 6 GTA profiles silently dropped. Added converter; `TmmGameOptionsTests` regression. |
-| F2 🟢 | Welcome-window left panel had 4 hardcoded English literals; swapped to `{helpers:Localization}`. Added keys to both locale files. |
-| F3 🔵 | `SelectBuiltinGameWindow.BtnDone` gated on `IsGameReady` — permanently disabled on fresh machines. Done now always enabled; paths set later from Library. |
-| F4 🟢 | `"Directory not set"` and open-folder `MessageBox` in `ModManagerPage` hardcoded; replaced with `LocalizationService` lookups + new locale keys. |
-| F5 🔵 | Skyrim/FNV/Cyberpunk/RDR2/Witcher 3 used flat `extensionPattern`/`destination` schema → empty `RoutingRule` objects. Rewrote all 5 to condition-based schema; `BuiltInProfilesTests` regression (3 cases, all 11 profiles). |
-
-**Pending follow-up (not a bug, low priority):** `"(not set)"`/`"(none)"` literals in `Step4_ReviewPage.xaml.cs` are still hardcoded English — benign in review-only context but worth localizing eventually.
+### AUDIT1 — Periodic file-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ⏳ STANDING
+Re-run when files sprawl. Last pass (2026-05-29) split `BackendCore.cs` and
+`ModManagerPage.xaml.cs` into per-concern partials (see CHANGELOG). Next time, re-inventory the
+top-20 largest source files and flag anything over ~800 lines for a partial-class split. **Gotcha:**
+WPF code-behind splits must keep `partial class` + the XAML `x:Class` intact; never move
+`InitializeComponent` wiring. Split only where it reduces real cognitive load.

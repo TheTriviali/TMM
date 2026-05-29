@@ -93,7 +93,7 @@ namespace TMM
         public void ApplyEntry(LibraryEntry entry)
         {
             // ── Card mode ──
-            txtArtTitle.Text  = entry.DisplayName.ToUpperInvariant();
+            txtArtTitle.Text  = entry.DisplayName;
             txtSubtitle.Text  = entry.Subtitle;
             txtModCount.Text  = entry.ModCount > 0 ? $"{entry.ModCount} mods" : "";
 
