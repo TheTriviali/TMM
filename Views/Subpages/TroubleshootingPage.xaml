@@ -1,0 +1,185 @@
+<UserControl x:Class="TMM.TroubleshootingPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TMM"
+             xmlns:helpers="clr-namespace:TMM.Helpers"
+             Background="{DynamicResource BgBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ── Header ── -->
+        <Grid Grid.Row="0" Margin="28,24,28,16">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{helpers:Localization Troubleshooting_Title}"
+                           FontSize="22" FontWeight="Bold"
+                           Foreground="{DynamicResource TextBrush}"/>
+                <TextBlock Text="{helpers:Localization Troubleshooting_Subtitle}"
+                           FontSize="12" Foreground="{DynamicResource SubTextBrush}" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- Search box -->
+            <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Background="{DynamicResource ControlBgBrush}" CornerRadius="5"
+                    Padding="8,0" Height="30" MinWidth="220">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE71E;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                               Foreground="{DynamicResource SubTextBrush}"
+                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox x:Name="txtSearch"
+                             MinWidth="180" Height="24"
+                             Background="Transparent" BorderThickness="0"
+                             Foreground="{DynamicResource TextBrush}" FontSize="12"
+                             VerticalContentAlignment="Center"
+                             TextChanged="TxtSearch_TextChanged">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Style.Resources>
+                                    <VisualBrush x:Key="PlaceholderBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
+                                        <VisualBrush.Visual>
+                                            <TextBlock Text="{helpers:Localization Troubleshooting_SearchPlaceholder}"
+                                                       Foreground="{DynamicResource SubTextBrush}" FontSize="12" Opacity="0.6"/>
+                                        </VisualBrush.Visual>
+                                    </VisualBrush>
+                                </Style.Resources>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Background" Value="{StaticResource PlaceholderBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsKeyboardFocused" Value="True">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ── Content ── -->
+        <Grid Grid.Row="1">
+
+            <!-- Entry list, grouped by Source -->
+            <ScrollViewer x:Name="mainScroll" VerticalScrollBarVisibility="Auto">
+                <ListBox x:Name="entryList"
+                         Margin="28,0,28,28"
+                         Background="Transparent" BorderThickness="0"
+                         SelectionMode="Single"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                    <!-- Remove the default ListBox selection chrome; highlight via IsSelected trigger -->
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Background"                 Value="Transparent"/>
+                            <Setter Property="BorderThickness"            Value="0"/>
+                            <Setter Property="Padding"                    Value="0"/>
+                            <Setter Property="FocusVisualStyle"           Value="{x:Null}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="itemBd"
+                                                Background="{TemplateBinding Background}"
+                                                Margin="0,0,0,10" CornerRadius="8">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="itemBd" Property="Background"
+                                                        Value="{DynamicResource AccentSoftBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
+                    <!-- Group header: Source name -->
+                    <ListBox.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{DynamicResource SubTextBrush}"
+                                            BorderThickness="0,0,0,1" Margin="0,8,0,6" Padding="0,0,0,4">
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontSize="10" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SubTextBrush}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ListBox.GroupStyle>
+
+                    <!-- Entry card -->
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:TmmErrorViewModel}">
+                            <Border Background="{DynamicResource PanelBrush}" CornerRadius="8"
+                                    BorderBrush="{DynamicResource ControlBgBrush}" BorderThickness="1"
+                                    Padding="16,12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Row 0: code chip + title -->
+                                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                        <Border Background="{DynamicResource AccentSoftBrush}"
+                                                BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
+                                                CornerRadius="4" Padding="6,2" Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Code}"
+                                                       FontSize="11" FontWeight="SemiBold" FontFamily="Consolas, Courier New"
+                                                       Foreground="{DynamicResource AccentBrush}"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Row 1: Cause -->
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="Cause: " FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SubTextBrush}" MinWidth="44"/>
+                                        <TextBlock Text="{Binding Cause}"
+                                                   FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+
+                                    <!-- Row 2: Fix -->
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                        <TextBlock Text="Fix: " FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextBrush}" MinWidth="44"/>
+                                        <TextBlock Text="{Binding Fix}"
+                                                   FontSize="11" Foreground="{DynamicResource TextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+
+                </ListBox>
+            </ScrollViewer>
+
+            <!-- Empty state (no search results) -->
+            <StackPanel x:Name="emptyState" Visibility="Collapsed"
+                        VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="No matching error codes"
+                           FontSize="16" FontWeight="SemiBold"
+                           Foreground="{DynamicResource SubTextBrush}"
+                           HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Try a different search term."
+                           FontSize="12" Foreground="{DynamicResource SubTextBrush}"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+        </Grid>
+    </Grid>
+</UserControl>

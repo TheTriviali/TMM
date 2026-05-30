@@ -219,6 +219,13 @@
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
+                            <!-- Troubleshooting / Error Guide -->
+                            <Button x:Name="navBtnTroubleshooting" Style="{StaticResource NavBtnStyle}"
+                                    ToolTip="Troubleshooting" Click="NavBtn_Click" Tag="Troubleshooting">
+                                <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                           Foreground="{DynamicResource SubTextBrush}"/>
+                            </Button>
+
                             <Border Height="1" Background="{DynamicResource SubTextBrush}"
                                     Opacity="0.2" Margin="6,8"/>
 
@@ -368,9 +375,10 @@
                         <!-- Paths, Settings, AddGame, and Notifications are added dynamically
                              in code-behind because their constructors require BackendCore -->
                         <ContentPresenter x:Name="pagePathsPlaceholder"          Visibility="Collapsed"/>
-                        <ContentPresenter x:Name="pageSettings"                  Visibility="Collapsed"/>
-                        <ContentPresenter x:Name="pageAddGamePlaceholder"        Visibility="Collapsed"/>
-                        <ContentPresenter x:Name="pageNotificationsPlaceholder"  Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageSettings"                        Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageAddGamePlaceholder"            Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageNotificationsPlaceholder"      Visibility="Collapsed"/>
+                        <ContentPresenter x:Name="pageTroubleshootingPlaceholder"    Visibility="Collapsed"/>
 
                         <!-- ═══ CARD-CLICK MODAL OVERLAY ═══ -->
                         <Grid x:Name="cardModal" Visibility="Collapsed" Panel.ZIndex="90"
