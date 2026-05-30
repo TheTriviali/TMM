@@ -115,6 +115,12 @@ namespace TMM
             {
                 if (_currentPage == "Downloads") txtBrowserUrl.Text = url;
             };
+            // Migrate users who were last on the now-removed showcase view
+            if (_core.Settings.LibraryViewMode == "showcase")
+            {
+                _core.Settings.LibraryViewMode = "grid";
+                _core.SaveSettings();
+            }
             pageLibrary.SetViewMode(_core.Settings.LibraryViewMode);
             UpdateViewModeButtonStyles(_core.Settings.LibraryViewMode);
 
@@ -372,9 +378,8 @@ namespace TMM
             var activeStyle = (Style)Resources["ViewModeBtnActiveStyle"];
             var inactiveStyle = (Style)Resources["ViewModeBtnStyle"];
 
-            btnViewGrid.Style     = activeMode == "grid"     ? activeStyle : inactiveStyle;
-            btnViewList.Style     = activeMode == "list"     ? activeStyle : inactiveStyle;
-            btnViewShowcase.Style = activeMode == "showcase" ? activeStyle : inactiveStyle;
+            btnViewGrid.Style = activeMode == "grid" ? activeStyle : inactiveStyle;
+            btnViewList.Style = activeMode == "list" ? activeStyle : inactiveStyle;
         }
 
         // ── Card-click modal ──────────────────────────────────────────────────────

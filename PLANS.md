@@ -404,6 +404,124 @@ archive; a game with no archives opens with the drawer closed. Build clean.
 
 ---
 
+## Group F — Library card & view refinement  (Opus design pass, signed off 2026-05-29)
+
+> **Context.** Opus reviewed the post-B1 GameCard + Library against the questions left open in
+> [HANDOFF_UX.md](HANDOFF_UX.md). Three design forks were resolved with the user on 2026-05-29 and
+> are **frozen** below — build to them, don't re-open. Core finding driving F1: the card carries
+> *two* state signals wearing similar clothes — a tiny `IsReady` dot (the thing users actually need)
+> and a prominent `ReleaseStatus` chip (TMM's *profile-maturity*, meaningless on a user-added game).
+> The prominent badge spoke to our concern; the critical "can I mod this" signal was a 7px dot.
+>
+> All three are independent. Suggested order: **F3** (pure deletion, unblocks nothing) → **F1**
+> (card state) → **F2** (new dialog).
+
+### F1 — Replace ready-dot + maturity chip with one labeled readiness badge  ✅ DONE
+**Decision (user, 2026-05-29):** readiness becomes the card's primary state signal; the
+`ReleaseStatus` (BETA/ALPHA/PRE-ALPHA/TESTING) chip is **removed entirely from the card** (all games,
+both modes) — not just hidden for customs.
+
+**Remove:**
+- `statusChip` + `txtStatus` ([Views/Controls/GameCard.xaml](Views/Controls/GameCard.xaml) ~254-261)
+  and `listStatusPill` + `listTxtStatus` (~334-340).
+- `ApplyStatusChip` ([Views/Controls/GameCard.xaml.cs](Views/Controls/GameCard.xaml.cs) ~201-227)
+  and both call sites (~41, ~108). Leave the `LibraryEntry.Status` **model field** alone (harmless,
+  may be reused later) — just stop the card rendering it.
+
+**Add — readiness badge (replaces the `readyDot` / `listReadyDot` ellipses):**
+- **States** (derive in `ApplyEntry` from existing fields):
+  | Condition | Label (localized) | Tone |
+  |---|---|---|
+  | `!entry.IsReady` | **Needs folder** | amber `#E0A020` — actionable |
+  | `entry.IsReady && entry.ModCount == 0` | **No mods** | muted grey `#80FFFFFF` |
+  | `entry.IsReady && entry.ModCount > 0` | **Ready** | `UiColors.ReadyGreen` |
+- **Card mode:** put the badge **top-right** (the corner the removed `statusChip` vacated — prime,
+  now free) as a small rounded pill (dot + label). Delete `readyDot` from the bottom controls row
+  (~101-109); that row collapses to `[★ Default pill] [spacer] [⋯ overflow]`.
+- **List mode:** replace `listReadyDot` in Column 3 (~354-360) with the same pill; widen that
+  `ColumnDefinition` from `22` to `Auto` (~271).
+- **Clickability:** the **Needs folder** badge is a `Button` that fires the existing
+  `ManageRequested` event (opens the Mod Manager, where the E3 inline banner already prompts for the
+  folder — reuse, no new event). The **Ready** / **No mods** badges are static labels (no button
+  chrome). The clickable variant is a `Button`, so `OnCardBodyClick`'s button-suppression walk still
+  ignores it — don't touch that logic.
+- Add `NeedsFolderAmber` (+ a muted "no mods" colour if not reusing an existing one) to `UiColors`.
+
+**Localize** (en-US + es-MX): `Card_Ready`, `Card_NeedsFolder`, `Card_NoMods`. Remove now-unused
+status-label strings only if they're truly orphaned (search first).
+
+**Verify:** a game with no path shows an amber **Needs folder** badge that, clicked, opens its Mod
+Manager with the set-folder banner; a path-set game with mods shows green **Ready**; a path-set empty
+game shows muted **No mods**; no BETA/ALPHA chip appears anywhere; a custom game reads cleanly (no
+maturity noise). Both grid and list. Build clean.
+
+### F2 — Unify card colour + artwork into one "Appearance…" dialog  ✅ DONE
+**Decision (user, 2026-05-29):** collapse the four scattered context items (Set Card Color / Reset
+Color / Set Artwork / Remove Artwork) into a single discoverable **Appearance…** entry that opens one
+dialog covering both.
+
+**Current state:** [Views/Controls/GameCard.xaml](Views/Controls/GameCard.xaml) ~23-27 lists the four
+items; handlers `MenuSetArt_Click` / `MenuRemoveArt_Click` / `MenuSetColor_Click` /
+`MenuResetColor_Click` ([Views/Controls/GameCard.xaml.cs](Views/Controls/GameCard.xaml.cs) ~330-381).
+Backend already exists: `Core.GetCardColor` / `SetCardColor` / `ClearCardColor` and
+`Core.SaveLibraryArt` / `DeleteLibraryArt` / `GetLibraryArtPath`. A standalone `ColorPickerWindow`
+(start/end hex) is invoked by `MenuSetColor_Click`.
+
+**Build a new `Views/AppearanceDialog.xaml(.cs)`** (modal, `Owner = Window.GetWindow(card)`), seeded
+with `entry.Key` + `Core`:
+1. **Live preview** at top — a card-sized border that reflects the in-progress gradient/artwork
+   (simplest: reuse the gradient brush + image-brush logic from `ApplyEntry` ~102-147).
+2. **Colour section** — preset swatches + custom start/end hex (lift `ColorPickerWindow`'s controls
+   in; if `ColorPickerWindow` has no other references after this, fold it in and delete it — search
+   first). Editing updates the preview live.
+3. **Artwork section** — current art thumbnail (via `GetLibraryArtPath`) + **[Choose image…]**
+   (PNG `OpenFileDialog`, reuse `MenuSetArt_Click`'s filter/validation) + **[Remove]**. Note in the
+   UI that **artwork overrides the gradient** (existing precedence in `ApplyEntry`).
+4. **Footer** — **[Reset to default]** (`ClearCardColor` + `DeleteLibraryArt`), **[Cancel]**,
+   **[Apply]**. On Apply, call the same backend setters the four handlers use (single source of
+   truth — do not add new persistence paths), then `ApplyEntry(Entry)` to refresh the card.
+
+Replace the four context-menu items + the `menu*` art/colour handlers with one **Appearance…** item
+wired to open the dialog. Keep the `⋯` overflow / right-click parity (Appearance lives in both).
+
+**Localize** (en-US + es-MX): `Card_Appearance`, `Appearance_Color`, `Appearance_Artwork`,
+`Appearance_ChooseImage`, `Appearance_RemoveArt`, `Appearance_Reset`, `Appearance_ArtOverridesColor`,
+`Appearance_Apply`, `Appearance_Cancel`. **Custom-game parity:** identical path (keyed by
+`entry.Key`) — verify on a wizard-added game too.
+
+**Verify:** right-click / ⋯ → Appearance opens one dialog; changing gradient and/or picking a PNG
+previews live and persists on Apply; Reset clears both; Cancel discards; works for a built-in and a
+custom game; survives restart. Build clean.
+
+### F3 — Remove the Showcase view mode (keep grid + list)  ✅ DONE
+**Decision (user, 2026-05-29):** the showcase carousel doesn't earn its complexity vs. grid+list.
+Delete it; the switcher drops to two options.
+
+**Remove (watch for dangling refs — build must stay clean):**
+- Shell: `btnViewShowcase` button ([Views/UnifiedShellWindow.xaml](Views/UnifiedShellWindow.xaml)
+  ~339-341) and its style line in `UpdateViewModeButtonStyles`
+  ([Views/UnifiedShellWindow.xaml.cs](Views/UnifiedShellWindow.xaml.cs) ~377). `BtnViewMode_Click`
+  then only ever sees `grid` / `list`.
+- **Migration guard:** in `Window_Loaded` *before* `SetViewMode(Settings.LibraryViewMode)` (~118),
+  if the persisted value is `"showcase"`, coerce to `"grid"` and `SaveSettings()` — otherwise a user
+  who last left showcase active boots into a now-deleted view.
+- Library XAML: the entire `showcaseScrollViewer` block
+  ([Views/Subpages/LibraryPage.xaml](Views/Subpages/LibraryPage.xaml) ~75-319) — hero, carousel,
+  chevrons.
+- Library code-behind ([Views/Subpages/LibraryPage.xaml.cs](Views/Subpages/LibraryPage.xaml.cs)):
+  `RenderShowcaseView` (~363), `ApplyShowcaseHero` (~391), `ResetCarousel`, `BtnCarouselPrev_Click`,
+  `BtnCarouselNext_Click`, `AnimateCarousel`, the `CardStep` const (~434), `_showcaseHeroKey` field
+  (~22), the `case "showcase":` switch arm (~141), the `showcaseScrollViewer.Visibility` reset
+  (~127), and the showcase-hero click branch (~525, ~586-587) plus any portrait-card builder used
+  only by the carousel.
+
+Default `LibraryViewMode` stays `"grid"`; grid + list must remain fully functional incl. drag-reorder.
+
+**Verify:** switcher shows two buttons (grid/list) that both work; a profile last set to showcase
+opens on grid after the migration; no build warnings, no dangling `x:Name`/handler refs. Build clean.
+
+---
+
 ## Group D — Codebase health (standing)
 
 ### AUDIT1 — Periodic file-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ⏳ STANDING

@@ -23,15 +23,19 @@ namespace TMM
 
     public static class UiColors
     {
-        public static readonly Color DisabledGray  = Color.FromRgb(70,  70,  70);
-        public static readonly Color ReadyGreen    = Color.FromRgb(80,  200, 100);
-        public static readonly Color NotReadyRed   = Color.FromRgb(160, 60,  60);
-        public static readonly Color PendingOrange = Color.FromRgb(200, 110, 20);
+        public static readonly Color DisabledGray    = Color.FromRgb(70,  70,  70);
+        public static readonly Color ReadyGreen      = Color.FromRgb(80,  200, 100);
+        public static readonly Color NotReadyRed     = Color.FromRgb(160, 60,  60);
+        public static readonly Color PendingOrange   = Color.FromRgb(200, 110, 20);
+        public static readonly Color NeedsFolderAmber = Color.FromRgb(224, 160, 32);
+        public static readonly Color NoModsMuted      = Color.FromArgb(128, 255, 255, 255);
 
-        public static SolidColorBrush DisabledBrush => new(DisabledGray);
-        public static SolidColorBrush ReadyBrush    => new(ReadyGreen);
-        public static SolidColorBrush NotReadyBrush => new(NotReadyRed);
-        public static SolidColorBrush PendingBrush  => new(PendingOrange);
+        public static SolidColorBrush DisabledBrush    => new(DisabledGray);
+        public static SolidColorBrush ReadyBrush       => new(ReadyGreen);
+        public static SolidColorBrush NotReadyBrush    => new(NotReadyRed);
+        public static SolidColorBrush PendingBrush     => new(PendingOrange);
+        public static SolidColorBrush NeedsFolderBrush => new(NeedsFolderAmber);
+        public static SolidColorBrush NoModsBrush      => new(NoModsMuted);
     }
 
     public static class JsonHelper

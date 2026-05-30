@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
+using System.Windows.Shapes;
 using TMM.Services;
 
 namespace TMM
@@ -37,8 +38,7 @@ namespace TMM
                 _isListMode = value;
                 cardModeRoot.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
                 listModeRoot.Visibility = value ? Visibility.Visible   : Visibility.Collapsed;
-                // Status chip is card-mode-only; list mode has an inline pill
-                if (Entry != null) ApplyStatusChip(Entry.Status);
+                if (Entry != null) ApplyReadinessBadge(Entry);
                 // List mode: flat border, no hover scale
                 cardBorder.CornerRadius = value ? new CornerRadius(8) : new CornerRadius(10);
                 cardBorder.BorderThickness = value ? new Thickness(1) : new Thickness(1.5);
@@ -104,15 +104,8 @@ namespace TMM
             if (TryParseHex(ov?.Start ?? entry.GradientStartHex, out var c0)) gradStart.Color = c0;
             if (TryParseHex(ov?.End   ?? entry.GradientEndHex,   out var c1)) gradEnd.Color   = c1;
 
-            // ── Status chip ──
-            ApplyStatusChip(entry.Status);
-
-            // ── Ready dot (both modes) ──
-            var dotColor = new SolidColorBrush(entry.IsReady
-                ? UiColors.ReadyGreen
-                : Color.FromRgb(160, 60, 60));
-            readyDot.Fill     = dotColor;
-            listReadyDot.Fill = dotColor;
+            // ── Readiness badge (both modes) ──
+            ApplyReadinessBadge(entry);
 
             // ── Opacity / archived ──
             double baseOpacity = entry.IsPlaceholder ? 0.72 : entry.IsArchived ? 0.55 : 1.0;
@@ -198,32 +191,49 @@ namespace TMM
             }
         }
 
-        private void ApplyStatusChip(ReleaseStatus status)
+        private enum ReadinessState { Ready, NeedsFolder, NoMods }
+
+        private void ApplyReadinessBadge(LibraryEntry entry)
         {
-            if (status == ReleaseStatus.Release)
-            {
-                statusChip.Visibility     = Visibility.Collapsed;
-                listStatusPill.Visibility = Visibility.Collapsed;
-                return;
-            }
+            var loc   = LocalizationService.Instance;
+            var state = !entry.IsReady              ? ReadinessState.NeedsFolder
+                      : entry.ModCount == 0         ? ReadinessState.NoMods
+                      :                               ReadinessState.Ready;
 
-            (Color chipColor, string label) = status switch
+            (Color dotColor, Color bgColor, string label, bool clickable) = state switch
             {
-                ReleaseStatus.Beta     => (Color.FromRgb(180, 140,  20), "BETA"),
-                ReleaseStatus.Alpha    => (Color.FromRgb(200, 100,  20), "ALPHA"),
-                ReleaseStatus.PreAlpha => (Color.FromRgb(200,  55,  30), "PRE-ALPHA"),
-                ReleaseStatus.Testing  => (Color.FromRgb( 80,  80, 180), "TESTING"),
-                _                      => (Colors.Gray, status.ToString().ToUpperInvariant()),
+                ReadinessState.NeedsFolder => (UiColors.NeedsFolderAmber,
+                                               Color.FromArgb(50, 224, 160, 32),
+                                               loc["Card_NeedsFolder"], true),
+                ReadinessState.NoMods      => (UiColors.NoModsMuted,
+                                               Color.FromArgb(20, 255, 255, 255),
+                                               loc["Card_NoMods"], false),
+                _                          => (UiColors.ReadyGreen,
+                                               Color.FromArgb(40, 80, 200, 100),
+                                               loc["Card_Ready"], false),
             };
-            var bgBrush = new SolidColorBrush(Color.FromArgb(217, chipColor.R, chipColor.G, chipColor.B));
 
-            statusChip.Visibility = _isListMode ? Visibility.Collapsed : Visibility.Visible;
-            statusChip.Background = bgBrush;
-            txtStatus.Text        = label;
+            ApplyBadgeToButton(readinessBadge, "readinessBadgeBg", "readinessDot", "readinessTxt",
+                               dotColor, bgColor, label, clickable);
+            ApplyBadgeToButton(listReadinessBadge, "listReadinessBadgeBg", "listReadinessDot", "listReadinessTxt",
+                               dotColor, bgColor, label, clickable);
+        }
 
-            listStatusPill.Visibility = _isListMode ? Visibility.Visible : Visibility.Collapsed;
-            listStatusPill.Background = bgBrush;
-            listTxtStatus.Text        = label;
+        private static void ApplyBadgeToButton(Button? btn,
+            string bgName, string dotName, string txtName,
+            Color dotColor, Color bgColor, string label, bool clickable)
+        {
+            if (btn?.Template == null) return;
+            btn.IsHitTestVisible = clickable;
+
+            if (btn.Template.FindName(bgName,  btn) is Border bg)  bg.Background = new SolidColorBrush(bgColor);
+            if (btn.Template.FindName(dotName, btn) is Ellipse dot) dot.Fill      = new SolidColorBrush(dotColor);
+            if (btn.Template.FindName(txtName, btn) is TextBlock tb) tb.Text      = label;
+        }
+
+        private void ReadinessBadge_Click(object sender, RoutedEventArgs e)
+        {
+            if (Entry != null) ManageRequested?.Invoke(Entry);
         }
 
         private void AnimateHover(bool entering)
@@ -325,59 +335,13 @@ namespace TMM
         /// <summary>Returns the drag handle border for list-mode drag-drop wiring.</summary>
         public Border GetListDragHandle() => listDragHandle;
 
-        // ── Context menu (artwork) ────────────────────────────────────────────────
+        // ── Context menu (appearance) ─────────────────────────────────────────────
 
-        private void MenuSetArt_Click(object sender, RoutedEventArgs e)
+        private void MenuAppearance_Click(object sender, RoutedEventArgs e)
         {
             if (Entry == null || Core == null) return;
-            var dlg = new Microsoft.Win32.OpenFileDialog
-            {
-                Title  = $"Select artwork for {Entry.DisplayName}",
-                Filter = "PNG Image (*.png)|*.png",
-            };
-            if (dlg.ShowDialog() != true) return;
-            try
-            {
-                Core.SaveLibraryArt(Entry.Key, dlg.FileName);
-                ApplyEntry(Entry);
-                NotificationService.ShowSuccess("Artwork updated");
-            }
-            catch (ArgumentException ex) { NotificationService.ShowWarning(ex.Message); }
-        }
-
-        private void MenuRemoveArt_Click(object sender, RoutedEventArgs e)
-        {
-            if (Entry == null || Core == null) return;
-            Core.DeleteLibraryArt(Entry.Key);
-            ApplyEntry(Entry);
-            NotificationService.ShowSuccess("Artwork removed — using gradient");
-        }
-
-        private void MenuSetColor_Click(object sender, RoutedEventArgs e)
-        {
-            if (Entry == null || Core == null) return;
-
-            // Seed the picker with the current effective colors (override else shipped gradient).
-            var current = Core.GetCardColor(Entry.Key);
-            var dlg = new ColorPickerWindow(
-                current?.Start ?? Entry.GradientStartHex,
-                current?.End   ?? Entry.GradientEndHex)
-            {
-                Owner = Window.GetWindow(this),
-            };
-            if (dlg.ShowDialog() != true) return;
-
-            Core.SetCardColor(Entry.Key, dlg.StartHex, dlg.EndHex);
-            ApplyEntry(Entry);
-            NotificationService.ShowSuccess("Card color updated");
-        }
-
-        private void MenuResetColor_Click(object sender, RoutedEventArgs e)
-        {
-            if (Entry == null || Core == null) return;
-            Core.ClearCardColor(Entry.Key);
-            ApplyEntry(Entry);
-            NotificationService.ShowSuccess("Card color reset");
+            var dlg = new AppearanceDialog(Entry, Core) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() == true) ApplyEntry(Entry);
         }
 
         // ── Static helpers ────────────────────────────────────────────────────────

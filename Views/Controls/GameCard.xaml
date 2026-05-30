@@ -20,11 +20,7 @@
                       Header="{helpers:Localization Card_Archive}"
                       Click="BtnArchiveOrDelete_Click"/>
             <Separator/>
-            <MenuItem Header="{helpers:Localization Card_SetArtwork}"    Click="MenuSetArt_Click"/>
-            <MenuItem Header="{helpers:Localization Card_RemoveArtwork}" Click="MenuRemoveArt_Click"/>
-            <Separator/>
-            <MenuItem Header="{helpers:Localization Card_SetColor}"   Click="MenuSetColor_Click"/>
-            <MenuItem Header="{helpers:Localization Card_ResetColor}" Click="MenuResetColor_Click"/>
+            <MenuItem Header="{helpers:Localization Card_Appearance}" Click="MenuAppearance_Click"/>
         </ContextMenu>
     </UserControl.ContextMenu>
 
@@ -89,28 +85,17 @@
                         <TextBlock Text="⠿" FontSize="14" Foreground="#AAFFFFFF"/>
                     </Border>
 
-                    <!-- Bottom controls: ready-dot · default pill · [spacer] · overflow -->
+                    <!-- Bottom controls: default pill · [spacer] · overflow -->
                     <Grid VerticalAlignment="Bottom" Margin="7,0,7,5">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <Ellipse x:Name="readyDot"
-                                 Grid.Column="0"
-                                 Width="7" Height="7"
-                                 VerticalAlignment="Center" Margin="0,0,6,0">
-                            <Ellipse.Effect>
-                                <DropShadowEffect BlurRadius="6" ShadowDepth="0"
-                                                  Color="#000000" Opacity="0.5"/>
-                            </Ellipse.Effect>
-                        </Ellipse>
-
                         <!-- ★ Default pill toggle -->
                         <Button x:Name="btnDefaultCard"
-                                Grid.Column="1" Height="22" Cursor="Hand"
+                                Grid.Column="0" Height="22" Cursor="Hand"
                                 Click="BtnDefault_Click" Focusable="True"
                                 ToolTip="Toggle as default game"
                                 Background="Transparent" BorderThickness="0" Padding="0">
@@ -142,7 +127,7 @@
 
                         <!-- ⋯ Overflow -->
                         <Button x:Name="btnOverflowCard"
-                                Grid.Column="3" Width="26" Height="22" Cursor="Hand"
+                                Grid.Column="2" Width="26" Height="22" Cursor="Hand"
                                 Click="BtnOverflow_Click" Focusable="True"
                                 ToolTip="More options"
                                 Background="Transparent" BorderThickness="0" Padding="0">
@@ -251,14 +236,35 @@
                 </Border>
             </Grid>
 
-            <!-- ── Status chip (top-right overlay, card mode) ───────────── -->
-            <Border x:Name="statusChip"
-                    CornerRadius="3" Padding="6,2"
+            <!-- ── Readiness badge (top-right overlay, card mode) ───────── -->
+            <!-- IsHitTestVisible=True only for Needs-folder state; set in code-behind -->
+            <Button x:Name="readinessBadge"
                     VerticalAlignment="Top" HorizontalAlignment="Right"
-                    Margin="0,8,8,0" Visibility="Collapsed">
-                <TextBlock x:Name="txtStatus" FontSize="9" FontWeight="Bold"
-                           Foreground="White"/>
-            </Border>
+                    Margin="0,8,8,0"
+                    Background="Transparent" BorderThickness="0" Padding="0"
+                    Cursor="Hand" Click="ReadinessBadge_Click"
+                    IsHitTestVisible="False">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="readinessBadgeBg"
+                                CornerRadius="4" Padding="6,3">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse x:Name="readinessDot"
+                                         Width="5" Height="5"
+                                         Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="readinessTxt"
+                                           FontSize="9" FontWeight="SemiBold"
+                                           Foreground="White"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="readinessBadgeBg" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
 
             <!-- ═══════════════════════════════════════════════════════════ -->
             <!-- LIST MODE — full-width × 72px row                          -->
@@ -268,7 +274,7 @@
                     <ColumnDefinition Width="34"/>   <!-- drag grip -->
                     <ColumnDefinition Width="Auto"/> <!-- default pill -->
                     <ColumnDefinition Width="*"/>    <!-- title + subtitle -->
-                    <ColumnDefinition Width="22"/>   <!-- ready dot -->
+                    <ColumnDefinition Width="Auto"/> <!-- readiness badge -->
                     <ColumnDefinition Width="Auto"/> <!-- action buttons -->
                     <ColumnDefinition Width="10"/>   <!-- right padding -->
                 </Grid.ColumnDefinitions>
@@ -330,14 +336,6 @@
                             <TextBlock Text="Archived" FontSize="8" FontWeight="Bold"
                                        Foreground="#A0FFFFFF" VerticalAlignment="Center"/>
                         </Border>
-                        <!-- Status pill (inline, coloured) -->
-                        <Border x:Name="listStatusPill"
-                                CornerRadius="2" Padding="5,1" Margin="0,0,6,0"
-                                Visibility="Collapsed">
-                            <TextBlock x:Name="listTxtStatus"
-                                       FontSize="8" FontWeight="Bold"
-                                       Foreground="White" VerticalAlignment="Center"/>
-                        </Border>
                         <!-- Subtitle text -->
                         <TextBlock x:Name="listTxtSubtitle"
                                    Foreground="#C0FFFFFF" FontSize="11"
@@ -350,14 +348,33 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Ready dot -->
-                <Ellipse Grid.Column="3" x:Name="listReadyDot"
-                         Width="8" Height="8" VerticalAlignment="Center"
-                         HorizontalAlignment="Center">
-                    <Ellipse.Effect>
-                        <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#000000" Opacity="0.5"/>
-                    </Ellipse.Effect>
-                </Ellipse>
+                <!-- Readiness badge (list mode) -->
+                <Button x:Name="listReadinessBadge"
+                        Grid.Column="3" Margin="6,0,6,0"
+                        Background="Transparent" BorderThickness="0" Padding="0"
+                        Cursor="Hand" Click="ReadinessBadge_Click"
+                        VerticalAlignment="Center" IsHitTestVisible="False">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="listReadinessBadgeBg"
+                                    CornerRadius="4" Padding="6,3">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse x:Name="listReadinessDot"
+                                             Width="5" Height="5"
+                                             Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="listReadinessTxt"
+                                               FontSize="9" FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                </StackPanel>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="listReadinessBadgeBg" Property="Opacity" Value="0.8"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
 
                 <!-- Action buttons: ▶ Play · ☰ Manage · ⋯ -->
                 <StackPanel Grid.Column="4" Orientation="Horizontal"

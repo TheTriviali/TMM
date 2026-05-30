@@ -336,9 +336,6 @@
                                     <Button x:Name="btnViewList" Style="{StaticResource ViewModeBtnStyle}"
                                             Content="&#xE9D5;" ToolTip="List view"
                                             Click="BtnViewMode_Click" Tag="list"/>
-                                    <Button x:Name="btnViewShowcase" Style="{StaticResource ViewModeBtnStyle}"
-                                            Content="&#xE71D;" ToolTip="Showcase view"
-                                            Click="BtnViewMode_Click" Tag="showcase"/>
                                 </StackPanel>
 
                                 <!-- Window controls -->
