@@ -460,6 +460,7 @@ namespace TMM
                     catch (Exception ex)
                     {
                         Log($"[Deploy:{gameKey}] WARN: backup failed for {rel}: {ex.Message}");
+                        NotificationService.ShowVerbose($"Backup failed for '{rel}': {ex.Message}", "Backup");
                     }
 
                     try { File.SetAttributes(destFile, FileAttributes.Normal); } catch { }

@@ -39,7 +39,15 @@ namespace TMM
                     var m = JsonSerializer.Deserialize<DeployManifest>(File.ReadAllText(mPath));
                     if (m is not null) manifests.Add(m);
                 }
-                catch { /* skip corrupt manifest */ }
+                catch (JsonException ex)
+                {
+                    Logger.Warn($"[Backups:{gameKey}] Skipping corrupt manifest at '{mPath}': {ex.Message}");
+                    NotificationService.ShowVerbose($"Skipped corrupt backup manifest: {Path.GetFileName(dir)}", "Backup");
+                }
+                catch (IOException ex)
+                {
+                    Logger.Warn($"[Backups:{gameKey}] Could not read manifest at '{mPath}': {ex.Message}");
+                }
             }
             return manifests;
         }

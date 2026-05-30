@@ -35,6 +35,11 @@ namespace TMM.Services
 
             // ── G5: Backup ────────────────────────────────────────────────────────
             Register("TMM-E004", "Backup",   "TmmError_E004_Title", "TmmError_E004_Cause", "TmmError_E004_Fix");
+            Register("TMM-E009", "Backup",   "TmmError_E009_Title", "TmmError_E009_Cause", "TmmError_E009_Fix");
+
+            // ── G6: Loadouts ──────────────────────────────────────────────────────
+            Register("TMM-E010", "Loadouts", "TmmError_E010_Title", "TmmError_E010_Cause", "TmmError_E010_Fix");
+            Register("TMM-E011", "Loadouts", "TmmError_E011_Title", "TmmError_E011_Cause", "TmmError_E011_Fix");
 
             // ── G7: Paths / settings ──────────────────────────────────────────────
             Register("TMM-E005", "GamePath", "TmmError_E005_Title", "TmmError_E005_Cause", "TmmError_E005_Fix");

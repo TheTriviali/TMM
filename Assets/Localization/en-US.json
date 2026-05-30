@@ -438,5 +438,17 @@
 
   "TmmError_E008_Title": "No mod candidates found",
   "TmmError_E008_Cause": "TMM scanned the game directory but could not identify any mod files to import.",
-  "TmmError_E008_Fix": "Ensure your game directory is correct and contains installed mod files. TMM looks for known mod types defined in the game's profile."
+  "TmmError_E008_Fix": "Ensure your game directory is correct and contains installed mod files. TMM looks for known mod types defined in the game's profile.",
+
+  "TmmError_E009_Title": "Backup manifest corrupt",
+  "TmmError_E009_Cause": "A backup manifest file could not be read. It may be corrupt or incomplete.",
+  "TmmError_E009_Fix": "The affected backup has been skipped. Other backups are unaffected. You can manually delete the corrupt entry from %APPDATA%\\TMM\\Backups.",
+
+  "TmmError_E010_Title": "Loadout operation failed",
+  "TmmError_E010_Cause": "TMM could not save, export, import, or rename the loadout. The file may be locked, the disk full, or permissions may be missing.",
+  "TmmError_E010_Fix": "Check that %APPDATA%\\TMM\\Loadouts is writable and that you have sufficient disk space.",
+
+  "TmmError_E011_Title": "Loadout apply failed",
+  "TmmError_E011_Cause": "TMM could not read or parse the loadout file when applying it.",
+  "TmmError_E011_Fix": "The loadout file may be corrupt. Try deleting it and saving a new loadout with the same configuration."
 }

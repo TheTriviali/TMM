@@ -438,5 +438,17 @@
 
   "TmmError_E008_Title": "No se encontraron candidatos de mod",
   "TmmError_E008_Cause": "TMM analizó el directorio del juego pero no pudo identificar archivos de mod para importar.",
-  "TmmError_E008_Fix": "Asegúrate de que el directorio del juego sea correcto y contenga archivos de mod instalados. TMM busca tipos de mod conocidos definidos en el perfil del juego."
+  "TmmError_E008_Fix": "Asegúrate de que el directorio del juego sea correcto y contenga archivos de mod instalados. TMM busca tipos de mod conocidos definidos en el perfil del juego.",
+
+  "TmmError_E009_Title": "Manifiesto de copia de seguridad corrupto",
+  "TmmError_E009_Cause": "No se pudo leer un archivo de manifiesto de copia de seguridad. Puede estar corrupto o incompleto.",
+  "TmmError_E009_Fix": "La copia de seguridad afectada fue omitida. Las demás no se ven afectadas. Puedes eliminar manualmente la entrada corrupta desde %APPDATA%\\TMM\\Backups.",
+
+  "TmmError_E010_Title": "Operación de loadout fallida",
+  "TmmError_E010_Cause": "TMM no pudo guardar, exportar, importar o renombrar el loadout. El archivo puede estar bloqueado, el disco lleno o faltar permisos.",
+  "TmmError_E010_Fix": "Verifica que %APPDATA%\\TMM\\Loadouts sea escribible y que haya suficiente espacio en disco.",
+
+  "TmmError_E011_Title": "No se pudo aplicar el loadout",
+  "TmmError_E011_Cause": "TMM no pudo leer o analizar el archivo de loadout al aplicarlo.",
+  "TmmError_E011_Fix": "El archivo de loadout puede estar corrupto. Intenta eliminarlo y guardar un nuevo loadout con la misma configuración."
 }

@@ -41,7 +41,21 @@ namespace TMM
                     JsonSerializer.Serialize(Settings, JsonHelper.PrettyOptions));
                 NotificationService.ShowVerbose("Settings saved", "Settings");
             }
-            catch (Exception ex) { Log($"SaveSettings failed: {ex.Message}"); }
+            catch (IOException ex)
+            {
+                Log($"SaveSettings failed (IO): {ex.Message}");
+                NotificationService.ShowError("Settings could not be saved to disk.", "Settings", "TMM-E006");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Log($"SaveSettings failed (access denied): {ex.Message}");
+                NotificationService.ShowError("Settings could not be saved — access denied.", "Settings", "TMM-E006");
+            }
+            catch (Exception ex)
+            {
+                Log($"SaveSettings failed: {ex.Message}");
+                NotificationService.ShowError($"Settings could not be saved: {ex.Message}", "Settings", "TMM-E006");
+            }
         }
 
         public void FactoryReset()

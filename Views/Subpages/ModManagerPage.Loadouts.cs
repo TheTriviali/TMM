@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -46,10 +47,18 @@ namespace TMM
                     var applyItem = new MenuItem { Header = "Apply" };
                     applyItem.Click += async (_, _) =>
                     {
-                        await _core.ApplyLoadoutAsync(_customProfile.Key, name, _modsCustom);
-                        SaveModsCustom();
-                        _core.Activity.Record(ActivityKind.LoadoutApplied, _customProfile.Key, _customConfig.GameName, $"Applied '{name}'");
-                        NotificationService.ShowSuccess($"Applied loadout '{name}'");
+                        try
+                        {
+                            await _core.ApplyLoadoutAsync(_customProfile.Key, name, _modsCustom);
+                            SaveModsCustom();
+                            _core.Activity.Record(ActivityKind.LoadoutApplied, _customProfile.Key, _customConfig.GameName, $"Applied '{name}'");
+                            NotificationService.ShowSuccess($"Applied loadout '{name}'", "Loadouts");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error($"Apply loadout '{name}' failed", ex);
+                            NotificationService.ShowError($"Could not apply loadout '{name}': {ex.Message}", "Loadouts", "TMM-E011");
+                        }
                     };
                     item.Items.Add(applyItem);
 
@@ -93,9 +102,22 @@ namespace TMM
                 if (result != MessageBoxResult.Yes) return;
             }
 
-            await _core.SaveLoadoutAsync(_customProfile.Key, name, _modsCustom);
-            _core.Activity.Record(ActivityKind.LoadoutSaved, _customProfile.Key, _customConfig.GameName, $"Saved '{name}'", _modsCustom.Count);
-            NotificationService.ShowSuccess($"Saved loadout '{name}'");
+            try
+            {
+                await _core.SaveLoadoutAsync(_customProfile.Key, name, _modsCustom);
+                _core.Activity.Record(ActivityKind.LoadoutSaved, _customProfile.Key, _customConfig.GameName, $"Saved '{name}'", _modsCustom.Count);
+                NotificationService.ShowSuccess($"Saved loadout '{name}'", "Loadouts");
+            }
+            catch (IOException ex)
+            {
+                Logger.Error($"Save loadout '{name}' failed (IO)", ex);
+                NotificationService.ShowError($"Could not save loadout '{name}': {ex.Message}", "Loadouts", "TMM-E010");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Save loadout '{name}' failed", ex);
+                NotificationService.ShowError($"Could not save loadout '{name}': {ex.Message}", "Loadouts", "TMM-E010");
+            }
         }
 
         private async Task ImportPackFlow()
@@ -114,7 +136,7 @@ namespace TMM
             }
             catch (Exception ex)
             {
-                NotificationService.ShowError($"Couldn't read pack: {ex.Message}");
+                NotificationService.ShowError($"Couldn't read pack: {ex.Message}", "Loadouts", "TMM-E010");
                 return;
             }
 
@@ -133,11 +155,17 @@ namespace TMM
                 string renamedNote = result.RenamedMods.Count > 0
                     ? $" ({result.RenamedMods.Count} renamed to avoid collisions)" : "";
                 NotificationService.ShowSuccess(
-                    $"Imported {result.ModsImported} mod(s){renamedNote}. Loadout: '{result.LoadoutName}'");
+                    $"Imported {result.ModsImported} mod(s){renamedNote}. Loadout: '{result.LoadoutName}'", "Loadouts");
+            }
+            catch (IOException ex)
+            {
+                Logger.Error("Pack import failed (IO)", ex);
+                NotificationService.ShowError($"Import failed: {ex.Message}", "Loadouts", "TMM-E010");
             }
             catch (Exception ex)
             {
-                NotificationService.ShowError($"Import failed: {ex.Message}");
+                Logger.Error("Pack import failed", ex);
+                NotificationService.ShowError($"Import failed: {ex.Message}", "Loadouts", "TMM-E010");
             }
             finally
             {
@@ -164,9 +192,9 @@ namespace TMM
             }
 
             if (_core.RenameLoadout(_customProfile.Key, oldName, newName))
-                NotificationService.ShowSuccess($"Renamed to '{newName}'");
+                NotificationService.ShowSuccess($"Renamed to '{newName}'", "Loadouts");
             else
-                NotificationService.ShowError("Rename failed.");
+                NotificationService.ShowError($"Could not rename '{oldName}' — loadout may not exist or name is taken.", "Loadouts", "TMM-E010");
         }
 
         private void DeleteLoadoutFlow(string name)
@@ -176,9 +204,9 @@ namespace TMM
             if (result != MessageBoxResult.Yes) return;
 
             if (_core.DeleteLoadout(_customProfile.Key, name))
-                NotificationService.ShowSuccess($"Deleted '{name}'");
+                NotificationService.ShowSuccess($"Deleted '{name}'", "Loadouts");
             else
-                NotificationService.ShowError("Delete failed.");
+                NotificationService.ShowError($"Could not delete '{name}' — file may not exist.", "Loadouts", "TMM-E010");
         }
 
         private async Task ExportLoadoutFlow(string loadoutName)
@@ -195,12 +223,12 @@ namespace TMM
             {
                 int modCount = await TmmPackBuilder.ExportAsync(
                     _core, _customProfile.Key, _customConfig.GameName, loadoutName, sfd.FileName);
-                NotificationService.ShowSuccess($"Exported '{loadoutName}' ({modCount} mods)");
+                NotificationService.ShowSuccess($"Exported '{loadoutName}' ({modCount} mods)", "Loadouts");
             }
             catch (Exception ex)
             {
                 Logger.Error($"Export failed for loadout '{loadoutName}'", ex);
-                NotificationService.ShowError($"Export failed: {ex.Message}");
+                NotificationService.ShowError($"Export failed: {ex.Message}", "Loadouts", "TMM-E010");
             }
         }
     }

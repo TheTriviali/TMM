@@ -132,8 +132,7 @@ namespace TMM
             if (File.Exists(logPath))
                 Process.Start(new ProcessStartInfo(logPath) { UseShellExecute = true });
             else
-                MessageBox.Show("Log file does not exist yet.", "No Logs",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Log file does not exist yet.", "Settings");
         }
 
         private void BtnWipeCache_Click(object sender, RoutedEventArgs e)
