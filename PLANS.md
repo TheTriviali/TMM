@@ -522,6 +522,114 @@ opens on grid after the migration; no build warnings, no dangling `x:Name`/handl
 
 ---
 
+## Group G — Notification feedback, error handling & error guide  (Opus design pass, signed off 2026-05-29)
+
+> **User ask:** *"Begin adding notification feedback for pretty much anything you do in the
+> program, pass or fail, implement error handling at certain points and an error guide alongside."*
+>
+> **Opus findings (2026-05-29):**
+> 1. The notification *engine* ([Services/NotificationService.cs](Services/NotificationService.cs)) is
+>    already strong — transient `Queue` (toasts) + persistent `History` (the Notifications tab) +
+>    a `ShowVerbose` tier (history-only unless `Settings.VerboseNotifications`) + JSON persistence.
+>    **Do not rebuild it.** This group is *instrumentation + hardening + a guide*, not new plumbing.
+> 2. **Linchpin gap:** the toast host (the `ItemsControl` bound to `NotificationService.Queue`) lives
+>    **only** in [Views/Subpages/ModManagerPage.xaml](Views/Subpages/ModManagerPage.xaml) ~656-690.
+>    Toasts raised on Library / Downloads / Settings / Backups / the wizard record to history but
+>    are **never visibly shown**. "Feedback for anything you do" is impossible until the host is
+>    promoted to the shell. **G1 must land first; everything else depends on it.**
+> 3. Coverage is uneven: ~67 `NotificationService.Show*` calls vs ~24 blocking `MessageBox.Show` and
+>    ~43 catch blocks spread unevenly. Many user actions are silent; many errors are free-text with
+>    no remedy.
+>
+> **Frozen decisions (user, 2026-05-29) — build to these, don't re-open:**
+> - **Error guide = in-app Help page + error codes.** Errors carry a short code (`TMM-E###`) that
+>   maps to a catalog entry (title / cause / fix). Error toasts + history rows get a *"What does this
+>   mean?"* affordance that deep-links to the new Troubleshooting page scrolled to that code.
+> - **Tiered toasts.** Significant outcomes (deploy, rollback, install, import, save settings, create/
+>   delete game, backup/restore, loadout apply) **always** toast pass/fail. Chatty internals (folder
+>   creation, plan freeze, selection changes, per-file progress) use `ShowVerbose` — history-only
+>   unless verbose mode is on. Use the engine as designed; don't make routine clicks noisy.
+>
+> **Suggested order:** **G1** (foundational, blocks all) → **G2** (the guide page) → then the
+> instrumentation passes **G3–G9** in any order (they're independent per-subsystem; each appends its
+> own new codes to the catalog + locales). G3/G4 are the highest-value (deploy + install).
+
+### G1 — Promote toast host to the shell + error-code plumbing  ✅ DONE (commit 874fec0)
+**Goal:** toasts visible on every page, and a first-class error-code field threaded through the
+notification engine.
+
+**Changes:**
+1. **Move the toast host to the shell.** Cut the `<!-- Notification toasts -->` `ItemsControl` block
+   (+ its `Toast_Close` / `Toast_CloseBtn` handlers) out of
+   [Views/Subpages/ModManagerPage.xaml](Views/Subpages/ModManagerPage.xaml) ~656-690 (+ the handlers
+   in [ModManagerPage.xaml.cs](Views/Subpages/ModManagerPage.xaml.cs)) and into
+   [Views/UnifiedShellWindow.xaml](Views/UnifiedShellWindow.xaml) as a **top-level overlay** — a
+   `Panel` in the outermost `Grid` spanning all rows/columns, top-right aligned,
+   `IsHitTestVisible="False"` on the container but `True` on each toast (so pages stay clickable
+   behind it). Move the two close handlers to `UnifiedShellWindow.xaml.cs`. **Remove from
+   ModManagerPage to avoid double toasts.** Verify a toast raised on the Library and on Settings now
+   appears.
+2. **Add `string? ErrorCode` to `NotificationItem`** ([Services/NotificationService.cs](Services/NotificationService.cs)).
+   Add overloads: `ShowError(string message, string source, string? errorCode)` and a matching
+   `Show(..., string? errorCode = null)`. Keep existing signatures working (default `errorCode = null`).
+3. **Error catalog — new `Services/TmmError.cs`.** A static, readonly catalog: `Code` (`"TMM-E001"`…)
+   → record with `Code`, `Source`, and three **locale keys** `TitleKey` / `CauseKey` / `FixKey`
+   (resolved via [Services/LocalizationService.cs](Services/LocalizationService.cs), not hard-coded
+   English). Seed it with the codes G3–G9 will reference (start with a handful: deploy-failed,
+   install-extract-failed, backup-write-failed, game-dir-missing, settings-save-failed — see each
+   pass below). Provide `TmmError.Get(code)` and `TmmError.All`.
+4. **Deep-link hook.** Add `public static Action<string>? OnErrorGuideRequested;` to
+   `NotificationService`. The toast/history "What does this mean?" affordance (only rendered when
+   `ErrorCode is not null`) invokes `OnErrorGuideRequested?.Invoke(code)`. The shell wires this in its
+   ctor to navigate to the Troubleshooting page (G2) and call `ScrollToCode(code)`. Until G2 lands,
+   wiring it to `NavigateTo("Notifications")` is an acceptable stub.
+5. Localize the "What does this mean?" label (en-US + es-MX).
+
+**Verify:** raise `ShowError("x", "Deploy", "TMM-E001")` from the Library page → toast shows there,
+carries the link, history row shows the code. Build clean. **When done: build clean, commit**
+(`feat: G1 — app-wide toast host + error-code plumbing`).
+
+### G2 — In-app Troubleshooting / error-guide page  ✅ DONE (commit d98549b)
+**Build `Views/Subpages/TroubleshootingPage.xaml(.cs)`** + a shell nav entry (alongside
+`navBtnNotifications`; mirror its `NavigateTo`/`SetNavActive` wiring ~219-330 +
+`pageNotificationsPlaceholder` pattern). The page renders **all `TmmError.All`** entries, grouped by
+`Source`, each as a card: code chip (`TMM-E012`), localized **title**, **cause**, **fix**. A search
+box filters by code/title. Expose `public void ScrollToCode(string code)` that scrolls to + briefly
+highlights the matching card (the G1 deep-link target). Localize the page chrome (en-US + es-MX); the
+catalog strings are already localized by G1/each pass.
+
+**Verify:** open the page → all codes listed with cause+fix; clicking a real error toast's "What does
+this mean?" jumps straight to that entry. Build clean.
+
+### G3–G9 — Per-subsystem instrumentation passes  *(each depends on G1+G2; independent of each other)*
+**Shared recipe for every pass** (apply uniformly):
+- Wrap the risky operation(s) in a **specific** try/catch (per CLAUDE.md: not bare `Exception` where a
+  narrower type fits — `IOException` / `UnauthorizedAccessException` / `JsonException` etc.).
+- On **success**, toast `ShowSuccess(localized, source)` for significant actions; `ShowVerbose` for
+  minor/internal steps.
+- On **failure**, `ShowError(localized, source, "TMM-E###")` **and** `Logger.Error(msg, ex)`. Append
+  the new code(s) to `TmmError` + both locales (title/cause/fix).
+- **Replace blocking error `MessageBox.Show`** dialogs with toasts. **Keep** `MessageBox` only where
+  it asks a *question / confirmation* (Yes/No, overwrite, destructive confirm) — those are decisions,
+  not feedback.
+- Don't change business logic; this is feedback + error-handling only.
+
+| Pass | Model | Subsystem & files |
+|---|---|---|
+| **G3** | ✅ DONE (9b87ff3) | **Deploy / rollback** |
+| **G4** | ✅ DONE (240592c) | **Install / import** |
+| **G5** | ✅ DONE (24f9573) | **Backups** |
+| **G6** | ✅ DONE (24f9573) | **Loadouts** |
+| **G7** | ✅ DONE (24f9573) | **Settings / paths / factory reset** |
+| **G8** | ✅ DONE (588db65) | **Game create / edit / export + wizard** |
+| **G9** | ✅ DONE (6864efe) | **Downloads** |
+
+**Each pass, when done:** build clean, verify a representative pass *and* fail path shows the right
+toast (and the fail's "What does this mean?" lands on the new catalog entry), then commit
+(e.g. `feat: G3 — deploy/rollback notification + error-guide coverage`).
+
+---
+
 ## Group D — Codebase health (standing)
 
 ### AUDIT1 — Periodic file-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ⏳ STANDING
