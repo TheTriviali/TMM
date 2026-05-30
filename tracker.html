@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMM Tracker</title>
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a24;
+    --surface2: #22222f;
+    --border: #2e2e3e;
+    --accent: #7c6af7;
+    --accent-dim: #4a428f;
+    --text: #e0e0f0;
+    --text-dim: #888899;
+    --text-dimmer: #555566;
+    --green: #4caf7d;
+    --yellow: #e8c547;
+    --red: #e05c5c;
+    --blue: #5c9ee0;
+    --check-c: #7c6af7;
+    --check-n: #4caf7d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header-title { font-size: 15px; font-weight: 700; letter-spacing: .03em; white-space: nowrap; }
+  .header-title span { color: var(--accent); }
+
+  .stats { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-dim); cursor: pointer; font-size: 12px;
+    transition: all .15s;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
+
+  .header-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn {
+    padding: 5px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); cursor: pointer; font-size: 12px;
+    transition: all .15s;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent-dim); border-color: var(--accent); }
+  .btn.primary:hover { background: var(--accent); }
+
+  /* ── Main layout ── */
+  main { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  /* ── Section ── */
+  .section { margin-bottom: 32px; }
+  .section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px; cursor: pointer; user-select: none;
+  }
+  .section-header h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); }
+  .section-count {
+    font-size: 11px; padding: 1px 7px; border-radius: 10px;
+    background: var(--surface2); color: var(--text-dimmer); border: 1px solid var(--border);
+  }
+  .section-toggle { margin-left: auto; font-size: 11px; color: var(--text-dimmer); }
+  .section-body { display: flex; flex-direction: column; gap: 1px; }
+
+  /* ── Item card ── */
+  .item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: start;
+    transition: border-color .15s;
+  }
+  .item:hover { border-color: var(--border); }
+  .item.done-both { opacity: 0.45; }
+  .item.hidden { display: none; }
+
+  /* status dot */
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0;
+  }
+  .status-open    { background: var(--blue); }
+  .status-partial { background: var(--yellow); }
+  .status-blocked { background: var(--red); }
+
+  /* content */
+  .item-content { min-width: 0; }
+  .item-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .item-detail {
+    font-size: 12px; color: var(--text-dim); margin-top: 4px;
+    display: none;
+    line-height: 1.6;
+  }
+  .item-detail.visible { display: block; }
+  .item-toggle-detail {
+    font-size: 11px; color: var(--text-dimmer); cursor: pointer; margin-top: 3px;
+    display: inline-block;
+  }
+  .item-toggle-detail:hover { color: var(--accent); }
+
+  /* notes */
+  .item-notes {
+    margin-top: 8px; width: 100%;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text); font-size: 12px;
+    padding: 5px 8px; resize: vertical; min-height: 28px;
+    font-family: inherit;
+  }
+  .item-notes:focus { outline: none; border-color: var(--accent-dim); }
+  .item-notes::placeholder { color: var(--text-dimmer); }
+
+  /* checkboxes */
+  .item-checks {
+    display: flex; flex-direction: column; gap: 8px; align-items: center; flex-shrink: 0;
+    padding-top: 2px;
+  }
+  .check-label {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer;
+  }
+  .check-label span {
+    font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  }
+  .check-c span { color: var(--check-c); }
+  .check-n span { color: var(--check-n); }
+
+  .custom-check {
+    width: 22px; height: 22px; border-radius: 5px;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+    background: var(--surface2);
+  }
+  .check-c .custom-check { border-color: var(--accent-dim); }
+  .check-n .custom-check { border-color: #2e5c3e; }
+
+  input[type=checkbox] { display: none; }
+  input[type=checkbox]:checked + .custom-check {
+    background: var(--check-c);
+    border-color: var(--check-c);
+  }
+  .check-n input[type=checkbox]:checked + .custom-check {
+    background: var(--check-n);
+    border-color: var(--check-n);
+  }
+  .custom-check::after {
+    content: ''; display: none;
+    width: 5px; height: 9px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+  input[type=checkbox]:checked + .custom-check::after { display: block; }
+
+  /* legend */
+  .legend {
+    display: flex; gap: 14px; align-items: center;
+    font-size: 11px; color: var(--text-dimmer);
+    padding: 6px 0 0;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">TMM <span>Tracker</span></div>
+  <div class="stats" id="stats-bar">Loading…</div>
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="open">Open</button>
+    <button class="filter-btn" data-filter="claude-done">Claude done</button>
+    <button class="filter-btn" data-filter="noah-verified">Noah verified</button>
+    <button class="filter-btn" data-filter="complete">Complete</button>
+  </div>
+  <div class="header-actions">
+    <button class="btn" id="btn-import" title="Import state from a previously exported JSON">Import</button>
+    <button class="btn primary" id="btn-save" title="Save current state back to tracker.json">Save JSON</button>
+  </div>
+</header>
+
+<main id="app">
+  <div style="color:var(--text-dim);padding:40px 0;text-align:center">Loading tracker.json…</div>
+</main>
+
+<input type="file" id="file-input" accept=".json" style="display:none">
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+let trackerData = null;
+const STORAGE_KEY = 'tmm-tracker-state';
+
+// Load tracker.json via fetch (works when served), then overlay localStorage state
+async function loadData() {
+  try {
+    const resp = await fetch('tracker.json');
+    trackerData = await resp.json();
+  } catch {
+    // fetch failed (file:// protocol without server) — try inline fallback
+    trackerData = window.__TRACKER_FALLBACK__ ?? null;
+    if (!trackerData) {
+      document.getElementById('app').innerHTML =
+        `<div style="color:var(--red);padding:40px;text-align:center">
+          Could not load tracker.json.<br>
+          <small style="color:var(--text-dim)">Open this file from a local server or place tracker.json in the same folder and serve both files.</small>
+        </div>`;
+      return;
+    }
+  }
+  overlayState();
+  render();
+  updateStats();
+}
+
+// Merge saved state (checkboxes, notes) on top of the JSON data
+function overlayState() {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  for (const section of trackerData.sections) {
+    for (const item of section.items) {
+      if (saved[item.id]) {
+        item.claudeDone    = saved[item.id].claudeDone    ?? item.claudeDone;
+        item.noahVerified  = saved[item.id].noahVerified  ?? item.noahVerified;
+        item.notes         = saved[item.id].notes         ?? item.notes;
+      }
+    }
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+
+let currentFilter = 'all';
+
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  // Legend
+  const leg = document.createElement('div');
+  leg.className = 'legend';
+  leg.innerHTML = `
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Open</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Partial</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Blocked</div>
+  `;
+  app.appendChild(leg);
+
+  for (const section of trackerData.sections) {
+    const visibleItems = section.items.filter(i => itemVisible(i));
+    if (visibleItems.length === 0) continue;
+
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.dataset.sectionId = section.id;
+
+    const hdr = document.createElement('div');
+    hdr.className = 'section-header';
+    hdr.innerHTML = `
+      <h2>${section.title}</h2>
+      <span class="section-count">${visibleItems.length}</span>
+      <span class="section-toggle">▾</span>
+    `;
+    sec.appendChild(hdr);
+
+    const body = document.createElement('div');
+    body.className = 'section-body';
+    body.id = `section-body-${section.id}`;
+
+    for (const item of section.items) {
+      body.appendChild(renderItem(item));
+    }
+
+    sec.appendChild(body);
+    app.appendChild(sec);
+
+    // Collapsible section
+    hdr.addEventListener('click', () => {
+      const isHidden = body.style.display === 'none';
+      body.style.display = isHidden ? '' : 'none';
+      hdr.querySelector('.section-toggle').textContent = isHidden ? '▾' : '▸';
+    });
+  }
+
+  applyFilter(currentFilter);
+}
+
+function renderItem(item) {
+  const card = document.createElement('div');
+  card.className = 'item' + (item.claudeDone && item.noahVerified ? ' done-both' : '');
+  card.dataset.itemId = item.id;
+  card.dataset.claudeDone   = item.claudeDone;
+  card.dataset.noahVerified = item.noahVerified;
+
+  const dotClass = item.status === 'partial' ? 'status-partial'
+                 : item.status === 'blocked' ? 'status-blocked'
+                 : 'status-open';
+
+  card.innerHTML = `
+    <div class="status-dot ${dotClass}" title="${item.status}"></div>
+    <div class="item-content">
+      <div class="item-title">${item.title}</div>
+      ${item.detail ? `<span class="item-toggle-detail" title="Toggle detail">show detail ▾</span>
+      <div class="item-detail">${escHtml(item.detail)}</div>` : ''}
+      <textarea class="item-notes" placeholder="Notes…" rows="1">${escHtml(item.notes)}</textarea>
+    </div>
+    <div class="item-checks">
+      <label class="check-label check-c" title="Claude done">
+        <span>C</span>
+        <input type="checkbox" ${item.claudeDone ? 'checked' : ''}>
+        <div class="custom-check"></div>
+      </label>
+      <label class="check-label check-n" title="Noah verified">
+        <span>N</span>
+        <input type="checkbox" ${item.noahVerified ? 'checked' : ''}>
+        <div class="custom-check"></div>
+      </label>
+    </div>
+  `;
+
+  // Detail toggle
+  const toggle = card.querySelector('.item-toggle-detail');
+  const detail = card.querySelector('.item-detail');
+  if (toggle && detail) {
+    toggle.addEventListener('click', e => {
+      e.stopPropagation();
+      const vis = detail.classList.toggle('visible');
+      toggle.textContent = vis ? 'hide detail ▴' : 'show detail ▾';
+    });
+  }
+
+  // Checkboxes
+  const [checkC, checkN] = card.querySelectorAll('input[type=checkbox]');
+  checkC.addEventListener('change', () => {
+    item.claudeDone = checkC.checked;
+    card.dataset.claudeDone = checkC.checked;
+    updateCard(card, item);
+    saveState();
+    updateStats();
+  });
+  checkN.addEventListener('change', () => {
+    item.noahVerified = checkN.checked;
+    card.dataset.noahVerified = checkN.checked;
+    updateCard(card, item);
+    saveState();
+    updateStats();
+  });
+
+  // Notes
+  const notes = card.querySelector('.item-notes');
+  notes.addEventListener('input', () => {
+    item.notes = notes.value;
+    // Auto-grow
+    notes.style.height = 'auto';
+    notes.style.height = notes.scrollHeight + 'px';
+    saveState();
+  });
+  // Init height
+  setTimeout(() => {
+    if (notes.value) {
+      notes.style.height = 'auto';
+      notes.style.height = notes.scrollHeight + 'px';
+    }
+  }, 0);
+
+  return card;
+}
+
+function updateCard(card, item) {
+  if (item.claudeDone && item.noahVerified) {
+    card.classList.add('done-both');
+  } else {
+    card.classList.remove('done-both');
+  }
+  applyFilterToCard(card, currentFilter);
+}
+
+function escHtml(str) {
+  return (str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+
+function itemVisible(item) {
+  switch (currentFilter) {
+    case 'all':           return true;
+    case 'open':          return !item.claudeDone || !item.noahVerified;
+    case 'claude-done':   return item.claudeDone;
+    case 'noah-verified': return item.noahVerified;
+    case 'complete':      return item.claudeDone && item.noahVerified;
+    default:              return true;
+  }
+}
+
+function applyFilterToCard(card, filter) {
+  const cd = card.dataset.claudeDone === 'true';
+  const nv = card.dataset.noahVerified === 'true';
+  let visible = true;
+  switch (filter) {
+    case 'open':          visible = !cd || !nv; break;
+    case 'claude-done':   visible = cd; break;
+    case 'noah-verified': visible = nv; break;
+    case 'complete':      visible = cd && nv; break;
+  }
+  card.classList.toggle('hidden', !visible);
+}
+
+function applyFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.item').forEach(card => applyFilterToCard(card, filter));
+  // Hide empty sections
+  document.querySelectorAll('.section').forEach(sec => {
+    const visible = [...sec.querySelectorAll('.item')].some(c => !c.classList.contains('hidden'));
+    sec.style.display = visible ? '' : 'none';
+  });
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilter(btn.dataset.filter);
+  });
+});
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+
+function updateStats() {
+  if (!trackerData) return;
+  let total = 0, cd = 0, nv = 0, done = 0;
+  for (const sec of trackerData.sections)
+    for (const item of sec.items) {
+      total++;
+      if (item.claudeDone)   cd++;
+      if (item.noahVerified) nv++;
+      if (item.claudeDone && item.noahVerified) done++;
+    }
+  document.getElementById('stats-bar').textContent =
+    `${done}/${total} complete · ${cd} Claude done · ${nv} Noah verified`;
+}
+
+// ── Persistence ───────────────────────────────────────────────────────────────
+
+function saveState() {
+  const state = {};
+  for (const sec of trackerData.sections)
+    for (const item of sec.items)
+      state[item.id] = { claudeDone: item.claudeDone, noahVerified: item.noahVerified, notes: item.notes };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// Save back to tracker.json via File System Access API
+document.getElementById('btn-save').addEventListener('click', async () => {
+  const updated = JSON.parse(JSON.stringify(trackerData));
+  updated.lastUpdated = new Date().toISOString().slice(0, 10);
+  const json = JSON.stringify(updated, null, 2);
+
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: 'tracker.json',
+        types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      flashBtn('btn-save', 'Saved ✓');
+    } catch (e) {
+      if (e.name !== 'AbortError') downloadJson(json);
+    }
+  } else {
+    downloadJson(json);
+  }
+});
+
+function downloadJson(json) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  a.download = 'tracker.json';
+  a.click();
+  flashBtn('btn-save', 'Downloaded ✓');
+}
+
+function flashBtn(id, text) {
+  const btn = document.getElementById(id);
+  const orig = btn.textContent;
+  btn.textContent = text;
+  setTimeout(() => btn.textContent = orig, 2000);
+}
+
+// Import state from a previously exported tracker.json
+document.getElementById('btn-import').addEventListener('click', () => {
+  document.getElementById('file-input').click();
+});
+document.getElementById('file-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const imported = JSON.parse(text);
+  // Merge state from imported file into live data
+  for (const sec of imported.sections ?? [])
+    for (const item of sec.items ?? []) {
+      for (const liveSec of trackerData.sections)
+        for (const liveItem of liveSec.items)
+          if (liveItem.id === item.id) {
+            liveItem.claudeDone   = item.claudeDone;
+            liveItem.noahVerified = item.noahVerified;
+            liveItem.notes        = item.notes;
+          }
+    }
+  saveState();
+  render();
+  updateStats();
+  e.target.value = '';
+  flashBtn('btn-import', 'Imported ✓');
+});
+
+// ── Embedded data (fallback when fetch is blocked on file://) ─────────────────
+
+window.__TRACKER_FALLBACK__ = {"lastUpdated":"2026-05-30","sections":[{"id":"layout","title":"Layout and General UI","items":[{"id":"ui-quit-button","title":"Remove the Quit button from the rail","detail":"BtnQuit_Click in UnifiedShellWindow.xaml:178. The button moved from 'bottom-left corner' (old layout) to the bottom of the global rail but the original request was to remove it entirely.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"ui-window-resize","title":"Enable window resizing","detail":"UnifiedShellWindow uses WindowStyle=None with no WndProc resize-region override. MinWidth/MinHeight are set but dragging the edge does nothing. Needs hit-test override in TmmWindow.cs or UnifiedShellWindow.xaml.cs.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"ui-titlebar-dblclick","title":"Fix double-click titlebar maximize","detail":"TmmWindow.TitleBar_MouseDown calls DragMove() only; no MouseDoubleClick handler. BtnMaximize_Click toggle works via button but titlebar double-click does not.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"ui-downloads-addressbar","title":"Restrict address bar width in Downloads tab","detail":"If the WebView2 browser address bar is visible in the Downloads workspace tab, it should not span full width. Verify visibility first, then constrain MaxWidth if shown.","status":"open","claudeDone":false,"noahVerified":false,"notes":""}]},{"id":"nav","title":"Navigation and Settings","items":[{"id":"nav-help-troubleshooting","title":"Merge Help + Troubleshooting into single global destination","detail":"Decision #3: Unified 'Help & Troubleshooting' rail entry. Content: FAQ, log/error viewer, About. Replaces the separate Troubleshooting rail entry and the Help/About overflow items. Always accessible regardless of which workspace is active.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"nav-paths-merge","title":"Merge File Locations (Paths) into Settings","detail":"Paths is currently a separate rail entry. The request is to absorb it into the Settings page so the rail shrinks. Explicitly deferred in M1 but still open.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"settings-save-apply","title":"Settings: explicit Save / Apply / Cancel flow","detail":"SettingsPage currently auto-saves on every change. No Save/Apply/Cancel flow. This causes notification/log spam from accidental adjustments. Needs unsaved-changes prompt on navigate away.","status":"open","claudeDone":false,"noahVerified":false,"notes":""}]},{"id":"modlist","title":"Mod List","items":[{"id":"modlist-ghost-checkbox","title":"Ghost checkbox artifact on hover — verify resolved","detail":"M2 replaced the GridView column layout with a full custom ItemTemplate DataTemplate. The ghost checkbox was a hover-state artifact of the old template. Needs visual verification in the running app to confirm it's gone.","status":"partial","claudeDone":false,"noahVerified":false,"notes":""},{"id":"modlist-order-inline-edit","title":"Double-click Order field for inline editing","detail":"The M2 DataTemplate shows a numeric order index. No double-click inline-edit handler exists. Requested: type a value directly, all other entries shift to accommodate.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"modlist-sorting","title":"Multi-attribute column-header sorting","detail":"M2 filter chips cover filtering (All/Enabled/Conflicts/Favorites) but column-header sorting for Order / Mod Name / isEnabled / Group / Size / Status is not implemented. The custom DataTemplate has no sortable headers.","status":"open","claudeDone":false,"noahVerified":false,"notes":""}]},{"id":"install","title":"Mod Installation","items":[{"id":"install-preview","title":"Pre-installation deployment preview (confirm before freezing plan)","detail":"User must see the parsed file layout and confirm it before the DeploymentPlan is frozen. Currently TMM parses and installs without a mandatory confirmation step even if the archive structure is ambiguous.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"install-dedup","title":"Strict duplicate mod validation","detail":"No checksum + filename + size deduplication at install time. A user can install the same mod twice under different archive names.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"install-charset","title":"Non-English character artifact in deployment notification","detail":"Corrupted characters in the deployment toast string (\"ace\"-like). Not confirmed fixed. Needs a deploy run to observe the notification string live.","status":"open","claudeDone":false,"noahVerified":false,"notes":""}]},{"id":"games","title":"Game Management (Unified)","items":[{"id":"games-unified-model","title":"Remove built-in vs custom game distinction (architectural)","detail":"Decision #5: All games are first-class. CustomGameProfile already has both IsNative and IsBuiltIn flags — overlapping and confusing. GameRegistry._builtInGames + _customGames are two dicts that should collapse into one. Remove all code paths that branch on 'is this a custom game'. Built-in games are just pre-seeded profiles from .tmmgame assets.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"games-model-rename","title":"Rename CustomGameProfile → GameConfig (or GameDefinition)","detail":"CustomGameProfile is the full editable config model. The name is misleading once all games are unified. Rename across all 27+ files. The lightweight display record GameProfile stays or gets renamed to GameEntry/GameSummary to avoid ambiguity.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"games-key-slug","title":"Replace CUSTOM_N key format with clean name-based slugs","detail":"AddCustomGameAsync generates CUSTOM_1, CUSTOM_2, etc. (GameRegistry.cs:202). Replace with a slug derived from the game name (e.g. 'My Game' → 'MyGame', deduplicated if needed). No CUSTOM_ prefix. Must handle existing installations via migration.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"games-folder-naming","title":"Clean mod folder names (ModsRaw_slug, not ModsRaw_CUSTOM_1)","detail":"Mod folder paths derive directly from the game key. Once keys are slugified, folders follow automatically. But existing CUSTOM_N folders need migration: rename on disk + update any stored paths in deployplan.json, manifests, etc.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"games-wizard-unified","title":"Rename CustomGameSetupWizard → GameSetupWizard, remove built-in guards","detail":"Decision #4: The wizard is the add + edit flow for every game, with no special cases for built-in profiles. Remove any UI branches that hide or disable fields for built-in games. Rename the wizard class and XAML file.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"games-wizard-redesign","title":"Redesign wizard: merge mod types + routing rules into one step","detail":"Decision #2: Steps 2 and 3 are redundant. Combine into a single step where each row is a mod type with its file extensions and target folder. Decision #4 means the redesign must work for both add and edit flows for all games.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"games-edit-mode","title":"Implement edit mode: Config tab opens wizard for any game","detail":"Decision #4: The Config tab in each game workspace opens the wizard in edit mode. This must work for built-in games (III, VC, SA, etc.) and user-added games identically. Changes persist back to the game's config file.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"games-registry-clean","title":"Consolidate GameRegistry: collapse two dicts into one","detail":"GameRegistry currently has _builtInGames (static GameProfile records) and _customGames (CustomGameProfile + GameProfile pairs). Once built-in .tmmgame profiles fully replace static records and all games are unified, collapse to a single dict. Remove GetBuiltInGames(), GetCustomGames(), GetBuiltInCustomGames() — replace with GetAllGames() and optional tag-based filtering.","status":"open","claudeDone":false,"noahVerified":false,"notes":""}]},{"id":"l10n","title":"Localization and Typography","items":[{"id":"l10n-dynamic-scaling","title":"Dynamic scaling for long translated strings","detail":"No adaptive layout logic for translated strings that exceed English lengths. Needs a pass across controls with fixed widths.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"l10n-specific-fixes","title":"Fix specific localization strings (verify in running app)","detail":"Known issues: (1) Truncated: 'table differs from this profile's expe--' (2) Pluralization: '1 mods installed' (library stats strip) (3) es-MX: '1 mod - 1 enabled - last deployed 8 min ago' (4) 'app data' and 'free space' in Home view (5) 'import' and 'loadouts' in M1 overflow/tab-bar positions (verify they still exist) (6) All window titles (7) All color accent preset identifiers.","status":"open","claudeDone":false,"noahVerified":false,"notes":""}]},{"id":"credits","title":"Credits","items":[{"id":"credits-opus48","title":"Add Opus 4.8 to AboutWindow credits","detail":"AboutWindow.xaml:135 shows 'Claude Opus 4.7'. Opus 4.8 needs to be appended to the AI-assisted credits tag list.","status":"open","claudeDone":false,"noahVerified":false,"notes":""}]},{"id":"feasibility","title":"Feasibility Surveys (analysis only — no code)","items":[{"id":"feasibility-vfs","title":"Virtual File System (VFS) feasibility assessment","detail":"Assess technical feasibility and maintenance overhead of adding a mandatory VFS layer (MO2-parity). Consider: impact on DeploymentPlan-freeze architecture, performance on large mod sets, rollback complexity.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"feasibility-nexus","title":"Nexus Mods API integration feasibility assessment","detail":"Assess feasibility of native NexusMods API support (mod browsing, metadata, download queue). Consider: API key management, rate limits, per-game category mapping.","status":"open","claudeDone":false,"noahVerified":false,"notes":""},{"id":"feasibility-fomod","title":"FOMOD installer schema feasibility assessment","detail":"Assess feasibility of parsing and presenting FOMOD ModuleConfig.xml during the pre-installation deployment preview. Consider: schema coverage, conditional install steps, interaction with DeploymentPlan freeze.","status":"open","claudeDone":false,"noahVerified":false,"notes":""}]}]};
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+
+loadData();
+</script>
+</body>
+</html>

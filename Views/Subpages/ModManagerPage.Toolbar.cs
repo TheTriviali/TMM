@@ -191,7 +191,7 @@ namespace TMM
 
             _deployCts?.Cancel();
             _deployCts = new CancellationTokenSource();
-            Cust_btnDeploy.IsEnabled = false;
+            Cust_Header.SetDeployEnabled(false);
             ShowDeployOverlay($"Deploying {_customConfig.GameName}...");
             try
             {
@@ -224,7 +224,7 @@ namespace TMM
             finally
             {
                 HideDeployOverlay();
-                Cust_btnDeploy.IsEnabled = true;
+                Cust_Header.SetDeployEnabled(true);
             }
             await RefreshCustomAsync();
         }

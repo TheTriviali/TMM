@@ -19,6 +19,8 @@ namespace TMM
         private string _currentPage = "Library";
         private LibraryEntry? _modalEntry;
         private LibraryEntry? _activeModManagerEntry;   // last game opened in mod manager
+        private LibraryEntry? _workspaceEntry;          // the game whose workspace is open (M1)
+        private string _workspaceTab = "Mods";          // last active workspace sub-tab
         // Pages instantiated lazily in Window_Loaded
         private BackupsPage? _pageBackups;
         private PathsPage? _pagePaths;
@@ -48,7 +50,12 @@ namespace TMM
 
             // Wire up pages that need the core
             pageLibrary.Initialize(_core);
-            pageModManager.BackRequested += () => NavigateTo("Library");
+            // "← Library" in the workspace header: exit the workspace back to the library list.
+            pageModManager.BackRequested += () =>
+            {
+                _workspaceEntry = null;
+                NavigateTo("Library");
+            };
 
             // Wire GameCard events from library
             pageLibrary.CardClicked     += OnCardClicked;
@@ -227,12 +234,39 @@ namespace TMM
 
         private void NavBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is string page)
-                NavigateTo(page);
+            if (sender is not Button btn || btn.Tag is not string page) return;
+
+            // While a game workspace is open, the Library rail item returns to that
+            // workspace (same game + last sub-tab). Use "← Library" in the header to
+            // actually exit to the library list.
+            if (page == "Library" && _workspaceEntry is { } ws)
+            {
+                NavigateToWorkspace(ws, _workspaceTab);
+                return;
+            }
+
+            NavigateTo(page);
+        }
+
+        /// <summary>
+        /// Opens <paramref name="entry"/>'s full game workspace (M1) on sub-tab
+        /// <paramref name="tab"/> and remembers it so global-rail round-trips restore it.
+        /// </summary>
+        private void NavigateToWorkspace(LibraryEntry entry, string tab)
+        {
+            _activeModManagerEntry = entry;
+            _workspaceEntry = entry;
+            _workspaceTab = tab;
+            pageModManager.LoadEntry(entry, _core, tab);
+            NavigateTo("ModManager");
         }
 
         private void NavigateTo(string page)
         {
+            // Preserve the active workspace sub-tab when stepping out to a global page.
+            if (_currentPage == "ModManager" && _workspaceEntry is not null)
+                _workspaceTab = pageModManager.CurrentTab;
+
             _currentPage = page;
 
             pageLibrary.Visibility                       = Visibility.Collapsed;
@@ -259,20 +293,11 @@ namespace TMM
                     break;
 
                 case "ModManager":
-                    // If no active entry, fall back to default game then first available
+                    // The workspace is loaded by NavigateToWorkspace; here we just reveal it.
                     if (_activeModManagerEntry == null)
-                    {
-                        var entries = BuildLibraryEntries();
-                        _activeModManagerEntry =
-                            entries.FirstOrDefault(e => !e.IsPlaceholder && e.IsActive) ??
-                            entries.FirstOrDefault(e => !e.IsPlaceholder && !e.IsArchived);
-                    }
-                    if (_activeModManagerEntry == null)
-                        return; // no games yet — button click is a no-op on fresh install
-                    pageModManager.LoadEntry(_activeModManagerEntry, _core);
+                        return; // no games yet — no-op on fresh install
                     pageModManager.Visibility = Visibility.Visible;
                     titleSubtext.Text         = $" — {_activeModManagerEntry.DisplayName}";
-                    UpdateModManagerNavTip();
                     break;
 
                 case "Downloads":
@@ -325,30 +350,26 @@ namespace TMM
 
         private void SetNavActive(string page)
         {
-            // Reset all to default style
+            // Reset all to default style. Post-M1 the rail holds only truly-global
+            // destinations; Mod Manager / Downloads / Backups / Add Game moved into the
+            // per-game workspace (or the library header).
             navBtnLibrary.Style           = (Style)Resources["NavBtnStyle"];
-            navBtnModMgr.Style            = (Style)Resources["NavBtnStyle"];
-            navBtnDownloads.Style         = (Style)Resources["NavBtnStyle"];
-            navBtnBackups.Style           = (Style)Resources["NavBtnStyle"];
             navBtnNotifications.Style     = (Style)Resources["NavBtnStyle"];
             navBtnTroubleshooting.Style   = (Style)Resources["NavBtnStyle"];
             navBtnPaths.Style             = (Style)Resources["NavBtnStyle"];
             navBtnSettings.Style          = (Style)Resources["NavBtnStyle"];
-            navBtnAddGame.Style           = (Style)Resources["NavBtnStyle"];
 
-            // Highlight the active button
+            // Highlight the active button. The workspace (ModManager) keeps Library lit,
+            // since it is reached from the library.
             var activeStyle = (Style)Resources["NavBtnActiveStyle"];
             switch (page)
             {
                 case "Library":          navBtnLibrary.Style         = activeStyle; break;
-                case "ModManager":       navBtnModMgr.Style          = activeStyle; break;
-                case "Downloads":        navBtnDownloads.Style        = activeStyle; break;
-                case "Backups":          navBtnBackups.Style          = activeStyle; break;
+                case "ModManager":       navBtnLibrary.Style         = activeStyle; break;
                 case "Notifications":    navBtnNotifications.Style    = activeStyle; break;
                 case "Troubleshooting":  navBtnTroubleshooting.Style  = activeStyle; break;
                 case "Paths":            navBtnPaths.Style            = activeStyle; break;
                 case "Settings":         navBtnSettings.Style         = activeStyle; break;
-                case "AddGame":          navBtnAddGame.Style          = activeStyle; break;
             }
         }
 
@@ -513,17 +534,8 @@ namespace TMM
                 }
             }
 
-            _activeModManagerEntry = entry;
-            pageModManager.LoadEntry(entry, _core);
-            UpdateModManagerNavTip();
-            NavigateTo("ModManager");
-        }
-
-        private void UpdateModManagerNavTip()
-        {
-            navBtnModMgr.ToolTip = _activeModManagerEntry != null
-                ? $"Mod Manager — {_activeModManagerEntry.DisplayName}"
-                : "Mod Manager";
+            // Opening a game from the library always starts on the Mods tab.
+            NavigateToWorkspace(entry, "Mods");
         }
 
         private void OnArchiveToggled(LibraryEntry entry, bool archive)

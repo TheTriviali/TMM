@@ -41,11 +41,17 @@ namespace TMM
         public ModManagerPage()
         {
             InitializeComponent();
+            WireHeader();
         }
 
         // ── Public API ────────────────────────────────────────────────────────────
 
-        public void LoadEntry(LibraryEntry entry, BackendCore core)
+        /// <summary>
+        /// Opens <paramref name="entry"/> in the workspace. <paramref name="tab"/> selects
+        /// the initial sub-tab (Mods · Conflicts · Backups · Downloads · Config); null keeps
+        /// the default ("Mods").
+        /// </summary>
+        public void LoadEntry(LibraryEntry entry, BackendCore core, string? tab = null)
         {
             _core  = core;
             _entry = entry;
@@ -56,13 +62,18 @@ namespace TMM
             if (entry.IsPlaceholder)
             {
                 Placeholder_txtName.Text = entry.DisplayName;
+                Cust_Header.LoadPlaceholder(entry);
                 panelPlaceholder.Visibility = Visibility.Visible;
                 return;
             }
 
             InitCustomGame();
+            ShowTab(tab ?? "Mods");
             panelCustom.Visibility = Visibility.Visible;
         }
+
+        /// <summary>The sub-tab currently shown, so the shell can restore it on return.</summary>
+        public string CurrentTab => _currentTab;
 
         // ══════════════════════════════════════════════════════════════════════════
         // GAME PANEL  (all games — built-in and custom — use the same panel)
@@ -94,6 +105,7 @@ namespace TMM
             Cust_ModList.ItemsSource = _modsCustom;
             LoadModsFromJsonCustom();
             InitializeDownloadsDrawer();
+            InitBackupsTab();
             _ = RefreshCustomAsync();
         }
 
@@ -117,13 +129,8 @@ namespace TMM
                 ? TMM.Services.LocalizationService.Instance["ModManager_DirectoryNotSet"]
                 : _customConfig.GameDirectory;
 
-            // Toolbar breadcrumb
-            Cust_txtGameTitle.Text = _customConfig.GameName;
-            var colorOverride = _core.GetCardColor(_customProfile.Key);
-            string startHex = colorOverride?.Start ?? _customConfig.GradientStartHex ?? "#1A1A2E";
-            string endHex   = colorOverride?.End   ?? _customConfig.GradientEndHex   ?? "#0D0D1A";
-            if (TryParseHex(startHex, out var c0)) Cust_gradChipTop.Color = c0;
-            if (TryParseHex(endHex,   out var c1)) Cust_gradChipBot.Color = c1;
+            // Refresh the workspace header identity/meta/loadout switcher.
+            UpdateHeader();
 
             if (!string.IsNullOrEmpty(_customConfig.NexusSlug))
             {
@@ -228,13 +235,8 @@ namespace TMM
             bool hasEnabled = _modsCustom.Any(m => m.IsEnabled);
             _pendingCustom = ready && hasEnabled;
 
-            if (!_pendingCustom)
-                Cust_btnDeploy.Background = UiColors.DisabledBrush;
-            else
-                Cust_btnDeploy.SetResourceReference(Button.BackgroundProperty, "AccentBrush");
-
-            Cust_pnlLaunch.Visibility = string.IsNullOrEmpty(_customConfig.ExePath)
-                ? Visibility.Collapsed : Visibility.Visible;
+            Cust_Header.SetDeployEnabled(_pendingCustom);
+            UpdateHeaderPending();
         }
 
         private void LoadModsFromJsonCustom()
@@ -843,6 +845,8 @@ namespace TMM
                         .ToList();
 
                     var summaries = _conflictAnalyzer.AnalyzeByMod(plans);
+                    int clashCount = _conflictAnalyzer.Analyze(plans).Count
+                                   + _conflictAnalyzer.AnalyzeProxyConflicts(plans).Count;
 
                     Application.Current?.Dispatcher.Invoke(() =>
                     {
@@ -851,6 +855,8 @@ namespace TMM
                             mod.ConflictSummary = summaries.TryGetValue(mod.Name, out var s) ? s : null;
                         }
                         RefreshFilterChips();
+                        UpdateConflictsTabBadge(clashCount);
+                        if (_currentTab == "Conflicts") RenderConflictsTab();
                     });
                 }
                 catch { /* analysis is best-effort */ }
@@ -1092,36 +1098,5 @@ namespace TMM
             }
         }
 
-        private static bool TryParseHex(string hex, out System.Windows.Media.Color color)
-        {
-            color = System.Windows.Media.Colors.Black;
-            if (string.IsNullOrWhiteSpace(hex)) return false;
-            try { color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex.Trim()); return true; }
-            catch { return false; }
-        }
-
-        // ── Toolbar label collapse ────────────────────────────────────────────────
-
-        private const double ToolbarLabelThreshold = 950.0;
-
-        private void Cust_ToolbarBorder_SizeChanged(object sender, SizeChangedEventArgs e)
-            => UpdateToolbarLabels(e.NewSize.Width >= ToolbarLabelThreshold);
-
-        private void UpdateToolbarLabels(bool show)
-        {
-            var vis = show ? Visibility.Visible : Visibility.Collapsed;
-            CollapseLabelsIn(Cust_leftButtons, vis);
-            CollapseLabelsIn(Cust_rightButtons, vis);
-            CollapseLabelsIn(Cust_centerButtons, vis);
-        }
-
-        private static void CollapseLabelsIn(StackPanel outer, Visibility vis)
-        {
-            foreach (var inner in outer.Children.OfType<StackPanel>())
-            {
-                var label = inner.Children.OfType<TextBlock>().FirstOrDefault();
-                if (label != null) label.Visibility = vis;
-            }
-        }
     }
 }

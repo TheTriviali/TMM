@@ -37,6 +37,20 @@ namespace TMM
             RefreshBackupSize();
         }
 
+        /// <summary>
+        /// Re-host mode (M1 workspace Backups tab): pin the page to a single game and
+        /// hide the cross-game selector. Backups are strictly per-game in the workspace.
+        /// </summary>
+        public void ScopeToGame(LibraryEntry entry)
+        {
+            cmbGame.ItemsSource = new[] { entry };
+            cmbGame.DisplayMemberPath = "DisplayName";
+            cmbGame.SelectedItem = entry;
+            cmbGame.Visibility = Visibility.Collapsed;
+            RefreshBackupSize();
+            LoadBackups(entry.Key, entry.DisplayName);
+        }
+
         private void RefreshBackupSize()
         {
             long total = _core.GetTotalBackupSize();

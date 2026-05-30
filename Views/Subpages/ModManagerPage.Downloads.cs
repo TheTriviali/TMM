@@ -18,57 +18,14 @@ namespace TMM
     /// </summary>
     public partial class ModManagerPage
     {
-        private bool _downloadsDrawerOpen = false;
-
         // ── Setup (called from InitCustomGame) ────────────────────────────────────
 
         private void InitializeDownloadsDrawer()
         {
-            bool hasFlag = _core.Settings.HasUsedBuiltInDownloads;
-            var vis = hasFlag ? Visibility.Visible : Visibility.Collapsed;
-            Cust_pnlDownloadsToggle.Visibility  = vis;
-            Cust_DownloadsSepToolbar.Visibility = vis;
-
-            // Auto-open drawer if archives are present for this game
-            _downloadsDrawerOpen = false;
-            Cust_DownloadsBorder.Visibility = Visibility.Collapsed;
-
-            if (hasFlag && _customProfile != null)
-            {
-                try
-                {
-                    string archiveDir = _core.GetModsArchivePath(_customProfile.Key);
-                    bool hasArchives = Directory.EnumerateFiles(archiveDir)
-                        .Any(f =>
-                        {
-                            string ext = Path.GetExtension(f).ToLowerInvariant();
-                            return ext is ".zip" or ".rar" or ".7z";
-                        });
-
-                    if (hasArchives)
-                    {
-                        _downloadsDrawerOpen = true;
-                        Cust_DownloadsBorder.Visibility = Visibility.Visible;
-                        RefreshDownloadsDrawer();
-                    }
-                }
-                catch
-                {
-                    // If there's an error checking archives, keep drawer closed
-                }
-            }
-        }
-
-        // ── Toggle handler ────────────────────────────────────────────────────────
-
-        private void BtnToggleDownloadsCustom_Click(object sender, RoutedEventArgs e)
-        {
-            _downloadsDrawerOpen = !_downloadsDrawerOpen;
-            Cust_DownloadsBorder.Visibility = _downloadsDrawerOpen
-                ? Visibility.Visible : Visibility.Collapsed;
-
-            if (_downloadsDrawerOpen)
-                RefreshDownloadsDrawer();
+            // Downloads is now a workspace tab (M1); content is populated lazily when
+            // the tab is shown (ShowTab → RefreshDownloadsDrawer). Pre-populate so the
+            // list is ready if the user opens the tab.
+            RefreshDownloadsDrawer();
         }
 
         // ── Drawer population ─────────────────────────────────────────────────────

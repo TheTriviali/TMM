@@ -191,27 +191,6 @@
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
-                            <!-- Mod Manager -->
-                            <Button x:Name="navBtnModMgr" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Mod Manager" Click="NavBtn_Click" Tag="ModManager">
-                                <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
-
-                            <!-- Downloads -->
-                            <Button x:Name="navBtnDownloads" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Downloads" Click="NavBtn_Click" Tag="Downloads">
-                                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
-
-                            <!-- Backups -->
-                            <Button x:Name="navBtnBackups" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Backups" Click="NavBtn_Click" Tag="Backups">
-                                <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
-
                             <!-- Notifications -->
                             <Button x:Name="navBtnNotifications" Style="{StaticResource NavBtnStyle}"
                                     ToolTip="Notifications" Click="NavBtn_Click" Tag="Notifications">
@@ -233,13 +212,6 @@
                             <Button x:Name="navBtnPaths" Style="{StaticResource NavBtnStyle}"
                                     ToolTip="File Locations" Click="NavBtn_Click" Tag="Paths">
                                 <TextBlock Text="&#xE9CE;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
-
-                            <!-- Add / Edit Game -->
-                            <Button x:Name="navBtnAddGame" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Add / Edit Game" Click="NavBtn_Click" Tag="AddGame">
-                                <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
