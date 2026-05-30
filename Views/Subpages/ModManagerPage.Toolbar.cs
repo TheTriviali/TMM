@@ -152,8 +152,7 @@ namespace TMM
         {
             if (!_pendingCustom)
             {
-                MessageBox.Show("Game directory not configured or no enabled mods.",
-                    "Cannot Deploy", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowWarning("Game directory not configured or no enabled mods.", "Deploy");
                 return;
             }
 
@@ -197,15 +196,26 @@ namespace TMM
                 await _core.DeployFilesToGameDirAsync(
                     _customProfile.Key, _customConfig.GameDirectory,
                     fileMap, modNames, MakeProgress(), _deployCts.Token);
-                NotificationService.ShowSuccess($"{_customConfig.GameName} deployed.");
+                NotificationService.ShowSuccess($"{_customConfig.GameName} deployed.", "Deploy");
             }
             catch (OperationCanceledException)
             {
-                NotificationService.ShowWarning("Deploy cancelled.");
+                NotificationService.ShowWarning("Deploy cancelled.", "Deploy");
+            }
+            catch (IOException ex)
+            {
+                Logger.Error("Deploy failed (IO)", ex);
+                NotificationService.ShowError($"Deploy failed: {ex.Message}", "Deploy", "TMM-E001");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.Error("Deploy failed (access denied)", ex);
+                NotificationService.ShowError($"Deploy failed — access denied: {ex.Message}", "Deploy", "TMM-E001");
             }
             catch (Exception ex)
             {
-                NotificationService.ShowError($"Deploy failed: {ex.Message}");
+                Logger.Error("Deploy failed", ex);
+                NotificationService.ShowError($"Deploy failed: {ex.Message}", "Deploy", "TMM-E001");
             }
             finally
             {

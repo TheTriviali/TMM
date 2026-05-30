@@ -335,8 +335,7 @@ namespace TMM
             var manifests = _core.GetRollbackManifests(profile.Key);
             if (manifests.Count == 0)
             {
-                MessageBox.Show($"No rollback snapshots found for {profile.DisplayName}.",
-                    "Rollback", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowWarning($"No rollback snapshots found for {profile.DisplayName}.", "Rollback");
                 return;
             }
 
@@ -353,11 +352,22 @@ namespace TMM
             {
                 var progress = new Progress<DeploymentProgress>(_ => { });
                 await _core.RollbackDeployAsync(latest, progress);
-                NotificationService.ShowSuccess($"{profile.DisplayName} rolled back.");
+                NotificationService.ShowSuccess($"{profile.DisplayName} rolled back.", "Rollback");
+            }
+            catch (IOException ex)
+            {
+                Logger.Error("Rollback failed (IO)", ex);
+                NotificationService.ShowError($"Rollback failed: {ex.Message}", "Rollback", "TMM-E002");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.Error("Rollback failed (access denied)", ex);
+                NotificationService.ShowError($"Rollback failed — access denied: {ex.Message}", "Rollback", "TMM-E002");
             }
             catch (Exception ex)
             {
-                NotificationService.ShowError($"Rollback failed: {ex.Message}");
+                Logger.Error("Rollback failed", ex);
+                NotificationService.ShowError($"Rollback failed: {ex.Message}", "Rollback", "TMM-E002");
             }
             finally
             {

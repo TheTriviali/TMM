@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -29,7 +30,7 @@ namespace TMM
 
             if (games.Count > 0)
             {
-                var def = games.FirstOrDefault(e => e.IsDefault) ?? games[0];
+                var def = games.FirstOrDefault(e => e.IsActive) ?? games[0];
                 cmbGame.SelectedItem = def;
             }
 
@@ -186,12 +187,22 @@ namespace TMM
             {
                 await _core.RollbackDeployAsync(manifest, new Progress<DeploymentProgress>(_ => { }));
                 _core.Activity.Record(ActivityKind.Rollback, manifest.GameKey, displayName, $"Restored backup from {timeStr}", manifest.Entries.Count);
-                NotificationService.ShowSuccess($"{displayName} restored.");
+                NotificationService.ShowSuccess($"{displayName} restored.", "Rollback");
+            }
+            catch (IOException ex)
+            {
+                Logger.Error("Restore failed (IO)", ex);
+                NotificationService.ShowError($"Restore failed: {ex.Message}", "Rollback", "TMM-E002");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.Error("Restore failed (access denied)", ex);
+                NotificationService.ShowError($"Restore failed — access denied: {ex.Message}", "Rollback", "TMM-E002");
             }
             catch (Exception ex)
             {
                 Logger.Error("Restore failed", ex);
-                NotificationService.ShowError($"Restore failed: {ex.Message}");
+                NotificationService.ShowError($"Restore failed: {ex.Message}", "Rollback", "TMM-E002");
             }
             finally
             {
