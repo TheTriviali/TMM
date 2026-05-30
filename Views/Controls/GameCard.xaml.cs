@@ -225,6 +225,7 @@ namespace TMM
         {
             if (btn?.Template == null) return;
             btn.IsHitTestVisible = clickable;
+            btn.ApplyTemplate(); // ControlTemplate elements are only findable after this
 
             if (btn.Template.FindName(bgName,  btn) is Border bg)  bg.Background = new SolidColorBrush(bgColor);
             if (btn.Template.FindName(dotName, btn) is Ellipse dot) dot.Fill      = new SolidColorBrush(dotColor);
