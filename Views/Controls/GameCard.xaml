@@ -22,6 +22,9 @@
             <Separator/>
             <MenuItem Header="{helpers:Localization Card_SetArtwork}"    Click="MenuSetArt_Click"/>
             <MenuItem Header="{helpers:Localization Card_RemoveArtwork}" Click="MenuRemoveArt_Click"/>
+            <Separator/>
+            <MenuItem Header="{helpers:Localization Card_SetColor}"   Click="MenuSetColor_Click"/>
+            <MenuItem Header="{helpers:Localization Card_ResetColor}" Click="MenuResetColor_Click"/>
         </ContextMenu>
     </UserControl.ContextMenu>
 
@@ -444,9 +447,13 @@
                 </StackPanel>
             </Grid>
 
-            <!-- Hover overlay (topmost, both modes) -->
+            <!-- Hover overlay (topmost, both modes).
+                 IsHitTestVisible=False is REQUIRED: a Transparent background is still
+                 hit-testable in WPF, so without this the overlay sits on top of every
+                 button and swallows their clicks (the whole card behaves as one button). -->
             <Border x:Name="hoverOverlay" CornerRadius="10"
-                    Background="Transparent" Opacity="0"/>
+                    Background="Transparent" Opacity="0"
+                    IsHitTestVisible="False"/>
         </Grid>
     </Border>
 </UserControl>
