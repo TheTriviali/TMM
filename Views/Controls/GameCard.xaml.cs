@@ -99,9 +99,10 @@ namespace TMM
             listTxtSubtitle.Text = entry.Subtitle;
             listTxtModCount.Text = entry.ModCount > 0 ? $"{entry.ModCount} mods" : "";
 
-            // ── Gradient ──
-            if (TryParseHex(entry.GradientStartHex, out var c0)) gradStart.Color = c0;
-            if (TryParseHex(entry.GradientEndHex,   out var c1)) gradEnd.Color   = c1;
+            // ── Gradient (user color override wins over the entry's shipped gradient) ──
+            var ov = Core?.GetCardColor(entry.Key);
+            if (TryParseHex(ov?.Start ?? entry.GradientStartHex, out var c0)) gradStart.Color = c0;
+            if (TryParseHex(ov?.End   ?? entry.GradientEndHex,   out var c1)) gradEnd.Color   = c1;
 
             // ── Status chip ──
             ApplyStatusChip(entry.Status);
@@ -350,6 +351,33 @@ namespace TMM
             Core.DeleteLibraryArt(Entry.Key);
             ApplyEntry(Entry);
             NotificationService.ShowSuccess("Artwork removed — using gradient");
+        }
+
+        private void MenuSetColor_Click(object sender, RoutedEventArgs e)
+        {
+            if (Entry == null || Core == null) return;
+
+            // Seed the picker with the current effective colors (override else shipped gradient).
+            var current = Core.GetCardColor(Entry.Key);
+            var dlg = new ColorPickerWindow(
+                current?.Start ?? Entry.GradientStartHex,
+                current?.End   ?? Entry.GradientEndHex)
+            {
+                Owner = Window.GetWindow(this),
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            Core.SetCardColor(Entry.Key, dlg.StartHex, dlg.EndHex);
+            ApplyEntry(Entry);
+            NotificationService.ShowSuccess("Card color updated");
+        }
+
+        private void MenuResetColor_Click(object sender, RoutedEventArgs e)
+        {
+            if (Entry == null || Core == null) return;
+            Core.ClearCardColor(Entry.Key);
+            ApplyEntry(Entry);
+            NotificationService.ShowSuccess("Card color reset");
         }
 
         // ── Static helpers ────────────────────────────────────────────────────────

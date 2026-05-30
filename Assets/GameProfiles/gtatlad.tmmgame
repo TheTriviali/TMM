@@ -50,8 +50,8 @@
     "subtitle": "Lost MC, 2008",
     "iconGlyph": "&#xE7FC;"
   },
-  "gradientStartHex": "#0C1A2E",
-  "gradientEndHex": "#060F1C",
+  "gradientStartHex": "#7A1414",
+  "gradientEndHex": "#2A0808",
   "libraryStatus": "Alpha",
   "description": "GTA IV: The Lost and Damned — part of the Episodes from Liberty City package. Nested under the GTA IV install directory.",
   "author": "TMM",

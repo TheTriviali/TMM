@@ -50,8 +50,8 @@
     "subtitle": "Gay Tony, 2008",
     "iconGlyph": "&#xE7FC;"
   },
-  "gradientStartHex": "#0C1A2E",
-  "gradientEndHex": "#060F1C",
+  "gradientStartHex": "#B8860B",
+  "gradientEndHex": "#2E2206",
   "libraryStatus": "Alpha",
   "description": "GTA IV: The Ballad of Gay Tony — part of the Episodes from Liberty City package. Nested under the GTA IV install directory.",
   "author": "TMM",

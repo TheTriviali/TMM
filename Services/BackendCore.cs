@@ -470,6 +470,36 @@ namespace TMM
             Log($"Library art saved for {gameKey}: {destPath}");
         }
 
+        /// <summary>
+        /// Returns the user's card color override for a game as (start, end) hex strings,
+        /// or null if none is set. Applies to both built-in and custom games.
+        /// </summary>
+        public (string Start, string End)? GetCardColor(string gameKey)
+        {
+            if (!Settings.CardColorOverrides.TryGetValue(gameKey, out var packed) || string.IsNullOrWhiteSpace(packed))
+                return null;
+            var parts = packed.Split('|');
+            return parts.Length == 2 ? (parts[0], parts[1]) : null;
+        }
+
+        /// <summary>Sets and persists a card color override for a game.</summary>
+        public void SetCardColor(string gameKey, string startHex, string endHex)
+        {
+            Settings.CardColorOverrides[gameKey] = $"{startHex}|{endHex}";
+            SaveSettings();
+            Log($"Card color set for {gameKey}: {startHex} → {endHex}");
+        }
+
+        /// <summary>Clears a card color override, reverting to the profile's gradient.</summary>
+        public void ClearCardColor(string gameKey)
+        {
+            if (Settings.CardColorOverrides.Remove(gameKey))
+            {
+                SaveSettings();
+                Log($"Card color reset for {gameKey}");
+            }
+        }
+
         /// <summary>Removes custom artwork for a game, reverting to gradient banner.</summary>
         public void DeleteLibraryArt(string gameKey)
         {

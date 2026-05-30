@@ -288,6 +288,8 @@
   "Card_Remove": "Remove",
   "Card_SetArtwork": "Set Artwork",
   "Card_RemoveArtwork": "Remove Artwork",
+  "Card_SetColor": "Set Card Color…",
+  "Card_ResetColor": "Reset Card Color",
 
   "ModManager_DirectoryNotSet": "Directory not set",
   "ModManager_FolderNotSet": "Game folder is not set or missing.",

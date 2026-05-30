@@ -288,6 +288,8 @@
   "Card_Remove": "Eliminar",
   "Card_SetArtwork": "Establecer imagen",
   "Card_RemoveArtwork": "Quitar imagen",
+  "Card_SetColor": "Color de tarjeta…",
+  "Card_ResetColor": "Restablecer color",
 
   "ModManager_DirectoryNotSet": "Directorio no configurado",
   "ModManager_FolderNotSet": "La carpeta del juego no está configurada o no existe.",

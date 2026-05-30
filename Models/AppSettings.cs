@@ -80,5 +80,14 @@ namespace TMM
         /// users who never use built-in downloads see no new UI.
         /// </summary>
         public bool HasUsedBuiltInDownloads { get; set; } = false;
+
+        // ── Per-game card color overrides ─────────────────────────────────────────
+        /// <summary>
+        /// User-chosen library card gradient per game key. Value is "startHex|endHex"
+        /// (e.g. "#B5179E|#3A0CA3"). When present it overrides the gradient that ships
+        /// with the game's profile, for both built-in and custom games. Set via the card's
+        /// "Set card color" menu; cleared by "Reset color".
+        /// </summary>
+        public Dictionary<string, string> CardColorOverrides { get; set; } = new();
     }
 }

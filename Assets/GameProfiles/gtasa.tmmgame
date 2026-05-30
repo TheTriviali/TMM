@@ -77,8 +77,8 @@
     "subtitle": "San Andreas, 1992",
     "iconGlyph": "&#xE7FC;"
   },
-  "gradientStartHex": "#1B3A1B",
-  "gradientEndHex": "#0C1E0C",
+  "gradientStartHex": "#C56A1A",
+  "gradientEndHex": "#3A1E08",
   "libraryStatus": "Beta",
   "description": "Grand Theft Auto: San Andreas — Los Santos, 1992. Routes ASI plugins to scripts/ or game root; CLEO scripts to cleo/.",
   "author": "TMM",

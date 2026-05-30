@@ -1,0 +1,102 @@
+<local:TmmWindow x:Class="TMM.ColorPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TMM"
+        Title="Set Card Color" SizeToContent="Height" Width="380"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Border CornerRadius="10" Background="{DynamicResource BgBrush}"
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
+            ClipToBounds="True">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Grid Grid.Row="0" Background="#18000000" MouseLeftButtonDown="TitleBar_MouseDown">
+                <TextBlock Text="Set Card Color" Foreground="{DynamicResource SubTextBrush}"
+                           VerticalAlignment="Center" Margin="14,0,0,0" FontSize="12" FontWeight="SemiBold"/>
+                <Button HorizontalAlignment="Right" Width="40" VerticalAlignment="Stretch" Click="BtnCancel_Click"
+                        ToolTip="Cancel">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bg" Background="Transparent" CornerRadius="0,8,0,0">
+                                <TextBlock Text="x" Foreground="{DynamicResource SubTextBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bg" Property="Background" Value="#E81123"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+
+            <StackPanel Grid.Row="1" Margin="16,14,16,4">
+                <!-- Live preview -->
+                <Border Height="64" CornerRadius="8" ClipToBounds="True"
+                        BorderBrush="#22FFFFFF" BorderThickness="1">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop x:Name="previewStart" Color="#1B3A1B" Offset="0"/>
+                            <GradientStop x:Name="previewEnd"   Color="#0C1E0C" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <TextBlock x:Name="previewLabel" Text="PREVIEW"
+                               Foreground="#E8FFFFFF" FontWeight="Black" FontSize="16"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Presets -->
+                <TextBlock Text="Presets" Foreground="{DynamicResource SubTextBrush}"
+                           FontSize="11" Margin="0,12,0,5"/>
+                <WrapPanel x:Name="presetPanel"/>
+
+                <!-- Custom hex inputs -->
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Start hex" Foreground="{DynamicResource SubTextBrush}"
+                                   FontSize="11" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtStart" Height="28" Background="{DynamicResource ControlBgBrush}"
+                                 Foreground="{DynamicResource TextBrush}" BorderThickness="0" Padding="6,4"
+                                 FontSize="13" TextChanged="Hex_TextChanged"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="End hex" Foreground="{DynamicResource SubTextBrush}"
+                                   FontSize="11" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtEnd" Height="28" Background="{DynamicResource ControlBgBrush}"
+                                 Foreground="{DynamicResource TextBrush}" BorderThickness="0" Padding="6,4"
+                                 FontSize="13" TextChanged="Hex_TextChanged"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+
+            <!-- Bottom buttons -->
+            <Border Grid.Row="2" Padding="16,10" Background="#0A000000">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="Apply" Click="BtnSave_Click" Height="30"
+                            Background="{DynamicResource AccentBrush}" Foreground="Black"
+                            FontWeight="Bold" BorderThickness="0" Cursor="Hand" FontSize="13"/>
+                    <Button Grid.Column="2" Content="Cancel" Click="BtnCancel_Click" Height="30" Width="70"
+                            Background="{DynamicResource PanelBrush}" Foreground="{DynamicResource TextBrush}"
+                            BorderThickness="0" Cursor="Hand"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</local:TmmWindow>

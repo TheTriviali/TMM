@@ -551,12 +551,17 @@ namespace TMM
                 .ToList();
             foreach (var (key, config) in allCustom)
             {
+                // A user color override (if any) wins over the profile's shipped gradient.
+                var colorOverride = _core.GetCardColor(key);
+                string startHex = colorOverride?.Start ?? config.GradientStartHex ?? "#1A1A2E";
+                string endHex   = colorOverride?.End   ?? config.GradientEndHex   ?? "#0D0D1A";
+
                 result.Add(new LibraryEntry(
                     Key:             key,
                     DisplayName:     config.GameName,
                     Subtitle:        config.Description ?? "",
-                    GradientStartHex: config.GradientStartHex ?? "#1A1A2E",
-                    GradientEndHex:   config.GradientEndHex   ?? "#0D0D1A",
+                    GradientStartHex: startHex,
+                    GradientEndHex:   endHex,
                     Status:          config.LibraryStatus,
                     ModCount:        CountMods(key),
                     IsReady:         !string.IsNullOrEmpty(config.GameDirectory) &&
