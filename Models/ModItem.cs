@@ -13,6 +13,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using TMM.Services;
 
 namespace TMM
 {
@@ -106,6 +107,33 @@ namespace TMM
         /// </summary>
         [JsonIgnore]
         public int FinalLoadOrder { get; set; } = 0;
+
+        // ── Transient UI state (never persisted) ─────────────────────────────────
+
+        private ModConflictSummary? _conflictSummary;
+        /// <summary>
+        /// Per-mod conflict summary computed by <see cref="ConflictAnalyzer.AnalyzeByMod"/>
+        /// and cached on the item. Null until the background analysis pass completes.
+        /// Not serialized — recomputed each time the mod list is loaded.
+        /// </summary>
+        [JsonIgnore]
+        public ModConflictSummary? ConflictSummary
+        {
+            get => _conflictSummary;
+            set { if (_conflictSummary != value) { _conflictSummary = value; OnPropertyChanged(); } }
+        }
+
+        private bool _isConflictExpanded;
+        /// <summary>
+        /// True when the inline conflict-detail panel is expanded in the mod list row.
+        /// Not serialized.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsConflictExpanded
+        {
+            get => _isConflictExpanded;
+            set { if (_isConflictExpanded != value) { _isConflictExpanded = value; OnPropertyChanged(); } }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? prop = null) =>

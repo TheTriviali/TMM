@@ -14,6 +14,9 @@
         <local:GroupNameDisplayConverter x:Key="GroupNameDisplayConverter"/>
         <local:StarGlyphConverter x:Key="StarGlyphConverter"/>
         <local:StarColorConverter x:Key="StarColorConverter"/>
+        <local:CategorySpineBrushConverter x:Key="CategorySpineBrushConverter"/>
+        <local:ConflictBadgeVisibilityConverter x:Key="ConflictBadgeVisibilityConverter"/>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <helpers:LocalizationConverter x:Key="LocalizationConverter"/>
 
         <!-- Core brushes: WinUI dark mode + 2-tone custom accent (replaced live by ThemeEngine.ApplyTheme at startup) -->
@@ -33,6 +36,8 @@
         </LinearGradientBrush>
         <SolidColorBrush x:Key="AccentLabelBrush"  Color="#0883FF"/>
         <SolidColorBrush x:Key="AccentSoftBrush"   Color="#1A0883FF"/>
+        <SolidColorBrush x:Key="ConflictRedBrush"  Color="#EF5350"/>
+        <SolidColorBrush x:Key="ConflictSoftBrush" Color="#22EF5350"/>
 
         <!-- Gradient brush for library cards (primary to secondary accent) -->
         <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">

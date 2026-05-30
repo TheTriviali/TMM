@@ -434,103 +434,266 @@
                                 Click="BtnClearSearchCustom_Click"/>
                     </Grid>
 
-                    <!-- Mod ListView -->
+                    <!-- Chips + bulk bar + mod list -->
                     <Grid Grid.Row="2">
-                        <ListView x:Name="Cust_ModList" Style="{StaticResource ModListStyle}"
-                                  Template="{StaticResource WatermarkCustom}"
-                                  SelectionMode="Extended"
-                                  ContextMenu="{StaticResource EmptyListContextMenu}"
-                                  Drop="Cust_List_Drop" DragOver="Cust_List_DragOver" DragLeave="Cust_List_DragLeave"
-                                  PreviewMouseLeftButtonDown="Cust_List_PreviewMouseLeftButtonDown"
-                                  MouseMove="Cust_List_MouseMove"
-                                  KeyDown="Cust_List_KeyDown">
-                            <ListView.View>
-                                <GridView>
-                                    <GridViewColumn Header="{helpers:Localization ModManager_Col_Order}" Width="50" DisplayMemberBinding="{Binding LoadOrder}"/>
-                                    <GridViewColumn Header="" Width="28">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
-                                                          Checked="ModCheckBox_Changed" Unchecked="ModCheckBox_Changed"/>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                    <GridViewColumn Header="" Width="28">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>  <!-- filter chips -->
+                            <RowDefinition Height="Auto"/>  <!-- bulk-action bar -->
+                            <RowDefinition Height="*"/>     <!-- list + empty state -->
+                        </Grid.RowDefinitions>
+
+                        <!-- ── Filter chips ─────────────────────────────────── -->
+                        <StackPanel Grid.Row="0" x:Name="Cust_FilterChips"
+                                    Orientation="Horizontal" Margin="0,0,0,6">
+                            <!-- All -->
+                            <Border x:Name="Cust_ChipAll" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
+                                    Background="{DynamicResource AccentBrush}" Cursor="Hand"
+                                    MouseLeftButtonUp="ChipAll_Click">
+                                <TextBlock x:Name="Cust_ChipAllText" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="White"/>
+                            </Border>
+                            <!-- Enabled -->
+                            <Border x:Name="Cust_ChipEnabled" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
+                                    Background="{DynamicResource ControlBgBrush}" Cursor="Hand"
+                                    MouseLeftButtonUp="ChipEnabled_Click">
+                                <TextBlock x:Name="Cust_ChipEnabledText" FontSize="12"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                            </Border>
+                            <!-- Conflicts -->
+                            <Border x:Name="Cust_ChipConflicts" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
+                                    Background="{DynamicResource ControlBgBrush}" Cursor="Hand"
+                                    MouseLeftButtonUp="ChipConflicts_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="7" Height="7" Fill="{DynamicResource ConflictRedBrush}"
+                                             Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="Cust_ChipConflictsText" FontSize="12"
+                                               Foreground="{DynamicResource TextBrush}"/>
+                                </StackPanel>
+                            </Border>
+                            <!-- Favorites -->
+                            <Border x:Name="Cust_ChipFavorites" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
+                                    Background="{DynamicResource ControlBgBrush}" Cursor="Hand"
+                                    MouseLeftButtonUp="ChipFavorites_Click">
+                                <TextBlock x:Name="Cust_ChipFavoritesText" FontSize="12"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- ── Bulk-action bar (hidden until multi-select) ──── -->
+                        <Border x:Name="Cust_BulkBar" Grid.Row="1"
+                                Background="{DynamicResource AccentSoftBrush}" CornerRadius="6"
+                                Padding="12,7" Margin="0,0,0,6" Visibility="Collapsed">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Content="{helpers:Localization ModManager_Bulk_Enable}"
+                                            Click="BulkEnable_Click" Cursor="Hand"
+                                            Background="{DynamicResource ControlBgBrush}"
+                                            Foreground="{DynamicResource TextBrush}"
+                                            BorderThickness="0" Padding="10,4" Margin="0,0,6,0" FontSize="12"/>
+                                    <Button Content="{helpers:Localization ModManager_Bulk_Disable}"
+                                            Click="BulkDisable_Click" Cursor="Hand"
+                                            Background="{DynamicResource ControlBgBrush}"
+                                            Foreground="{DynamicResource TextBrush}"
+                                            BorderThickness="0" Padding="10,4" Margin="0,0,6,0" FontSize="12"/>
+                                    <Button Content="{helpers:Localization ModManager_Bulk_SetGroup}"
+                                            Click="BulkSetGroup_Click" Cursor="Hand"
+                                            Background="{DynamicResource ControlBgBrush}"
+                                            Foreground="{DynamicResource TextBrush}"
+                                            BorderThickness="0" Padding="10,4" Margin="0,0,6,0" FontSize="12"/>
+                                    <Button Content="{helpers:Localization ModManager_Bulk_Remove}"
+                                            Click="BulkRemove_Click" Cursor="Hand"
+                                            Background="{DynamicResource ControlBgBrush}"
+                                            Foreground="{DynamicResource ConflictRedBrush}"
+                                            BorderThickness="0" Padding="10,4" FontSize="12"/>
+                                </StackPanel>
+                                <TextBlock x:Name="Cust_BulkSelLabel" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- ── Mod ListView ─────────────────────────────────── -->
+                        <Grid Grid.Row="2">
+                            <ListView x:Name="Cust_ModList" Style="{StaticResource ModListStyle}"
+                                      Template="{StaticResource WatermarkCustom}"
+                                      SelectionMode="Extended"
+                                      ContextMenu="{StaticResource EmptyListContextMenu}"
+                                      Drop="Cust_List_Drop" DragOver="Cust_List_DragOver" DragLeave="Cust_List_DragLeave"
+                                      PreviewMouseLeftButtonDown="Cust_List_PreviewMouseLeftButtonDown"
+                                      MouseMove="Cust_List_MouseMove"
+                                      KeyDown="Cust_List_KeyDown"
+                                      SelectionChanged="Cust_ModList_SelectionChanged">
+                                <!-- Custom DataTemplate: spine · order · check · star · name/conflict · actions -->
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border x:Name="rowBorder" CornerRadius="6" Margin="0,2"
+                                                Background="{DynamicResource PanelBrush}"
+                                                MinHeight="46">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="4"/>    <!-- category spine -->
+                                                    <ColumnDefinition Width="38"/>   <!-- order -->
+                                                    <ColumnDefinition Width="32"/>   <!-- checkbox -->
+                                                    <ColumnDefinition Width="32"/>   <!-- star -->
+                                                    <ColumnDefinition Width="*"/>    <!-- name + conflict detail -->
+                                                    <ColumnDefinition Width="Auto"/> <!-- badge + hover actions -->
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Category colour spine -->
+                                                <Border Grid.Column="0" CornerRadius="6,0,0,6"
+                                                        Background="{Binding Category, Converter={StaticResource CategorySpineBrushConverter}}"/>
+
+                                                <!-- Load order -->
+                                                <TextBlock Grid.Column="1" Text="{Binding LoadOrder}"
+                                                           FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                                                           VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+                                                <!-- Enable toggle -->
+                                                <CheckBox Grid.Column="2"
+                                                          IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                          Checked="ModCheckBox_Changed" Unchecked="ModCheckBox_Changed"
+                                                          VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+                                                <!-- Favorite star -->
+                                                <Button Grid.Column="3"
+                                                        Background="Transparent" BorderThickness="0" Cursor="Hand"
                                                         Click="StarButton_Click" Tag="{Binding}"
-                                                        ToolTip="Toggle favorite">
-                                                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                        ToolTip="Toggle favorite"
+                                                        VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="13"
                                                                Text="{Binding IsFavorite, Converter={StaticResource StarGlyphConverter}}"
                                                                Foreground="{Binding IsFavorite, Converter={StaticResource StarColorConverter}}"/>
                                                 </Button>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                    <GridViewColumn Header="{helpers:Localization ModManager_Col_Name}" Width="340" DisplayMemberBinding="{Binding Name}"/>
-                                    <GridViewColumn Header="Group" Width="140" DisplayMemberBinding="{Binding GroupName}"/>
-                                    <GridViewColumn Header="{helpers:Localization ModManager_Col_Size}" Width="80" DisplayMemberBinding="{Binding SizeDisplay}"/>
-                                    <GridViewColumn Header="{helpers:Localization ModManager_Col_Status}" Width="90">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusColor}"/>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                </GridView>
-                            </ListView.View>
-                            <ListView.GroupStyle>
-                                <GroupStyle>
-                                    <GroupStyle.HeaderTemplate>
-                                        <DataTemplate>
-                                            <Border Background="{DynamicResource HeaderBrush}" Padding="8,4" Margin="0,8,0,2">
-                                                <TextBlock Text="{Binding Name, Converter={StaticResource GroupNameDisplayConverter}}"
-                                                           Foreground="{DynamicResource AccentLabelBrush}"
-                                                           FontWeight="SemiBold"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </GroupStyle.HeaderTemplate>
-                                </GroupStyle>
-                            </ListView.GroupStyle>
-                        </ListView>
-                        <Canvas IsHitTestVisible="False">
-                            <Rectangle x:Name="Cust_DropLine" Height="2" Fill="{DynamicResource AccentBrush}"
-                                       Visibility="Collapsed" Width="400"/>
-                        </Canvas>
 
-                        <!-- Empty mod list state (shown when no mods and no search active) -->
-                        <Border x:Name="Cust_EmptyState"
-                                Background="{DynamicResource PanelBrush}"
-                                CornerRadius="5" Visibility="Collapsed"
-                                Panel.ZIndex="10">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="📦" FontSize="40" HorizontalAlignment="Center"/>
-                                <TextBlock Text="{helpers:Localization ModManager_Empty_Title}"
-                                           Foreground="{DynamicResource TextBrush}"
-                                           FontSize="15" FontWeight="SemiBold"
-                                           HorizontalAlignment="Center" Margin="0,12,0,4"/>
-                                <TextBlock Text="{helpers:Localization ModManager_Empty_Subtitle}"
-                                           Foreground="{DynamicResource SubTextBrush}"
-                                           FontSize="11" HorizontalAlignment="Center"
-                                           TextAlignment="Center" TextWrapping="Wrap"
-                                           MaxWidth="280" Margin="0,0,0,20"/>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <Button Content="{helpers:Localization ModManager_Install}"
-                                            Click="BtnInstallModCustom_Click"
-                                            Height="30" Padding="14,0" Margin="0,0,8,0"
-                                            Background="{DynamicResource AccentBrush}"
-                                            Foreground="Black" FontWeight="Bold"
-                                            FontSize="12" BorderThickness="0" Cursor="Hand"/>
-                                    <Button Content="{helpers:Localization ModManager_Empty_Import}"
-                                            Click="BtnImportFromGame_Click"
-                                            Height="30" Padding="14,0"
-                                            Background="{DynamicResource ControlBgBrush}"
-                                            Foreground="{DynamicResource TextBrush}"
-                                            FontSize="12" BorderThickness="0" Cursor="Hand"/>
+                                                <!-- Name + optional conflict expansion -->
+                                                <StackPanel Grid.Column="4" VerticalAlignment="Center" Margin="4,6,4,6">
+                                                    <TextBlock Text="{Binding Name}" FontSize="13"
+                                                               Foreground="{DynamicResource TextBrush}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <!-- Conflict detail panel (expanded) -->
+                                                    <ItemsControl x:Name="conflictDetail"
+                                                                  ItemsSource="{Binding ConflictSummary.Clashes}"
+                                                                  Visibility="{Binding IsConflictExpanded, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                  Margin="0,4,0,0">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <TextBlock FontSize="10.5" TextWrapping="Wrap"
+                                                                           Foreground="{DynamicResource SubTextBrush}"
+                                                                           Margin="0,1">
+                                                                    <Run Text="{Binding Destination, Mode=OneWay}"
+                                                                         Foreground="{DynamicResource TextBrush}"/>
+                                                                    <Run Text=" — winner: "/>
+                                                                    <Run Text="{Binding WinnerModName, Mode=OneWay}"
+                                                                         Foreground="#50C878"/>
+                                                                </TextBlock>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+
+                                                <!-- Right side: conflict badge + hover actions -->
+                                                <StackPanel Grid.Column="5" Orientation="Horizontal"
+                                                            VerticalAlignment="Center" Margin="0,0,8,0">
+                                                    <!-- Conflict badge (click to toggle detail) -->
+                                                    <Border Visibility="{Binding ConflictSummary, Converter={StaticResource ConflictBadgeVisibilityConverter}}"
+                                                            Background="{DynamicResource ConflictSoftBrush}"
+                                                            CornerRadius="9" Padding="8,3" Margin="0,0,8,0"
+                                                            Cursor="Hand" Tag="{Binding}"
+                                                            MouseLeftButtonUp="ConflictBadge_Click">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="&#xE74A;" FontFamily="Segoe MDL2 Assets"
+                                                                       FontSize="10" Foreground="{DynamicResource ConflictRedBrush}"
+                                                                       Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                            <TextBlock FontSize="10.5"
+                                                                       Foreground="{DynamicResource ConflictRedBrush}"
+                                                                       Text="{Binding ConflictSummary.Clashes.Count, StringFormat='{}{0} conflict(s)'}"/>
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <!-- Hover action buttons (visible on row mouse-over) -->
+                                                    <StackPanel x:Name="hoverActions" Orientation="Horizontal"
+                                                                Opacity="0">
+                                                        <StackPanel.Style>
+                                                            <Style TargetType="StackPanel">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListViewItem}}" Value="True">
+                                                                        <Setter Property="Opacity" Value="1"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </StackPanel.Style>
+                                                        <Button Width="28" Height="28" Margin="0,0,2,0"
+                                                                Background="Transparent" BorderThickness="0"
+                                                                Cursor="Hand" ToolTip="Open folder"
+                                                                Click="MenuOpenFolder_Click" Tag="{Binding}">
+                                                            <TextBlock Text="&#xE8DA;" FontFamily="Segoe MDL2 Assets"
+                                                                       FontSize="13" Foreground="{DynamicResource SubTextBrush}"/>
+                                                        </Button>
+                                                        <Button Width="28" Height="28"
+                                                                Background="Transparent" BorderThickness="0"
+                                                                Cursor="Hand" ToolTip="Properties"
+                                                                Click="MenuProperties_Click" Tag="{Binding}">
+                                                            <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets"
+                                                                       FontSize="13" Foreground="{DynamicResource SubTextBrush}"/>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                                <ListView.GroupStyle>
+                                    <GroupStyle>
+                                        <GroupStyle.HeaderTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{DynamicResource HeaderBrush}" Padding="8,4" Margin="0,8,0,2">
+                                                    <TextBlock Text="{Binding Name, Converter={StaticResource GroupNameDisplayConverter}}"
+                                                               Foreground="{DynamicResource AccentLabelBrush}"
+                                                               FontWeight="SemiBold"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </GroupStyle.HeaderTemplate>
+                                    </GroupStyle>
+                                </ListView.GroupStyle>
+                            </ListView>
+                            <Canvas IsHitTestVisible="False">
+                                <Rectangle x:Name="Cust_DropLine" Height="2" Fill="{DynamicResource AccentBrush}"
+                                           Visibility="Collapsed" Width="400"/>
+                            </Canvas>
+
+                            <!-- Empty mod list state -->
+                            <Border x:Name="Cust_EmptyState"
+                                    Background="{DynamicResource PanelBrush}"
+                                    CornerRadius="5" Visibility="Collapsed"
+                                    Panel.ZIndex="10">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="📦" FontSize="40" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{helpers:Localization ModManager_Empty_Title}"
+                                               Foreground="{DynamicResource TextBrush}"
+                                               FontSize="15" FontWeight="SemiBold"
+                                               HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                    <TextBlock Text="{helpers:Localization ModManager_Empty_Subtitle}"
+                                               Foreground="{DynamicResource SubTextBrush}"
+                                               FontSize="11" HorizontalAlignment="Center"
+                                               TextAlignment="Center" TextWrapping="Wrap"
+                                               MaxWidth="280" Margin="0,0,0,20"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Content="{helpers:Localization ModManager_Install}"
+                                                Click="BtnInstallModCustom_Click"
+                                                Height="30" Padding="14,0" Margin="0,0,8,0"
+                                                Background="{DynamicResource AccentBrush}"
+                                                Foreground="Black" FontWeight="Bold"
+                                                FontSize="12" BorderThickness="0" Cursor="Hand"/>
+                                        <Button Content="{helpers:Localization ModManager_Empty_Import}"
+                                                Click="BtnImportFromGame_Click"
+                                                Height="30" Padding="14,0"
+                                                Background="{DynamicResource ControlBgBrush}"
+                                                Foreground="{DynamicResource TextBrush}"
+                                                FontSize="12" BorderThickness="0" Cursor="Hand"/>
+                                    </StackPanel>
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
+                            </Border>
+                        </Grid>
                     </Grid>
                 </Grid>
 

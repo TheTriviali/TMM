@@ -106,6 +106,8 @@ namespace TMM
             UpdateSidebarCustom();
             Cust_txtDiskSpace.Text = _core.GetDriveSpaceInfo();
             await RefreshIntegrityAsync();
+            // Kick off background conflict analysis to populate inline badges.
+            ScheduleConflictAnalysis();
         }
 
         private void UpdateSidebarCustom()
@@ -258,6 +260,8 @@ namespace TMM
             Directory.CreateDirectory(folder);
             File.WriteAllText(Path.Combine(folder, "modlist.json"),
                 JsonSerializer.Serialize(_modsCustom.ToList(), JsonHelper.PrettyOptions));
+            // Keep chip counts in sync after any mod list mutation.
+            if (Cust_FilterChips?.IsLoaded == true) RefreshFilterChips();
         }
 
         private void RefreshCustomView()
@@ -265,14 +269,7 @@ namespace TMM
             var view = CollectionViewSource.GetDefaultView(_modsCustom);
             if (view is null) return;
 
-            string q = Cust_txtSearch.Text.Trim().ToLowerInvariant();
-            view.Filter = string.IsNullOrEmpty(q)
-                ? null
-                : obj => obj is ModItem m && m.Name.ToLowerInvariant().Contains(q);
-
-            // Auto-group only when at least one mod has a group assigned (set via the
-            // context menu or picked up on import). No manual toggle — a flat list when
-            // groups aren't in use, grouped when they are.
+            // Auto-group only when at least one mod has a group assigned.
             bool hasGroups = _modsCustom.Any(m => !string.IsNullOrWhiteSpace(m.GroupName));
             using (view.DeferRefresh())
             {
@@ -281,6 +278,10 @@ namespace TMM
                     view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ModItem.GroupName)));
             }
 
+            // Apply chip + search filter together.
+            ApplyChipFilter();
+
+            string q = Cust_txtSearch?.Text?.Trim() ?? "";
             Cust_EmptyState.Visibility = _modsCustom.Count == 0 && string.IsNullOrEmpty(q)
                 ? Visibility.Visible
                 : Visibility.Collapsed;
@@ -601,16 +602,15 @@ namespace TMM
 
         private void MenuOpenFolder_Click(object? sender, RoutedEventArgs e)
         {
-            var mod = GetSelectedMod();
+            // Supports both context-menu (uses selected mod) and hover-button (uses Tag).
+            var mod = (sender is FrameworkElement fe && fe.Tag is ModItem tagged)
+                ? tagged : GetSelectedMod();
             if (mod != null)
             {
                 if (Directory.Exists(mod.RawFolderPath))
                     ShellHelper.OpenFolder(mod.RawFolderPath);
                 else if (_customProfile != null)
-                {
-                    // Mod folder is missing; fall back to parent mods folder
                     ShellHelper.OpenOwnedFolder(Path.Combine(_core.AppDataPath, _customProfile.RawFolderName));
-                }
             }
         }
 
@@ -639,7 +639,8 @@ namespace TMM
 
         private void MenuProperties_Click(object? sender, RoutedEventArgs e)
         {
-            var mod = GetSelectedMod();
+            var mod = (sender is FrameworkElement fe && fe.Tag is ModItem tagged)
+                ? tagged : GetSelectedMod();
             if (mod != null)
                 new ModPropertiesWindow(mod) { Owner = Window.GetWindow(this) }.ShowDialog();
         }
@@ -647,6 +648,214 @@ namespace TMM
         // ── Active list helper ────────────────────────────────────────────────────
 
         private ModItem? GetSelectedMod() => Cust_ModList.SelectedItem as ModItem;
+
+        // ── M2: Filter chips ──────────────────────────────────────────────────────
+
+        private enum ModFilter { All, Enabled, Conflicts, Favorites }
+        private ModFilter _activeFilter = ModFilter.All;
+
+        private void RefreshFilterChips()
+        {
+            int total     = _modsCustom.Count;
+            int enabled   = _modsCustom.Count(m => m.IsEnabled);
+            int conflicts = _modsCustom.Count(m => m.ConflictSummary is { } s &&
+                                                   (s.OverwritesCount > 0 || s.OverwrittenByCount > 0));
+            int favorites = _modsCustom.Count(m => m.IsFavorite);
+
+            Cust_ChipAllText.Text       = $"All  {total}";
+            Cust_ChipEnabledText.Text   = $"Enabled  {enabled}";
+            Cust_ChipConflictsText.Text = $"Conflicts  {conflicts}";
+            Cust_ChipFavoritesText.Text = $"★ Favorites  {favorites}";
+
+            // Active chip = AccentBrush, inactive = ControlBgBrush
+            var accent   = (System.Windows.Media.Brush)Application.Current.Resources["AccentBrush"];
+            var inactive = (System.Windows.Media.Brush)Application.Current.Resources["ControlBgBrush"];
+            Cust_ChipAll.Background       = _activeFilter == ModFilter.All       ? accent : inactive;
+            Cust_ChipEnabled.Background   = _activeFilter == ModFilter.Enabled   ? accent : inactive;
+            Cust_ChipConflicts.Background = _activeFilter == ModFilter.Conflicts ? accent : inactive;
+            Cust_ChipFavorites.Background = _activeFilter == ModFilter.Favorites ? accent : inactive;
+
+            var white = System.Windows.Media.Brushes.White;
+            var text  = (System.Windows.Media.Brush)Application.Current.Resources["TextBrush"];
+            Cust_ChipAllText.Foreground       = _activeFilter == ModFilter.All       ? white : text;
+            Cust_ChipEnabledText.Foreground   = _activeFilter == ModFilter.Enabled   ? white : text;
+            Cust_ChipConflictsText.Foreground = _activeFilter == ModFilter.Conflicts ? white : text;
+            Cust_ChipFavoritesText.Foreground = _activeFilter == ModFilter.Favorites ? white : text;
+        }
+
+        private void ApplyChipFilter()
+        {
+            var view = CollectionViewSource.GetDefaultView(_modsCustom);
+            if (view == null) return;
+
+            // Combine chip filter with existing search filter (already applied in RefreshCustomView).
+            // Re-apply the full filter here so both work together.
+            string q = Cust_txtSearch?.Text?.Trim().ToLowerInvariant() ?? "";
+            bool hasGroups = _modsCustom.Any(m => !string.IsNullOrWhiteSpace(m.GroupName));
+
+            view.Filter = obj =>
+            {
+                if (obj is not ModItem m) return false;
+
+                // Search
+                if (!string.IsNullOrEmpty(q) &&
+                    !m.Name.Contains(q, StringComparison.OrdinalIgnoreCase) &&
+                    !(m.GroupName?.Contains(q, StringComparison.OrdinalIgnoreCase) == true))
+                    return false;
+
+                // Chip
+                return _activeFilter switch
+                {
+                    ModFilter.Enabled   => m.IsEnabled,
+                    ModFilter.Conflicts => m.ConflictSummary is { } s && (s.OverwritesCount > 0 || s.OverwrittenByCount > 0),
+                    ModFilter.Favorites => m.IsFavorite,
+                    _                   => true,
+                };
+            };
+
+            // Group view mirrors existing logic
+            if (view is System.Windows.Data.ListCollectionView lcv)
+            {
+                if (hasGroups && _activeFilter == ModFilter.All && string.IsNullOrEmpty(q))
+                    lcv.GroupDescriptions.Clear();
+                // Groups are managed by RefreshCustomView; just ensure filter is applied.
+            }
+
+            view.Refresh();
+            RefreshFilterChips();
+        }
+
+        private void ChipAll_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            _activeFilter = ModFilter.All;
+            ApplyChipFilter();
+        }
+
+        private void ChipEnabled_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            _activeFilter = ModFilter.Enabled;
+            ApplyChipFilter();
+        }
+
+        private void ChipConflicts_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            _activeFilter = ModFilter.Conflicts;
+            ApplyChipFilter();
+        }
+
+        private void ChipFavorites_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            _activeFilter = ModFilter.Favorites;
+            ApplyChipFilter();
+        }
+
+        // ── M2: Bulk-action bar ───────────────────────────────────────────────────
+
+        private void Cust_ModList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int count = Cust_ModList.SelectedItems.Count;
+            if (count > 1)
+            {
+                Cust_BulkBar.Visibility = Visibility.Visible;
+                Cust_BulkSelLabel.Text  = $"{count} mods selected";
+            }
+            else
+            {
+                Cust_BulkBar.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private IEnumerable<ModItem> GetBulkSelection() =>
+            Cust_ModList.SelectedItems.Cast<ModItem>();
+
+        private void BulkEnable_Click(object sender, RoutedEventArgs e)
+        {
+            BatchEnable(GetBulkSelection());
+            RefreshFilterChips();
+        }
+
+        private void BulkDisable_Click(object sender, RoutedEventArgs e)
+        {
+            BatchDisable(GetBulkSelection());
+            RefreshFilterChips();
+        }
+
+        private void BulkSetGroup_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new RenameWindow("", "Set Group", "Group name:")
+            {
+                Owner = Window.GetWindow(this),
+            };
+            if (dlg.ShowDialog() != true) return;
+            BatchSetGroup(GetBulkSelection(), dlg.NewName);
+            RefreshFilterChips();
+        }
+
+        private void BulkRemove_Click(object sender, RoutedEventArgs e)
+        {
+            BatchRemove(GetBulkSelection().ToList());
+            RefreshFilterChips();
+        }
+
+        // ── M2: Conflict badge toggle ─────────────────────────────────────────────
+
+        private void ConflictBadge_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is ModItem mod)
+            {
+                mod.IsConflictExpanded = !mod.IsConflictExpanded;
+                e.Handled = true;
+            }
+        }
+
+        // ── M2: Background conflict analysis ─────────────────────────────────────
+
+        private readonly TMM.Services.ConflictAnalyzer _conflictAnalyzer = new();
+
+        private void ScheduleConflictAnalysis()
+        {
+            if (_customProfile is null) return;
+            // Run off-thread; update UI on return.
+            var profile = _customProfile;
+            _ = System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    var plans = _modsCustom
+                        .Where(m => m.IsEnabled)
+                        .Select(m =>
+                        {
+                            string planPath = System.IO.Path.Combine(m.RawFolderPath, "_tmm", "deployplan.json");
+                            TMM.Services.DeploymentPlan? plan = null;
+                            if (System.IO.File.Exists(planPath))
+                            {
+                                try
+                                {
+                                    plan = System.Text.Json.JsonSerializer.Deserialize<TMM.Services.DeploymentPlan>(
+                                        System.IO.File.ReadAllText(planPath), JsonHelper.PrettyOptions);
+                                }
+                                catch { /* corrupt plan — skip */ }
+                            }
+                            return (m, plan);
+                        })
+                        .Where(t => t.plan is not null)
+                        .Select(t => (t.m, t.plan!))
+                        .ToList();
+
+                    var summaries = _conflictAnalyzer.AnalyzeByMod(plans);
+
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        foreach (var mod in _modsCustom)
+                        {
+                            mod.ConflictSummary = summaries.TryGetValue(mod.Name, out var s) ? s : null;
+                        }
+                        RefreshFilterChips();
+                    });
+                }
+                catch { /* analysis is best-effort */ }
+            });
+        }
 
         // ── Custom context menu helpers ───────────────────────────────────────────
 
