@@ -226,7 +226,7 @@ inside the manager; this is the archive-list + install surface only.
 
 ---
 
-## Group E — Setup & download flow fixes  (Opus-triaged 2026-05-29, user-approved)
+## Group E — Setup & download flow fixes  ✅ ALL DONE
 
 > **Context.** User walked the cold-start flow (factory reset → "go to your library" → Downloads →
 > download SilentPatch III → Mod Manager → Install) and hit five rough edges. Opus diagnosed each
@@ -234,12 +234,18 @@ inside the manager; this is the archive-list + install surface only.
 > **(1) flow approach = "context-follow" (lightweight)** — Downloads & Mod Manager silently follow
 > the active/default game, no new persistent chrome; **(2) path setup = "inline banner + clickable
 > sidebar"** — no wizard/prompt changes. Build to those decisions; do not re-open them.
->
-> Suggested order: **E2** (real bug) first, then **E1 / E5** (quick wins), then **E4** (needs a small
-> backend extraction), then **E3**. They're largely independent; E4 and E5 both touch the install
-> path so coordinate if done together.
 
-### E1 — Downloads page follows the active/default game (stop always defaulting to GTA III)  🟢 Haiku
+| Item | Status | Details |
+|------|--------|---------|
+| **E1** | ✅ | `SetActiveGame()` pre-selects dropdown per active game |
+| **E2** | ✅ | `OpenOwnedFolder()` unifies handlers, creates on demand |
+| **E3** | ✅ | Inline `Cust_SetFolderBanner` + clickable sidebar Browse |
+| **E4** | ✅ | `InstallArchiveForGameAsync()` on Downloads page |
+| **E5** | ✅ | Drawer auto-opens when archives present for the game |
+
+---
+
+### ~~E1 — Downloads page follows the active/default game~~ ✅ DONE
 **Symptom:** opening the Downloads tab always pre-selects GTA III regardless of what the user is
 working on.
 
@@ -267,9 +273,9 @@ shell's `NavigateTo("Downloads")` ([Views/UnifiedShellWindow.xaml.cs](Views/Unif
    so it follows the game being managed, falling back to the default.
 
 **Verify:** open Mod Manager on a non-III game, then click Downloads → dropdown shows that game.
-With no game managed but a default set → shows the default. Build clean.
+With no game managed but a default set → shows the default. Build clean. ✅
 
-### E2 — Fix "Location is not available" + unify folder-open handlers  🔵 Sonnet  *(reproduce first)*
+### E2 — Fix "Location is not available" + unify folder-open handlers  ✅ DONE
 **Symptom (screenshot):** right-clicking a mod → *Open mod(s) folder* throws Windows'
 "`…\TMM\ModsRawIII` is unavailable" dialog.
 
@@ -312,9 +318,9 @@ they differ, an archive installs under one `ModsRaw*` while the manager reads an
 to Opus rather than papering over it.
 
 **Verify:** factory reset, then (without relaunching) Install a mod and use every Open-folder menu
-item — none should throw; missing TMM folders are created on demand. Build clean.
+item — none should throw; missing TMM folders are created on demand. Build clean. ✅
 
-### E3 — Inline "Set game folder" banner + clickable sidebar path  🔵 Sonnet
+### E3 — Inline "Set game folder" banner + clickable sidebar path  ✅ DONE
 **User ask:** *"path picking is awkward cuz u have to go into edit game inside the mod management
 window."* **Approved design = inline banner + clickable sidebar** (no wizard/prompt changes).
 
@@ -350,9 +356,9 @@ via the wizard (it does — same `_customConfig` path).
 
 **Verify:** open a built-in game with no path → banner + sidebar prompt appear; Browse sets the
 folder, banner disappears, deploy becomes available, path persists across restart. Repeat for a
-custom game. Build clean.
+custom game. Build clean. ✅
 
-### E4 — Install button on the Downloads page (extract a reusable install method)  🔵 Sonnet
+### E4 — Install button on the Downloads page  ✅ DONE
 **User ask:** *"no obvious way to install"* after downloading on the Downloads page.
 
 **Current state:** the standalone Downloads page renders archive rows via
@@ -381,9 +387,9 @@ tightly bound to ModManagerPage state. `ArchiveRowHelper.BuildRow` **already sup
 
 **Verify:** download an archive on the Downloads page → each row shows Install → clicking it installs
 into the selected game and the mod appears in that game's Mod Manager list. Confirm the C1 drawer's
-install still works (shared method). Build clean.
+install still works (shared method). Build clean. ✅
 
-### E5 — Auto-open the Downloads drawer when archives are present  🟢 Haiku  *(refines C1)*
+### E5 — Auto-open the Downloads drawer when archives are present  ✅ DONE
 **User ask:** *"click downloads in toolbar to show downloads list — it should be showing already cuz
 i started a download."*
 
@@ -400,7 +406,7 @@ availability logic. Keep it cheap — a single `Directory.EnumerateFiles(...).An
 try/catch.
 
 **Verify:** download something for game X, open X's Mod Manager → drawer is already open showing the
-archive; a game with no archives opens with the drawer closed. Build clean.
+archive; a game with no archives opens with the drawer closed. Build clean. ✅
 
 ---
 
