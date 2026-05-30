@@ -18,6 +18,33 @@
                 <TextBlock x:Name="txtGameCount" FontSize="11"
                            Foreground="{DynamicResource SubTextBrush}" Margin="0,2,0,0"/>
             </StackPanel>
+
+            <!-- Archived toggle pill (only visible when archived games exist) -->
+            <Button x:Name="btnArchiveToggle"
+                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Click="BtnArchiveToggle_Click" Cursor="Hand" Visibility="Collapsed"
+                    Background="Transparent" BorderThickness="0" Padding="0"
+                    ToolTip="{helpers:Localization Library_ArchivedToggleTip}">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="pill" CornerRadius="13" Padding="11,5"
+                                Background="#16FFFFFF" BorderThickness="1" BorderBrush="#30FFFFFF">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="pill" Property="Background" Value="#28FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="🗄" FontSize="11" Margin="0,0,6,0"
+                               Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="txtArchiveToggle" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
         </Grid>
 
         <!-- Content area -->

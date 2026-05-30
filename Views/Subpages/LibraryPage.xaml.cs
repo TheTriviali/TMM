@@ -103,6 +103,19 @@ namespace TMM
             txtGameCount.Text = archived > 0
                 ? $"{total} games · {archived} archived"
                 : $"{total} game{(total != 1 ? "s" : "")}";
+
+            // Archived toggle pill: only offered when there's something archived to reveal.
+            var loc = TMM.Services.LocalizationService.Instance;
+            btnArchiveToggle.Visibility = archived > 0 ? Visibility.Visible : Visibility.Collapsed;
+            txtArchiveToggle.Text = _showArchived
+                ? loc["Library_HideArchived"]
+                : $"{loc["Library_ShowArchived"]} ({archived})";
+        }
+
+        private void BtnArchiveToggle_Click(object sender, RoutedEventArgs e)
+        {
+            _showArchived = !_showArchived;
+            RebuildFilter(); // re-filters + refreshes the pill label via UpdateHeaderCount
         }
 
         // ── Rendering ─────────────────────────────────────────────────────────────

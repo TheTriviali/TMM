@@ -269,6 +269,9 @@
   "Library_ReadyToDeploy": "Listos para instalar",
   "Library_LaunchGame": "Iniciar juego",
   "Library_ManageMods": "Administrar mods",
+  "Library_ShowArchived": "Mostrar archivados",
+  "Library_HideArchived": "Ocultar archivados",
+  "Library_ArchivedToggleTip": "Mostrar u ocultar juegos archivados. Desarchiva cualquier juego desde su menú ⋯.",
   "Library_Empty_Title": "No hay juegos en la biblioteca",
   "Library_Empty_Subtitle": "Haz clic en ➕ para agregar tu primer juego",
 
