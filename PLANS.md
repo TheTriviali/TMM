@@ -671,6 +671,55 @@ mods. `BatchRemove` still confirms before deleting.
 
 ---
 
+## Group I — Mockup backport: UI phases  (design in [HANDOFF_BACKPORT.md](HANDOFF_BACKPORT.md))
+
+> **Context.** Continues from Group H (all H1–H4 backend done). These are the three
+> visual/structural UI phases, in the sequencing order frozen in the handoff: Home → enriched
+> list → workspace nav restructure. All design decisions are frozen in HANDOFF_BACKPORT.md.
+> **Deferred, do NOT build:** mod source+version, update-available badge, "Updates" filter chip.
+
+### M3 — Library Home view (replace grid)  ✅ DONE (5b9aed4)
+Replaced the grid view entirely with Home: Continue hero (default/active game, Play/Manage
+buttons, pending-badge via H3 `PendingChanges`), quick-stats strip (games set up / mods installed
+with cached size / backups used vs budget), your-games `GameCard` grid (no big add-game card —
+button only in section header), recent-activity feed from `ActivityLogger`. Shell view switcher
+is now Home / List only; legacy "grid"/"showcase" migrate to "home" on launch. Added
+`AppSettings.CachedModsInstalledBytes` (updated off-render via `RecomputeModsInstalledSizeAsync`
+on init + after install/deploy). Localized en-US + es-MX.
+
+### M2 — Enriched mod list (inline conflicts + bulk bar + categories + filter chips)  🔵 Sonnet
+Backport Mockup 2 into `ModManagerPage`. Needs:
+- **Category colour spine:** 4 px left border on each mod row using `ModCategories.BrushFor(mod.Category)`.
+- **Inline conflict badge:** per-row badge showing `OverwritesCount`/`OverwrittenByCount` from H2
+  `AnalyzeByMod`. Expand on hover/click to show clash detail list. Feed the badge from a
+  background pass when the mod list loads; cache result in the row VM.
+- **Bulk-action bar:** appears when `Cust_ModList.SelectedItems.Count > 1`. Buttons wire to the
+  H4 `Batch*` methods. Bar hides on deselect-all.
+- **Filter chips:** Enabled / Conflicts / Favorites row above the list. Client-side filter over
+  the live `ObservableCollection`. Conflicts chip uses H2 result; **do NOT add "Updates" chip** (deferred).
+- **Per-row hover actions:** surface Open Folder + Properties as hover icon buttons on the right
+  (handlers already exist in `ModManagerPage.xaml.cs`).
+- **Do NOT add:** source/version line, Update badge.
+- Localize new strings en-US + es-MX.
+
+### M1 — Game Workspace (tabbed shell + slim toolbar + nav restructure)  🟣 Opus
+The riskiest; do last. Restructures `UnifiedShellWindow` so a selected game owns a full
+workspace:
+- **Game header:** cover art, title, readiness badge, loadout switcher dropdown (reuse
+  `BackendCore.Loadouts.cs`), deploy-status pill (H3 `PendingChanges`), Deploy / Play / `⋯` overflow.
+- **Sub-tabs:** Mods · Conflicts(N) · Backups · Downloads · Config — all scoped to one game.
+  Downloads + Backups move from the global rail into these tabs; retire the standalone pages
+  once hosted. Conflicts tab uses H2 `AnalyzeByMod`. Config tab surfaces the Edit Config flow.
+- **Slim toolbar:** 3 primary verbs (Install, Deploy, Play) + `⋯` overflow; ~14-button strip gone.
+- **Shell nav:** global rail drops to Library / Notifications / Help / Settings only.
+  Nav returns restore **same game + same sub-tab** (frozen decision). "Back to library"
+  affordance lives in the game header.
+- **Entry/exit state:** `UnifiedShellWindow` tracks `_activeWorkspaceEntry` + `_activeWorkspaceTab`
+  to restore on return from global destinations.
+- Localize new strings en-US + es-MX. Build clean before committing.
+
+---
+
 ## Group D — Codebase health (standing)
 
 ### AUDIT1 — Periodic file-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ⏳ STANDING
