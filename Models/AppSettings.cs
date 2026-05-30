@@ -30,16 +30,16 @@ namespace TMM
         public List<string> ArchivedGameKeys { get; set; } = new();
 
         /// <summary>
-        /// Key of the game set as "default" (highlighted in library, used for ModManager
-        /// shortcut nav item). E.g. "GTA_III_SERIES". Null = no default set.
+        /// Key of the game set as "active" (pinned to first in library, used for ModManager
+        /// shortcut nav on relaunch). E.g. "GTA_III_SERIES". Null = no active game set.
         /// </summary>
-        public string? DefaultGameKey { get; set; }
+        public string? ActiveGameKey { get; set; }
 
         /// <summary>
-        /// Library view mode. One of: "grid" | "list" | "showcase".
-        /// Default is "grid".
+        /// Library view mode. One of: "home" | "list".
+        /// Default is "home". Legacy "grid"/"showcase" values migrate to "home" on launch.
         /// </summary>
-        public string LibraryViewMode { get; set; } = "grid";
+        public string LibraryViewMode { get; set; } = "home";
 
         /// <summary>
         /// User-defined display order for library cards. List of game keys in order.
@@ -64,6 +64,15 @@ namespace TMM
         // ── Backup quota ────────────────────────────────────────────────────────
         /// <summary>Warn user when total backup folder size exceeds this many bytes (default 5 GB).</summary>
         public long BackupSizeWarnBytes { get; set; } = 5L * 1024 * 1024 * 1024;
+
+        // ── Home stats cache ──────────────────────────────────────────────────────
+        /// <summary>
+        /// Cached total size (bytes) of all installed mods across every ModsRaw_* folder.
+        /// Recomputed off the render path (on init + after install/deploy) so the Home
+        /// stats strip can show a size without walking disk on every render. See
+        /// BackendCore.RecomputeModsInstalledSizeAsync.
+        /// </summary>
+        public long CachedModsInstalledBytes { get; set; } = 0;
 
         // ── Notifications ─────────────────────────────────────────────────────────
         /// <summary>

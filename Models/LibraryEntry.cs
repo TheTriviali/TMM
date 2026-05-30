@@ -49,11 +49,11 @@ namespace TMM
         bool IsArchived = false,
 
         /// <summary>
-        /// True when this is the user's designated "default" game.
-        /// Default card shows a filled accent checkbox in its top-left corner.
-        /// The ModManager nav shortcut opens this game's manager directly.
-        /// Only one card can be default at a time.
+        /// True when this is the user's designated "active" game.
+        /// Active card shows a filled accent star in its footer bar.
+        /// On app close, the active game is saved; on relaunch, the ModManager opens with it.
+        /// Only one card can be active at a time.
         /// </summary>
-        bool IsDefault = false
+        bool IsActive = false
     );
 }

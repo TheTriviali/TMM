@@ -50,13 +50,180 @@
         <!-- Content area -->
         <Grid Grid.Row="1">
 
-            <!-- ── Grid / Large view ──────────────────────────────────── -->
-            <ScrollViewer x:Name="gridScrollViewer"
+            <!-- ── Home view (Continue hero + stats + your games + activity) ── -->
+            <ScrollViewer x:Name="homeScrollViewer"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Visibility="Visible" Padding="0,0,0,20">
-                <WrapPanel x:Name="cardPanel" Margin="12,12,12,12"
-                           Orientation="Horizontal" HorizontalAlignment="Center"/>
+                <StackPanel Margin="32,4,32,24" MaxWidth="1040" HorizontalAlignment="Stretch">
+
+                    <!-- Continue hero: the active / default game -->
+                    <Border x:Name="heroBorder" CornerRadius="12" Height="172" Margin="0,0,0,28"
+                            Visibility="Collapsed">
+                        <Grid Margin="28,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" x:Name="heroCover" Width="108" Height="108"
+                                    CornerRadius="12" VerticalAlignment="Center">
+                                <TextBlock x:Name="heroCoverText" FontWeight="Black" FontSize="34"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="24,0">
+                                <TextBlock Text="{helpers:Localization Home_Continue}" FontSize="10"
+                                           FontWeight="Bold" Foreground="White" Opacity="0.8"/>
+                                <TextBlock x:Name="heroTitle" FontSize="26" FontWeight="Bold"
+                                           Foreground="White" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="heroSubtitle" FontSize="12.5"
+                                           Foreground="#D8D8D8" Margin="0,8,0,0"/>
+                                <Border x:Name="heroPendingBadge" Background="#33E0A020" CornerRadius="9"
+                                        Padding="9,3" HorizontalAlignment="Left" Margin="0,12,0,0"
+                                        Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                                   Foreground="#E0A020"
+                                                   Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="heroPendingText" FontSize="11" Foreground="#E0A020"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Width="172" VerticalAlignment="Center">
+                                <!-- ▶ Play (primary, accent) -->
+                                <Button x:Name="heroPlayBtn" Click="HeroPlay_Click" Height="40"
+                                        Margin="0,0,0,10" HorizontalAlignment="Stretch" Cursor="Hand"
+                                        Background="Transparent" BorderThickness="0" Padding="0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="heroPlayBg" Background="{DynamicResource AccentBrush}"
+                                                    CornerRadius="7">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets"
+                                                               FontSize="14" Foreground="#06222E" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{helpers:Localization Home_Play}" FontSize="14"
+                                                               FontWeight="SemiBold" Foreground="#06222E"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="heroPlayBg" Property="Opacity" Value="0.82"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="heroPlayBg" Property="Opacity" Value="0.6"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <!-- Manage (secondary, ghost) -->
+                                <Button x:Name="heroManageBtn" Click="HeroManage_Click" Height="38"
+                                        HorizontalAlignment="Stretch" Cursor="Hand"
+                                        Background="Transparent" BorderThickness="0" Padding="0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="heroManageBg" Background="#3CFFFFFF" BorderBrush="#2EFFFFFF"
+                                                    BorderThickness="1" CornerRadius="7">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets"
+                                                               FontSize="13" Foreground="#E0FFFFFF" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{helpers:Localization Home_ManageMods}" FontSize="13"
+                                                               FontWeight="SemiBold" Foreground="#E0FFFFFF"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="heroManageBg" Property="Background" Value="#5AFFFFFF"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="heroManageBg" Property="Opacity" Value="0.7"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Quick-stats strip -->
+                    <UniformGrid Rows="1" Columns="3" Margin="-6,0,-6,28">
+                        <Border Background="{DynamicResource ControlBgBrush}" CornerRadius="10"
+                                Padding="20,16" Margin="6,0">
+                            <StackPanel>
+                                <TextBlock x:Name="statGames" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock Text="{helpers:Localization Home_StatGames}" FontSize="11"
+                                           Foreground="{DynamicResource SubTextBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{DynamicResource ControlBgBrush}" CornerRadius="10"
+                                Padding="20,16" Margin="6,0">
+                            <StackPanel>
+                                <TextBlock x:Name="statMods" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock x:Name="statModsSub" Text="{helpers:Localization Home_StatMods}"
+                                           FontSize="11" Foreground="{DynamicResource SubTextBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{DynamicResource ControlBgBrush}" CornerRadius="10"
+                                Padding="20,16" Margin="6,0">
+                            <StackPanel>
+                                <TextBlock x:Name="statBackups" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock x:Name="statBackupsSub" FontSize="11"
+                                           Foreground="{DynamicResource SubTextBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Your games -->
+                    <DockPanel Margin="0,0,0,12">
+                        <Button DockPanel.Dock="Right" Click="BtnHomeAddGame_Click" Cursor="Hand"
+                                Background="Transparent" BorderThickness="0" Padding="0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="addBg" Background="#1EFFFFFF" BorderBrush="#33FFFFFF"
+                                            BorderThickness="1" CornerRadius="6" Padding="12,6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                       Foreground="{DynamicResource TextBrush}" Margin="0,0,6,0"/>
+                                            <TextBlock Text="{helpers:Localization Home_AddGame}" FontSize="12"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="addBg" Property="Background" Value="#33FFFFFF"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        <TextBlock Text="{helpers:Localization Home_YourGames}" FontSize="15"
+                                   FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"
+                                   VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <WrapPanel x:Name="homeGamesPanel" Margin="-8,0,-8,0"/>
+
+                    <!-- Recent activity -->
+                    <TextBlock Text="{helpers:Localization Home_RecentActivity}" FontSize="15"
+                               FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"
+                               Margin="0,16,0,12"/>
+                    <Border Background="{DynamicResource ControlBgBrush}" CornerRadius="10" Padding="6">
+                        <StackPanel>
+                            <StackPanel x:Name="homeActivityPanel"/>
+                            <TextBlock x:Name="homeActivityEmpty"
+                                       Text="{helpers:Localization Home_NoActivity}" FontSize="12"
+                                       Foreground="{DynamicResource SubTextBrush}"
+                                       Margin="14,12" Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
             </ScrollViewer>
 
             <!-- ── List view ──────────────────────────────────────────── -->

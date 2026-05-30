@@ -47,6 +47,14 @@
     <EmbeddedResource Remove="TMM.Tests\**" />
     <None             Remove="TMM.Tests\**" />
     <Content          Remove="TMM.Tests\**" />
+
+    <!-- Standalone UI-only mockup harness (TMM.Mockups) — its own project. -->
+    <Compile          Remove="Mockups\**" />
+    <EmbeddedResource Remove="Mockups\**" />
+    <None             Remove="Mockups\**" />
+    <Content          Remove="Mockups\**" />
+    <Page             Remove="Mockups\**" />
+    <ApplicationDefinition Remove="Mockups\**" />
   </ItemGroup>
 
 </Project>

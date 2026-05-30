@@ -338,9 +338,9 @@
                                 <!-- View-mode switcher (library only) -->
                                 <StackPanel x:Name="viewModePanel"
                                             Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
-                                    <Button x:Name="btnViewGrid" Style="{StaticResource ViewModeBtnStyle}"
-                                            Content="&#xE8A9;" ToolTip="Grid view"
-                                            Click="BtnViewMode_Click" Tag="grid"/>
+                                    <Button x:Name="btnViewHome" Style="{StaticResource ViewModeBtnStyle}"
+                                            Content="&#xE80F;" ToolTip="Home view"
+                                            Click="BtnViewMode_Click" Tag="home"/>
                                     <Button x:Name="btnViewList" Style="{StaticResource ViewModeBtnStyle}"
                                             Content="&#xE9D5;" ToolTip="List view"
                                             Click="BtnViewMode_Click" Tag="list"/>

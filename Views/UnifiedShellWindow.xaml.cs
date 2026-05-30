@@ -127,14 +127,17 @@ namespace TMM
             {
                 if (_currentPage == "Downloads") txtBrowserUrl.Text = url;
             };
-            // Migrate users who were last on the now-removed showcase view
-            if (_core.Settings.LibraryViewMode == "showcase")
+            // Migrate users who were last on a now-removed view (showcase, grid) to Home.
+            if (_core.Settings.LibraryViewMode is "showcase" or "grid")
             {
-                _core.Settings.LibraryViewMode = "grid";
+                _core.Settings.LibraryViewMode = "home";
                 _core.SaveSettings();
             }
             pageLibrary.SetViewMode(_core.Settings.LibraryViewMode);
             UpdateViewModeButtonStyles(_core.Settings.LibraryViewMode);
+
+            // Warm the Home mod-size cache off the render path (background, best-effort).
+            _ = _core.RecomputeModsInstalledSizeAsync();
 
             if (setup?.OpenAddGameAfterClose == true)
             {
@@ -398,7 +401,7 @@ namespace TMM
             var activeStyle = (Style)Resources["ViewModeBtnActiveStyle"];
             var inactiveStyle = (Style)Resources["ViewModeBtnStyle"];
 
-            btnViewGrid.Style = activeMode == "grid" ? activeStyle : inactiveStyle;
+            btnViewHome.Style = activeMode != "list" ? activeStyle : inactiveStyle;
             btnViewList.Style = activeMode == "list" ? activeStyle : inactiveStyle;
         }
 

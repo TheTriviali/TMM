@@ -53,29 +53,32 @@
             <!-- ═══════════════════════════════════════════════════════════ -->
             <Grid x:Name="cardModeRoot">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>    <!-- top: title + drag grip + controls -->
-                    <RowDefinition Height="Auto"/> <!-- labeled action button pair -->
-                    <RowDefinition Height="22"/>   <!-- info strip -->
+                    <RowDefinition Height="*"/>    <!-- art zone: title + mod count -->
+                    <RowDefinition Height="Auto"/> <!-- unified footer control bar -->
                 </Grid.RowDefinitions>
 
-                <!-- ── Top area ─────────────────────────────────────────── -->
+                <!-- ── Art zone (row 0): centred title + quiet mod count ── -->
                 <Grid Grid.Row="0">
-                    <!-- Title (centred) -->
-                    <TextBlock x:Name="txtArtTitle"
-                               Text="GAME TITLE"
-                               Foreground="#E8FFFFFF"
-                               FontSize="20" FontWeight="Black"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               TextWrapping="Wrap" TextAlignment="Center"
-                               Margin="12,22,12,34"
-                               LineHeight="24"/>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                Margin="12,10,12,4">
+                        <TextBlock x:Name="txtArtTitle"
+                                   Text="GAME TITLE"
+                                   Foreground="#E8FFFFFF"
+                                   FontSize="19" FontWeight="Black"
+                                   HorizontalAlignment="Center"
+                                   TextWrapping="Wrap" TextAlignment="Center"
+                                   LineHeight="23"/>
+                        <TextBlock x:Name="txtModCount"
+                                   Foreground="#80FFFFFF" FontSize="10"
+                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
 
-                    <!-- Drag grip (top-left, faint → solid on hover) -->
+                    <!-- Drag grip (top-left, faint → solid on hover; locked for active card) -->
                     <Border x:Name="cardDragHandle"
                             VerticalAlignment="Top" HorizontalAlignment="Left"
                             Margin="5,4,0,0" Padding="4,3"
                             Background="Transparent" Cursor="SizeAll"
-                            ToolTip="Drag to reorder">
+                            ToolTip="Drag to reorder (active card is locked to first)">
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Setter Property="Opacity" Value="0.25"/>
@@ -88,64 +91,126 @@
                         </Border.Style>
                         <TextBlock Text="⠿" FontSize="14" Foreground="#AAFFFFFF"/>
                     </Border>
+                </Grid>
 
-                    <!-- Bottom controls: default pill · [spacer] · overflow -->
-                    <Grid VerticalAlignment="Bottom" Margin="7,0,7,5">
+                <!-- ── Unified footer bar (row 1): Play · Manage · ★ · ⋯ ── -->
+                <Border Grid.Row="1" CornerRadius="0,0,10,10"
+                        Background="#9E000000" Padding="7,6">
+                    <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>      <!-- Play -->
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="*"/>      <!-- Manage -->
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="Auto"/>   <!-- ★ default -->
+                            <ColumnDefinition Width="4"/>
+                            <ColumnDefinition Width="Auto"/>   <!-- ⋯ overflow -->
                         </Grid.ColumnDefinitions>
 
-                        <!-- ★ Default pill toggle -->
-                        <Button x:Name="btnDefaultCard"
-                                Grid.Column="0" Height="22" Cursor="Hand"
-                                Click="BtnDefault_Click" Focusable="True"
-                                ToolTip="Toggle as default game"
+                        <!-- ▶ Play (primary, accent) -->
+                        <Button x:Name="btnPlayCard" Grid.Column="0" Height="28"
+                                Click="BtnPlay_Click" Focusable="True"
+                                ToolTip="{helpers:Localization Library_LaunchGame}"
                                 Background="Transparent" BorderThickness="0" Padding="0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border x:Name="defaultCardPillBg"
-                                            CornerRadius="11" Padding="8,2"
-                                            Background="#19FFFFFF"
-                                            BorderThickness="1" BorderBrush="#3CFFFFFF">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock x:Name="defaultCardStar"
-                                                       Text="☆" FontSize="9" Foreground="White"
-                                                       Margin="0,0,3,0"/>
-                                            <TextBlock Text="{helpers:Localization Card_Default}"
-                                                       FontSize="9" FontWeight="SemiBold" Foreground="White"/>
+                                    <Border x:Name="playCardBg"
+                                            Background="{DynamicResource AccentBrush}"
+                                            CornerRadius="6">
+                                        <StackPanel Orientation="Horizontal"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="▶" FontSize="8" Foreground="#06222E" Margin="0,0,5,0"/>
+                                            <TextBlock Text="{helpers:Localization Card_Play}" FontSize="10"
+                                                       FontWeight="SemiBold" Foreground="#06222E"/>
                                         </StackPanel>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="defaultCardPillBg" Property="Opacity" Value="0.75"/>
+                                            <Setter TargetName="playCardBg" Property="Opacity" Value="0.82"/>
                                         </Trigger>
                                         <Trigger Property="IsPressed" Value="True">
-                                            <Setter TargetName="defaultCardPillBg" Property="Opacity" Value="0.5"/>
+                                            <Setter TargetName="playCardBg" Property="Opacity" Value="0.6"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
 
-                        <!-- ⋯ Overflow -->
+                        <!-- ☰ Manage (secondary, ghost) -->
+                        <Button x:Name="btnManageCard" Grid.Column="2" Height="28"
+                                Click="BtnManage_Click" Focusable="True"
+                                ToolTip="{helpers:Localization Library_ManageMods}"
+                                Background="Transparent" BorderThickness="0" Padding="0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="manageCardBg"
+                                            Background="#3CFFFFFF" BorderBrush="#2EFFFFFF"
+                                            BorderThickness="1" CornerRadius="6">
+                                        <StackPanel Orientation="Horizontal"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="☰" FontSize="10" Foreground="#E0FFFFFF" Margin="0,0,5,0"/>
+                                            <TextBlock Text="{helpers:Localization Card_Manage}" FontSize="10"
+                                                       FontWeight="SemiBold" Foreground="#E0FFFFFF"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="manageCardBg" Property="Background" Value="#5AFFFFFF"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="manageCardBg" Property="Opacity" Value="0.7"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <!-- ★ Active toggle -->
+                        <Button x:Name="btnDefaultCard"
+                                Grid.Column="4" Width="28" Height="28" Cursor="Hand"
+                                Click="BtnDefault_Click" Focusable="True"
+                                ToolTip="Set as active game (auto-opens in Mod Manager on relaunch)"
+                                Background="Transparent" BorderThickness="0" Padding="0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="defaultCardPillBg"
+                                            CornerRadius="6"
+                                            Background="#22FFFFFF"
+                                            BorderThickness="1" BorderBrush="#40FFFFFF">
+                                        <TextBlock x:Name="defaultCardStar"
+                                                   Text="☆" FontSize="13" Foreground="#C0FFFFFF"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="defaultCardPillBg" Property="Background" Value="#44FFFFFF"/>
+                                            <Setter TargetName="defaultCardPillBg" Property="BorderBrush" Value="#66FFFFFF"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="defaultCardPillBg" Property="Background" Value="#20FFFFFF"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <!-- ⋯ Overflow (quiet icon) -->
                         <Button x:Name="btnOverflowCard"
-                                Grid.Column="2" Width="26" Height="22" Cursor="Hand"
+                                Grid.Column="6" Width="28" Height="28" Cursor="Hand"
                                 Click="BtnOverflow_Click" Focusable="True"
                                 ToolTip="More options"
                                 Background="Transparent" BorderThickness="0" Padding="0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="overflowCardBg"
-                                            Background="#33000000" BorderBrush="#33FFFFFF"
-                                            BorderThickness="1" CornerRadius="5">
-                                        <TextBlock Text="⋯" FontSize="11" Foreground="White"
+                                            Background="#19FFFFFF" BorderBrush="#26FFFFFF"
+                                            BorderThickness="1" CornerRadius="6">
+                                        <TextBlock Text="⋯" FontSize="13" Foreground="#D8FFFFFF"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="overflowCardBg" Property="Background" Value="#77000000"/>
+                                            <Setter TargetName="overflowCardBg" Property="Background" Value="#33FFFFFF"/>
                                         </Trigger>
                                         <Trigger Property="IsPressed" Value="True">
                                             <Setter TargetName="overflowCardBg" Property="Opacity" Value="0.7"/>
@@ -154,88 +219,6 @@
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
-                    </Grid>
-                </Grid>
-
-                <!-- ── Labeled action buttons (row 1) ───────────────────── -->
-                <Grid Grid.Row="1" Margin="7,2,7,7">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="6"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- ▶ Play -->
-                    <Button x:Name="btnPlayCard" Grid.Column="0" Height="28"
-                            Click="BtnPlay_Click" Focusable="True"
-                            ToolTip="{helpers:Localization Library_LaunchGame}"
-                            Background="Transparent" BorderThickness="0" Padding="0">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="playCardBg"
-                                        Background="{DynamicResource AccentBrush}"
-                                        CornerRadius="6">
-                                    <StackPanel Orientation="Horizontal"
-                                                HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="▶" FontSize="8" Foreground="#06222E" Margin="0,0,5,0"/>
-                                        <TextBlock Text="{helpers:Localization Card_Play}" FontSize="10"
-                                                   FontWeight="SemiBold" Foreground="#06222E"/>
-                                    </StackPanel>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="playCardBg" Property="Opacity" Value="0.82"/>
-                                    </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="playCardBg" Property="Opacity" Value="0.6"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
-
-                    <!-- ☰ Manage -->
-                    <Button x:Name="btnManageCard" Grid.Column="2" Height="28"
-                            Click="BtnManage_Click" Focusable="True"
-                            ToolTip="{helpers:Localization Library_ManageMods}"
-                            Background="Transparent" BorderThickness="0" Padding="0">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="manageCardBg"
-                                        Background="#55000000" BorderBrush="#44FFFFFF"
-                                        BorderThickness="1" CornerRadius="6">
-                                    <StackPanel Orientation="Horizontal"
-                                                HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="☰" FontSize="10" Foreground="White" Margin="0,0,5,0"/>
-                                        <TextBlock Text="{helpers:Localization Card_Manage}" FontSize="10"
-                                                   FontWeight="SemiBold" Foreground="White"/>
-                                    </StackPanel>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="manageCardBg" Property="Background" Value="#AA000000"/>
-                                    </Trigger>
-                                    <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="manageCardBg" Property="Opacity" Value="0.7"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
-                </Grid>
-
-                <!-- ── Info strip (row 2) ────────────────────────────────── -->
-                <Border Grid.Row="2" CornerRadius="0,0,10,10"
-                        Background="#AA000000" Padding="8,0">
-                    <Grid VerticalAlignment="Center">
-                        <TextBlock x:Name="txtSubtitle"
-                                   Foreground="#CCFFFFFF" FontSize="10"
-                                   VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis"
-                                   Margin="0,0,40,0"/>
-                        <TextBlock x:Name="txtModCount"
-                                   Foreground="#88FFFFFF" FontSize="9"
-                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
             </Grid>
@@ -297,29 +280,31 @@
                         Grid.Column="1" Height="26" Cursor="Hand"
                         Margin="4,0,6,0" Padding="0"
                         Click="BtnDefault_Click" Focusable="True"
-                        ToolTip="Toggle as default game"
+                        ToolTip="Toggle as active game"
                         Background="Transparent" BorderThickness="0"
                         VerticalAlignment="Center">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="defaultListPillBg"
                                     CornerRadius="13" Padding="9,2"
-                                    Background="#19FFFFFF"
-                                    BorderThickness="1" BorderBrush="#3CFFFFFF">
+                                    Background="#22FFFFFF"
+                                    BorderThickness="1" BorderBrush="#40FFFFFF">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock x:Name="defaultListStar"
-                                               Text="☆" FontSize="9" Foreground="White"
+                                               Text="☆" FontSize="9" Foreground="#C0FFFFFF"
                                                Margin="0,0,3,0"/>
-                                    <TextBlock Text="{helpers:Localization Card_Default}"
-                                               FontSize="9" FontWeight="SemiBold" Foreground="White"/>
+                                    <TextBlock x:Name="defaultListLabel"
+                                               Text="{helpers:Localization Card_Active}"
+                                               FontSize="9" FontWeight="SemiBold" Foreground="#C0FFFFFF"/>
                                 </StackPanel>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="defaultListPillBg" Property="Opacity" Value="0.75"/>
+                                    <Setter TargetName="defaultListPillBg" Property="Background" Value="#40FFFFFF"/>
+                                    <Setter TargetName="defaultListPillBg" Property="BorderBrush" Value="#66FFFFFF"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter TargetName="defaultListPillBg" Property="Opacity" Value="0.5"/>
+                                    <Setter TargetName="defaultListPillBg" Property="Background" Value="#20FFFFFF"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

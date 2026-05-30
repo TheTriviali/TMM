@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace TMM
 {
@@ -91,6 +92,37 @@ namespace TMM
 
             bool hasChanges = enabled > 0 || disabled > 0 || reordered > 0 || addedRemoved > 0;
             return new PendingChangesSummary(hasChanges, enabled, disabled, reordered, addedRemoved);
+        }
+
+        /// <summary>
+        /// Recomputes <see cref="AppSettings.CachedModsInstalledBytes"/> by summing the size
+        /// of every file under each game's ModsRaw_* folder. Runs the disk walk off-thread
+        /// and persists the result. Call after install/remove/deploy and on init — never on
+        /// the Home render path (Home reads the cached value directly).
+        /// </summary>
+        public async Task RecomputeModsInstalledSizeAsync()
+        {
+            long total = await Task.Run(() =>
+            {
+                long sum = 0;
+                foreach (var profile in GameRegistry.Instance.GetAllGames())
+                {
+                    string folder = Path.Combine(AppDataPath, profile.RawFolderName);
+                    if (!Directory.Exists(folder)) continue;
+                    try
+                    {
+                        foreach (var file in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
+                        {
+                            try { sum += new FileInfo(file).Length; } catch { /* locked/gone */ }
+                        }
+                    }
+                    catch { /* skip protected dirs */ }
+                }
+                return sum;
+            }).ConfigureAwait(false);
+
+            Settings.CachedModsInstalledBytes = total;
+            SaveSettings();
         }
 
         private DeployManifest? GetMostRecentManifest(string gameKey)
