@@ -48,6 +48,10 @@ namespace TMM.Services
             // ── G8: Game create / edit / export ───────────────────────────────────
             Register("TMM-E012", "GameRegistry", "TmmError_E012_Title", "TmmError_E012_Cause", "TmmError_E012_Fix");
             Register("TMM-E013", "GameRegistry", "TmmError_E013_Title", "TmmError_E013_Cause", "TmmError_E013_Fix");
+
+            // ── G9: Downloads ─────────────────────────────────────────────────────
+            Register("TMM-E014", "Downloads",    "TmmError_E014_Title", "TmmError_E014_Cause", "TmmError_E014_Fix");
+            Register("TMM-E015", "Downloads",    "TmmError_E015_Title", "TmmError_E015_Cause", "TmmError_E015_Fix");
         }
 
         private static void Register(string code, string source, string titleKey, string causeKey, string fixKey)

@@ -458,5 +458,13 @@
 
   "TmmError_E013_Title": "Profile export failed",
   "TmmError_E013_Cause": "TMM could not write the .tmmgame file to the chosen location.",
-  "TmmError_E013_Fix": "Choose a different save location and ensure you have write permissions to that folder."
+  "TmmError_E013_Fix": "Choose a different save location and ensure you have write permissions to that folder.",
+
+  "TmmError_E014_Title": "Download interrupted",
+  "TmmError_E014_Cause": "The download was interrupted before it could complete.",
+  "TmmError_E014_Fix": "Check your internet connection and try downloading again. If the problem persists, try a different browser or download the file manually.",
+
+  "TmmError_E015_Title": "Archive save failed",
+  "TmmError_E015_Cause": "TMM could not save the downloaded file to the archive folder.",
+  "TmmError_E015_Fix": "Check that %APPDATA%\\TMM\\ModsRaw is writable and that you have sufficient disk space."
 }

@@ -59,7 +59,7 @@ namespace TMM
 
             if (_entries.Count > 0)
             {
-                var def = _entries.FirstOrDefault(e => e.IsDefault) ?? _entries[0];
+                var def = _entries.FirstOrDefault(e => e.IsActive) ?? _entries[0];
                 cmbGame.SelectedItem = def;
             }
         }
@@ -147,11 +147,13 @@ namespace TMM
                             _core.SaveSettings();
                         }
                         RefreshArchiveList();
-                        NotificationService.ShowSuccess($"Saved: {Path.GetFileName(destPath)}");
+                        NotificationService.ShowSuccess($"Saved: {Path.GetFileName(destPath)}", "Downloads");
                     });
                 else if (op.State == CoreWebView2DownloadState.Interrupted)
                     Dispatcher.Invoke(() =>
-                        NotificationService.ShowWarning($"Download interrupted: {fname}"));
+                        NotificationService.ShowError(
+                            $"Download interrupted: {fname}. Check your connection and try again.",
+                            "Downloads", "TMM-E014"));
             };
         }
 
@@ -226,9 +228,8 @@ namespace TMM
             var item = await _core.InstallArchiveForGameAsync(_selectedGameKey, archivePath, System.Threading.CancellationToken.None);
 
             if (item is not null)
-                NotificationService.ShowSuccess($"Installed '{modName}' to {_selectedGameKey}");
-            else
-                NotificationService.ShowError($"Failed to install '{modName}'");
+                NotificationService.ShowSuccess($"Installed '{modName}' to {_selectedGameKey}", "Downloads");
+            // else: InstallArchiveForGameAsync already showed a specific error toast
 
             RefreshArchiveList();
         }

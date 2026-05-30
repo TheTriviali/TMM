@@ -458,5 +458,13 @@
 
   "TmmError_E013_Title": "Error al exportar el perfil",
   "TmmError_E013_Cause": "TMM no pudo escribir el archivo .tmmgame en la ubicación elegida.",
-  "TmmError_E013_Fix": "Elige una ubicación diferente y asegúrate de tener permisos de escritura en esa carpeta."
+  "TmmError_E013_Fix": "Elige una ubicación diferente y asegúrate de tener permisos de escritura en esa carpeta.",
+
+  "TmmError_E014_Title": "Descarga interrumpida",
+  "TmmError_E014_Cause": "La descarga fue interrumpida antes de completarse.",
+  "TmmError_E014_Fix": "Verifica tu conexión a internet e intenta descargar de nuevo. Si el problema persiste, prueba con un navegador diferente o descarga el archivo manualmente.",
+
+  "TmmError_E015_Title": "Error al guardar el archivo",
+  "TmmError_E015_Cause": "TMM no pudo guardar el archivo descargado en la carpeta de archivos.",
+  "TmmError_E015_Fix": "Verifica que %APPDATA%\\TMM\\ModsRaw sea escribible y que haya suficiente espacio en disco."
 }
