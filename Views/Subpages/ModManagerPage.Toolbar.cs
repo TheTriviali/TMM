@@ -52,13 +52,13 @@ namespace TMM
             var item = await _core.InstallArchiveForGameAsync(_customProfile.Key, archivePath, CancellationToken.None);
             if (item is null)
             {
-                NotificationService.ShowError($"Failed to install '{modName}'.");
+                // InstallArchiveForGameAsync already showed a specific toast; this is a silent guard.
                 return;
             }
 
             item.LoadOrder = _modsCustom.Count;
             _modsCustom.Add(item);
-            NotificationService.ShowSuccess($"Installed '{modName}'.");
+            NotificationService.ShowSuccess($"Installed '{modName}'.", "Install");
             _core.Activity.Record(ActivityKind.ModAdded, _customProfile.Key, _customConfig.GameName, $"Installed '{modName}'");
 
             var proxies = ProxyDllDetector.Scan(item.RawFolderPath);
@@ -74,8 +74,7 @@ namespace TMM
         {
             if (string.IsNullOrWhiteSpace(_customConfig.GameDirectory) || !Directory.Exists(_customConfig.GameDirectory))
             {
-                MessageBox.Show("Set the game directory first, then try import again.",
-                    "Import Not Available", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowWarning("Set the game directory first, then try import again.", "Install");
                 return;
             }
 
@@ -98,8 +97,7 @@ namespace TMM
 
             if (candidates.Count == 0)
             {
-                MessageBox.Show("No obvious mod candidates were found in the current game folder.",
-                    "Import Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("No mod candidates found in the current game folder.", "Install");
                 return;
             }
 
@@ -135,11 +133,17 @@ namespace TMM
 
                 SaveModsCustom();
                 await _core.DeployCustomGameModsAsync(_customProfile, _customConfig, _modsCustom);
-                NotificationService.ShowSuccess($"Imported {importedMods.Count} mod(s).");
+                NotificationService.ShowSuccess($"Imported {importedMods.Count} mod(s).", "Install");
+            }
+            catch (IOException ex)
+            {
+                Logger.Error("Import failed (IO)", ex);
+                NotificationService.ShowError($"Import failed: {ex.Message}", "Install", "TMM-E003");
             }
             catch (Exception ex)
             {
-                NotificationService.ShowError($"Import failed: {ex.Message}");
+                Logger.Error("Import failed", ex);
+                NotificationService.ShowError($"Import failed: {ex.Message}", "Install", "TMM-E003");
             }
             finally
             {

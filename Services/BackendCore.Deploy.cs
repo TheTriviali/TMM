@@ -144,8 +144,18 @@ namespace TMM
                 string ext = Path.GetExtension(archivePath).ToLowerInvariant();
                 if (ext is ".zip" or ".rar" or ".7z")
                     await ExtractArchiveSafeAsync(archivePath, destFolder, ct);
-                else
+                else if (ext is ".asi" or ".dll" or ".cleo" or ".fxt" or ".cs" or ".cm")
+                    // Single-file mod: copy directly into the destination folder
                     File.Copy(archivePath, Path.Combine(destFolder, Path.GetFileName(archivePath)), overwrite: true);
+                else
+                {
+                    Log($"[Install:{gameKey}] Unsupported archive format '{ext}' for '{modName}'.");
+                    NotificationService.ShowError(
+                        $"Unsupported file format '{ext}'. TMM supports .zip, .rar, .7z and common single-file mod types.",
+                        "Install", "TMM-E007");
+                    try { if (Directory.Exists(destFolder)) ForceDeleteDirectory(destFolder); } catch { }
+                    return null;
+                }
 
                 // Create and persist mod metadata
                 var item = new ModItem
@@ -172,10 +182,31 @@ namespace TMM
                 Log($"[Install:{gameKey}] Successfully installed '{modName}' from {Path.GetFileName(archivePath)}");
                 return item;
             }
+            catch (InvalidDataException ex)
+            {
+                Log($"[Install:{gameKey}] Archive corrupt or unsupported for '{modName}': {ex.Message}");
+                NotificationService.ShowError($"Could not extract '{modName}': the archive may be corrupt or password-protected.", "Install", "TMM-E003");
+                try { if (Directory.Exists(destFolder)) ForceDeleteDirectory(destFolder); } catch { }
+                return null;
+            }
+            catch (IOException ex)
+            {
+                Log($"[Install:{gameKey}] IO error installing '{modName}': {ex.Message}");
+                NotificationService.ShowError($"Failed to install '{modName}': {ex.Message}", "Install", "TMM-E003");
+                try { if (Directory.Exists(destFolder)) ForceDeleteDirectory(destFolder); } catch { }
+                return null;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Log($"[Install:{gameKey}] Access denied installing '{modName}': {ex.Message}");
+                NotificationService.ShowError($"Failed to install '{modName}' — access denied: {ex.Message}", "Install", "TMM-E003");
+                try { if (Directory.Exists(destFolder)) ForceDeleteDirectory(destFolder); } catch { }
+                return null;
+            }
             catch (Exception ex)
             {
                 Log($"[Install:{gameKey}] Failed to install '{modName}': {ex.Message}");
-                // Cleanup on failure
+                NotificationService.ShowError($"Failed to install '{modName}': {ex.Message}", "Install", "TMM-E003");
                 try { if (Directory.Exists(destFolder)) ForceDeleteDirectory(destFolder); } catch { }
                 return null;
             }

@@ -30,6 +30,8 @@ namespace TMM.Services
 
             // ── G4: Install / import ──────────────────────────────────────────────
             Register("TMM-E003", "Install",  "TmmError_E003_Title", "TmmError_E003_Cause", "TmmError_E003_Fix");
+            Register("TMM-E007", "Install",  "TmmError_E007_Title", "TmmError_E007_Cause", "TmmError_E007_Fix");
+            Register("TMM-E008", "Install",  "TmmError_E008_Title", "TmmError_E008_Cause", "TmmError_E008_Fix");
 
             // ── G5: Backup ────────────────────────────────────────────────────────
             Register("TMM-E004", "Backup",   "TmmError_E004_Title", "TmmError_E004_Cause", "TmmError_E004_Fix");

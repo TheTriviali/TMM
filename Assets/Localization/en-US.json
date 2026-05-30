@@ -430,5 +430,13 @@
 
   "TmmError_E006_Title": "Settings save failed",
   "TmmError_E006_Cause": "TMM could not write settings.json to disk.",
-  "TmmError_E006_Fix": "Check that %APPDATA%\\TMM is writable and that your disk is not full. Antivirus software may also be blocking the write."
+  "TmmError_E006_Fix": "Check that %APPDATA%\\TMM is writable and that your disk is not full. Antivirus software may also be blocking the write.",
+
+  "TmmError_E007_Title": "Unsupported file format",
+  "TmmError_E007_Cause": "The file you tried to install is not a supported archive or mod format.",
+  "TmmError_E007_Fix": "Use a .zip, .rar, or .7z archive. For single-file mods, supported extensions include .asi, .dll, .cleo, .fxt, .cs, and .cm.",
+
+  "TmmError_E008_Title": "No mod candidates found",
+  "TmmError_E008_Cause": "TMM scanned the game directory but could not identify any mod files to import.",
+  "TmmError_E008_Fix": "Ensure your game directory is correct and contains installed mod files. TMM looks for known mod types defined in the game's profile."
 }

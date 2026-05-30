@@ -430,5 +430,13 @@
 
   "TmmError_E006_Title": "Error al guardar ajustes",
   "TmmError_E006_Cause": "TMM no pudo escribir settings.json en el disco.",
-  "TmmError_E006_Fix": "Verifica que %APPDATA%\\TMM sea escribible y que el disco no esté lleno. El software antivirus también puede estar bloqueando la escritura."
+  "TmmError_E006_Fix": "Verifica que %APPDATA%\\TMM sea escribible y que el disco no esté lleno. El software antivirus también puede estar bloqueando la escritura.",
+
+  "TmmError_E007_Title": "Formato de archivo no compatible",
+  "TmmError_E007_Cause": "El archivo que intentaste instalar no es un archivo comprimido o formato de mod compatible.",
+  "TmmError_E007_Fix": "Usa un archivo .zip, .rar o .7z. Para mods de un solo archivo, las extensiones compatibles incluyen .asi, .dll, .cleo, .fxt, .cs y .cm.",
+
+  "TmmError_E008_Title": "No se encontraron candidatos de mod",
+  "TmmError_E008_Cause": "TMM analizó el directorio del juego pero no pudo identificar archivos de mod para importar.",
+  "TmmError_E008_Fix": "Asegúrate de que el directorio del juego sea correcto y contenga archivos de mod instalados. TMM busca tipos de mod conocidos definidos en el perfil del juego."
 }
