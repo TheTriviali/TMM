@@ -115,6 +115,14 @@ namespace TMM
                 ? TMM.Services.LocalizationService.Instance["ModManager_DirectoryNotSet"]
                 : _customConfig.GameDirectory;
 
+            // Toolbar breadcrumb
+            Cust_txtGameTitle.Text = _customConfig.GameName;
+            var colorOverride = _core.GetCardColor(_customProfile.Key);
+            string startHex = colorOverride?.Start ?? _customConfig.GradientStartHex ?? "#1A1A2E";
+            string endHex   = colorOverride?.End   ?? _customConfig.GradientEndHex   ?? "#0D0D1A";
+            if (TryParseHex(startHex, out var c0)) Cust_gradChipTop.Color = c0;
+            if (TryParseHex(endHex,   out var c1)) Cust_gradChipBot.Color = c1;
+
             if (!string.IsNullOrEmpty(_customConfig.NexusSlug))
             {
                 Cust_btnNexus.Content = "NexusMods";
@@ -272,6 +280,10 @@ namespace TMM
                 if (hasGroups)
                     view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ModItem.GroupName)));
             }
+
+            Cust_EmptyState.Visibility = _modsCustom.Count == 0 && string.IsNullOrEmpty(q)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private async Task EnsureDeploymentPlansAsync()
@@ -872,6 +884,14 @@ namespace TMM
                 SaveModsCustom();
                 NotificationService.ShowInfo(mod.IsFavorite ? $"Starred '{mod.Name}'" : $"Unstarred '{mod.Name}'");
             }
+        }
+
+        private static bool TryParseHex(string hex, out System.Windows.Media.Color color)
+        {
+            color = System.Windows.Media.Colors.Black;
+            if (string.IsNullOrWhiteSpace(hex)) return false;
+            try { color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex.Trim()); return true; }
+            catch { return false; }
         }
     }
 }

@@ -31,7 +31,7 @@ approve before the Sonnet build.
 
 > These three are small, well-specified, and independent. Knock them out first.
 
-### A1 — Welcome: "built-in" option just opens the Library; retire the picker + Skip  🟢 Haiku
+### A1 — Welcome: "built-in" option just opens the Library; retire the picker + Skip  ✅ DONE (commit 17de60d)
 **User ask:** *"'select a built in game' interface is clunky — scrap it and just show the
 library if they hit that button, removing the need for the skip."*
 
@@ -56,7 +56,7 @@ lists every built-in game as a card, so the picker is redundant.
 **Verify:** fresh-launch (`/run --fresh`) shows the welcome screen; clicking the first card
 closes it and shows the Library; clicking the second still routes to Add Game; the X still closes.
 
-### A2 — Prompt to set a default when managing a game with no default set  🟢 Haiku
+### A2 — Prompt to set a default when managing a game with no default set  ✅ DONE (commit 9472fd0)
 **User ask:** *"if someone picks to manage a game and no default is set the program should ask
 the user if they wanna set that first game as default or not."*
 

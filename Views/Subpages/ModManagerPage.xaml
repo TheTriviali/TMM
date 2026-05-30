@@ -242,8 +242,24 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Center: Install | Edit Config | Refresh | Files -->
+                    <!-- Center: Game title | Install | Edit Config | Refresh | Files -->
                     <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Game name breadcrumb -->
+                        <Border x:Name="Cust_titleGradientChip"
+                                Width="10" CornerRadius="3" Margin="0,8,8,8">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop x:Name="Cust_gradChipTop" Color="#1B3A1B" Offset="0"/>
+                                    <GradientStop x:Name="Cust_gradChipBot" Color="#0C1E0C" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <TextBlock x:Name="Cust_txtGameTitle" Text=""
+                                   Foreground="{DynamicResource TextBrush}"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" Margin="0,0,10,0"
+                                   MaxWidth="200" TextTrimming="CharacterEllipsis"/>
+                        <Border Width="1" Background="{DynamicResource SubTextBrush}" Margin="0,6,8,6" Opacity="0.3"/>
                         <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                             <Button Content="&#xE710;" Click="BtnInstallModCustom_Click" ToolTip="{helpers:Localization ModManager_Tooltip_Install}"
                                     Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
@@ -477,6 +493,39 @@
                             <Rectangle x:Name="Cust_DropLine" Height="2" Fill="{DynamicResource AccentBrush}"
                                        Visibility="Collapsed" Width="400"/>
                         </Canvas>
+
+                        <!-- Empty mod list state (shown when no mods and no search active) -->
+                        <Border x:Name="Cust_EmptyState"
+                                Background="{DynamicResource PanelBrush}"
+                                CornerRadius="5" Visibility="Collapsed"
+                                Panel.ZIndex="10">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="📦" FontSize="40" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{helpers:Localization ModManager_Empty_Title}"
+                                           Foreground="{DynamicResource TextBrush}"
+                                           FontSize="15" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                <TextBlock Text="{helpers:Localization ModManager_Empty_Subtitle}"
+                                           Foreground="{DynamicResource SubTextBrush}"
+                                           FontSize="11" HorizontalAlignment="Center"
+                                           TextAlignment="Center" TextWrapping="Wrap"
+                                           MaxWidth="280" Margin="0,0,0,20"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Content="{helpers:Localization ModManager_Install}"
+                                            Click="BtnInstallModCustom_Click"
+                                            Height="30" Padding="14,0" Margin="0,0,8,0"
+                                            Background="{DynamicResource AccentBrush}"
+                                            Foreground="Black" FontWeight="Bold"
+                                            FontSize="12" BorderThickness="0" Cursor="Hand"/>
+                                    <Button Content="{helpers:Localization ModManager_Empty_Import}"
+                                            Click="BtnImportFromGame_Click"
+                                            Height="30" Padding="14,0"
+                                            Background="{DynamicResource ControlBgBrush}"
+                                            Foreground="{DynamicResource TextBrush}"
+                                            FontSize="12" BorderThickness="0" Cursor="Hand"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </Grid>
                 </Grid>
 

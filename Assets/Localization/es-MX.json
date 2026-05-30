@@ -309,6 +309,9 @@
   "Card_SetColor": "Color de tarjeta…",
   "Card_ResetColor": "Restablecer color",
 
+  "ModManager_Empty_Title": "Sin mods aún",
+  "ModManager_Empty_Subtitle": "Instala un archivo .zip/.rar/.7z o importa mods desde la carpeta del juego.",
+  "ModManager_Empty_Import": "Importar del juego",
   "ModManager_DirectoryNotSet": "Directorio no configurado",
   "ModManager_FolderNotSet": "La carpeta del juego no está configurada o no existe.",
   "ModManager_DropHere": "Suelta Mods Aquí",

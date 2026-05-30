@@ -309,6 +309,9 @@
   "Card_SetColor": "Set Card Color…",
   "Card_ResetColor": "Reset Card Color",
 
+  "ModManager_Empty_Title": "No mods yet",
+  "ModManager_Empty_Subtitle": "Install a .zip/.rar/.7z archive or import mods already in your game folder.",
+  "ModManager_Empty_Import": "Import from game",
   "ModManager_DirectoryNotSet": "Directory not set",
   "ModManager_FolderNotSet": "Game folder is not set or missing.",
   "ModManager_DropHere": "Drop Mods Here",
