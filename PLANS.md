@@ -636,6 +636,41 @@ toast (and the fail's "What does this mean?" lands on the new catalog entry), th
 
 ---
 
+## Group H — Mockup backport: delegable backend/wiring  (design in [HANDOFF_BACKPORT.md](HANDOFF_BACKPORT.md))
+
+> **Context.** Opus + user approved backporting the three design mockups (`Mockups/`)
+> into the app. The cross-cutting *UI* restructure (tabbed Game Workspace, Library Home
+> replacing the grid, enriched list layout) stays Opus-led in the backport chat. The
+> briefs below are the **well-specified backend/data pieces those screens need** — land
+> them first; they're independent and testable. **Frozen decisions** live in the handoff;
+> a few taxonomy/semantics questions there (categories shape, "pending" definition) should
+> be answered by the user before H1/H3 are built — escalate if you hit them.
+>
+> **Deferred, do NOT build:** mod source+version capture, update-available checking.
+
+### H1 — `ModItem` category/tag field + persistence + wizard config  ✅ DONE (fb4d32d)
+Fixed-preset single category per mod. `ModItem.Category` persists via modinfo.json.
+`ModCategories.cs` holds the 5-value preset + stable colour map. `CustomGameProfile.ModCategories`
+lets custom-game profiles override the preset via the wizard (Step 1 + Step 4 review).
+Localized en-US + es-MX. Frozen decision: fixed preset, single category.
+
+### H2 — Per-mod conflict aggregation helper  ✅ DONE (9ac628c)
+Added `ModConflictSummary` / `ModConflictClash` types and `AnalyzeByMod()` to
+`ConflictAnalyzer`. Covers file-destination + proxy-DLL conflicts. 7 unit tests in
+`TMM.Tests/ConflictAnalyzerTests.cs`.
+
+### H3 — Pending-changes tracker on `BackendCore`  ✅ DONE (3fa52e3)
+Added `PendingChanges(gameKey)` → `PendingChangesSummary` in new `BackendCore.PendingChanges.cs`.
+Diffs current enabled mods + load order vs last `DeployManifest`. Pending baseline is
+always the last physical deploy; loadout switches do not reset it.
+
+### H4 — Batch mod operations  ✅ DONE (c7327b3)
+Added `ModManagerPage.Batch.cs` with `BatchEnable`, `BatchDisable`, `BatchSetGroup`,
+`BatchRemove`. One save + one summary toast per batch. `BatchSetGroup` re-plans affected
+mods. `BatchRemove` still confirms before deleting.
+
+---
+
 ## Group D — Codebase health (standing)
 
 ### AUDIT1 — Periodic file-count & module-size audit  🔵 Sonnet (inventory) → 🟣 Opus (decisions)  ⏳ STANDING
