@@ -147,6 +147,9 @@
   "Step1_NexusSlug_Label": "Slug de NexusMods",
   "Step1_NexusSlug_Hint": "Opcional. Vincula el panel lateral directamente a la página de mods del juego en Nexus. Encuéntralo en la URL: nexusmods.com/{slug}/mods (ej. 'grandtheftauto3'). Déjalo en blanco para usar búsqueda web.",
 
+  "Step1_ModCategories_Label": "Categorías de mods",
+  "Step1_ModCategories_Hint": "Opcional. Lista de categorías separadas por comas que los usuarios pueden asignar a mods (ej. Jugabilidad, Visual, Audio, Mapa, Otro). Deja en blanco para usar el preset predeterminado.",
+
   "Step1_Integrity_Header": "Verificación de Integridad (opcional)",
   "Step1_Integrity_Intro": "Detecta cuando el ejecutable del juego ha sido reemplazado o corrompido. Déjalo en blanco para omitir.",
   "Step1_Integrity_AutoDetect": "Detectar automáticamente del ejecutable actual",

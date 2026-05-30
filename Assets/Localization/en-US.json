@@ -147,6 +147,9 @@
   "Step1_NexusSlug_Label": "NexusMods Slug",
   "Step1_NexusSlug_Hint": "Optional. Used to link the sidebar directly to this game's mod page. Find it in the URL: nexusmods.com/{slug}/mods (e.g. 'grandtheftauto3'). Leave blank to fall back to a web search.",
 
+  "Step1_ModCategories_Label": "Mod categories",
+  "Step1_ModCategories_Hint": "Optional. Comma-separated list of categories users can assign to mods (e.g. Gameplay, Visual, Audio, Map, Other). Leave blank to use the built-in default preset.",
+
   "Step1_Integrity_Header": "Integrity Verification (optional)",
   "Step1_Integrity_Intro": "Detect when the game executable has been replaced or corrupted. Leave blank to skip checks.",
   "Step1_Integrity_AutoDetect": "Auto-detect from current exe",

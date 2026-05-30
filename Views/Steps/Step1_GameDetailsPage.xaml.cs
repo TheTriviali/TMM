@@ -32,6 +32,7 @@ namespace TMM
             txtExePath.Text    = profile.ExePath ?? "";
             txtSteamAppId.Text = profile.SteamAppId ?? "";
             txtNexusSlug.Text  = profile.NexusSlug ?? "";
+            txtModCategories.Text  = string.Join(", ", profile.ModCategories);
             txtOverlayFolders.Text = string.Join(", ", profile.OverlayFolders);
             txtCompanionSiblings.Text = string.Join(Environment.NewLine,
                 profile.CompanionSiblings.Select(kvp =>
@@ -52,6 +53,7 @@ namespace TMM
             profile.ExePath       = NullIfBlank(txtExePath.Text);
             profile.SteamAppId    = NullIfBlank(txtSteamAppId.Text);
             profile.NexusSlug     = NullIfBlank(txtNexusSlug.Text);
+            profile.ModCategories  = ParseCsvList(txtModCategories.Text);
             profile.OverlayFolders = ParseCsvList(txtOverlayFolders.Text);
             profile.CompanionSiblings = ParseCompanionMap(txtCompanionSiblings.Text);
             profile.SearchHints = ParseLineList(txtSearchHints.Text);

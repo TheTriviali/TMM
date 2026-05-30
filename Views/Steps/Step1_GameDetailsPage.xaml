@@ -111,6 +111,13 @@
             <TextBox x:Name="txtNexusSlug" Style="{StaticResource FieldBox}"
                      Margin="0,0,0,0" Width="260" HorizontalAlignment="Left"/>
 
+            <!-- Mod categories (drives colour spine + filter chips) -->
+            <TextBlock Text="{helpers:Localization Step1_ModCategories_Label}" Style="{StaticResource FieldLabel}"
+                       Margin="0,20,0,4"/>
+            <TextBlock Text="{helpers:Localization Step1_ModCategories_Hint}" Style="{StaticResource FieldHint}"/>
+            <TextBox x:Name="txtModCategories" Style="{StaticResource FieldBox}"
+                     AcceptsReturn="False" Margin="0,0,0,0"/>
+
             <!-- Overlay / companion metadata -->
             <Expander Header="Advanced layout metadata"
                       Margin="0,20,0,0" Foreground="{DynamicResource TextBrush}"

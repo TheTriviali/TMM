@@ -29,6 +29,9 @@ namespace TMM
             lblSearchHints.Text = profile.SearchHints.Count == 0
                 ? "(not set)"
                 : string.Join("; ", profile.SearchHints);
+            lblModCategories.Text = profile.ModCategories.Count == 0
+                ? $"(default: {string.Join(", ", ModCategories.DefaultCategories)})"
+                : string.Join(", ", profile.ModCategories);
 
             var modTypeSummaries = profile.ModTypes
                 .Select(mt =>

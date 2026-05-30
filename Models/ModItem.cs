@@ -64,6 +64,19 @@ namespace TMM
         /// <summary>Optional group name used to nest the mod under a deployment group.</summary>
         public string? GroupName { get; set; }
 
+        private string? _category;
+        /// <summary>
+        /// Single user-assigned category, drawn from the game's available preset
+        /// (see <see cref="ModCategories"/>). Null/empty = uncategorized. Drives the
+        /// list's colour spine and the category filter chips. Purely organizational —
+        /// has no effect on routing or deployment.
+        /// </summary>
+        public string? Category
+        {
+            get => _category;
+            set { if (_category != value) { _category = value; OnPropertyChanged(); } }
+        }
+
         /// <summary>
         /// Auto-detected mod type based on file contents.
         /// Null if type could not be determined.

@@ -69,6 +69,13 @@ namespace TMM
         public List<string> OverlayFolders { get; set; } = new();
 
         /// <summary>
+        /// Available mod categories the user can assign to mods of this game (single per mod).
+        /// Empty = fall back to the built-in preset (<see cref="ModCategories.DefaultCategories"/>).
+        /// Organizational only — drives the list colour spine and filter chips, never routing.
+        /// </summary>
+        public List<string> ModCategories { get; set; } = new();
+
+        /// <summary>
         /// Known sibling folders that should be scanned for companion files during import.
         /// Key = folder name that owns the main file type; value = allowed companion folders.
         /// </summary>

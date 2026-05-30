@@ -822,6 +822,7 @@ namespace TMM
             ModTypes           = new(src.ModTypes),
             RoutingRules       = new(src.RoutingRules),
             OverlayFolders     = new(src.OverlayFolders),
+            ModCategories      = new(src.ModCategories),
             CompanionSiblings  = src.CompanionSiblings.ToDictionary(
                 kvp => kvp.Key,
                 kvp => new List<string>(kvp.Value)),
