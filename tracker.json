@@ -1,16 +1,34 @@
 {
-  "lastUpdated": "2026-05-30",
+  "lastUpdated": "2026-05-31",
   "sections": [
     {
       "id": "layout",
       "title": "Layout and General UI",
       "items": [
         {
+          "id": "ui-game-dir-guard",
+          "title": "Enforce game directory rules: disable mod management if no dir set",
+          "detail": "If a game has no directory configured, the mod manager must not attempt management. Instead, show a clear prompt to set the folder. Currently, conflicting messaging about deployment appears rather than a simple 'set folder first' reminder. This guardrail should gate all mod management actions (install, deploy, etc.).",
+          "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Phase 1 — must-fix before deployment UX makes sense. Install button now guards on GameDirectory; deploy already guarded via _pendingCustom."
+        },
+        {
+          "id": "ui-lag-needs-folder",
+          "title": "Fix UI lag: 'Needs folder' state persists too long after path is set",
+          "detail": "After the user sets a game directory, game cards and workspace indicators continue showing a 'needs folder' state for longer than expected. The UI should update promptly (ideally immediately) when the path is confirmed.",
+          "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Phase 1 — minor but noticeable friction on first run. UpdatePathAffordances + UpdateSidebarCustom now called immediately in BtnBrowseGameFolder_Click before the async refresh."
+        },
+        {
           "id": "ui-quit-button",
           "title": "Remove the Quit button from the rail",
           "detail": "BtnQuit_Click in UnifiedShellWindow.xaml:178. The button moved from 'bottom-left corner' (old layout) to the bottom of the global rail but the original request was to remove it entirely.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -30,7 +48,7 @@
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
-          "notes": ""
+          "notes": "When double-clicking, the window briefly maximizes before returning to its' original size in a split second."
         },
         {
           "id": "ui-downloads-addressbar",
@@ -48,16 +66,7 @@
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
-          "notes": ""
-        },
-        {
-          "id": "ux-card-density",
-          "title": "Compact card option for users with many games",
-          "detail": "Current 240×160 grid card is generous — on a large monitor with 10+ games the grid has a lot of whitespace. A compact/dense card option would help power users scan their library faster.",
-          "status": "open",
-          "claudeDone": false,
-          "noahVerified": false,
-          "notes": ""
+          "notes": "Distinct from the first-time wizard revamp (see firstrun section). This is the splash/landing screen; the wizard is what runs when adding a first game."
         },
         {
           "id": "ux-overflow-discoverability",
@@ -67,6 +76,102 @@
           "claudeDone": false,
           "noahVerified": false,
           "notes": ""
+        },
+        {
+          "id": "ui-sidebar-structure",
+          "title": "Implement sidebar navigation (Logo, Library, Mod Manager, Help, Settings)",
+          "detail": "Decision #6: Vertical rail on left. Top-aligned: Logo (themed icon, renders with current theme color), Library (Books icon), Mod Manager (wrench icon). Bottom-aligned: Help & Troubleshooting (merges FAQ, log viewer, About), Settings (app paths and preferences). Replaces old top menu bar. Additionally: make the sidebar resizable. Add a hamburger icon toggle — goes in the exact same position where the current Install Mod button sits (which is moving to the action bar per Decision #8). The hamburger collapses/expands the sidebar.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "This is more of a change to the existing vertical bar than something entirely new. Resizable + hamburger toggle are Phase 4 additions to this item."
+        },
+        {
+          "id": "ui-unified-filter-bar",
+          "title": "Consolidate filter searchbox into tab row",
+          "detail": "Decision #7: Merge filter searchbox + tab row (All / Enabled / Conflicts / Favorites) into a single horizontal control in mod manager. Removes dedicated search element to reclaim vertical space.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": ""
+        },
+        {
+          "id": "ui-install-mod-inline",
+          "title": "Move Install Mod button inline with Deploy and Play",
+          "detail": "Decision #8: Install Mod button moves to action bar alongside Deploy and Play buttons at bottom of mod manager. The vacated position is taken by the sidebar hamburger toggle (see ui-sidebar-structure).",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": ""
+        },
+        {
+          "id": "ui-dark-scrollbar",
+          "title": "Custom dark mode scrollbar for all scrollable areas",
+          "detail": "Default Windows light-mode scrollbars cause two problems: (1) they are visually inconsistent with the dark theme, and (2) they shift centered UI elements slightly left when visible. Apply a custom dark scrollbar style to all scrollable tabs/panels. Priority areas: Library tab and Notifications window. Not needed for the mod list (separate concern).",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "Phase 4. Cosmetic but noticeable — centered elements drifting left is especially annoying."
+        },
+        {
+          "id": "ui-browse-window-title",
+          "title": "Browse window QoL: show game name in title bar",
+          "detail": "When the user opens the browse-for-game-directory dialog, include the game's name in the window title bar so the user knows which game they are setting the path for at a glance.",
+          "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Phase 3. Already implemented: OpenFolderDialog title = 'Select {GameName} Folder'."
+        },
+        {
+          "id": "ui-statusbar-secondary",
+          "title": "Status bar: add disk space indicator and game selection display",
+          "detail": "Status bar currently shows language selector only. Add secondary functions: disk free space for selected game directory, and/or indicator of which game workspace is active.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "You can add other stuff to the status bar as applicable."
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "title": "Library & Config Refinements",
+      "items": [
+        {
+          "id": "library-scroll-arrows",
+          "title": "Library scroll indicators: circular arrows for overflow content",
+          "detail": "Show a circular down arrow when content continues below the visible area, and a circular up arrow when content continues above. Applies to the Library tab only — not the mod list, not the notifications list. Purely decorative/UX; does not replace the scrollbar.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "Phase 3. Prettiness specifically for the library; not a global pattern."
+        },
+        {
+          "id": "library-tmmgame-filenames",
+          "title": "Expose .tmmgame filenames in small text on library cards",
+          "detail": "Display the backing .tmmgame filename in small, subtle text on each game card in the library. Conceptually, the library is a polished file browser for .tmmgame files — exposing filenames reinforces this and helps power users identify profiles.",
+          "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Phase 3. SourceFileName added to CustomGameProfile (JsonIgnore); populated in GameRegistry for both built-in .tmmgame and custom .json profiles. TmmGameFileName added to LibraryEntry. txtTmmGameFile / listTxtTmmGameFile shown on GameCard in 8.5pt/9.5pt semi-transparent text."
+        },
+        {
+          "id": "library-context-menus",
+          "title": "Library context menus: open Config editor directly from game card",
+          "detail": "Right-click (or ⋯ overflow) on a game card in the library should include an option to open the config editor (game wizard in edit mode) directly, without needing to navigate into the Mod Manager workspace first.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "Phase 3. Pairs with library-path-setting."
+        },
+        {
+          "id": "library-path-setting",
+          "title": "Quick path setting from library: set game dir without entering the wizard",
+          "detail": "Game directory should be settable directly from the library view — e.g. via card context menu or a dedicated 'Set path' control — without needing to open the full wizard or navigate into the Mod Manager. This is important for second, third, etc. games after the first-run wizard has already been completed. Open question: does this also inform the design of the Config tab (see nav-config-tab-justify)?",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "Phase 3. Closely related to firstrun-wizard-revamp. Design decision pending on whether path-setting separates from the full wizard flow entirely."
         }
       ]
     },
@@ -78,19 +183,28 @@
           "id": "nav-help-troubleshooting",
           "title": "Merge Help + Troubleshooting into single global destination",
           "detail": "Decision #3: Unified 'Help & Troubleshooting' rail entry. Content: FAQ, log/error viewer, About. Replaces the separate Troubleshooting rail entry and the Help/About overflow items. Always accessible regardless of which workspace is active.",
-          "status": "open",
-          "claudeDone": false,
+          "status": "partial",
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": ""
+          "notes": "Rail button tooltip and titlebar text updated to 'Help & Troubleshooting'. Still navigates to the existing TroubleshootingPage — a proper unified Help+About+Log content page is out of scope for this pass."
         },
         {
           "id": "nav-paths-merge",
           "title": "Merge File Locations (Paths) into Settings",
           "detail": "Paths is currently a separate rail entry. The request is to absorb it into the Settings page so the rail shrinks. Explicitly deferred in M1 but still open.",
           "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Paths button removed from rail. File Locations section added to SettingsPage (settingsPathRowsPanel, BuildPathRows helper). Navigating to 'Paths' via code highlights Settings in the rail."
+        },
+        {
+          "id": "nav-config-tab-justify",
+          "title": "Config tab: quick path-setting + 'Advanced config' link to wizard",
+          "detail": "DECIDED: The Config tab is a lightweight panel, not a full wizard launch. It shows a quick path-setting control (browse + confirm game directory) and an 'Advanced config' link/button that opens the full wizard in edit mode. This updates Decision #4. Relates to library-path-setting (same quick-path pattern, different surface).",
+          "status": "open",
           "claudeDone": false,
           "noahVerified": false,
-          "notes": ""
+          "notes": "Phase 3. Decision locked in — no longer an open question."
         },
         {
           "id": "settings-save-apply",
@@ -99,7 +213,7 @@
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
-          "notes": ""
+          "notes": "It is nice not to force the user into the option right away, but maybe the color options should auto-apply before hitting Apply, might be annoying if you're testing out some color combos iteratively."
         },
         {
           "id": "ux-notifications-review",
@@ -108,7 +222,49 @@
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
-          "notes": ""
+          "notes": "Consider replacing notifications with notification history with a clock icon instead of noti bell."
+        }
+      ]
+    },
+    {
+      "id": "firstrun",
+      "title": "First-Launch Flow & Startup Defaults",
+      "items": [
+        {
+          "id": "firstrun-wizard-revamp",
+          "title": "Revamp first-time setup wizard: .tmmgame dropdown + path-first flow",
+          "detail": "Occurs after the welcome screen (see ux-welcome-screen) — sequential flows, not alternatives. The current first-game setup wizard is 13 steps — far too long for most users. New flow: Step 1 = select a bundled .tmmgame file from a dropdown (the list of included profiles); Step 2 = set the game directory path. Most users will not be building custom game profiles from scratch. The lengthy custom-game steps should only appear when the user explicitly opts into 'Add custom game.' Path-setting for additional games after the first must be discoverable from the library (see library-path-setting) without re-entering the wizard.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "Phase 2. Wizard auto-launches after the welcome screen — no manual navigation required for first run. Second-game path discovery is handled by library-path-setting (library card context menu). Related to games-wizard-unified."
+        },
+        {
+          "id": "firstrun-startup-prefs",
+          "title": "Startup preference: Library first or Mod Manager first",
+          "detail": "Let the user choose whether TMM opens to the Library or the Mod Manager on launch. If Mod Manager: go to the default game if one is set, otherwise fall back to last-managed game. If Library: ensure the default game (if set) appears first in the list. Preference should be exposed in Settings and ideally during or shortly after first run.",
+          "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Phase 2. Pairs with firstrun-default-game. AppSettings.StartupPage added; radio buttons in Settings page; Window_Loaded respects the preference."
+        },
+        {
+          "id": "firstrun-default-game",
+          "title": "Default game handling: expose control, fall back to last-opened",
+          "detail": "Empower users to set a default game during and after first launch. No need to prompt or force the choice — just expose the control (e.g. in the library game card context menu or a star/pin icon). When no default is set, automatically track the last-opened game and show it first. The default indicator should be easily visible and settable from the library.",
+          "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Phase 2. Infrastructure already existed end-to-end (ActiveGameKey, IsActive, star button on GameCard, ActiveToggled event). No new code needed — fully functional."
+        },
+        {
+          "id": "firstrun-default-change-notif",
+          "title": "Notify user when the default game changes",
+          "detail": "If the user already has a default game set and sets a new one, show a notification: 'Default changed from [Game A] to [Game B].' If no previous default existed, the notification should just confirm what the new default is. Standard notification channel — no modal.",
+          "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Phase 2. OnActiveToggled in UnifiedShellWindow.xaml.cs now shows clear/set/change notifications."
         }
       ]
     },
@@ -116,6 +272,24 @@
       "id": "modlist",
       "title": "Mod List",
       "items": [
+        {
+          "id": "modlist-tab-navigation",
+          "title": "Fix tab navigation: Mods / Conflicts / Backups / Downloads / Config",
+          "detail": "PRIORITY: Tabs currently cannot be clicked at all — switching between workspace tabs is completely broken. Fix this first before any other mod list work. All five tabs must be accessible and switch cleanly. Conflicts tab displays ConflictAnalyzer results; Backups lists per-deploy rollback points; Downloads shows mod download history; Config opens game wizard in edit mode.",
+          "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Phase 1 — blocking all other mod manager functionality. Root cause: MouseLeftButtonDown=TitleBar_MouseDown on the master window Border caused DragMove() to fire on every click, consuming the MouseLeftButtonUp event before it reached the tab handlers. Fixed by removing that handler from the master border — titlebar row already has its own."
+        },
+        {
+          "id": "modlist-tab-rename-conflicts",
+          "title": "Rename 'Conflicts' tab to 'Conflict Manager'",
+          "detail": "The main Mods tab should show whether conflicts exist at a glance. The dedicated tab is for actively managing or resolving them — the name 'Conflict Manager' reflects that purpose and sets clearer expectations for users.",
+          "status": "open",
+          "claudeDone": true,
+          "noahVerified": false,
+          "notes": "Phase 4. Simple rename. Updated en-US.json and es-MX.json."
+        },
         {
           "id": "modlist-ghost-checkbox",
           "title": "Ghost checkbox artifact on hover — verify resolved",
@@ -136,12 +310,21 @@
         },
         {
           "id": "modlist-sorting",
-          "title": "Multi-attribute column-header sorting",
-          "detail": "M2 filter chips cover filtering (All/Enabled/Conflicts/Favorites) but column-header sorting for Order / Mod Name / isEnabled / Group / Size / Status is not implemented. The custom DataTemplate has no sortable headers.",
+          "title": "Multi-attribute column-header sorting + tiering",
+          "detail": "Restore and expand sorting: support load order, mod name, mod group, isEnabled, size, status. Sorting must support ascending and descending for each column. Modlist must be tiered again (visual grouping by mod group or type). Column headers should be clickable to sort; clicking the active column header toggles direction. Pairs with the up/down arrow re-ordering controls in modlist-entry-controls.",
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
-          "notes": ""
+          "notes": "Phase 4. Tiering re-add is required alongside sort controls."
+        },
+        {
+          "id": "modlist-entry-controls",
+          "title": "Per-mod entry controls: folder icon, up/down arrows, re-install",
+          "detail": "Add controls to each mod row in the mod list: (1) Folder icon — opens the mod's stored folder in Explorer. (2) Up/down arrows — manually re-order load order; should also respond to keyboard arrow keys when a mod row is focused. (3) Re-install / Edit Plan — two sub-paths: (a) Archive still present → ask user if they want to re-import from the archive (warn that manual changes to the mod folder will be overwritten) or just open the Plan Editor to adjust the existing plan. (b) Archive gone → inform user the archive is no longer present; skip re-import option; open the Plan Editor (install-preview) directly so the user can re-plan the already-extracted mod files without a full re-install. In all destructive paths, show a confirmation dialog before proceeding.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "Phase 4. Architecturally significant. The 'pre-deployment UI' for the archive-gone branch is the expanded DeployPreviewWindow / Deployment Plan Editor (see install-preview)."
         },
         {
           "id": "ux-empty-modlist",
@@ -153,9 +336,27 @@
           "notes": ""
         },
         {
-          "id": "ux-loadouts",
-          "title": "Loadouts UI audit",
-          "detail": "Loadouts exist in the backend (%APPDATA%\\TMM\\Loadouts_{key}\\) and there is a Loadouts.cs partial in ModManagerPage, but the loadout UI has not been audited recently. Confirm the UX (switcher in workspace header, apply/save/delete flows) matches the backend capability.",
+          "id": "modlist-favorites",
+          "title": "Wire up Favorites support: toggle and filter",
+          "detail": "Favorites tab (subset of enabled mods) exists in the filter chips but backend support and visual toggles are incomplete. Add star/heart icon to each mod row to mark as favorite. Favorites chip filters to this subset. Persist favorite status in mod metadata.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": ""
+        },
+        {
+          "id": "modlist-conflicts-display",
+          "title": "Conflict Manager tab: ConflictAnalyzer integration and readability",
+          "detail": "Ensure ConflictAnalyzer surfaces all cross-mod file overlaps and display is readable (grouped by conflict set, showing affected files and involved mods). This is the Conflict Manager tab (previously 'Conflicts' — see modlist-tab-rename-conflicts). Additionally: when any conflict exists (detected during install, re-plan, or deploy), show a persistent notification bubble/badge on the Conflict Manager tab to draw user attention. Bubble persists until — see tracker.md Q15 for open question on when it clears.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": ""
+        },
+        {
+          "id": "modlist-loadouts-deferred",
+          "title": "Loadouts: deferred to long-term backlog (remove from UX)",
+          "detail": "Loadouts exist in backend (%APPDATA%\\TMM\\Loadouts_{key}\\) but are not fully backend-implemented for this release cycle. Remove loadout UX (switcher, save/load/delete) from current mod manager. Add to long-term feasibility study for future release. Depends on backend storage and load-order reconciliation.",
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
@@ -168,13 +369,31 @@
       "title": "Mod Installation",
       "items": [
         {
-          "id": "install-preview",
-          "title": "Pre-installation deployment preview (confirm before freezing plan)",
-          "detail": "User must see the parsed file layout and confirm it before the DeploymentPlan is frozen. Currently TMM parses and installs without a mandatory confirmation step even if the archive structure is ambiguous.",
+          "id": "install-direct-override",
+          "title": "[WON'T IMPLEMENT] Direct Install Override",
+          "detail": "DECIDED: Not implementing. The routing rules system already supports a 'game root' destination — users who want a direct copy (e.g. dxvk) just need a mod type rule that targets the game directory root. A cleanly routed mod can be uninstalled, tracked, and conflict-checked. A special CTRL override mode with no DeploymentPlan, no clean uninstall, and a separate code path adds more complexity than value. Ensure 'game root / game directory' is a clearly visible and obvious routing destination option so this use case is naturally covered.",
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
-          "notes": ""
+          "notes": "Won't implement. Routing rules + 'game root' destination is the right answer."
+        },
+        {
+          "id": "install-tar-gz",
+          "title": "Add .tar.gz archive support for mod installation",
+          "detail": "Edge case: some mods (e.g. dxvk) ship as .tar.gz archives. Add .tar.gz to the supported archive formats for mod installation.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "Phase 5. Small scope — just extend the archive extraction handler."
+        },
+        {
+          "id": "install-preview",
+          "title": "Deployment Plan Editor: two-pane file levelling / routing UI",
+          "detail": "Expand DeployPreviewWindow into a full two-pane deployment plan editor. FLOW: archive extracted to ModsRaw → routing rules auto-populate DeploymentPlan as default → Plan Editor opens → user confirms or adjusts → Confirm freezes plan / Cancel aborts install entirely. Always mandatory — shown on every install regardless of whether issues exist. LEFT PANE (game dir): read-only file tree; conflicts against ALL installed mods (enabled or disabled) highlighted visually; users CAN create folders (created on disk at deploy time); Explorer quick-link. RIGHT PANE (ModsRaw source layout): inline destination annotation per file (routing-rule assignment); drag file → drop onto left-pane folder to reassign (annotation updates in place). Operations: reassign destination, create custom folders, rename files (renames in ModsRaw immediately), exclude from plan (stays in ModsRaw, not deployed). No drag-to-add files — use Explorer quick-link. UNRECOGNIZED FILE RULES (in order): (1) same dir level as recognized file → carry to same destination; (2) filename contains 'readme' → rename to readme_{modname}.txt, game root; (3) otherwise → game root, flagged. CONFLICT BUBBLE: badge on Conflict Manager tab; clears only when all conflicts resolved. ORPHANED FILES: pre-deploy blocking dialog lists files no longer in plan, asks permission to remove before proceeding. RENAME: renames file in ModsRaw immediately. BATCH: sequential, alphabetical; mid-sequence cancel aborts that mod only, rest continue without prompt. CONFLICT SCOPE: all installed mods (enabled or disabled). EDIT EXISTING PLAN: accessible from mod list at any time; flags mod 'needs redeploy.' ARCHIVE-GONE: opens Plan Editor directly to re-plan extracted files.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "Significant feature. Full spec in tracker.md 'Deployment Plan Editor' section. All design questions resolved."
         },
         {
           "id": "install-dedup",
@@ -183,7 +402,7 @@
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
-          "notes": ""
+          "notes": "I don't think anything will really break if duplicates are found... maybe we should just warn the user, or ignore it."
         },
         {
           "id": "install-charset",
@@ -285,7 +504,7 @@
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
-          "notes": ""
+          "notes": "Try not to go too far down the rabbit hole on this one.. we'll just use nice comfy buttons & whatnot."
         },
         {
           "id": "l10n-specific-fixes",
@@ -307,7 +526,7 @@
           "title": "Add Opus 4.8 to AboutWindow credits",
           "detail": "AboutWindow.xaml:135 shows 'Claude Opus 4.7'. Opus 4.8 needs to be appended to the AI-assisted credits tag list.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         }
@@ -345,12 +564,21 @@
     },
     {
       "id": "feasibility",
-      "title": "Feasibility Surveys (analysis only — no code)",
+      "title": "Deferred Analysis & Long-Term Features",
       "items": [
+        {
+          "id": "deferred-loadouts",
+          "title": "Loadouts: backend storage and load-order reconciliation",
+          "detail": "Save/load mod configurations with full load-order preservation and conflict resolution. Blocked on backend storage design and LoadOrderResolver integration. Candidate for post-v1 release.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": ""
+        },
         {
           "id": "feasibility-vfs",
           "title": "Virtual File System (VFS) feasibility assessment",
-          "detail": "Assess technical feasibility and maintenance overhead of adding a mandatory VFS layer (MO2-parity). Consider: impact on DeploymentPlan-freeze architecture, performance on large mod sets, rollback complexity.",
+          "detail": "Assess technical feasibility and maintenance overhead of adding a mandatory VFS layer (MO2-parity). Consider: impact on DeploymentPlan-freeze architecture, performance on large mod sets, rollback complexity. Design note: if VFS is re-implemented, the Backup tab could be replaced with archive/download management for existing mod archives; existing Downloads tab becomes 'Downloader.' VFS would remove the need for the backup system and strengthen the purpose of per-mod isolated install paths.",
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
@@ -359,7 +587,7 @@
         {
           "id": "feasibility-nexus",
           "title": "Nexus Mods API integration feasibility assessment",
-          "detail": "Assess feasibility of native NexusMods API support (mod browsing, metadata, download queue). Consider: API key management, rate limits, per-game category mapping. Also covers the deferred 'mod source + version line' and update-available badge from the M2 backport.",
+          "detail": "Assess feasibility of native NexusMods API support (mod browsing, metadata, download queue). Consider: API key management, rate limits, per-game category mapping. Also covers the deferred 'mod source + version line' and update-available badge from the M2 backport. Design note: Nexus API credentials/login should live in the Settings menu, not a dedicated rail entry.",
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,
@@ -369,6 +597,24 @@
           "id": "feasibility-fomod",
           "title": "FOMOD installer schema feasibility assessment",
           "detail": "Assess feasibility of parsing and presenting FOMOD ModuleConfig.xml during the pre-installation deployment preview. Consider: schema coverage, conditional install steps, interaction with DeploymentPlan freeze.",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": ""
+        },
+        {
+          "id": "feasibility-deploy-undo",
+          "title": "Single-layer undo for deploy actions feasibility assessment",
+          "detail": "Assess feasibility of a single-level undo for deploy-time destructive actions, specifically orphaned file removal during smart partial redeploy. Consider: interaction with existing backup/rollback system (first-touch baseline + per-deploy manifests), storage overhead, UX surface (undo button in action bar vs notification toast). Does this supplement or replace the existing backup tab rollback?",
+          "status": "open",
+          "claudeDone": false,
+          "noahVerified": false,
+          "notes": "Deferred. Triggered by orphaned-file cleanup in smart partial redeploy."
+        },
+        {
+          "id": "deferred-mod-preview",
+          "title": "Mod preview and image gallery support",
+          "detail": "Display mod preview images, screenshots, or carousel in mod details. Requires optional mod metadata fields and preview asset storage/handling.",
           "status": "open",
           "claudeDone": false,
           "noahVerified": false,

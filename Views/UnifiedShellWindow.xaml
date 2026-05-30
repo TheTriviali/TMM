@@ -134,8 +134,7 @@
 
     <!-- Master border -->
     <Border x:Name="MainWindowBorder" Background="{DynamicResource BgBrush}" CornerRadius="10"
-            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2"
-            MouseLeftButtonDown="TitleBar_MouseDown">
+            BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="2">
         <Border>
             <Border.OpacityMask>
                 <VisualBrush>
@@ -166,17 +165,12 @@
                                    Foreground="{DynamicResource AccentBrush}"
                                    HorizontalAlignment="Center" Margin="0,14,0,10"/>
 
-                        <!-- Bottom: Settings + Quit -->
+                        <!-- Bottom: Settings -->
                         <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,8">
                             <!-- Settings (global) -->
                             <Button x:Name="navBtnSettings" Style="{StaticResource NavBtnStyle}"
                                     ToolTip="Settings" Click="NavBtn_Click" Tag="Settings">
                                 <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
-                            <Button Style="{StaticResource NavBtnStyle}" ToolTip="Quit TMM"
-                                    Click="BtnQuit_Click">
-                                <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="18"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
                         </StackPanel>
@@ -198,22 +192,13 @@
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
-                            <!-- Troubleshooting / Error Guide -->
+                            <!-- Help & Troubleshooting -->
                             <Button x:Name="navBtnTroubleshooting" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Troubleshooting" Click="NavBtn_Click" Tag="Troubleshooting">
+                                    ToolTip="Help &amp; Troubleshooting" Click="NavBtn_Click" Tag="Troubleshooting">
                                 <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
-                            <Border Height="1" Background="{DynamicResource SubTextBrush}"
-                                    Opacity="0.2" Margin="6,8"/>
-
-                            <!-- Paths -->
-                            <Button x:Name="navBtnPaths" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="File Locations" Click="NavBtn_Click" Tag="Paths">
-                                <TextBlock Text="&#xE9CE;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
 
                         </StackPanel>
                     </DockPanel>

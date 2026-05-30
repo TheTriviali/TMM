@@ -135,6 +135,9 @@
                             <TextBlock Text="Claude Opus 4.7" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
                         </Border>
                         <Border Style="{StaticResource TagStyle}">
+                            <TextBlock Text="Claude Opus 4.8" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                        </Border>
+                        <Border Style="{StaticResource TagStyle}">
                             <TextBlock Text="Gemini 3.1 Pro Paid" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
                         </Border>
                         <Border Style="{StaticResource TagStyle}">

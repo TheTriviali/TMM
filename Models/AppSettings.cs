@@ -21,6 +21,13 @@ namespace TMM
         // Active preset name (e.g. "Blue-Cyan", "Purple-Pink")
         public string ActiveAccentPreset { get; set; } = "Blue-Cyan";
 
+        // ── Startup preference ──────────────────────────────────────────────────────
+        /// <summary>
+        /// Which page TMM opens to on launch. "Library" | "ModManager".
+        /// "ModManager" goes to ActiveGameKey if set, otherwise last-opened game.
+        /// </summary>
+        public string StartupPage { get; set; } = "Library";
+
         // ── Library state (Design-required) ──────────────────────────────────────────
 
         /// <summary>

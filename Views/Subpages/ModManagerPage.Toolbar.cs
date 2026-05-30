@@ -25,6 +25,13 @@ namespace TMM
 
         private async void BtnInstallModCustom_Click(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrEmpty(_customConfig?.GameDirectory) || !Directory.Exists(_customConfig.GameDirectory))
+            {
+                NotificationService.ShowWarning("Set the game folder before installing mods.", "Install");
+                Cust_SetFolderBanner.Visibility = Visibility.Visible;
+                return;
+            }
+
             var ofd = new OpenFileDialog
             {
                 Title       = "Select Mod Archive(s)",

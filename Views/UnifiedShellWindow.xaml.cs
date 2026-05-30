@@ -153,8 +153,9 @@ namespace TMM
             }
             else
             {
-                // Check for default game
-                if (!string.IsNullOrEmpty(_core.Settings.ActiveGameKey))
+                // Respect startup preference: open to Mod Manager only when the user asked for it
+                if (_core.Settings.StartupPage == "ModManager" &&
+                    !string.IsNullOrEmpty(_core.Settings.ActiveGameKey))
                 {
                     var defaultEntry = entries.FirstOrDefault(e => e.IsActive && !e.IsPlaceholder);
                     if (defaultEntry != null)
@@ -340,7 +341,7 @@ namespace TMM
 
                 case "Troubleshooting":
                     pageTroubleshootingPlaceholder.Visibility = Visibility.Visible;
-                    titleSubtext.Text = " — Troubleshooting";
+                    titleSubtext.Text = " — Help & Troubleshooting";
                     break;
             }
 
@@ -356,7 +357,6 @@ namespace TMM
             navBtnLibrary.Style           = (Style)Resources["NavBtnStyle"];
             navBtnNotifications.Style     = (Style)Resources["NavBtnStyle"];
             navBtnTroubleshooting.Style   = (Style)Resources["NavBtnStyle"];
-            navBtnPaths.Style             = (Style)Resources["NavBtnStyle"];
             navBtnSettings.Style          = (Style)Resources["NavBtnStyle"];
 
             // Highlight the active button. The workspace (ModManager) keeps Library lit,
@@ -368,7 +368,7 @@ namespace TMM
                 case "ModManager":       navBtnLibrary.Style         = activeStyle; break;
                 case "Notifications":    navBtnNotifications.Style    = activeStyle; break;
                 case "Troubleshooting":  navBtnTroubleshooting.Style  = activeStyle; break;
-                case "Paths":            navBtnPaths.Style            = activeStyle; break;
+                case "Paths":            navBtnSettings.Style         = activeStyle; break; // Paths merged into Settings
                 case "Settings":         navBtnSettings.Style         = activeStyle; break;
             }
         }
@@ -555,6 +555,8 @@ namespace TMM
 
         private void OnActiveToggled(LibraryEntry entry, bool isActive)
         {
+            string? prevKey = _core.Settings.ActiveGameKey;
+
             // Toggle: if already active, clicking again clears it
             if (!isActive || _core.Settings.ActiveGameKey == entry.Key)
                 _core.Settings.ActiveGameKey = null;
@@ -562,6 +564,21 @@ namespace TMM
                 _core.Settings.ActiveGameKey = entry.Key;
             _core.SaveSettings();
             RefreshLibrary();
+
+            string? newKey = _core.Settings.ActiveGameKey;
+            if (newKey is null)
+            {
+                NotificationService.ShowInfo($"Default game cleared.", "Default");
+            }
+            else if (prevKey is not null && prevKey != newKey)
+            {
+                string? prevName = GameRegistry.Instance.GetGameProfile(prevKey)?.DisplayName ?? prevKey;
+                NotificationService.ShowInfo($"Default changed from {prevName} to {entry.DisplayName}.", "Default");
+            }
+            else
+            {
+                NotificationService.ShowInfo($"Default game set to {entry.DisplayName}.", "Default");
+            }
         }
 
         private void OnOrderChanged(List<string> newOrder)
@@ -610,7 +627,8 @@ namespace TMM
                     GameKeys:        [key],
                     IsPlaceholder:   false,
                     IsArchived:      settings.ArchivedGameKeys.Contains(key),
-                    IsActive:       settings.ActiveGameKey == key
+                    IsActive:        settings.ActiveGameKey == key,
+                    TmmGameFileName: config.SourceFileName
                 ));
             }
 

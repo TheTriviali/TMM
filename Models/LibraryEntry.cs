@@ -54,6 +54,13 @@ namespace TMM
         /// On app close, the active game is saved; on relaunch, the ModManager opens with it.
         /// Only one card can be active at a time.
         /// </summary>
-        bool IsActive = false
+        bool IsActive = false,
+
+        /// <summary>
+        /// Backing file basename, e.g. "GTA_III.tmmgame" or "MyGame.json".
+        /// Shown in small text on the library card for power-user reference.
+        /// Null for placeholder entries.
+        /// </summary>
+        string? TmmGameFileName = null
     );
 }

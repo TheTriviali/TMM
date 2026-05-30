@@ -165,6 +165,10 @@ namespace TMM
             // re-evaluate immediately (RefreshCustomAsync does not re-read GamePaths).
             _customConfig.GameDirectory = dlg.FolderName;
 
+            // Reflect the new path immediately — don't wait for the full async refresh.
+            UpdatePathAffordances();
+            UpdateSidebarCustom();
+
             // Distinguish between built-in and custom games for persistence.
             var builtInProfile = GameProfile.All.FirstOrDefault(p => p.Key == _customProfile.Key);
             if (builtInProfile != null)

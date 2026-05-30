@@ -148,5 +148,12 @@ namespace TMM
         [JsonIgnore]
         public bool IsBuiltIn { get; set; }
 
+        /// <summary>
+        /// The backing file basename (e.g. "GTA_III.tmmgame" for built-in profiles,
+        /// "{key}.json" for user-added games). Set by GameRegistry at load time; not serialized.
+        /// </summary>
+        [JsonIgnore]
+        public string? SourceFileName { get; set; }
+
     }
 }

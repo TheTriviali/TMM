@@ -71,6 +71,10 @@
                         <TextBlock x:Name="txtModCount"
                                    Foreground="#80FFFFFF" FontSize="10"
                                    HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        <TextBlock x:Name="txtTmmGameFile"
+                                   Foreground="#50FFFFFF" FontSize="8.5"
+                                   HorizontalAlignment="Center" Margin="0,3,0,0"
+                                   Visibility="Collapsed"/>
                     </StackPanel>
 
                     <!-- Drag grip (top-left, faint → solid on hover; locked for active card) -->
@@ -334,6 +338,10 @@
                         <TextBlock x:Name="listTxtModCount"
                                    Foreground="#66FFFFFF" FontSize="11" Margin="8,0,0,0"
                                    VerticalAlignment="Center"/>
+                        <!-- .tmmgame filename -->
+                        <TextBlock x:Name="listTxtTmmGameFile"
+                                   Foreground="#44FFFFFF" FontSize="9.5" Margin="10,0,0,0"
+                                   VerticalAlignment="Center" Visibility="Collapsed"/>
                     </StackPanel>
                 </StackPanel>
 

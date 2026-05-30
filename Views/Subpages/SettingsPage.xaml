@@ -10,6 +10,25 @@
             <TextBlock Text="{helpers:Localization Settings_Title}" FontSize="22" FontWeight="Bold"
                        Foreground="{DynamicResource TextBrush}" Margin="0,0,0,20"/>
 
+            <!-- Startup preference -->
+            <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                    Padding="0,12,0,0" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Startup" FontSize="13" FontWeight="SemiBold"
+                               Foreground="#FF88EE" Margin="0,0,0,8"/>
+                    <TextBlock Text="Open TMM to:" FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                               Margin="0,0,0,6"/>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="rdStartupLibrary" Content="Library" Margin="0,0,16,0"
+                                     Foreground="{DynamicResource TextBrush}" Cursor="Hand"
+                                     Checked="RdStartup_Changed"/>
+                        <RadioButton x:Name="rdStartupModManager" Content="Mod Manager (default game)"
+                                     Foreground="{DynamicResource TextBrush}" Cursor="Hand"
+                                     Checked="RdStartup_Changed"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- Appearance: 2-Tone Accent Colors -->
             <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
                     Padding="0,12,0,0" Margin="0,0,0,16">
@@ -105,6 +124,18 @@
                                 Height="26" Margin="3,0,0,0" Background="{DynamicResource PanelBrush}"
                                 Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
                     </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- File Locations -->
+            <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                    Padding="0,12,0,0" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="File Locations" FontSize="13" FontWeight="SemiBold"
+                               Foreground="#FF88EE" Margin="0,0,0,4"/>
+                    <TextBlock Text="TMM's app data folders. Click Open to browse each location."
+                               FontSize="10" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,10"/>
+                    <StackPanel x:Name="settingsPathRowsPanel"/>
                 </StackPanel>
             </Border>
 

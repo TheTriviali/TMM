@@ -99,6 +99,19 @@ namespace TMM
             listTxtSubtitle.Text = entry.Subtitle;
             listTxtModCount.Text = entry.ModCount > 0 ? $"{entry.ModCount} mods" : "";
 
+            if (!string.IsNullOrEmpty(entry.TmmGameFileName))
+            {
+                txtTmmGameFile.Text = entry.TmmGameFileName;
+                txtTmmGameFile.Visibility = Visibility.Visible;
+                listTxtTmmGameFile.Text = entry.TmmGameFileName;
+                listTxtTmmGameFile.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                txtTmmGameFile.Visibility = Visibility.Collapsed;
+                listTxtTmmGameFile.Visibility = Visibility.Collapsed;
+            }
+
             // ── Gradient ──
             // An explicit user color override is honoured verbatim (deliberate intent).
             // The shipped per-game gradients are run through a desaturating wash so a

@@ -394,7 +394,7 @@
   "Workspace_Pending_Reordered": "reordered",
   "Workspace_Pending_AddedRemoved": "added/removed",
   "Workspace_Tab_Mods": "Mods",
-  "Workspace_Tab_Conflicts": "Conflicts",
+  "Workspace_Tab_Conflicts": "Conflict Manager",
   "Workspace_Tab_Backups": "Backups",
   "Workspace_Tab_Downloads": "Downloads",
   "Workspace_Tab_Config": "Config",
