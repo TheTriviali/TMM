@@ -118,11 +118,14 @@
             </Grid.RowDefinitions>
 
             <!-- Toolbar -->
-            <Border Grid.Row="0" Background="{DynamicResource HeaderBrush}" Opacity="0.98" Padding="8,6">
+            <Border x:Name="Cust_ToolbarBorder" Grid.Row="0"
+                    Background="{DynamicResource HeaderBrush}" Opacity="0.98" Padding="8,6"
+                    SizeChanged="Cust_ToolbarBorder_SizeChanged">
                 <DockPanel LastChildFill="True">
 
                     <!-- Right: Downloads toggle | Deploy | Rollback | Launch (conditional) -->
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel x:Name="Cust_rightButtons"
+                                DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Downloads drawer toggle (absent until first built-in download) -->
                         <StackPanel x:Name="Cust_pnlDownloadsToggle"
                                     Margin="0,0,4,0" VerticalAlignment="Center" Visibility="Collapsed">
@@ -194,7 +197,8 @@
                     </StackPanel>
 
                     <!-- Left: Back | Sidebar | Help | About -->
-                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel x:Name="Cust_leftButtons"
+                                DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                         <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
                             <Button Content="&#xE72B;" Click="BtnBack_Click" ToolTip="{helpers:Localization ModManager_Tooltip_Back}"
                                     Style="{StaticResource IconButtonStyle}" Width="38" Height="38"
@@ -243,7 +247,8 @@
                     </StackPanel>
 
                     <!-- Center: Game title | Install | Edit Config | Refresh | Files -->
-                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel x:Name="Cust_centerButtons"
+                                HorizontalAlignment="Center" Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Game name breadcrumb -->
                         <Border x:Name="Cust_titleGradientChip"
                                 Width="10" CornerRadius="3" Margin="0,8,8,8">

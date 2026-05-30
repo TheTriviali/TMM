@@ -24,6 +24,10 @@
         </ContextMenu>
     </UserControl.ContextMenu>
 
+    <UserControl.ToolTip>
+        <ToolTip Content="{helpers:Localization Card_RightClickHint}"/>
+    </UserControl.ToolTip>
+
     <Border x:Name="cardBorder" CornerRadius="10" ClipToBounds="True"
             BorderThickness="1.5" BorderBrush="#22FFFFFF">
         <Border.Effect>

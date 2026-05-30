@@ -893,5 +893,29 @@ namespace TMM
             try { color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex.Trim()); return true; }
             catch { return false; }
         }
+
+        // ── Toolbar label collapse ────────────────────────────────────────────────
+
+        private const double ToolbarLabelThreshold = 950.0;
+
+        private void Cust_ToolbarBorder_SizeChanged(object sender, SizeChangedEventArgs e)
+            => UpdateToolbarLabels(e.NewSize.Width >= ToolbarLabelThreshold);
+
+        private void UpdateToolbarLabels(bool show)
+        {
+            var vis = show ? Visibility.Visible : Visibility.Collapsed;
+            CollapseLabelsIn(Cust_leftButtons, vis);
+            CollapseLabelsIn(Cust_rightButtons, vis);
+            CollapseLabelsIn(Cust_centerButtons, vis);
+        }
+
+        private static void CollapseLabelsIn(StackPanel outer, Visibility vis)
+        {
+            foreach (var inner in outer.Children.OfType<StackPanel>())
+            {
+                var label = inner.Children.OfType<TextBlock>().FirstOrDefault();
+                if (label != null) label.Visibility = vis;
+            }
+        }
     }
 }
