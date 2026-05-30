@@ -117,10 +117,8 @@ These were requested as analyses to inform future planning, not implementation t
 
 ---
 
-## Items requiring clarification before work begins
+## Design decisions (clarified 2026-05-30)
 
-Two items from the original list don't fit cleanly onto the new design and need a quick answer before work is scoped:
+1. **"Available Games" section** — No separate browseable section needed. The "Add a game" button in the Library header is sufficient.
 
-1. **"Available Games" section** — The Home view (M3) shows configured games. The original request also wanted a section for built-in profiles that haven't been set up yet (i.e., browseable "Add GTA III", "Add Vice City" cards). Does the current "Add a game" button in the Library header satisfy this, or should the Home view surface installable presets directly?
-
-2. **Mod types vs. routing rules** — Before the Add-a-Game wizard redesign can be planned, the architectural relationship between Step 2 (mod types) and Step 3 (routing rules) needs to be decided. Options: keep separate, merge types into routes as labels, or remove Step 2 and derive types from route file-extension groups automatically.
+2. **Mod types vs. routing rules** — **Merge them.** Steps 2 and 3 are redundant; the new wizard should combine type definition and routing rules into a single step. Routing rules should include the type label as metadata.
