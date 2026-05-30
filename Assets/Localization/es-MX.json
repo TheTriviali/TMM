@@ -214,8 +214,8 @@
   "Setup_Feature_BuiltinGames": "Perfiles de juego integrados",
   "Setup_Feature_CustomProfiles": "Perfiles de juego personalizados",
 
-  "Prompt_SetDefault_Title": "¿Establecer como predeterminado?",
-  "Prompt_SetDefault_Message": "¿Establecer {0} como tu juego predeterminado? TMM abrirá directamente sus mods la próxima vez.",
+  "Prompt_SetActive_Title": "¿Establecer como activo?",
+  "Prompt_SetActive_Message": "¿Establecer {0} como tu juego activo? TMM abrirá directamente sus mods la próxima vez.",
 
   "Picker_Heading": "¿Qué te gustaría hacer?",
   "Picker_BuiltinTitle": "Ve a tu biblioteca",
@@ -283,7 +283,7 @@
 
   "Card_Play": "Jugar",
   "Card_Manage": "Administrar",
-  "Card_Default": "Predeterminado",
+  "Card_Active": "Activo",
   "Card_Edit": "Editar",
   "Card_ExportProfile": "Exportar perfil",
   "Card_Archive": "Archivar",
@@ -399,5 +399,36 @@
   "Wizard_Cancel": "Cancelar",
   "Wizard_Back": "← Atrás",
   "Wizard_Next": "Siguiente →",
-  "Wizard_Finish": "✓ Crear Juego"
+  "Wizard_Finish": "✓ Crear Juego",
+
+  "Toast_WhatDoesThisMean": "¿Qué significa esto?",
+
+  "Page_Troubleshooting": "Solución de Problemas",
+  "Troubleshooting_Title": "Solución de Problemas",
+  "Troubleshooting_Subtitle": "Códigos de error, causas y soluciones.",
+  "Troubleshooting_SearchPlaceholder": "Buscar por código o título…",
+
+  "TmmError_E001_Title": "Error al desplegar",
+  "TmmError_E001_Cause": "TMM no pudo copiar uno o más archivos de mod al directorio del juego.",
+  "TmmError_E001_Fix": "Verifica que el directorio del juego esté configurado correctamente, que tengas permisos de escritura y que ningún archivo esté bloqueado por otro proceso (p. ej., el juego no debe estar en ejecución).",
+
+  "TmmError_E002_Title": "Error al revertir",
+  "TmmError_E002_Cause": "TMM no pudo restaurar uno o más archivos desde la copia de seguridad base.",
+  "TmmError_E002_Fix": "Verifica que la carpeta de copias de seguridad exista y sea accesible. Si faltan archivos, puede ser necesaria una restauración manual desde %APPDATA%\\TMM\\Backups.",
+
+  "TmmError_E003_Title": "Error al extraer el archivo",
+  "TmmError_E003_Cause": "TMM no pudo extraer el archivo del mod. Puede estar corrupto, protegido con contraseña o en un formato no compatible.",
+  "TmmError_E003_Fix": "Vuelve a descargar el archivo e inténtalo de nuevo. Asegúrate de que sea .zip, .rar o .7z y no esté protegido con contraseña.",
+
+  "TmmError_E004_Title": "Error al escribir la copia de seguridad",
+  "TmmError_E004_Cause": "TMM no pudo escribir el manifiesto de copia de seguridad ni copiar los archivos a la carpeta de respaldo.",
+  "TmmError_E004_Fix": "Asegúrate de que %APPDATA%\\TMM\\Backups sea escribible y de que haya suficiente espacio en disco.",
+
+  "TmmError_E005_Title": "Directorio del juego no encontrado",
+  "TmmError_E005_Cause": "El directorio del juego configurado no existe o ya no es accesible.",
+  "TmmError_E005_Fix": "Abre el Administrador de Mods y usa el banner 'Establecer carpeta del juego' o 'Editar Configuración' para indicar a TMM la carpeta de instalación correcta.",
+
+  "TmmError_E006_Title": "Error al guardar ajustes",
+  "TmmError_E006_Cause": "TMM no pudo escribir settings.json en el disco.",
+  "TmmError_E006_Fix": "Verifica que %APPDATA%\\TMM sea escribible y que el disco no esté lleno. El software antivirus también puede estar bloqueando la escritura."
 }

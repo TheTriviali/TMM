@@ -781,20 +781,6 @@ namespace TMM
             return lv.Items.Count;
         }
 
-        // ── Toast helpers ─────────────────────────────────────────────────────────
-
-        private void Toast_Close(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is FrameworkElement el && el.DataContext is NotificationItem item)
-                NotificationService.Queue.Remove(item);
-        }
-
-        private void Toast_CloseBtn(object sender, RoutedEventArgs e)
-        {
-            if (sender is FrameworkElement el && el.DataContext is NotificationItem item)
-                NotificationService.Queue.Remove(item);
-        }
-
         // ── Static sync helper ────────────────────────────────────────────────────
 
         private static void SyncModInfoToFolder(ModItem mod)

@@ -36,6 +36,9 @@ namespace TMM
             _core = core;
             InitializeComponent();
 
+            // Wire error-guide deep-link: until TroubleshootingPage (G2) lands, navigate to Notifications.
+            NotificationService.OnErrorGuideRequested = _ => NavigateTo("Notifications");
+
             // Wire up pages that need the core
             pageLibrary.Initialize(_core);
             pageModManager.BackRequested += () => NavigateTo("Library");
@@ -45,7 +48,7 @@ namespace TMM
             pageLibrary.PlayRequested   += OnPlayRequested;
             pageLibrary.ManageRequested += OnManageRequested;
             pageLibrary.ArchiveToggled  += OnArchiveToggled;
-            pageLibrary.DefaultToggled  += OnDefaultToggled;
+            pageLibrary.ActiveToggled  += OnActiveToggled;
             pageLibrary.OrderChanged    += OnOrderChanged;
             pageLibrary.AddGameRequested  += OnAddGameRequested;
             pageLibrary.EditGameRequested += OnEditGameRequested;
@@ -132,9 +135,9 @@ namespace TMM
             else
             {
                 // Check for default game
-                if (!string.IsNullOrEmpty(_core.Settings.DefaultGameKey))
+                if (!string.IsNullOrEmpty(_core.Settings.ActiveGameKey))
                 {
-                    var defaultEntry = entries.FirstOrDefault(e => e.IsDefault && !e.IsPlaceholder);
+                    var defaultEntry = entries.FirstOrDefault(e => e.IsActive && !e.IsPlaceholder);
                     if (defaultEntry != null)
                     {
                         OnManageRequested(defaultEntry);
@@ -248,7 +251,7 @@ namespace TMM
                     {
                         var entries = BuildLibraryEntries();
                         _activeModManagerEntry =
-                            entries.FirstOrDefault(e => !e.IsPlaceholder && e.IsDefault) ??
+                            entries.FirstOrDefault(e => !e.IsPlaceholder && e.IsActive) ??
                             entries.FirstOrDefault(e => !e.IsPlaceholder && !e.IsArchived);
                     }
                     if (_activeModManagerEntry == null)
@@ -262,7 +265,7 @@ namespace TMM
                 case "Downloads":
                     // Pre-select the active/default game so Downloads follows what the user is working on
                     var activeKey = _activeModManagerEntry?.Key
-                        ?? BuildLibraryEntries().FirstOrDefault(e => e.IsDefault && !e.IsPlaceholder)?.Key;
+                        ?? BuildLibraryEntries().FirstOrDefault(e => e.IsActive && !e.IsPlaceholder)?.Key;
                     pageDownloads.SetActiveGame(activeKey);
                     pageDownloads.Visibility    = Visibility.Visible;
                     downloadsNavBar.Visibility  = Visibility.Visible;
@@ -477,14 +480,14 @@ namespace TMM
         private void OnManageRequested(LibraryEntry entry)
         {
             // Prompt to set default if none is set
-            if (string.IsNullOrEmpty(_core.Settings.DefaultGameKey) && !entry.IsPlaceholder)
+            if (string.IsNullOrEmpty(_core.Settings.ActiveGameKey) && !entry.IsPlaceholder)
             {
                 var svc = LocalizationService.Instance;
-                string title = svc["Prompt_SetDefault_Title"];
-                string message = string.Format(svc["Prompt_SetDefault_Message"], entry.DisplayName);
+                string title = svc["Prompt_SetActive_Title"];
+                string message = string.Format(svc["Prompt_SetActive_Message"], entry.DisplayName);
                 if (MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    _core.Settings.DefaultGameKey = entry.Key;
+                    _core.Settings.ActiveGameKey = entry.Key;
                     _core.SaveSettings();
                     RefreshLibrary();
                 }
@@ -518,13 +521,13 @@ namespace TMM
             RefreshLibrary();
         }
 
-        private void OnDefaultToggled(LibraryEntry entry, bool isDefault)
+        private void OnActiveToggled(LibraryEntry entry, bool isActive)
         {
-            // Toggle: if already default, clicking again clears it
-            if (!isDefault || _core.Settings.DefaultGameKey == entry.Key)
-                _core.Settings.DefaultGameKey = null;
+            // Toggle: if already active, clicking again clears it
+            if (!isActive || _core.Settings.ActiveGameKey == entry.Key)
+                _core.Settings.ActiveGameKey = null;
             else
-                _core.Settings.DefaultGameKey = entry.Key;
+                _core.Settings.ActiveGameKey = entry.Key;
             _core.SaveSettings();
             RefreshLibrary();
         }
@@ -575,7 +578,7 @@ namespace TMM
                     GameKeys:        [key],
                     IsPlaceholder:   false,
                     IsArchived:      settings.ArchivedGameKeys.Contains(key),
-                    IsDefault:       settings.DefaultGameKey == key
+                    IsActive:       settings.ActiveGameKey == key
                 ));
             }
 
@@ -594,6 +597,16 @@ namespace TMM
                 result = ordered;
             }
 
+            // Default game is pinned to the front (locked first in both views,
+            // regardless of saved drag order).
+            var defaultIdx = result.FindIndex(e => !e.IsPlaceholder && e.IsActive);
+            if (defaultIdx > 0)
+            {
+                var def = result[defaultIdx];
+                result.RemoveAt(defaultIdx);
+                result.Insert(0, def);
+            }
+
             return result;
         }
 
@@ -604,6 +617,29 @@ namespace TMM
                 if (_core.Mods.TryGetValue(key, out var list))
                     count += list.Count;
             return count;
+        }
+
+        // ── Toast handlers ────────────────────────────────────────────────────────
+
+        private void Toast_Close(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement el && el.DataContext is NotificationItem item)
+                NotificationService.Queue.Remove(item);
+        }
+
+        private void Toast_CloseBtn(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement el && el.DataContext is NotificationItem item)
+                NotificationService.Queue.Remove(item);
+        }
+
+        private void Toast_ErrorLink(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement el && el.DataContext is NotificationItem item
+                && item.ErrorCode is not null)
+            {
+                NotificationService.OnErrorGuideRequested?.Invoke(item.ErrorCode);
+            }
         }
 
         // ── Add / Edit game flow ──────────────────────────────────────────────────

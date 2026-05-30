@@ -26,6 +26,12 @@ namespace TMM
         /// </summary>
         public string Source { get; set; } = "";
 
+        /// <summary>
+        /// Optional structured error code (e.g. "TMM-E001"). When set, toasts and history rows
+        /// show a deep-link to the Troubleshooting page entry for this code.
+        /// </summary>
+        public string? ErrorCode { get; set; }
+
         [System.Text.Json.Serialization.JsonIgnore]
         public string LocalTimeDisplay
         {
@@ -72,6 +78,13 @@ namespace TMM
         /// <summary>True when verbose toasts are enabled (per <see cref="Settings.VerboseNotifications"/>).</summary>
         public static bool IsVerbose => _verboseEnabled?.Invoke() ?? false;
 
+        /// <summary>
+        /// Invoked when a toast's "What does this mean?" link is clicked. The argument is the
+        /// <see cref="NotificationItem.ErrorCode"/>. The shell wires this to navigate to the
+        /// Troubleshooting page and scroll to the matching entry.
+        /// </summary>
+        public static Action<string>? OnErrorGuideRequested;
+
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             WriteIndented = true,
@@ -93,7 +106,7 @@ namespace TMM
         // ── Toast + history ────────────────────────────────────────────────────────
 
         public static void Show(string message, NotificationType type = NotificationType.Info,
-                                int durationMs = 3500, string source = "")
+                                int durationMs = 3500, string source = "", string? errorCode = null)
         {
             var item = new NotificationItem
             {
@@ -101,7 +114,8 @@ namespace TMM
                 Type       = type,
                 DurationMs = durationMs,
                 CreatedAt  = DateTime.UtcNow,
-                Source     = source
+                Source     = source,
+                ErrorCode  = errorCode
             };
 
             RecordHistory(item);
@@ -110,8 +124,14 @@ namespace TMM
 
         public static void ShowSuccess(string message, string source = "") => Show(message, NotificationType.Success, source: source);
         public static void ShowWarning(string message, string source = "") => Show(message, NotificationType.Warning, source: source);
-        public static void ShowError(string message,   string source = "") => Show(message, NotificationType.Error,   source: source);
         public static void ShowInfo(string message,    string source = "") => Show(message, NotificationType.Info,    source: source);
+
+        /// <summary>Show an error toast without a structured code.</summary>
+        public static void ShowError(string message, string source = "") => Show(message, NotificationType.Error, source: source);
+
+        /// <summary>Show an error toast with a structured code that links to the Troubleshooting guide.</summary>
+        public static void ShowError(string message, string source, string? errorCode)
+            => Show(message, NotificationType.Error, 5000, source, errorCode);
 
         /// <summary>
         /// Records a low-level/verbose event to history. Raises a toast only when verbose mode

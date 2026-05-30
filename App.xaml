@@ -10,6 +10,7 @@
         <!-- Converters -->
         <local:NotificationTypeIconConverter x:Key="NotificationTypeIconConverter"/>
         <local:InverseBoolToVisConverter x:Key="InverseBoolToVisConverter"/>
+        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <local:GroupNameDisplayConverter x:Key="GroupNameDisplayConverter"/>
         <local:StarGlyphConverter x:Key="StarGlyphConverter"/>
         <local:StarColorConverter x:Key="StarColorConverter"/>

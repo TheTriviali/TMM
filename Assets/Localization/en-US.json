@@ -214,8 +214,8 @@
   "Setup_Feature_BuiltinGames": "Built-in game profiles",
   "Setup_Feature_CustomProfiles": "Custom game profiles",
 
-  "Prompt_SetDefault_Title": "Set as Default?",
-  "Prompt_SetDefault_Message": "Set {0} as your default game? TMM will open straight to its mods next time.",
+  "Prompt_SetActive_Title": "Set as Active?",
+  "Prompt_SetActive_Message": "Set {0} as your active game? TMM will open straight to its mods next time.",
 
   "Picker_Heading": "Which would you like to do?",
   "Picker_BuiltinTitle": "Go to Your Library",
@@ -283,7 +283,7 @@
 
   "Card_Play": "Play",
   "Card_Manage": "Manage",
-  "Card_Default": "Default",
+  "Card_Active": "Active",
   "Card_Edit": "Edit",
   "Card_ExportProfile": "Export Profile",
   "Card_Archive": "Archive",
@@ -399,5 +399,36 @@
   "Wizard_Cancel": "Cancel",
   "Wizard_Back": "← Back",
   "Wizard_Next": "Next →",
-  "Wizard_Finish": "✓ Create Game"
+  "Wizard_Finish": "✓ Create Game",
+
+  "Toast_WhatDoesThisMean": "What does this mean?",
+
+  "Page_Troubleshooting": "Troubleshooting",
+  "Troubleshooting_Title": "Troubleshooting",
+  "Troubleshooting_Subtitle": "Error codes, causes, and fixes.",
+  "Troubleshooting_SearchPlaceholder": "Search by code or title…",
+
+  "TmmError_E001_Title": "Deploy failed",
+  "TmmError_E001_Cause": "TMM could not copy one or more mod files to the game directory.",
+  "TmmError_E001_Fix": "Check that the game directory is set correctly, that you have write access to it, and that no files are locked by another process (e.g. the game is not running).",
+
+  "TmmError_E002_Title": "Rollback failed",
+  "TmmError_E002_Cause": "TMM could not restore one or more files from the baseline backup.",
+  "TmmError_E002_Fix": "Check that the backup folder exists and is accessible. If files are missing, a manual restore from %APPDATA%\\TMM\\Backups may be required.",
+
+  "TmmError_E003_Title": "Archive extraction failed",
+  "TmmError_E003_Cause": "TMM could not extract the mod archive. The file may be corrupt, password-protected, or in an unsupported format.",
+  "TmmError_E003_Fix": "Re-download the archive and try again. Ensure it is a .zip, .rar, or .7z file and is not password-protected.",
+
+  "TmmError_E004_Title": "Backup write failed",
+  "TmmError_E004_Cause": "TMM could not write the backup manifest or copy files to the backup folder.",
+  "TmmError_E004_Fix": "Ensure %APPDATA%\\TMM\\Backups is writable and that you have sufficient disk space.",
+
+  "TmmError_E005_Title": "Game directory missing",
+  "TmmError_E005_Cause": "The configured game directory does not exist or is no longer accessible.",
+  "TmmError_E005_Fix": "Open the Mod Manager, use the 'Set game folder' banner or Edit Config to point TMM to the correct game installation folder.",
+
+  "TmmError_E006_Title": "Settings save failed",
+  "TmmError_E006_Cause": "TMM could not write settings.json to disk.",
+  "TmmError_E006_Fix": "Check that %APPDATA%\\TMM is writable and that your disk is not full. Antivirus software may also be blocking the write."
 }
