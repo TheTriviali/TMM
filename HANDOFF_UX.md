@@ -47,6 +47,10 @@ Library view mode (`grid` | `list` | `showcase`) persists in `AppSettings.Librar
 - **Card colors:** built-in gradients varied (VC magenta, SA orange, TLAD crimson, TBoGT gold;
   III green & IV blue unchanged). Users can set a per-card gradient via right-click →
   "Set Card Color…" (preset swatches + custom hex), persisted in `AppSettings.CardColorOverrides`.
+- **Unarchive flow:** a header toggle pill ("🗄 Show archived (N)" / "Hide archived") now reveals
+  archived games (previously `ShowArchived` had no UI and archived games were unrecoverable).
+  Unarchive itself is per-card (⋯ → Unarchive). *Possible follow-up for you:* is a header pill the
+  right home, or should archived games live in their own collapsible section / chip row?
 
 ## 4. Open UX questions for your pass (suggestions, not constraints)
 
