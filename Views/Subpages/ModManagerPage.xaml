@@ -413,12 +413,6 @@
                                 Click="BtnClearSearchCustom_Click"/>
                     </Grid>
 
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right"
-                                Margin="0,0,0,0">
-                        <CheckBox x:Name="Cust_chkShowGroups" Content="Show groups"
-                                  Checked="Cust_ShowGroupsChanged" Unchecked="Cust_ShowGroupsChanged"/>
-                    </StackPanel>
-
                     <!-- Mod ListView -->
                     <Grid Grid.Row="2">
                         <ListView x:Name="Cust_ModList" Style="{StaticResource ModListStyle}"

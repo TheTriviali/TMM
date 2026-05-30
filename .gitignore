@@ -362,3 +362,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 .aider*
+
+# Stray mod artifacts - mods extracted or run inside the repo dir (never commit these)
+/modinfo.json
+/modinfo.txt
+*.asi

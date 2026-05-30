@@ -296,11 +296,5 @@ namespace TMM
             Cust_txtSearch.Text = "";
             RefreshCustomView();
         }
-
-        private void Cust_ShowGroupsChanged(object sender, RoutedEventArgs e)
-        {
-            _showGroups = Cust_chkShowGroups.IsChecked == true;
-            RefreshCustomView();
-        }
     }
 }

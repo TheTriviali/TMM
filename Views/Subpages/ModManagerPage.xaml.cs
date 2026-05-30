@@ -32,7 +32,6 @@ namespace TMM
         private CustomGameProfile _customConfig = null!;
         private ObservableCollection<ModItem> _modsCustom = new();
         private bool _pendingCustom;
-        private bool _showGroups;
         private Point _startCustom;
         private ModItem? _draggedCustom;
         private CancellationTokenSource? _deployCts;
@@ -145,19 +144,16 @@ namespace TMM
             var dlg = new Microsoft.Win32.OpenFolderDialog { Title = $"Select {_customConfig.GameName} Folder" };
             if (dlg.ShowDialog() != true) return;
 
-            // Distinguish between built-in and custom games.
+            // Update the in-memory config so the sidebar, banner, and deploy button
+            // re-evaluate immediately (RefreshCustomAsync does not re-read GamePaths).
+            _customConfig.GameDirectory = dlg.FolderName;
+
+            // Distinguish between built-in and custom games for persistence.
             var builtInProfile = GameProfile.All.FirstOrDefault(p => p.Key == _customProfile.Key);
             if (builtInProfile != null)
-            {
-                // Built-in game: persist via Settings.GamePaths
-                _core.SetVanillaPath(builtInProfile, dlg.FolderName);
-            }
+                _core.SetVanillaPath(builtInProfile, dlg.FolderName); // built-in: Settings.GamePaths
             else
-            {
-                // Custom game: persist via GameRegistry
-                _customConfig.GameDirectory = dlg.FolderName;
-                GameRegistry.Instance.SaveCustomGameSync(_customProfile.Key, _customConfig);
-            }
+                GameRegistry.Instance.SaveCustomGameSync(_customProfile.Key, _customConfig); // custom: GameRegistry
 
             await RefreshCustomAsync();
             NotificationService.ShowSuccess($"Game folder set to {Path.GetFileName(dlg.FolderName)}");
@@ -266,10 +262,14 @@ namespace TMM
                 ? null
                 : obj => obj is ModItem m && m.Name.ToLowerInvariant().Contains(q);
 
+            // Auto-group only when at least one mod has a group assigned (set via the
+            // context menu or picked up on import). No manual toggle — a flat list when
+            // groups aren't in use, grouped when they are.
+            bool hasGroups = _modsCustom.Any(m => !string.IsNullOrWhiteSpace(m.GroupName));
             using (view.DeferRefresh())
             {
                 view.GroupDescriptions.Clear();
-                if (_showGroups)
+                if (hasGroups)
                     view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ModItem.GroupName)));
             }
         }
