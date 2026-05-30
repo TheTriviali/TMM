@@ -4,6 +4,24 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [v0.1-alpha-12] — 2026-05-30 *(Mockup backport M2: enriched mod list)*
+
+### Added
+- **Category colour spine:** 4 px left border on each mod row using `ModCategories.BrushFor(mod.Category)`. `CategorySpineBrushConverter` converts the category string to a frozen `SolidColorBrush` in the DataTemplate.
+- **Inline conflict badge:** Per-row badge (conflict count) populated by a background `ConflictAnalyzer.AnalyzeByMod` pass after the list loads. Click the badge to expand clash detail (destination path → winner mod name) inline below the mod name. `ModItem` gains `[JsonIgnore]` properties `ConflictSummary` + `IsConflictExpanded` with `INotifyPropertyChanged`.
+- **Filter chips:** All / Enabled / Conflicts / Favorites — client-side `CollectionView` predicate above the mod list. Active chip highlighted with `AccentBrush`. Counts update after every list mutation. No "Updates" chip (deferred).
+- **Bulk-action bar:** Slides in whenever `Cust_ModList.SelectedItems.Count > 1`. Buttons Enable / Disable / Set group… / Remove wire to H4 `Batch*` methods. Collapses on deselect-all.
+- **Per-row hover actions:** Open Folder + Properties icon buttons at opacity 0, fade to 1 on `ListViewItem` mouse-over. Both handlers updated to accept `Tag` (mod item) from hover buttons in addition to the context-menu path.
+- **New converters** in `Converters/ModListConverters.cs`: `CategorySpineBrushConverter`, `ConflictBadgeVisibilityConverter`, `BoolToVisibilityConverter`.
+- `App.xaml`: `ConflictRedBrush` (#EF5350) + `ConflictSoftBrush` (#22EF5350) added as global resources.
+
+### Changed
+- `ModManagerPage` ListView switched from `GridView` columns to a full custom `ItemTemplate` DataTemplate. The old Order / ✓ / ★ / Name / Group / Size / Status column layout is replaced by the row anatomy: spine · order · checkbox · star · name+conflict-detail · badge+hover-actions.
+- `RefreshCustomView` now delegates search + chip filtering to `ApplyChipFilter` so both predicates compose correctly.
+- `SaveModsCustom` refreshes chip counts after every mod-list mutation.
+
+---
+
 ## [v0.1-alpha-11] — 2026-05-30 *(Mockup backport Phase 1: backend + Library Home)*
 
 ### Added

@@ -25,76 +25,162 @@ Each brief is tagged with the model to hand it to. **Prefer the lowest capable m
 
 ## Group I — Mockup backport: UI phases  (design in [HANDOFF_BACKPORT.md](HANDOFF_BACKPORT.md))
 
-> **Context.** Groups H + M3 are complete (see CHANGELOG v0.1-alpha-11). These are the two
-> remaining UI backport phases. All design decisions are frozen in HANDOFF_BACKPORT.md.
+> All design decisions frozen in HANDOFF_BACKPORT.md.
 > **Deferred, do NOT build:** mod source+version, update-available badge, "Updates" filter chip.
 
 ### M3 — Library Home view (replace grid)  ✅ DONE (5b9aed4)
-See CHANGELOG v0.1-alpha-11.
-
-### M2 — Enriched mod list (inline conflicts + bulk bar + categories + filter chips)  🔵 Sonnet
-
-Backport Mockup 2 into `ModManagerPage`. All backend APIs are ready (H1–H4). Key files:
-- Mod list: `Views/Subpages/ModManagerPage.xaml` + `.xaml.cs`
-- Conflict data: `Services/ConflictAnalyzer.cs` → `AnalyzeByMod()`
-- Category colours: `Models/ModCategories.cs` → `BrushFor()`
-- Batch ops: `Views/Subpages/ModManagerPage.Batch.cs`
-
-**What to build:**
-- **Category colour spine:** 4 px left border on each mod row using `ModCategories.BrushFor(mod.Category)`.
-  Colour is purely visual — no routing change.
-- **Inline conflict badge:** per-row badge showing `OverwritesCount`/`OverwrittenByCount` from H2
-  `AnalyzeByMod`. Expand on hover/click to show clash detail (destination + winner name). Feed via a
-  background pass when the mod list loads; cache result in a `Dictionary<string, ModConflictSummary>`.
-- **Bulk-action bar:** appears above the list when `Cust_ModList.SelectedItems.Count > 1`. Buttons:
-  Enable / Disable / Set Group / Remove — wire to H4 `Batch*` methods. Bar collapses on deselect-all.
-- **Filter chips:** Enabled / Conflicts / Favorites row above the mod list. Client-side filter over
-  the live `ObservableCollection`. Conflicts chip uses H2 result.
-  **Do NOT add "Updates" chip** (deferred).
-- **Per-row hover actions:** surface Open Folder + Properties as right-side hover icon buttons.
-  Handlers already exist in `ModManagerPage.xaml.cs` (`MenuOpenFolder_Click`, `MenuProperties_Click`).
-
-**Do NOT add:** source/version line, Update badge, any update-checking logic.
-
-Localize all new strings en-US + es-MX. Build clean before committing.
+### M2 — Enriched mod list  ✅ DONE (a197b6d)
+See CHANGELOG v0.1-alpha-11 and v0.1-alpha-12 respectively.
 
 ---
 
 ### M1 — Game Workspace (tabbed shell + slim toolbar + nav restructure)  🟣 Opus
 
-The riskiest change; do after M2 is merged. Restructures `UnifiedShellWindow` so a selected
-game owns a focused workspace. Run the mockup first (`dotnet run --project Mockups\TMM.Mockups.csproj`,
-pick "Game Workspace") to see the intended shape.
+**The last and riskiest backport phase.** Run the mockup first to anchor the design:
 
-**Game header** (replaces the ModManager top toolbar):
-- Cover initials tile, game title, readiness badge (reuse `GameCard` logic)
-- Loadout switcher dropdown (reuse `BackendCore.ListLoadouts` / `ApplyLoadoutAsync`)
-- Deploy-status pill showing `PendingChanges(gameKey).HasChanges` (H3)
-- Primary buttons: Deploy / Play / `⋯` overflow
+```
+dotnet run --project Mockups\TMM.Mockups.csproj   # pick "Game Workspace"
+```
 
-**Sub-tabs** (scoped to one game):
-- **Mods** — current mod list (the meat of ModManagerPage)
-- **Conflicts(N)** — full conflict table from H2 `AnalyzeByMod` + `AnalyzeProxyConflicts`
-- **Backups** — re-host `BackupsPage` content here; retire standalone global page
-- **Downloads** — re-host the in-manager downloads drawer here; retire standalone `DownloadsPage`
-- **Config** — surface the Edit Config flow (`BtnEditConfigCustom_Click`)
+All frozen decisions are in [HANDOFF_BACKPORT.md](HANDOFF_BACKPORT.md). This brief adds
+the codebase-specific wiring details.
 
-**Slim toolbar:** 3 primary verbs (Install, Deploy, Play) + `⋯` overflow. The ~14-button strip is gone.
-Edit Config → Config tab. Refresh / Files / Import / Rollback / Export → overflow menu.
+---
 
-**Shell nav restructure:**
-- Global rail: Library / Notifications / Help / Settings only
-- Game-scoped rail items (Downloads, Backups) removed from global nav once hosted as tabs
-- Nav return: restore **same game + same sub-tab** (frozen decision, HANDOFF_BACKPORT.md)
-- "Back to library" affordance lives in the game header
-- `UnifiedShellWindow` tracks `_activeWorkspaceEntry` (a `LibraryEntry`) + `_activeWorkspaceTab`
-  (string, e.g. "Mods") to restore after returning from a global destination
+#### What M1 produces
 
-**Entry/exit:** Clicking a global-rail item while in the workspace preserves
-`_activeWorkspaceEntry` + `_activeWorkspaceTab`. Returning navigates back to the stored workspace.
-Clicking "Back to library" in the game header clears both and navigates to Library/Home.
+A selected game owns a **full workspace** inside `UnifiedShellWindow`. The user enters it
+by clicking a game card (or the default-game auto-open on launch); exits via a "← Library"
+button in the game header.
 
-Localize all new strings en-US + es-MX. Build clean before committing.
+```
+GLOBAL RAIL (4 items only)          GAME WORKSPACE
+┌──────┐  ┌───────────────────────────────────────────────────────┐
+│  🏠  │  │ [cover] Grand Theft Auto III    ● Ready               │
+│  🔔  │  │         Rockstar · 12 mods  [Loadout ▾] [Deploy][Play]⋯│
+│  ❓  │  ├───────────────────────────────────────────────────────┤
+│  ⚙  │  │ ⚠ 3 changes since last deploy — Review & Deploy →     │
+└──────┘  ├───────────────────────────────────────────────────────┤
+          │ Mods │ Conflicts(2) │ Backups │ Downloads │ Config    │
+          ├───────────────────────────────────────────────────────┤
+          │  …active tab content…                                  │
+          └───────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Shell nav changes  (`Views/UnifiedShellWindow.xaml(.cs)`)
+
+**Global rail** currently has 8 nav items. Post-M1 it has **4**:
+- Keep: Library (🏠), Notifications (🔔), Help (❓), Settings (⚙)
+- Remove from rail: Mod Manager, Downloads, Backups, Add Game (Add Game moves to Library header)
+
+The rail `NavigateTo` / `SetNavActive` flow is already in place. Retire the Mod Manager,
+Downloads, and Backups nav buttons + their `Visibility="Visible"/"Collapsed"` switches.
+
+**New state to track** (add to `UnifiedShellWindow.xaml.cs`):
+```csharp
+private LibraryEntry? _workspaceEntry;   // the game whose workspace is open
+private string _workspaceTab = "Mods";   // last active sub-tab
+```
+
+When a global-rail item is clicked while `_workspaceEntry != null`, preserve both fields.
+When the user returns to Library and the game is still set, navigate straight back to
+`_workspaceEntry` + `_workspaceTab`. Clicking "← Library" in the game header sets
+`_workspaceEntry = null` and navigates to "Library".
+
+---
+
+#### Game header  (new `Views/Controls/WorkspaceHeader.xaml(.cs)`)
+
+Build as a separate `UserControl` (easier to test, keeps `UnifiedShellWindow` lean):
+
+| Element | Source |
+|---|---|
+| Cover tile (initials) | Same `CoverInitials()` logic as `LibraryPage.RenderHero` |
+| Title | `LibraryEntry.DisplayName` |
+| Readiness badge | `GameCard` badge logic — reuse `UiColors` colours |
+| Loadout switcher | `BackendCore.ListLoadouts(gameKey)` → `ComboBox`; on change call `BackendCore.ApplyLoadoutAsync` |
+| Pending pill | `BackendCore.PendingChanges(gameKey).HasChanges` → amber pill "N changes" |
+| Deploy button | Fires existing `BtnDeployCustom_Click` logic |
+| Play button | Fires existing `BtnLaunchCustom_Click` / `LaunchGame` logic |
+| `⋯` overflow | `ContextMenu` with: Refresh, Import from folder, Rollback, Export profile |
+| Pending banner | Full-width amber strip "N changes since last deploy — Review & Deploy →" (same as mockup) |
+| ← Library | Button in top-left of header; sets `_workspaceEntry = null`, navigates to Library |
+
+---
+
+#### Sub-tabs  (new `Views/Controls/WorkspaceTabBar.xaml(.cs)` or inline in shell)
+
+Five tabs, each a `Border` toggle. Active tab body shown via `Visibility`:
+
+| Tab | Content | Notes |
+|---|---|---|
+| **Mods** | Current `ModManagerPage` content (already enriched by M2) | Default tab |
+| **Conflicts(N)** | Table of all clashes from `ConflictAnalyzer.AnalyzeByMod` + `AnalyzeProxyConflicts` | N = total clash count across both; 0 hides the badge |
+| **Backups** | `BackupsPage` content re-hosted inline | Retire the standalone global `BackupsPage` nav |
+| **Downloads** | The in-manager downloads drawer content (`Cust_DownloadsBorder` area) re-hosted | Retire standalone `DownloadsPage` nav |
+| **Config** | Edit Config flow (`BtnEditConfigCustom_Click` logic) rendered inline | Replaces "Edit Config" toolbar button |
+
+---
+
+#### Conflicts tab detail
+
+Use `ConflictAnalyzer.AnalyzeByMod(plans)` + `AnalyzeProxyConflicts(plans)` (both already
+exist; H2 wired `AnalyzeByMod`). Render a simple `ListView` / `ItemsControl`:
+
+```
+[mod name]  overwrites N · overwritten by M
+  └─ data\handling.cfg → winner: SkyGFX
+  └─ dinput8.dll (proxy) → winner: SilentPatch
+```
+
+Winner is the highest-`FinalLoadOrder` participant. Read-only display; re-run on tab
+activation. No inline editing (stays in `DeployPreviewWindow` per frozen decision #5).
+
+---
+
+#### Slim toolbar / overflow
+
+The current `ModManagerPage` toolbar has ~14 buttons. Post-M1:
+
+**Keep visible (3 primary verbs):** Install · Deploy · Play
+- Deploy + Play already have large icon+label buttons; keep them.
+- Install is `BtnInstallModCustom_Click`.
+
+**Move to `⋯` overflow `ContextMenu`:**
+Refresh (`BtnRefreshCustom_Click`), Import (`BtnImportFromGame_Click`),
+Open Mods Folder (`MenuOpenModsFolder_Click`), Rollback (`BtnRollbackCustom_Click`),
+Export Profile, Help, About.
+
+**Remove entirely (moved to workspace tabs):**
+- Edit Config → Config tab
+- Downloads toggle → Downloads tab
+- Backups shortcut → Backups tab
+- Back button → "← Library" in the game header
+
+Loadout switcher moves from toolbar icon to the **game header** dropdown.
+
+---
+
+#### Files to touch
+
+| File | Change |
+|---|---|
+| `Views/UnifiedShellWindow.xaml` | Remove Mod Manager / Downloads / Backups / Add-Game rail buttons; add workspace host area |
+| `Views/UnifiedShellWindow.xaml.cs` | Add `_workspaceEntry` / `_workspaceTab`; `NavigateToWorkspace(entry, tab)` method; wire LibraryPage `ManageRequested` → `NavigateToWorkspace` |
+| `Views/Controls/WorkspaceHeader.xaml(.cs)` | **New** — game header UserControl (see above) |
+| `Views/Subpages/ModManagerPage.xaml(.cs)` | Strip the toolbar down to 3 verbs + `⋯`; remove Back button; remove Downloads + Loadout toolbar items (they move to the header) |
+| `Views/Subpages/ModManagerPage.Toolbar.cs` | Thin it out per the overflow move |
+| `Views/Subpages/BackupsPage.xaml(.cs)` | No content change; just retire its global nav entry |
+| `Views/Subpages/DownloadsPage.xaml(.cs)` | No content change; retire its global nav entry |
+
+**Do NOT delete** the page files themselves — just remove their global-rail nav entry. The
+pages remain functional as UserControls hosted inside the workspace.
+
+---
+
+#### Localize all new strings en-US + es-MX. Build clean before committing.
 
 ---
 
