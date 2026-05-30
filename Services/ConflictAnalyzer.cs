@@ -35,6 +35,43 @@ namespace TMM.Services
     }
 
     /// <summary>
+    /// A single clash detail for one destination/DLL that a mod contests with another.
+    /// </summary>
+    public sealed class ModConflictClash
+    {
+        /// <summary>
+        /// The contested destination path (file conflict) or DLL filename (proxy conflict).
+        /// </summary>
+        public string Destination { get; set; } = string.Empty;
+
+        /// <summary>Name of the mod that wins this clash by load order.</summary>
+        public string WinnerModName { get; set; } = string.Empty;
+
+        /// <summary>True if the mod that owns this summary is the winner for this clash.</summary>
+        public bool ThisModWins { get; set; }
+    }
+
+    /// <summary>
+    /// Aggregated conflict data for a single mod: how many destinations it overwrites
+    /// (wins by load order) and is overwritten at (loses), plus the detail list.
+    /// Covers both file-destination and proxy-DLL conflicts.
+    /// </summary>
+    public sealed class ModConflictSummary
+    {
+        /// <summary>Display name of the mod this summary describes.</summary>
+        public string ModName { get; set; } = string.Empty;
+
+        /// <summary>Number of contested destinations where this mod is the winner (highest load order).</summary>
+        public int OverwritesCount { get; set; }
+
+        /// <summary>Number of contested destinations where this mod is overwritten by another.</summary>
+        public int OverwrittenByCount { get; set; }
+
+        /// <summary>Per-destination clash details for inline display.</summary>
+        public List<ModConflictClash> Clashes { get; set; } = new();
+    }
+
+    /// <summary>
     /// Detects cross-mod file conflicts: distinct destination paths that more than
     /// one enabled mod's deployment plan writes to. Intra-mod conflicts are already
     /// resolved by <see cref="RuleEngine.ResolveConflict"/> at plan time; this analyzer
@@ -103,6 +140,62 @@ namespace TMM.Services
         /// route to different destinations yet still collide at load time — only the one the OS
         /// actually loads will activate. Surfaces the issue so the user can disable one.
         /// </summary>
+        /// <summary>
+        /// Returns per-mod conflict summaries combining both file-destination conflicts
+        /// (from <see cref="Analyze"/>) and proxy-DLL conflicts (from
+        /// <see cref="AnalyzeProxyConflicts"/>). Only mods that participate in at least
+        /// one conflict are included in the result.
+        /// </summary>
+        /// <param name="plans">The (mod, frozen plan) pairs about to be deployed.</param>
+        public Dictionary<string, ModConflictSummary> AnalyzeByMod(
+            List<(ModItem Mod, DeploymentPlan Plan)> plans)
+        {
+            var fileConflicts  = Analyze(plans);
+            var proxyConflicts = AnalyzeProxyConflicts(plans);
+
+            // Merge: all ConflictEntries from both sets. Proxy entries reuse DestinationPath
+            // for the DLL filename — they're structurally identical for our purposes here.
+            var all = fileConflicts.Concat(proxyConflicts).ToList();
+
+            var result = new Dictionary<string, ModConflictSummary>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var entry in all)
+            {
+                // The highest-load-order participant is the winner for this destination/DLL.
+                var winner = entry.Participants.OrderByDescending(p => p.LoadOrder).First();
+
+                foreach (var participant in entry.Participants)
+                {
+                    if (!result.TryGetValue(participant.ModName, out var summary))
+                    {
+                        summary = new ModConflictSummary { ModName = participant.ModName };
+                        result[participant.ModName] = summary;
+                    }
+
+                    bool isWinner = string.Equals(participant.ModName, winner.ModName,
+                        StringComparison.OrdinalIgnoreCase);
+
+                    if (isWinner)
+                    {
+                        summary.OverwritesCount++;
+                    }
+                    else
+                    {
+                        summary.OverwrittenByCount++;
+                    }
+
+                    summary.Clashes.Add(new ModConflictClash
+                    {
+                        Destination    = entry.DestinationPath,
+                        WinnerModName  = winner.ModName,
+                        ThisModWins    = isWinner,
+                    });
+                }
+            }
+
+            return result;
+        }
+
         /// <returns>
         /// One <see cref="ConflictEntry"/> per shared proxy DLL name. The
         /// <see cref="ConflictEntry.DestinationPath"/> field repurposed to hold the DLL filename.
