@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -161,14 +162,21 @@ namespace TMM
                     await GameRegistry.Instance.UpdateCustomGameAsync(_editKey, _profile);
 
                 string actionWord = _editKey is null ? "added" : "updated";
-                NotificationService.ShowSuccess($"'{_profile.GameName}' {actionWord}.");
+                NotificationService.ShowSuccess($"'{_profile.GameName}' {actionWord}.", "GameRegistry");
 
                 if (GameSaved is not null)
                     await GameSaved.Invoke();
             }
+            catch (IOException ex)
+            {
+                Logger.Error($"Save game '{_profile.GameName}' failed (IO)", ex);
+                NotificationService.ShowError($"Could not save game: {ex.Message}", "GameRegistry", "TMM-E012");
+                btnCreate.IsEnabled = _step1.IsValid;
+            }
             catch (Exception ex)
             {
-                NotificationService.ShowError($"Could not save game: {ex.Message}");
+                Logger.Error($"Save game '{_profile.GameName}' failed", ex);
+                NotificationService.ShowError($"Could not save game: {ex.Message}", "GameRegistry", "TMM-E012");
                 btnCreate.IsEnabled = _step1.IsValid;
             }
         }

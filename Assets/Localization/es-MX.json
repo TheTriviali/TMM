@@ -450,5 +450,13 @@
 
   "TmmError_E011_Title": "No se pudo aplicar el loadout",
   "TmmError_E011_Cause": "TMM no pudo leer o analizar el archivo de loadout al aplicarlo.",
-  "TmmError_E011_Fix": "El archivo de loadout puede estar corrupto. Intenta eliminarlo y guardar un nuevo loadout con la misma configuración."
+  "TmmError_E011_Fix": "El archivo de loadout puede estar corrupto. Intenta eliminarlo y guardar un nuevo loadout con la misma configuración.",
+
+  "TmmError_E012_Title": "Error al guardar el juego",
+  "TmmError_E012_Cause": "TMM no pudo escribir el perfil del juego personalizado en el disco.",
+  "TmmError_E012_Fix": "Verifica que %APPDATA%\\TMM\\CustomGames sea escribible. Asegúrate de que el nombre del juego no contenga caracteres especiales no válidos en nombres de archivo.",
+
+  "TmmError_E013_Title": "Error al exportar el perfil",
+  "TmmError_E013_Cause": "TMM no pudo escribir el archivo .tmmgame en la ubicación elegida.",
+  "TmmError_E013_Fix": "Elige una ubicación diferente y asegúrate de tener permisos de escritura en esa carpeta."
 }

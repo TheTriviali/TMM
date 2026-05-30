@@ -42,8 +42,12 @@ namespace TMM.Services
             Register("TMM-E011", "Loadouts", "TmmError_E011_Title", "TmmError_E011_Cause", "TmmError_E011_Fix");
 
             // ── G7: Paths / settings ──────────────────────────────────────────────
-            Register("TMM-E005", "GamePath", "TmmError_E005_Title", "TmmError_E005_Cause", "TmmError_E005_Fix");
-            Register("TMM-E006", "Settings", "TmmError_E006_Title", "TmmError_E006_Cause", "TmmError_E006_Fix");
+            Register("TMM-E005", "GamePath",     "TmmError_E005_Title", "TmmError_E005_Cause", "TmmError_E005_Fix");
+            Register("TMM-E006", "Settings",     "TmmError_E006_Title", "TmmError_E006_Cause", "TmmError_E006_Fix");
+
+            // ── G8: Game create / edit / export ───────────────────────────────────
+            Register("TMM-E012", "GameRegistry", "TmmError_E012_Title", "TmmError_E012_Cause", "TmmError_E012_Fix");
+            Register("TMM-E013", "GameRegistry", "TmmError_E013_Title", "TmmError_E013_Cause", "TmmError_E013_Fix");
         }
 
         private static void Register(string code, string source, string titleKey, string causeKey, string fixKey)

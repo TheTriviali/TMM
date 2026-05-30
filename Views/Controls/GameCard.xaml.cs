@@ -1,10 +1,10 @@
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
 using TMM.Services;
@@ -38,6 +38,7 @@ namespace TMM
                 _isListMode = value;
                 cardModeRoot.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
                 listModeRoot.Visibility = value ? Visibility.Visible   : Visibility.Collapsed;
+                readinessBadge.Visibility = value ? Visibility.Collapsed : Visibility.Visible;
                 if (Entry != null) ApplyReadinessBadge(Entry);
                 // List mode: flat border, no hover scale
                 cardBorder.CornerRadius = value ? new CornerRadius(8) : new CornerRadius(10);
@@ -55,7 +56,7 @@ namespace TMM
         public event Action<LibraryEntry, bool>? ArchiveToggled;
         public event Action<LibraryEntry>? DeleteRequested;
         public event Action<LibraryEntry>? EditRequested;
-        public event Action<LibraryEntry, bool>? DefaultToggled;
+        public event Action<LibraryEntry, bool>? ActiveToggled;
 
         // ── Constructor ───────────────────────────────────────────────────────────
 
@@ -91,7 +92,6 @@ namespace TMM
         {
             // ── Card mode ──
             txtArtTitle.Text = entry.DisplayName;
-            txtSubtitle.Text = entry.Subtitle;
             txtModCount.Text = entry.ModCount > 0 ? $"{entry.ModCount} mods" : "";
 
             // ── List mode ──
@@ -99,10 +99,23 @@ namespace TMM
             listTxtSubtitle.Text = entry.Subtitle;
             listTxtModCount.Text = entry.ModCount > 0 ? $"{entry.ModCount} mods" : "";
 
-            // ── Gradient (user color override wins over the entry's shipped gradient) ──
+            // ── Gradient ──
+            // An explicit user color override is honoured verbatim (deliberate intent).
+            // The shipped per-game gradients are run through a desaturating wash so a
+            // grid of 11 cards reads as one cohesive surface instead of a patchwork of
+            // saturated mid-tones.
             var ov = Core?.GetCardColor(entry.Key);
-            if (TryParseHex(ov?.Start ?? entry.GradientStartHex, out var c0)) gradStart.Color = c0;
-            if (TryParseHex(ov?.End   ?? entry.GradientEndHex,   out var c1)) gradEnd.Color   = c1;
+            bool hasOverride = !string.IsNullOrEmpty(ov?.Start);
+            if (hasOverride)
+            {
+                if (TryParseHex(ov!.Value.Start, out var c0)) gradStart.Color = c0;
+                if (TryParseHex(ov!.Value.End,   out var c1)) gradEnd.Color   = c1;
+            }
+            else
+            {
+                if (TryParseHex(entry.GradientStartHex, out var c0)) gradStart.Color = Wash(c0);
+                if (TryParseHex(entry.GradientEndHex,   out var c1)) gradEnd.Color   = Wash(c1);
+            }
 
             // ── Readiness badge (both modes) ──
             ApplyReadinessBadge(entry);
@@ -114,7 +127,7 @@ namespace TMM
             listArchivedTag.Visibility = entry.IsArchived ? Visibility.Visible : Visibility.Collapsed;
 
             // ── Default pill (card + list modes) ──
-            ApplyDefaultState(entry.IsDefault);
+            ApplyDefaultState(entry.IsActive);
 
             // ── Overflow menu items ──
             bool isCustom = entry.GameKeys.Length == 1
@@ -140,41 +153,60 @@ namespace TMM
             }
         }
 
-        private void ApplyDefaultState(bool isDefault)
+        private void ApplyDefaultState(bool isActive)
         {
             var accentBrush = Application.Current.Resources["AccentBrush"] as Brush;
-            var dimBg       = new SolidColorBrush(Color.FromArgb(25, 255, 255, 255));
-            var dimBorder   = new SolidColorBrush(Color.FromArgb(60, 255, 255, 255));
-            var noBorder    = Brushes.Transparent;
 
-            UpdateDefaultPill(
-                btnDefaultCard,
-                "defaultCardPillBg", "defaultCardStar",
-                isDefault, accentBrush, dimBg, dimBorder, noBorder);
-
-            UpdateDefaultPill(
-                listBtnDefault,
-                "defaultListPillBg", "defaultListStar",
-                isDefault, accentBrush, dimBg, dimBorder, noBorder);
+            UpdateActivePill(btnDefaultCard,  "defaultCardPillBg",  "defaultCardStar",  null,               isActive, accentBrush);
+            UpdateActivePill(listBtnDefault,  "defaultListPillBg",  "defaultListStar",  "defaultListLabel", isActive, accentBrush);
         }
 
-        private static void UpdateDefaultPill(
+        private static void UpdateActivePill(
             Button? btn,
-            string bgName, string starName,
-            bool isDefault,
-            Brush? accentBrush, Brush dimBg, Brush dimBorder, Brush noBorder)
+            string bgName, string starName, string? labelName,
+            bool isActive, Brush? accentBrush)
         {
             if (btn?.Template == null) return;
+            btn.ApplyTemplate();
 
-            var bg = btn.Template.FindName(bgName, btn) as Border;
-            if (bg != null)
+            if (btn.Template.FindName(bgName, btn) is Border bg)
             {
-                bg.Background  = isDefault ? accentBrush ?? Brushes.Cyan : dimBg;
-                bg.BorderBrush = isDefault ? noBorder : dimBorder;
+                if (isActive)
+                {
+                    bg.Background  = accentBrush ?? Brushes.Cyan;
+                    bg.BorderBrush = Brushes.Transparent;
+                    bg.Effect      = new DropShadowEffect
+                    {
+                        Color       = (accentBrush is SolidColorBrush scb) ? scb.Color : Colors.Cyan,
+                        BlurRadius  = 8,
+                        ShadowDepth = 0,
+                        Opacity     = 0.7,
+                    };
+                }
+                else
+                {
+                    bg.Background  = new SolidColorBrush(Color.FromArgb(0x22, 0xFF, 0xFF, 0xFF));
+                    bg.BorderBrush = new SolidColorBrush(Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF));
+                    bg.Effect      = null;
+                }
             }
 
-            var star = btn.Template.FindName(starName, btn) as TextBlock;
-            if (star != null) star.Text = isDefault ? "★" : "☆";
+            // Star glyph: filled + dark-on-accent when active, hollow + muted when not
+            if (btn.Template.FindName(starName, btn) is TextBlock star)
+            {
+                star.Text       = isActive ? "★" : "☆";
+                star.Foreground = isActive
+                    ? new SolidColorBrush(Color.FromRgb(0x06, 0x22, 0x2E))
+                    : new SolidColorBrush(Color.FromArgb(0xC0, 0xFF, 0xFF, 0xFF));
+            }
+
+            // List pill label: full opacity + dark text when active
+            if (labelName != null && btn.Template.FindName(labelName, btn) is TextBlock lbl)
+            {
+                lbl.Foreground = isActive
+                    ? new SolidColorBrush(Color.FromRgb(0x06, 0x22, 0x2E))
+                    : new SolidColorBrush(Color.FromArgb(0xC0, 0xFF, 0xFF, 0xFF));
+            }
         }
 
         private void ApplyOverflowMenu(LibraryEntry entry, bool isCustom)
@@ -241,20 +273,13 @@ namespace TMM
         {
             if (_isListMode) return;
 
-            var overlayAnim = new DoubleAnimation(entering ? 0.08 : 0, TimeSpan.FromMilliseconds(120));
-            hoverOverlay.Background = new SolidColorBrush(Colors.White);
-            hoverOverlay.BeginAnimation(OpacityProperty, overlayAnim);
-
-            var scaleAnim = new DoubleAnimation(entering ? 1.03 : 1.0,
-                new Duration(TimeSpan.FromMilliseconds(120)));
-            if (RenderTransform is not ScaleTransform)
-            {
-                RenderTransformOrigin = new Point(0.5, 0.5);
-                RenderTransform = new ScaleTransform(1, 1);
-            }
-            var st = (ScaleTransform)RenderTransform;
-            st.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
-            st.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
+            // Border highlight only. The old effect scaled the whole card (1.03×),
+            // which resampled the text and made it look blurry on hover. The action
+            // buttons already light up on their own, so the card just brightens its
+            // edge to signal hover — no scale, no full-card wash.
+            cardBorder.BorderBrush = new SolidColorBrush(entering
+                ? Color.FromArgb(0x66, 0xFF, 0xFF, 0xFF)
+                : Color.FromArgb(0x22, 0xFF, 0xFF, 0xFF));
         }
 
         // ── Button handlers ───────────────────────────────────────────────────────
@@ -274,7 +299,7 @@ namespace TMM
         private void BtnDefault_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
-            if (Entry != null) DefaultToggled?.Invoke(Entry, !Entry.IsDefault);
+            if (Entry != null) ActiveToggled?.Invoke(Entry, !Entry.IsActive);
         }
 
         private void BtnOverflow_Click(object sender, RoutedEventArgs e)
@@ -314,11 +339,17 @@ namespace TMM
             try
             {
                 await GameRegistry.ExportConfigAsync(profile, dlg.FileName);
-                NotificationService.ShowSuccess("Profile exported");
+                NotificationService.ShowSuccess("Profile exported", "GameRegistry");
+            }
+            catch (IOException ex)
+            {
+                Logger.Error($"Export profile '{Entry.DisplayName}' failed (IO)", ex);
+                NotificationService.ShowError($"Export failed: {ex.Message}", "GameRegistry", "TMM-E013");
             }
             catch (Exception ex)
             {
-                NotificationService.ShowError($"Export failed: {ex.Message}");
+                Logger.Error($"Export profile '{Entry.DisplayName}' failed", ex);
+                NotificationService.ShowError($"Export failed: {ex.Message}", "GameRegistry", "TMM-E013");
             }
         }
 
@@ -352,6 +383,25 @@ namespace TMM
             foreach (var c in System.IO.Path.GetInvalidFileNameChars())
                 name = name.Replace(c, '_');
             return name;
+        }
+
+        /// <summary>
+        /// Calms a shipped gradient colour for grid display: pulls it partway toward its
+        /// own grey (desaturate) then darkens it, so the per-game hue survives only as a
+        /// subtle wash. Keeps cards cohesive side-by-side without losing colour identity.
+        /// </summary>
+        private static Color Wash(Color c)
+        {
+            const double desat = 0.55; // fraction pulled toward grey
+            const double value = 0.62; // brightness multiplier
+
+            double grey = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
+            byte Mix(byte ch)
+            {
+                double d = ch + (grey - ch) * desat; // desaturate toward grey
+                return (byte)Math.Clamp(d * value, 0, 255); // then darken
+            }
+            return Color.FromRgb(Mix(c.R), Mix(c.G), Mix(c.B));
         }
 
         private static bool TryParseHex(string hex, out Color color)
