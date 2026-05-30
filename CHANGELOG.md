@@ -4,6 +4,22 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
+## [v0.1-alpha-11] — 2026-05-30 *(Mockup backport Phase 1: backend + Library Home)*
+
+### Added
+- **Mod category field + wizard config (H1):** New `ModItem.Category` (single, fixed-preset) persists via `modinfo.json`. `Models/ModCategories.cs` holds the 5-value preset (Gameplay/Visual/Audio/Map/Other) + stable colour map for the future list colour spine. `CustomGameProfile.ModCategories` lets custom games override the preset via the wizard — Step 1 input field + Step 4 review row added. Localized en-US + es-MX. (fb4d32d)
+- **Per-mod conflict aggregation (H2):** `ConflictAnalyzer.AnalyzeByMod()` returns a `ModConflictSummary` per mod: `OverwritesCount`, `OverwrittenByCount`, and per-destination `Clashes` list. Covers both file-destination and proxy-DLL conflicts. 7 unit tests in `TMM.Tests/ConflictAnalyzerTests.cs`. (9ac628c)
+- **Pending-changes tracker (H3):** `BackendCore.PendingChanges(gameKey)` returns `PendingChangesSummary {HasChanges, Enabled, Disabled, Reordered, AddedRemoved}` by diffing the current mod list (enabled set + load order) against the most recent `DeployManifest`. Loadout switches do not reset the baseline — pending is always relative to what's physically deployed. (3fa52e3)
+- **Batch mod operations (H4):** `ModManagerPage.Batch.cs` adds `BatchEnable`, `BatchDisable`, `BatchSetGroup`, `BatchRemove` — set-based wrappers over existing per-mod handlers. One save + one summary toast per call; `BatchRemove` still confirms before deleting; `BatchSetGroup` re-plans affected mods. (c7327b3)
+- **Library Home view — M3 (replaces grid):** Home render mode in `LibraryPage`: Continue hero (active/default game, Play/Manage buttons, pending badge via H3), quick-stats strip (games set up / mods installed with cached size / backups used vs budget), your-games `GameCard` wrap-panel, recent-activity feed from `ActivityLogger`. Shell view-mode switcher is now Home/List only; legacy "grid"/"showcase" values migrate to "home" on launch. `AppSettings.CachedModsInstalledBytes` added (off-render recompute via `BackendCore.RecomputeModsInstalledSizeAsync`). Localized en-US + es-MX. (5b9aed4)
+
+### Changed
+- `AppSettings.LibraryViewMode` default changed from `"grid"` to `"home"`.
+- Shell view-mode button `btnViewGrid` renamed to `btnViewHome` (Home icon &#xE80F;).
+- Old `CreateAddGameCard` grid-mode branch removed; list-mode variant retained for the List view.
+
+---
+
 ## [v0.1-alpha-10] — 2026-05-29 *(Notifications, Add/Edit Game page, import review, first-run fixes)*
 
 ### Added
