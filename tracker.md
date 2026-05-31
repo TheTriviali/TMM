@@ -16,8 +16,11 @@ An item is only complete when both are checked.
 
 Frozen — don't re-open without a conversation.
 
-1. **"Available Games" section** — not needed. "Add a game" button in Library header is
-   sufficient.
+1. **Library "Your games" shows configured games only** — only games with a game folder set
+   appear in "Your games". On fresh start the section is empty with a hint. Unconfigured
+   built-in profiles are reachable only through "+ Add game." Hero card also restricted to
+   ready games. Stats: "Games with folder" (replaces "Games set up") + "Last deployed"
+   (replaces "Backups used").
 
 2. **Mod types + routing rules merged** — wizard Steps 2 and 3 are redundant. Redesigned
    wizard combines them: each row is a mod type with its extensions and target folder.
@@ -35,9 +38,11 @@ Frozen — don't re-open without a conversation.
    architectural debt to remove. Built-in games are pre-seeded profiles from `.tmmgame`
    assets.
 
-6. **Sidebar navigation structure** — vertical rail on left. Top: Logo (themed), Library,
-   Mod Manager. Bottom: Help & Troubleshooting, Settings. Sidebar is resizable. A hamburger
-   toggle occupies the former Install Mod button position (moved to action bar per #8).
+6. **Nav rail structure** — vertical strip on left (call it "nav rail" to avoid confusion
+   with the mod manager toolbar). Top: Library, Mod Manager. Bottom: Troubleshooting & Help,
+   Settings. **No hamburger toggle** (pending removal). **No T logo** (pending removal).
+   Always-visible fixed width. Title bar: app icon + page name, no "TMM —" prefix (pending).
+   Mod Manager gets its own dedicated nav button (done — previously shared Library button).
 
 7. **Unified mod list filter bar** — filter searchbox + tab row (All / Enabled / Conflicts
    / Favorites) consolidated into one horizontal control.
@@ -152,6 +157,15 @@ install is a convenience feature).
 
 ## Priority ordering
 
+### Phase 0 — Welcome Screen & Nav Rail Cleanup (new)
+- `ui-welcome-remove-library-link` — remove "Go to your Library" link
+- `ui-nav-rail-remove-hamburger` — remove hamburger toggle from nav rail
+- `ui-nav-rail-remove-logo` — remove T logo from nav rail
+- `ui-titlebar-app-icon` — replace "TMM —" with app icon in title bar
+- `ui-language-globe-icon` — replace globe icon, tint blue
+- `nav-rail-troubleshooting-reorder` — move Troubleshooting & Help above Settings
+
+
 ### Phase 1 — Critical UI State & Navigation Blockers
 - `modlist-tab-navigation` — **tabs cannot be clicked at all; fix first**
 - `ui-game-dir-guard` — gate mod management on dir being set
@@ -183,6 +197,9 @@ install is a convenience feature).
 - `install-preview` — **Deployment Plan Editor** (significant feature — full spec above)
 - `install-tar-gz` — add .tar.gz archive support
 - `install-direct-override` — WON'T IMPLEMENT
+
+### Phase 5b — Settings Redesign
+- `settings-dual-pane` — split Settings into dual-pane (category list + detail pane)
 
 ### Phase 6 — Long-Term Feasibility (analysis only, no code)
 - `feasibility-vfs` — VFS assessment (backup tab → archive mgmt if implemented)
