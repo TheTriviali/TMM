@@ -13,20 +13,14 @@ namespace TMM
     {
         private readonly BackendCore _core;
         private bool _isUpdating = false;
-        private bool _isDirty = false;
 
-        private void MarkDirty()
-        {
-            _isDirty = true;
-            unsavedBanner.Visibility = Visibility.Visible;
-        }
+        private void MarkDirty() => unsavedBanner.Visibility = Visibility.Visible;
 
         private void BtnSaveSettings_Click(object sender, RoutedEventArgs e)
         {
             _core.Settings.VerboseNotifications = chkVerboseNotifications.IsChecked == true;
             _core.Settings.StartupPage = rdStartupModManager.IsChecked == true ? "ModManager" : "Library";
             _core.SaveSettings();
-            _isDirty = false;
             unsavedBanner.Visibility = Visibility.Collapsed;
         }
 
@@ -37,7 +31,6 @@ namespace TMM
             rdStartupLibrary.IsChecked    = _core.Settings.StartupPage != "ModManager";
             rdStartupModManager.IsChecked = _core.Settings.StartupPage == "ModManager";
             _isUpdating = false;
-            _isDirty = false;
             unsavedBanner.Visibility = Visibility.Collapsed;
         }
 

@@ -12,7 +12,6 @@ namespace TMM
     public partial class InitialSetupWindow : TmmWindow
     {
         private readonly BackendCore _core;
-        private bool _suppressDropdownEvent;
         private string? _selectedGameDir;
 
         // (gameKey, displayName) pairs loaded from embedded .tmmgame resources
@@ -123,7 +122,6 @@ namespace TMM
 
         private void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_suppressDropdownEvent) return;
             if (cmbLanguage.SelectedItem is ComboBoxItem item && item.Tag is string code)
                 ApplyLanguage(code);
         }
