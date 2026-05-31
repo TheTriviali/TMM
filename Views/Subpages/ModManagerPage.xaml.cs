@@ -203,8 +203,8 @@ namespace TMM
             (string label, Brush color) = result.State switch
             {
                 IntegrityState.Ok            => ("✓ Integrity verified", Brushes.LightGreen),
-                IntegrityState.SizeMismatch  => ("ℹ Executable differs from this profile's expected version", new SolidColorBrush(Color.FromRgb(64, 156, 255))),
-                IntegrityState.Md5Mismatch   => ("ℹ Executable differs from this profile's expected version", new SolidColorBrush(Color.FromRgb(64, 156, 255))),
+                IntegrityState.SizeMismatch  => ("ℹ Executable version mismatch", new SolidColorBrush(Color.FromRgb(64, 156, 255))),
+                IntegrityState.Md5Mismatch   => ("ℹ Executable checksum mismatch", new SolidColorBrush(Color.FromRgb(64, 156, 255))),
                 IntegrityState.FileMissing   => ("⚠ Exe missing",        new SolidColorBrush(Color.FromRgb(224, 112, 112))),
                 _                            => ("",                     Brushes.Gray),
             };
@@ -872,6 +872,45 @@ namespace TMM
                 mod.IsConflictExpanded = !mod.IsConflictExpanded;
                 e.Handled = true;
             }
+        }
+
+        // ── Column sorting ───────────────────────────────────────────────────────
+
+        private string _sortColumn = "LoadOrder";
+        private bool _sortAscending = true;
+
+        private void SortHeader_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is not FrameworkElement { Tag: string column }) return;
+            if (_sortColumn == column)
+                _sortAscending = !_sortAscending;
+            else
+            {
+                _sortColumn = column;
+                _sortAscending = true;
+            }
+            ApplySortAndUpdateHeaders();
+        }
+
+        private void ApplySortAndUpdateHeaders()
+        {
+            var view = System.Windows.Data.CollectionViewSource.GetDefaultView(_modsCustom);
+            if (view is null) return;
+            view.SortDescriptions.Clear();
+            var dir = _sortAscending
+                ? System.ComponentModel.ListSortDirection.Ascending
+                : System.ComponentModel.ListSortDirection.Descending;
+            view.SortDescriptions.Add(new System.ComponentModel.SortDescription(_sortColumn, dir));
+            view.Refresh();
+
+            string arrow = _sortAscending ? "↑" : "↓";
+            sortHdrOrder.Foreground = _sortColumn == "LoadOrder"
+                ? (System.Windows.Media.Brush)Application.Current.Resources["AccentBrush"]
+                : (System.Windows.Media.Brush)Application.Current.Resources["SubTextBrush"];
+            sortHdrName.Foreground = _sortColumn == "Name"
+                ? (System.Windows.Media.Brush)Application.Current.Resources["AccentBrush"]
+                : (System.Windows.Media.Brush)Application.Current.Resources["SubTextBrush"];
+            sortHdrArrow.Text = arrow;
         }
 
         // ── Entry control buttons ────────────────────────────────────────────────

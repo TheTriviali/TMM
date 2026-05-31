@@ -337,7 +337,7 @@ namespace TMM
 
                 case "Notifications":
                     pageNotificationsPlaceholder.Visibility = Visibility.Visible;
-                    titleSubtext.Text = " — Notifications";
+                    titleSubtext.Text = " — Notification History";
                     break;
 
                 case "Troubleshooting":

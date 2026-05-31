@@ -132,33 +132,6 @@
                 <!-- ── Sub-tab bar ─────────────────────────────────── -->
                 <Border Grid.Row="0" Background="{DynamicResource HeaderBrush}" Padding="16,0">
                     <DockPanel LastChildFill="True">
-                        <!-- right tools: Install -->
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Click="BtnInstallModCustom_Click"
-                                    Background="{DynamicResource AccentBrush}"
-                                    Foreground="{DynamicResource AccentTextBrush}"
-                                    BorderThickness="0" Padding="12,5" FontSize="12" FontWeight="SemiBold"
-                                    Cursor="Hand">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5"
-                                                Padding="{TemplateBinding Padding}">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bd" Property="Opacity" Value="0.82"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,6,0"/>
-                                    <TextBlock Text="{helpers:Localization ModManager_Install}"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-
                         <!-- tabs -->
                         <StackPanel Orientation="Horizontal">
                             <Border x:Name="Cust_TabMods" BorderBrush="{DynamicResource AccentBrush}"
@@ -409,8 +382,42 @@
                                     </DockPanel>
                                 </Border>
 
-                                <!-- ── Mod ListView ─────────────────────────────────── -->
+                                <!-- ── Mod list: sort header + list ────────────────── -->
                                 <Grid Grid.Row="2">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Sort header bar -->
+                                    <Border Grid.Row="0" Background="{DynamicResource HeaderBrush}"
+                                            Padding="6,4" Margin="0,0,0,2" CornerRadius="4">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="4"/>   <!-- spine spacer -->
+                                                <ColumnDefinition Width="38"/>  <!-- order -->
+                                                <ColumnDefinition Width="32"/>  <!-- enabled spacer -->
+                                                <ColumnDefinition Width="32"/>  <!-- star spacer -->
+                                                <ColumnDefinition Width="*"/>   <!-- name -->
+                                                <ColumnDefinition Width="Auto"/><!-- actions spacer -->
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="1" Cursor="Hand" MouseLeftButtonUp="SortHeader_Click" Tag="LoadOrder">
+                                                <TextBlock x:Name="sortHdrOrder" Text="#" FontSize="10"
+                                                           Foreground="{DynamicResource AccentBrush}"
+                                                           HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="4" Cursor="Hand" MouseLeftButtonUp="SortHeader_Click" Tag="Name" Padding="4,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock x:Name="sortHdrName" Text="Name" FontSize="10"
+                                                               Foreground="{DynamicResource SubTextBrush}"/>
+                                                    <TextBlock x:Name="sortHdrArrow" Text="" FontSize="9" Margin="4,0,0,0"
+                                                               Foreground="{DynamicResource AccentBrush}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+
+                                    <Grid Grid.Row="1">
                                     <ListView x:Name="Cust_ModList" Style="{StaticResource ModListStyle}"
                                               Template="{StaticResource WatermarkCustom}"
                                               SelectionMode="Extended"
@@ -622,7 +629,8 @@
                                             </StackPanel>
                                         </StackPanel>
                                     </Border>
-                                </Grid>
+                                    </Grid><!-- closes Grid Grid.Row="1" wrapping ListView + empty state -->
+                                </Grid><!-- closes outer sort Grid -->
                             </Grid>
                         </Grid>
                     </Grid>

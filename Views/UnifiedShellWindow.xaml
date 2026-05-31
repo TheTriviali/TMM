@@ -185,10 +185,10 @@
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
-                            <!-- Notifications -->
+                            <!-- Notification History -->
                             <Button x:Name="navBtnNotifications" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Notifications" Click="NavBtn_Click" Tag="Notifications">
-                                <TextBlock Text="&#xEA8F;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                    ToolTip="Notification History" Click="NavBtn_Click" Tag="Notifications">
+                                <TextBlock Text="&#xE823;" FontFamily="Segoe MDL2 Assets" FontSize="20"
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 

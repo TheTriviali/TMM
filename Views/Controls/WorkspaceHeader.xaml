@@ -124,9 +124,17 @@
                                TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
 
-                <!-- Actions: Deploy · Play · overflow -->
+                <!-- Actions: Install · Deploy · Play · overflow -->
                 <StackPanel Grid.Column="3" x:Name="actionsPanel"
                             Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="btnInstall" Style="{StaticResource WsGhostBtn}" Margin="0,0,10,0"
+                            Click="BtnInstall_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,7,0"/>
+                            <TextBlock Text="{helpers:Localization ModManager_Install}"/>
+                        </StackPanel>
+                    </Button>
+
                     <Button x:Name="btnDeploy" Style="{StaticResource WsAccentBtn}" Margin="0,0,10,0"
                             Click="BtnDeploy_Click">
                         <StackPanel Orientation="Horizontal">

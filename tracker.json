@@ -73,7 +73,7 @@
           "title": "Right-click / \u00e2\u2039\u00af overflow discoverability",
           "detail": "Set Group, Set Color, Set Artwork, Export, Archive all live in the right-click/overflow menu. Power-user-friendly, but a new user may never find them. Consider a first-time tooltip, subtle indicator, or onboarding hint.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -100,7 +100,7 @@
           "title": "Move Install Mod button inline with Deploy and Play",
           "detail": "Decision #8: Install Mod button moves to action bar alongside Deploy and Play buttons at bottom of mod manager. The vacated position is taken by the sidebar hamburger toggle (see ui-sidebar-structure).",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -220,7 +220,7 @@
           "title": "Notifications page design review",
           "detail": "The Notifications page (bell icon in rail) was added in v0.1-alpha-10. No design review has been done \u00e2\u20ac\u201d content layout, empty state, and interaction model have not been audited.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": "Consider replacing notifications with notification history with a clock icon instead of noti bell."
         }
@@ -313,7 +313,7 @@
           "title": "Multi-attribute column-header sorting + tiering",
           "detail": "Restore and expand sorting: support load order, mod name, mod group, isEnabled, size, status. Sorting must support ascending and descending for each column. Modlist must be tiered again (visual grouping by mod group or type). Column headers should be clickable to sort; clicking the active column header toggles direction. Pairs with the up/down arrow re-ordering controls in modlist-entry-controls.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": "Phase 4. Tiering re-add is required alongside sort controls."
         },
@@ -511,7 +511,7 @@
           "title": "Fix specific localization strings (verify in running app)",
           "detail": "Known issues: (1) Truncated: 'table differs from this profile's expe--' (2) Pluralization: '1 mods installed' (library stats strip) (3) es-MX: '1 mod - 1 enabled - last deployed 8 min ago' (4) 'app data' and 'free space' in Home view (5) 'import' and 'loadouts' in M1 overflow/tab-bar positions (verify they still exist) (6) All window titles (7) All color accent preset identifiers.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         }
@@ -556,9 +556,9 @@
           "title": "Periodic module-size audit \u00e2\u20ac\u201d flag files over ~800 lines",
           "detail": "Re-run when files sprawl. Last pass 2026-05-29 split BackendCore.cs and ModManagerPage.xaml.cs into per-concern partials. Next: re-inventory the top-20 largest source files, flag anything over ~800 lines for a partial-class split. WPF split gotcha: keep partial class + x:Class intact; never move InitializeComponent.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": ""
+          "notes": "ModManagerPage.xaml.cs at 1055 lines; split into additional partials recommended (Filter, Sorting, DragDrop, ContextMenu). Others under 800 lines."
         }
       ]
     },

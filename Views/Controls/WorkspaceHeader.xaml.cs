@@ -17,6 +17,8 @@ namespace TMM
     {
         /// <summary>← Library clicked.</summary>
         public event Action? BackRequested;
+        /// <summary>Install Mod clicked.</summary>
+        public event Action? InstallRequested;
         /// <summary>Deploy verb clicked.</summary>
         public event Action? DeployRequested;
         /// <summary>Play verb clicked.</summary>
@@ -99,8 +101,9 @@ namespace TMM
 
         // ── Event handlers ──────────────────────────────────────────────────────────
 
-        private void BtnBack_Click(object sender, RoutedEventArgs e)   => BackRequested?.Invoke();
-        private void BtnDeploy_Click(object sender, RoutedEventArgs e) => DeployRequested?.Invoke();
+        private void BtnBack_Click(object sender, RoutedEventArgs e)    => BackRequested?.Invoke();
+        private void BtnInstall_Click(object sender, RoutedEventArgs e) => InstallRequested?.Invoke();
+        private void BtnDeploy_Click(object sender, RoutedEventArgs e)  => DeployRequested?.Invoke();
         private void BtnPlay_Click(object sender, RoutedEventArgs e)   => PlayRequested?.Invoke();
         private void BtnReviewDeploy_Click(object sender, RoutedEventArgs e) => ReviewDeployRequested?.Invoke();
 

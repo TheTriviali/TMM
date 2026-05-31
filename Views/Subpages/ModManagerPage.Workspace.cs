@@ -26,6 +26,7 @@ namespace TMM
         private void WireHeader()
         {
             Cust_Header.BackRequested         += () => BackRequested?.Invoke();
+            Cust_Header.InstallRequested      += () => BtnInstallModCustom_Click(null!, null!);
             Cust_Header.DeployRequested       += () => BtnDeployCustom_Click(null!, null!);
             Cust_Header.PlayRequested         += () => BtnLaunchCustom_Click(null!, null!);
             Cust_Header.ReviewDeployRequested += () => BtnDeployCustom_Click(null!, null!);
@@ -39,7 +40,7 @@ namespace TMM
             var parts = new List<string>();
             if (!string.IsNullOrWhiteSpace(_customConfig.Author)) parts.Add(_customConfig.Author!);
             int modCount = _modsCustom.Count;
-            parts.Add($"{modCount} {(modCount == 1 ? "mod" : "mods")}");
+            if (modCount > 0) parts.Add($"{modCount} {(modCount == 1 ? "mod" : "mods")}");
             if (!string.IsNullOrWhiteSpace(_customConfig.GameDirectory)) parts.Add(_customConfig.GameDirectory!);
             string meta = string.Join("  ·  ", parts);
 

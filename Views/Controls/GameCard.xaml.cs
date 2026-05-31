@@ -93,12 +93,12 @@ namespace TMM
         {
             // ── Card mode ──
             txtArtTitle.Text = entry.DisplayName;
-            txtModCount.Text = entry.ModCount > 0 ? $"{entry.ModCount} mods" : "";
+            txtModCount.Text = entry.ModCount > 0 ? $"{entry.ModCount} {(entry.ModCount == 1 ? "mod" : "mods")}" : "";
 
             // ── List mode ──
             listTxtTitle.Text    = entry.DisplayName;
             listTxtSubtitle.Text = entry.Subtitle;
-            listTxtModCount.Text = entry.ModCount > 0 ? $"{entry.ModCount} mods" : "";
+            listTxtModCount.Text = entry.ModCount > 0 ? $"{entry.ModCount} {(entry.ModCount == 1 ? "mod" : "mods")}" : "";
 
             if (!string.IsNullOrEmpty(entry.TmmGameFileName))
             {
