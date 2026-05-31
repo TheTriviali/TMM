@@ -104,83 +104,79 @@
                                Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8"/>
                     <TextBlock Text="{helpers:Localization Setup_Subtitle}"
                                Foreground="{DynamicResource SubTextBrush}" FontSize="13"
-                               Margin="0,0,0,32" TextWrapping="Wrap"/>
+                               Margin="0,0,0,28" TextWrapping="Wrap"/>
 
-                    <!-- Primary CTA -->
-                    <Button Click="BtnGoToLibrary_Click" Cursor="Hand" Margin="0,0,0,20">
+                    <!-- Step 1: Profile picker -->
+                    <TextBlock Text="Step 1 — Select a game" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentLabelBrush}" Margin="0,0,0,6"/>
+                    <ComboBox x:Name="cmbProfile" Height="36" FontSize="13" Margin="0,0,0,14"
+                              Background="{DynamicResource PanelBrush}"
+                              Foreground="{DynamicResource TextBrush}"
+                              BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1"
+                              SelectionChanged="CmbProfile_SelectionChanged"/>
+
+                    <!-- Step 2: Game directory (shown after profile selected) -->
+                    <StackPanel x:Name="dirStep" Visibility="Collapsed" Margin="0,0,0,20">
+                        <TextBlock Text="Step 2 — Set the game folder" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AccentLabelBrush}" Margin="0,0,0,6"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{DynamicResource PanelBrush}"
+                                    BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,8">
+                                <TextBlock x:Name="txtDirDisplay" Text="Click Browse to select folder"
+                                           Foreground="{DynamicResource SubTextBrush}" FontSize="12"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </Border>
+                            <Button Grid.Column="1" Content="Browse…" Click="BtnBrowseDir_Click"
+                                    Margin="8,0,0,0" Height="36" Padding="12,0"
+                                    Background="{DynamicResource ControlBgBrush}"
+                                    Foreground="{DynamicResource TextBrush}"
+                                    BorderThickness="0" FontSize="12" Cursor="Hand"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Primary CTA: start with selected game -->
+                    <Button x:Name="btnStartWithGame" Click="BtnStartWithGame_Click" Cursor="Hand"
+                            IsEnabled="False" Margin="0,0,0,12">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="bd" CornerRadius="9"
                                         Background="{DynamicResource AccentBrush}"
-                                        Padding="0,14">
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="16"
-                                                   Foreground="{DynamicResource AccentTextBrush}"
-                                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                        <TextBlock Text="{helpers:Localization Setup_GoToLibrary}"
-                                                   FontSize="14" FontWeight="Bold"
-                                                   Foreground="{DynamicResource AccentTextBrush}"
-                                                   VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                        Padding="0,13" Opacity="{TemplateBinding Opacity}">
+                                    <TextBlock Text="{helpers:Localization Setup_StartWithGame}"
+                                               FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentTextBrush}"
+                                               HorizontalAlignment="Center"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                                    </Trigger>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bd" Property="Opacity" Value="0.88"/>
+                                        <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
 
+                    <!-- Secondary: skip to library -->
+                    <Button Click="BtnGoToLibrary_Click" Cursor="Hand" Margin="0,0,0,16"
+                            Background="Transparent" BorderThickness="0" Padding="0,8">
+                        <TextBlock Text="{helpers:Localization Setup_GoToLibrary}"
+                                   FontSize="12" Foreground="{DynamicResource SubTextBrush}"
+                                   HorizontalAlignment="Center"/>
+                    </Button>
+
                     <!-- Separator -->
-                    <Grid Margin="0,0,0,14">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" Height="1" Background="{DynamicResource ControlBgBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="or add a game first"
-                                   Foreground="{DynamicResource SubTextBrush}" FontSize="10"
-                                   Opacity="0.6" Margin="10,0" VerticalAlignment="Center"/>
-                        <Border Grid.Column="2" Height="1" Background="{DynamicResource ControlBgBrush}" VerticalAlignment="Center"/>
-                    </Grid>
+                    <Border Height="1" Background="{DynamicResource ControlBgBrush}" Margin="0,0,0,12"/>
 
-                    <!-- Game choice cards -->
-                    <Border x:Name="opt1" CornerRadius="8" Padding="16,12" Margin="0,0,0,10"
-                            MouseLeftButtonDown="Card_MouseDown"
-                            MouseLeftButtonUp="Option1_Click" Cursor="Hand"
-                            BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{DynamicResource ControlBgBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="36" Height="36" CornerRadius="8"
-                                    Background="{DynamicResource AccentSoftBrush}"
-                                    Margin="0,0,14,0" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="16"
-                                           Foreground="{DynamicResource AccentBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{helpers:Localization Picker_BuiltinTitle}"
-                                           FontSize="13" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextBrush}" Margin="0,0,0,3"/>
-                                <TextBlock Text="{helpers:Localization Picker_BuiltinDesc}"
-                                           FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="opt2" CornerRadius="8" Padding="16,12"
+                    <!-- Tertiary: custom game -->
+                    <Border x:Name="opt2" CornerRadius="8" Padding="14,10"
                             MouseLeftButtonDown="Card_MouseDown"
                             MouseLeftButtonUp="Option2_Click" Cursor="Hand"
                             BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1">
@@ -196,19 +192,19 @@
                             </Style>
                         </Border.Style>
                         <StackPanel Orientation="Horizontal">
-                            <Border Width="36" Height="36" CornerRadius="8"
+                            <Border Width="30" Height="30" CornerRadius="6"
                                     Background="{DynamicResource AccentSoftBrush}"
-                                    Margin="0,0,14,0" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                    Margin="0,0,12,0" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="14"
                                            Foreground="{DynamicResource AccentBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{helpers:Localization Picker_CustomTitle}"
-                                           FontSize="13" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextBrush}" Margin="0,0,0,3"/>
+                                           FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextBrush}" Margin="0,0,0,2"/>
                                 <TextBlock Text="{helpers:Localization Picker_CustomDesc}"
-                                           FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                                           FontSize="10" Foreground="{DynamicResource SubTextBrush}"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>

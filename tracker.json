@@ -82,9 +82,9 @@
           "title": "Implement sidebar navigation (Logo, Library, Mod Manager, Help, Settings)",
           "detail": "Decision #6: Vertical rail on left. Top-aligned: Logo (themed icon, renders with current theme color), Library (Books icon), Mod Manager (wrench icon). Bottom-aligned: Help & Troubleshooting (merges FAQ, log viewer, About), Settings (app paths and preferences). Replaces old top menu bar. Additionally: make the sidebar resizable. Add a hamburger icon toggle \u00e2\u20ac\u201d goes in the exact same position where the current Install Mod button sits (which is moving to the action bar per Decision #8). The hamburger collapses/expands the sidebar.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": "This is more of a change to the existing vertical bar than something entirely new. Resizable + hamburger toggle are Phase 4 additions to this item."
+          "notes": "Done: hamburger toggle button (E700) added at top of nav rail; BtnHamburger_Click collapses/expands navColumn (50\u21940). ClipToBounds on nav strip border prevents content bleed."
         },
         {
           "id": "ui-unified-filter-bar",
@@ -235,9 +235,9 @@
           "title": "Revamp first-time setup wizard: .tmmgame dropdown + path-first flow",
           "detail": "Occurs after the welcome screen (see ux-welcome-screen) \u00e2\u20ac\u201d sequential flows, not alternatives. The current first-game setup wizard is 13 steps \u00e2\u20ac\u201d far too long for most users. New flow: Step 1 = select a bundled .tmmgame file from a dropdown (the list of included profiles); Step 2 = set the game directory path. Most users will not be building custom game profiles from scratch. The lengthy custom-game steps should only appear when the user explicitly opts into 'Add custom game.' Path-setting for additional games after the first must be discoverable from the library (see library-path-setting) without re-entering the wizard.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": "Phase 2. Wizard auto-launches after the welcome screen \u00e2\u20ac\u201d no manual navigation required for first run. Second-game path discovery is handled by library-path-setting (library card context menu). Related to games-wizard-unified."
+          "notes": "Done: InitialSetupWindow redesigned to 2-step flow \u2014 Step 1: profile dropdown (reads embedded .tmmgame names); Step 2: directory picker. PendingFirstRunGameKey/Dir stored in AppSettings; Window_Loaded applies selection after init. Custom game option kept as tertiary card."
         },
         {
           "id": "firstrun-startup-prefs",
@@ -390,10 +390,10 @@
           "id": "install-preview",
           "title": "Deployment Plan Editor: two-pane file levelling / routing UI",
           "detail": "Expand DeployPreviewWindow into a full two-pane deployment plan editor. FLOW: archive extracted to ModsRaw \u00e2\u2020\u2019 routing rules auto-populate DeploymentPlan as default \u00e2\u2020\u2019 Plan Editor opens \u00e2\u2020\u2019 user confirms or adjusts \u00e2\u2020\u2019 Confirm freezes plan / Cancel aborts install entirely. Always mandatory \u00e2\u20ac\u201d shown on every install regardless of whether issues exist. LEFT PANE (game dir): read-only file tree; conflicts against ALL installed mods (enabled or disabled) highlighted visually; users CAN create folders (created on disk at deploy time); Explorer quick-link. RIGHT PANE (ModsRaw source layout): inline destination annotation per file (routing-rule assignment); drag file \u00e2\u2020\u2019 drop onto left-pane folder to reassign (annotation updates in place). Operations: reassign destination, create custom folders, rename files (renames in ModsRaw immediately), exclude from plan (stays in ModsRaw, not deployed). No drag-to-add files \u00e2\u20ac\u201d use Explorer quick-link. UNRECOGNIZED FILE RULES (in order): (1) same dir level as recognized file \u00e2\u2020\u2019 carry to same destination; (2) filename contains 'readme' \u00e2\u2020\u2019 rename to readme_{modname}.txt, game root; (3) otherwise \u00e2\u2020\u2019 game root, flagged. CONFLICT BUBBLE: badge on Conflict Manager tab; clears only when all conflicts resolved. ORPHANED FILES: pre-deploy blocking dialog lists files no longer in plan, asks permission to remove before proceeding. RENAME: renames file in ModsRaw immediately. BATCH: sequential, alphabetical; mid-sequence cancel aborts that mod only, rest continue without prompt. CONFLICT SCOPE: all installed mods (enabled or disabled). EDIT EXISTING PLAN: accessible from mod list at any time; flags mod 'needs redeploy.' ARCHIVE-GONE: opens Plan Editor directly to re-plan extracted files.",
-          "status": "open",
-          "claudeDone": false,
+          "status": "partial",
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": "Significant feature. Full spec in tracker.md 'Deployment Plan Editor' section. All design questions resolved."
+          "notes": "Partial: Plan Editor made mandatory on install \u2014 DeployPreviewWindow shown after extraction before mod is added to list; cancel cleans up extracted folder. Full two-pane drag-drop editor deferred (significant feature). .tar.gz archive support added to InstallArchiveForGameAsync."
         },
         {
           "id": "install-dedup",

@@ -147,6 +147,40 @@ namespace TMM
             // Warm the Home mod-size cache off the render path (background, best-effort).
             _ = _core.RecomputeModsInstalledSizeAsync();
 
+            // Apply first-run game selection (set in InitialSetupWindow) if present
+            if (!string.IsNullOrEmpty(_core.Settings.PendingFirstRunGameKey) &&
+                !string.IsNullOrEmpty(_core.Settings.PendingFirstRunGameDir))
+            {
+                string key = _core.Settings.PendingFirstRunGameKey!;
+                string dir = _core.Settings.PendingFirstRunGameDir!;
+                _core.Settings.PendingFirstRunGameKey = null;
+                _core.Settings.PendingFirstRunGameDir = null;
+
+                var config = GameRegistry.Instance.GetCustomGameConfig(key);
+                var builtIn = GameProfile.All.FirstOrDefault(p => p.Key == key);
+                if (config != null)
+                {
+                    config.GameDirectory = dir;
+                    if (builtIn != null) _core.SetVanillaPath(builtIn, dir);
+                    else GameRegistry.Instance.SaveCustomGameSync(key, config);
+                    _core.SaveSettings();
+
+                    await _core.InitializeAsync();
+                    entries = BuildLibraryEntries().ToList();
+                    pageLibrary.LoadEntries(entries);
+                    _pageBackups.Initialize(entries);
+
+                    var entry = entries.FirstOrDefault(e => e.Key == key && !e.IsPlaceholder);
+                    if (entry is not null)
+                    {
+                        _core.Settings.ActiveGameKey = key;
+                        _core.SaveSettings();
+                        NavigateToWorkspace(entry, "Mods");
+                        return;
+                    }
+                }
+            }
+
             if (setup?.OpenAddGameAfterClose == true)
             {
                 _pageAddGame?.LoadForAdd();
@@ -167,6 +201,18 @@ namespace TMM
                 }
                 SetNavActive("Library");
             }
+        }
+
+        // ── Sidebar toggle ────────────────────────────────────────────────────────
+
+        private bool _sidebarCollapsed = false;
+
+        private void BtnHamburger_Click(object sender, RoutedEventArgs e)
+        {
+            _sidebarCollapsed = !_sidebarCollapsed;
+            navColumn.Width = _sidebarCollapsed
+                ? new System.Windows.GridLength(0)
+                : new System.Windows.GridLength(50);
         }
 
         // ── Window chrome ─────────────────────────────────────────────────────────

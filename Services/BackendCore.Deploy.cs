@@ -141,8 +141,11 @@ namespace TMM
                 Directory.CreateDirectory(destFolder);
 
                 // Extract archive
-                string ext = Path.GetExtension(archivePath).ToLowerInvariant();
-                if (ext is ".zip" or ".rar" or ".7z")
+                string fileName = Path.GetFileName(archivePath);
+                bool isTarGz = fileName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase)
+                            || fileName.EndsWith(".tgz", StringComparison.OrdinalIgnoreCase);
+                string ext = isTarGz ? ".tar.gz" : Path.GetExtension(archivePath).ToLowerInvariant();
+                if (ext is ".zip" or ".rar" or ".7z" or ".tar" or ".tar.gz")
                     await ExtractArchiveSafeAsync(archivePath, destFolder, ct);
                 else if (ext is ".asi" or ".dll" or ".cleo" or ".fxt" or ".cs" or ".cm")
                     // Single-file mod: copy directly into the destination folder
@@ -151,7 +154,7 @@ namespace TMM
                 {
                     Log($"[Install:{gameKey}] Unsupported archive format '{ext}' for '{modName}'.");
                     NotificationService.ShowError(
-                        $"Unsupported file format '{ext}'. TMM supports .zip, .rar, .7z and common single-file mod types.",
+                        $"Unsupported file format '{ext}'. TMM supports .zip, .rar, .7z, .tar.gz and common single-file mod types.",
                         "Install", "TMM-E007");
                     try { if (Directory.Exists(destFolder)) ForceDeleteDirectory(destFolder); } catch { }
                     return null;

@@ -74,11 +74,50 @@ namespace TMM
                 }
             }
 
-            var item = await _core.InstallArchiveForGameAsync(_customProfile.Key, archivePath, CancellationToken.None);
+            ShowDeployOverlay($"Extracting {modName}...");
+            ModItem? item;
+            try
+            {
+                item = await _core.InstallArchiveForGameAsync(_customProfile.Key, archivePath, CancellationToken.None);
+            }
+            finally
+            {
+                HideDeployOverlay();
+            }
+
             if (item is null)
             {
                 // InstallArchiveForGameAsync already showed a specific toast; this is a silent guard.
                 return;
+            }
+
+            // ── Plan Editor (mandatory per Decision #12) ──────────────────────────
+            // Load the frozen plan and show the editor so the user can review/adjust
+            // before the mod is added to the list.
+            string planPath = Path.Combine(item.RawFolderPath, "_tmm", "deployplan.json");
+            if (File.Exists(planPath))
+            {
+                try
+                {
+                    var plan = System.Text.Json.JsonSerializer.Deserialize<TMM.Services.DeploymentPlan>(
+                        File.ReadAllText(planPath), JsonHelper.PrettyOptions);
+                    if (plan is not null)
+                    {
+                        var preview = new DeployPreviewWindow(
+                            new List<(ModItem Mod, TMM.Services.DeploymentPlan Plan)> { (item, plan) },
+                            _customConfig.GameDirectory ?? "")
+                        { Owner = Window.GetWindow(this) };
+
+                        if (preview.ShowDialog() != true)
+                        {
+                            // User cancelled — clean up the extracted mod folder
+                            try { BackendCore.ForceDeleteDirectory(item.RawFolderPath); } catch { }
+                            NotificationService.ShowInfo($"Install of '{modName}' cancelled.", "Install");
+                            return;
+                        }
+                    }
+                }
+                catch { /* plan load failure — continue without editor */ }
             }
 
             item.LoadOrder = _modsCustom.Count;

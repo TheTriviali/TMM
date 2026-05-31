@@ -21,6 +21,16 @@ namespace TMM
         // Active preset name (e.g. "Blue-Cyan", "Purple-Pink")
         public string ActiveAccentPreset { get; set; } = "Blue-Cyan";
 
+        // ── First-run pending game selection (applied after initialization) ──────────
+        /// <summary>
+        /// Game key selected in the first-run wizard. Applied by Window_Loaded after
+        /// _core.InitializeAsync() completes. Cleared after application.
+        /// </summary>
+        public string? PendingFirstRunGameKey { get; set; }
+
+        /// <summary>Game directory selected in the first-run wizard.</summary>
+        public string? PendingFirstRunGameDir { get; set; }
+
         // ── Startup preference ──────────────────────────────────────────────────────
         /// <summary>
         /// Which page TMM opens to on launch. "Library" | "ModManager".
