@@ -4,494 +4,89 @@ All notable changes to TMM are listed here, newest first.
 
 ---
 
-## [v0.1-alpha-12] — 2026-05-30 *(Mockup backport M2: enriched mod list)*
+## [v0.1-alpha-12] — 2026-05-30 *(Mod list enrichment)*
 
-### Added
-- **Category colour spine:** 4 px left border on each mod row using `ModCategories.BrushFor(mod.Category)`. `CategorySpineBrushConverter` converts the category string to a frozen `SolidColorBrush` in the DataTemplate.
-- **Inline conflict badge:** Per-row badge (conflict count) populated by a background `ConflictAnalyzer.AnalyzeByMod` pass after the list loads. Click the badge to expand clash detail (destination path → winner mod name) inline below the mod name. `ModItem` gains `[JsonIgnore]` properties `ConflictSummary` + `IsConflictExpanded` with `INotifyPropertyChanged`.
-- **Filter chips:** All / Enabled / Conflicts / Favorites — client-side `CollectionView` predicate above the mod list. Active chip highlighted with `AccentBrush`. Counts update after every list mutation. No "Updates" chip (deferred).
-- **Bulk-action bar:** Slides in whenever `Cust_ModList.SelectedItems.Count > 1`. Buttons Enable / Disable / Set group… / Remove wire to H4 `Batch*` methods. Collapses on deselect-all.
-- **Per-row hover actions:** Open Folder + Properties icon buttons at opacity 0, fade to 1 on `ListViewItem` mouse-over. Both handlers updated to accept `Tag` (mod item) from hover buttons in addition to the context-menu path.
-- **New converters** in `Converters/ModListConverters.cs`: `CategorySpineBrushConverter`, `ConflictBadgeVisibilityConverter`, `BoolToVisibilityConverter`.
-- `App.xaml`: `ConflictRedBrush` (#EF5350) + `ConflictSoftBrush` (#22EF5350) added as global resources.
-
-### Changed
-- `ModManagerPage` ListView switched from `GridView` columns to a full custom `ItemTemplate` DataTemplate. The old Order / ✓ / ★ / Name / Group / Size / Status column layout is replaced by the row anatomy: spine · order · checkbox · star · name+conflict-detail · badge+hover-actions.
-- `RefreshCustomView` now delegates search + chip filtering to `ApplyChipFilter` so both predicates compose correctly.
-- `SaveModsCustom` refreshes chip counts after every mod-list mutation.
+- **Colour spine:** 4 px left border per row keyed to mod category via `CategorySpineBrushConverter`
+- **Inline conflict badge:** per-row clash count; click to expand destination → winner detail below the mod name. `ModItem` gains `ConflictSummary` + `IsConflictExpanded` (`[JsonIgnore]`, `INotifyPropertyChanged`)
+- **Filter chips:** All / Enabled / Conflicts / Favorites — `CollectionView` predicate, counts update on every list mutation, active chip highlighted with `AccentBrush`
+- **Bulk-action bar:** slides in on multi-select; Enable / Disable / Set group / Remove; collapses on deselect-all
+- **Hover actions:** Open Folder + Properties buttons fade in on row hover
+- New converters in `Converters/ModListConverters.cs`: `CategorySpineBrushConverter`, `ConflictBadgeVisibilityConverter`, `BoolToVisibilityConverter`
+- `App.xaml`: `ConflictRedBrush` + `ConflictSoftBrush` added as global resources
+- ListView switched from `GridView` columns to full custom `ItemTemplate` DataTemplate
 
 ---
 
-## [v0.1-alpha-11] — 2026-05-30 *(Mockup backport Phase 1: backend + Library Home)*
+## [v0.1-alpha-11] — 2026-05-30 *(Backport phase 1: backend + Library Home)*
 
-### Added
-- **Mod category field + wizard config (H1):** New `ModItem.Category` (single, fixed-preset) persists via `modinfo.json`. `Models/ModCategories.cs` holds the 5-value preset (Gameplay/Visual/Audio/Map/Other) + stable colour map for the future list colour spine. `CustomGameProfile.ModCategories` lets custom games override the preset via the wizard — Step 1 input field + Step 4 review row added. Localized en-US + es-MX. (fb4d32d)
-- **Per-mod conflict aggregation (H2):** `ConflictAnalyzer.AnalyzeByMod()` returns a `ModConflictSummary` per mod: `OverwritesCount`, `OverwrittenByCount`, and per-destination `Clashes` list. Covers both file-destination and proxy-DLL conflicts. 7 unit tests in `TMM.Tests/ConflictAnalyzerTests.cs`. (9ac628c)
-- **Pending-changes tracker (H3):** `BackendCore.PendingChanges(gameKey)` returns `PendingChangesSummary {HasChanges, Enabled, Disabled, Reordered, AddedRemoved}` by diffing the current mod list (enabled set + load order) against the most recent `DeployManifest`. Loadout switches do not reset the baseline — pending is always relative to what's physically deployed. (3fa52e3)
-- **Batch mod operations (H4):** `ModManagerPage.Batch.cs` adds `BatchEnable`, `BatchDisable`, `BatchSetGroup`, `BatchRemove` — set-based wrappers over existing per-mod handlers. One save + one summary toast per call; `BatchRemove` still confirms before deleting; `BatchSetGroup` re-plans affected mods. (c7327b3)
-- **Library Home view — M3 (replaces grid):** Home render mode in `LibraryPage`: Continue hero (active/default game, Play/Manage buttons, pending badge via H3), quick-stats strip (games set up / mods installed with cached size / backups used vs budget), your-games `GameCard` wrap-panel, recent-activity feed from `ActivityLogger`. Shell view-mode switcher is now Home/List only; legacy "grid"/"showcase" values migrate to "home" on launch. `AppSettings.CachedModsInstalledBytes` added (off-render recompute via `BackendCore.RecomputeModsInstalledSizeAsync`). Localized en-US + es-MX. (5b9aed4)
-
-### Changed
-- `AppSettings.LibraryViewMode` default changed from `"grid"` to `"home"`.
-- Shell view-mode button `btnViewGrid` renamed to `btnViewHome` (Home icon &#xE80F;).
-- Old `CreateAddGameCard` grid-mode branch removed; list-mode variant retained for the List view.
+- **Mod categories (H1):** `ModItem.Category` — 5-value preset (Gameplay / Visual / Audio / Map / Other) with stable color map; persists via `modinfo.json`. Custom games can override the preset in the wizard (Step 1 + Step 4 review)
+- **Per-mod conflict summary (H2):** `ConflictAnalyzer.AnalyzeByMod()` — `OverwritesCount`, `OverwrittenByCount`, per-destination `Clashes`; covers file and proxy-DLL conflicts; 7 unit tests
+- **Pending-changes tracker (H3):** `BackendCore.PendingChanges()` diffs the current mod list against the last `DeployManifest` — loadout switches don't reset the baseline
+- **Batch operations (H4):** `BatchEnable`, `BatchDisable`, `BatchSetGroup`, `BatchRemove` in `ModManagerPage.Batch.cs` — one save + one summary toast per call
+- **Library Home view (M3):** replaces grid — Continue hero card (active game, Play/Manage, pending badge), quick-stats strip (games set up / mods installed / backup usage), game card wrap-panel, recent-activity feed. Shell view switcher is now Home/List only; legacy "grid"/"showcase" values migrate to "home" on launch. `AppSettings.CachedModsInstalledBytes` added
 
 ---
 
-## [v0.1-alpha-10] — 2026-05-29 *(Notifications, Add/Edit Game page, import review, first-run fixes)*
+## [v0.1-alpha-10] — 2026-05-29 *(Notifications, Add/Edit Game, import review, first-run fixes)*
 
 ### Added
-- **Whole-program Add/Edit Game page (WIZ2):** New full-shell `Views/Subpages/AddGamePage.xaml(.cs)` replaces the cramped `CustomGameSetupWizard` modal as the primary add/edit UX. Stacks the four existing wizard step controls (`Step1`–`Step4`) in a `ScrollViewer` with a left jump-rail (Essentials / Mod Types / Routing / Review) and filled/empty completion dots. Live summary bar ("Ready — 2 mod types, 6 rules, integrity set") updates as fields change. Single **Create** / **Save** button, enabled when Step 1 is valid. Entry points: Library "➕ Add Game" button (new blank page), per-card ✎ pencil (edit mode, pre-filled), `InitialSetupWindow.Option2_Click` (sets `OpenAddGameAfterClose = true` and closes; shell navigates after dialog). `GameCard` gained an `EditRequested` event + `btnEdit` shown for non-built-in games. `LibraryPage` wires `EditGameRequested` through. ✎ pencil nav button added to the shell; `pageAddGamePlaceholder` injected exactly like other pages.
-- **Import review master-detail UI (D-B5):** `ImportReviewWindow` replaced with a master-detail
-  layout. Left pane: candidate list with `Extended` multi-selection (Ctrl/Shift), per-candidate
-  "include in import" checkbox, file count + source subline, ⚠ warning badge. Right pane: file
-  list for the focused candidate — each file has its own checkbox; **"+ New mod from checked"**
-  splits checked files into a new candidate; **"Move checked ▾"** opens a context menu to
-  reassign checked files to any other candidate. **"Merge selected"** in the left-pane footer
-  folds all multi-selected candidates into the first. Name and Group editors below the file list
-  replace old inline DataGrid editing. Import button shows live count of selected candidates and
-  disables at 0. `ModImportCandidate` upgraded to `INotifyPropertyChanged` with
-  `ObservableCollection<string> FilePaths` (deserialization-safe), stable `Guid Id`, and
-  `FileCountDisplay`/`HasWarning` computed properties. `gameDir` passed to ctor so file paths
-  display relative to the game folder. Locale keys added to `en-US.json` + `es-MX.json`.
-- **Proxy-DLL routing warning (D-E2):** At plan time, if `ProxyDllDetector.IsKnownProxy` matches a file whose resolved destination is a non-root subdirectory (e.g. `plugins\`), a non-blocking `DeploymentWarning` is added and surfaces in the `pnlWarnings` panel of `DeployPreviewWindow` — proxy DLLs must live at the game root to be picked up by the loader.
-- **Multi-proxy version conflict detection (D-E3):** New `ConflictAnalyzer.AnalyzeProxyConflicts` groups proxy DLL filenames across all enabled mods' plans and returns a `ConflictEntry` per shared name (e.g. two mods shipping `dinput8.dll`). `DeployPreviewWindow` appends results to `icWarnings`; `txtBlockingNote` shown only for actually-blocking rows. Catches a load-order footgun that is not a normal file conflict.
-- **Built-in games use SearchHints for QuickScan (D-O2r):** `gtaiv.tmmgame`, `gtatlad.tmmgame`, and `gtatbogt.tmmgame` gained `searchHints` arrays (III/VC/SA already had them). New `BackendCore.ScanBuiltInsBySearchHints()` calls `GetBuiltInCustomGames()` + `SetVanillaPath` (auto-derives TLaD/TBoGT when IV is found); runs in `QuickScan()` before the legacy loop so found games are skipped by the old loop. Hardcoded roots kept as fallback.
-- **Verbose instrumentation (NOTIF4):** `NotificationService.ShowVerbose` calls added at key
-  low-level sites — directory creation (first-time only: game ModsRaw subdirs, DownloadCache,
-  Backups, Loadouts per game); `SaveSettings`; plan freeze in `OnModAddedAsync`; deploy start/
-  finish (file count + backup count + timestamp); rollback start/finish; backup prune (per deleted
-  snapshot); import baseline seed, per-mod staging, and completion. All messages are terse and
-  source-tagged ("Deploy", "Rollback", "Plan", "Backup", "Baseline", "Import", "Init", "Settings").
-  When verbose mode is off (default), these write to history only — no toasts.
-- **Notifications page (NOTIF3):** New left-nav tab (bell/ActionCenter icon &#xEA8F;) opens a full-shell
-  Notifications page. Shows the persistent `NotificationService.History` in newest-first order;
-  each row displays the level icon + color (Info blue, Success green, Warning amber, Error red),
-  message, source subsystem, and local timestamp. Level filter (All/Info/Success/Warning/Error)
-  applies via a `ListCollectionView` predicate. "Clear history" button calls
-  `NotificationService.ClearHistory()`. Empty state shown when history is empty. `NotificationItem`
-  gained a `LocalTimeDisplay` computed property (HH:mm:ss today, MM/dd HH:mm older). Locale keys
-  added to both `en-US.json` and `es-MX.json`.
-- **Verbose notifications setting toggle (NOTIF2):** New "Notifications" section in Settings page
-  with a "Verbose notifications" checkbox. Loads from `Settings.VerboseNotifications` on open;
-  saves via `BackendCore.SaveSettings()` on change — no restart needed (the service reads the flag
-  live). Locale keys `Settings_Notifications`, `Settings_VerboseNotifications`,
-  `Settings_VerboseNotifications_Desc` added to `en-US.json` and `es-MX.json`.
-- **Notification history + verbose model (NOTIF1):** Notifications now have a persistent,
-  browsable history separate from the transient toast queue. `NotificationService.History` is a
-  newest-first in-memory ring (cap 500) whose 200-entry tail persists to
-  `%APPDATA%\TMM\notifications.json` and survives restarts. `NotificationItem` gained a `Source`
-  label; every `Show*` records to history. New `ShowVerbose(message, source)` always records but
-  only raises a toast when the new `Settings.VerboseNotifications` flag (default off) is enabled —
-  read live so a runtime toggle needs no restart. All collection mutations marshal to the UI
-  dispatcher so background callers are safe. Unblocks the Notifications tab + verbose instrumentation.
+- **Add/Edit Game full-page (WIZ2):** `Views/Subpages/AddGamePage.xaml(.cs)` replaces the modal wizard as the primary add/edit UX. Scrollable sections (Essentials / Mod Types / Routing / Review) with left jump-rail, completion dots, and live summary bar. Edit mode pre-fills from saved profile. ✎ pencil nav button added to shell
+- **Import review master-detail (D-B5):** Left pane — candidate list with `Extended` multi-select, include checkbox, file count, warning badge. Right pane — per-file checkboxes, "New mod from checked" split, "Move checked" reassign, "Merge selected" fold. Inline name + group editors
+- **Proxy-DLL routing warning (D-E2):** Non-blocking `DeploymentWarning` in `DeployPreviewWindow` when a proxy DLL resolves to a non-root destination
+- **Multi-proxy conflict detection (D-E3):** `ConflictAnalyzer.AnalyzeProxyConflicts` — surfaces a `ConflictEntry` per shared proxy filename (e.g. two mods shipping `dinput8.dll`)
+- **Built-in games use SearchHints (D-O2r):** All six GTA `.tmmgame` profiles now have `searchHints`; `ScanBuiltInsBySearchHints()` runs before the legacy loop so found games are skipped
+- **Notifications (NOTIF1–4):** Persistent ring (500 entries, 200 persisted to `notifications.json`). Full-page Notifications tab (bell icon). Verbose mode toggle in Settings (off by default). `ShowVerbose` instrumentation at all key backend sites (deploy, rollback, plan freeze, import, backup prune, etc.)
 
 ### Fixed
-- **All six GTA built-in profiles silently failed to load (critical, F1):** On a fresh launch only
-  the five flat-schema games appeared — GTA III/VC/SA/IV/TLaD/TBoGT were missing. `JsonHelper.TmmGameOptions`
-  lacked a `JsonStringEnumConverter`; the GTA profiles' condition-based `routingRules` (enum names like
-  `"PathContains"`, `"StartsWith"`, `"AND"`) threw on deserialize and were swallowed. Added the converter
-  (accepts string and numeric forms) plus a `TmmGameOptionsTests` regression.
-- **"Select a Built-in Game" / "Create a Custom Game" cards couldn't complete setup (F3):**
-  `SelectBuiltinGameWindow.BtnDone` was gated on `GameProfile.All.Any(IsGameReady)` — on a fresh machine
-  without GTA installed the button was permanently greyed out, so first-run setup could never be completed.
-  Done is now always enabled; users can proceed without configuring a path and do so later from the Library.
-- **Welcome-window left panel stayed English on language switch (F2):** The four branding strings
-  (`"Mod Management Made Simple"`, `"Direct-deploy, no VFS"`, `"GTA III series built-in"`, `"Custom game profiles"`)
-  were hardcoded literals; swapped to `{helpers:Localization}` bindings. Updated "GTA III series built-in"
-  to game-agnostic `Setup_Feature_BuiltinGames`. New keys added to `en-US.json` and `es-MX.json`.
-- **"Directory not set" never localized (F4):** Hardcoded literal in `ModManagerPage.xaml.cs:115` and
-  the matching open-folder `MessageBox` replaced with `LocalizationService.Instance[key]` lookups.
-  New keys: `ModManager_DirectoryNotSet`, `ModManager_FolderNotSet` in both locale files.
-- **Five non-GTA built-in profiles had non-functional routing (F5):** Skyrim/FNV/Cyberpunk/RDR2/Witcher 3
-  used a flat `extensionPattern`/`destination` schema that mapped to no property on `RoutingRule`, so
-  routing rules deserialized to empty objects. Rewrote all five to the condition-based schema (same as
-  GTA profiles). Skyrim's SKSE conditional rule (HasFolder check) preserved. Added `BuiltInProfilesTests`
-  with three cases covering all 11 profiles; 60/60 tests pass.
+- All six GTA built-in profiles silently failed to deserialize on fresh launch — `JsonHelper.TmmGameOptions` lacked `JsonStringEnumConverter`; condition-based routing rule enum names threw and were swallowed
+- "Select a Built-in Game" done button was permanently greyed out on machines without GTA installed
+- Welcome window left panel stayed English after language switch (hardcoded branding strings)
+- "Directory not set" message was a hardcoded literal (now localized)
+- Five non-GTA built-in profiles (Skyrim, FNV, Cyberpunk, RDR2, Witcher 3) had non-functional routing — flat schema didn't map to `RoutingRule`; all five rewritten to condition-based schema
 
 ---
 
-## [v0.1-alpha-9] — 2026-05-29 *(Build restore, audit cleanup, profile portability, .tmmpack import)*
+## [v0.1-alpha-9] — 2026-05-29 *(Build restore, audit cleanup, profile portability)*
 
-### Fixed
-- **Broken build (critical):** Commit `b09c02a` shipped a non-compiling `master` — the C4 conflict resolver referenced `ConflictAnalyzer` / `ConflictEntry` / `ConflictParticipant` from `DeployPreviewWindow` and `ConflictResolverWindow`, but those types were never committed. Reconstructed in `Services/ConflictAnalyzer.cs` (groups enabled mods' plan files by destination, flags paths with ≥2 distinct writers, ranks participants by `FinalLoadOrder` so the resolver's default winner matches a plain Deploy).
-- **`.tmmgame` fields silently dropped:** `ProfileMigration.FromExport` never mapped `NexusSlug`, `AcceptedExeMd5s`, or `ExpectedExeBytes`, so those profile fields were lost on load (the sidebar "find mods" Nexus link never worked for built-in games). Added the mappings, plus `SearchHints`, across `TmmGameExport` / `FromExport` / `ExportConfigAsync`.
-- **Integrity panel never showed for built-in games:** `ModManagerPage.InitCustomGame` now syncs a built-in game's resolved path (`Settings.GamePaths`) into `config.GameDirectory`, so the integrity panel, sidebar path, and deploy button resolve for built-ins too.
-- **2 CS0108 warnings:** Removed redundant local `BtnClose_Click` overrides in `ActivityFeedWindow` and `LoadoutDiffWindow` (both inherit the identical `TmmWindow` handler).
-
-### Added
-- **`.tmmpack` import (D4):** `Services/TmmPackInstaller.cs` (`ReadManifest` + `ImportAsync`) consumes a pack into the currently-selected game — extracts mods into `ModsRaw_{key}` with a zip-slip guard, collision-safe unique names, a forward-version reject, a per-mod `OnModAddedAsync` plan freeze, and loadout reconstruction (remapping renamed mods). New `BackendCore.SaveLoadoutAsync(gameKey, ModLoadout)` overload. Wired as "Import .tmmpack…" in the Loadouts menu. Closes the export-only gap.
-- **Profile search hints (O2):** `CustomGameProfile.SearchHints` — default install locations (relative to a drive root) that travel inside a shared `.tmmgame`. `QuickScan` now probes them across every fixed drive for the configured exe and auto-fills the game directory, so a shared profile self-locates on another machine. Editable in wizard Step 1, reviewed in Step 4.
-- **Restored GTA III/VC/SA integrity hashes (O1):** `acceptedExeMd5s` re-added to the three bundled profiles (recovered from commit `eb2b953`; Vice City keeps its ModDB v1.0 downgrader variant).
-- **Loadout name validation:** `BackendCore.IsValidLoadoutName` rejects filenames with illegal characters in save/rename, with graceful UI messaging.
-- **UI flow charts:** New `UIFLOWS.md` — Mermaid diagrams for startup/first-launch, navigation, the add-game wizard, install→plan-freeze, deploy+conflict-resolve, rollback, import, and loadouts.
-
-### Changed
-- **Unified onboarding (S7):** Deleted `FirstGamePickerWindow`; its built-in/custom choice cards merged into `InitialSetupWindow` (language + game choice on one screen, one fewer dialog).
-- **Centralized version string:** New `Helpers/AppInfo.DisplayVersion` is the single source, consumed by `TmmPackBuilder` and `AboutWindow` (which previously showed a misleading `v1.0.0` for an alpha build).
-
-### Removed
-- **Dead code:** `BackendCore.DeployModsAsync` (no callers — legacy built-in path superseded by the unified custom path) and its only consumer `ApplyConditionalRoutes`; `ModImporter.GetCandidateGroup` (unused).
+- **Fixed broken build:** `ConflictAnalyzer` / `ConflictEntry` / `ConflictParticipant` were referenced but never committed — reconstructed in `Services/ConflictAnalyzer.cs`
+- **`.tmmpack` import (D4):** `TmmPackInstaller` — zip-slip guard, collision-safe names, per-mod plan freeze on import, loadout reconstruction
+- **Profile search hints (O2):** `CustomGameProfile.SearchHints` travel inside `.tmmgame`; `QuickScan` probes them across all fixed drives
+- **Restored GTA III/VC/SA integrity hashes (O1):** `acceptedExeMd5s` back in bundled profiles
+- **Unified onboarding (S7):** `FirstGamePickerWindow` deleted; built-in/custom choice merged into `InitialSetupWindow`
+- **Centralized version string:** `Helpers/AppInfo.DisplayVersion`
+- **Removed:** `BackendCore.DeployModsAsync` + `ApplyConditionalRoutes` (no callers)
+- **New:** `UIFLOWS.md` — Mermaid diagrams for all major flows
 
 ---
 
-## [v0.1-alpha-8] — 2026-05-28 *(Block D complete + Block E1 + Block F polish)*
+## [v0.1-alpha-8] — 2026-05-28 *(Loadouts, .tmmpack export, conflict resolver)*
 
-### Added — Loadouts (Block D)
-- **D1 — Loadout snapshots:** Save/load enabled states + ordering via `BackendCore.SaveLoadoutAsync` / `ApplyLoadoutAsync`. New `Loadouts_{gameKey}/{Name}.json` files persist per-game.
-- **D2 — .tmmpack export:** `TmmPackBuilder` bundles a loadout (manifest + loadout.json + mod source folders) into a portable archive.
-- **D3 — Loadout management:** Rename, delete, overwrite confirmation, per-loadout submenu in the new Loadouts toolbar button.
-- **Loadout diff viewer:** `LoadoutDiffWindow` compares two loadouts side-by-side — additions, removals, enable/disable changes, load-order reorders.
-
-### Added — Smart DLL Wizard (Block E1)
-- **Proxy DLL detection:** `ProxyDllDetector` flags ~20 known proxy DLLs (dinput8, d3d9, dsound, ScriptHook variants, SKSE/F4SE loaders) during mod install. Logs detection details and surfaces a toast.
-
-### Added — Conflict Resolution (C4)
-- **Smart conflict resolver UI:** `ConflictResolverWindow` lets users pick a winner per-conflict, overriding the highest-load-order default. Non-winners are auto-skipped in the deploy plan.
-
-### Added — Quality of Life (Block F)
-- **Mod favorites:** Star/pin mods with a clickable column + context-menu toggle. Persisted on `ModItem.IsFavorite`.
-- **Recent activity feed:** `ActivityLogger` records the last 20 deploys/rollbacks/imports/loadout operations; `ActivityFeedWindow` surfaces them from the BackupsPage.
-- **Backup size monitoring:** BackupsPage shows total backup folder size with an "Over quota" badge once `Settings.BackupSizeWarnBytes` is exceeded (default 5 GB).
-- **Loadout overwrite confirmation:** Saving a loadout with an existing name now prompts before overwriting.
-
-### Added — Reliability
-- **Log rotation:** New `Logger` service caps `TMM.log` at 5 MB and rotates up to 3 historical files. Co-exists with legacy `BackendCore.Log` path.
-- **Crash dialog log attach:** Recent 40 log lines are appended to the clipboard report when the unexpected-error dialog fires.
-
-### Internal
-- **GitHub repository:** Project canonicalized at `TheTriviali/TMM`.
+- **Loadouts (D1–D3):** Save/load/rename/delete named mod configs (enable state + order) — `Loadouts_{gameKey}/{Name}.json`; overwrite confirmation
+- **Loadout diff viewer:** `LoadoutDiffWindow` side-by-side comparison (additions, removals, enable/disable changes, reorders)
+- **.tmmpack export (D2):** `TmmPackBuilder` bundles loadout + mod sources into a portable archive
+- **Proxy-DLL detection (E1):** `ProxyDllDetector` flags ~20 known proxy DLLs (dinput8, d3d9, ScriptHook variants, SKSE/F4SE loaders) at install time
+- **Conflict resolver UI (C4):** `ConflictResolverWindow` — per-conflict winner override; non-winners auto-skipped in deploy plan
+- **Favorites:** star/pin per mod, persisted on `ModItem.IsFavorite`
+- **Recent activity feed:** `ActivityLogger` (last 20 ops) surfaced from `BackupsPage`
+- **Backup size monitoring:** total size + "Over quota" badge at 5 GB default
+- **Log rotation:** 5 MB cap, 3 historical files; crash dialog appends last 40 lines to clipboard report
 
 ---
 
-## [v0.1-alpha-7] — 2026-05-27 *(UI Audit, GTA Deprecated Cleanup & BackupsPage)*
+## Earlier (v0.1-alpha-1 through v0.1-alpha-7)
 
-### Added
-- **BackupsPage:** Fully implemented — game selector ComboBox, per-game backup list with timestamps and mod summaries, restore button with confirmation dialog and progress overlay. Previously showed only an empty-state placeholder.
-- **Integrity verification:** Generic per-game exe integrity checking (`IntegrityChecker` service, `ExpectedExeBytes`/`AcceptedExeMd5s` on `CustomGameProfile`, wizard Step 1 Expander with auto-detect, Step 4 review summary, ModManagerPage sidebar status row).
-
-### Removed
-- **GTA-specific deprecated logic:** MD5/vanilla detection fields (`GameProfile.Vanilla10Md5`, `AdditionalValidMd5s`, `HasExeCheck`, etc.), `ExeStatus` enum, `BackendCore` methods (`VerifyGameStatusAsync`, `GetEffectiveMd5Async`, `GetMd5DiagnosticsAsync`, `HasExeModOverride`, `ToggleDeployOverride`, `FindExeInMod`, `GetFileMD5Async`), `AppSettings.DeployOverrides`, Steam Controls + MD5 panels in SettingsPage.
-- **ArchiveExtractionWindow:** Deleted unreachable `Views/ArchiveExtractionWindow.xaml(.cs)`.
-- **Stale docs:** Deleted `TASK_BREAKDOWN.md`, `tool_usage_guide.md`, `TEST_FLOW.md` (all described removed or obsolete functionality).
-
-### Fixed
-- **Language dropdown:** UnifiedShellWindow now shows display names (e.g. "English", "Español") instead of raw locale codes in the language ComboBox.
-- **PathsPage:** Removed dead `SetPath` parameter from `PathRowDef` record; updated subtitle to accurately describe the page as read-only.
-- **LibraryViewMode doc-comment:** Removed non-existent `"large"` from the list of valid values.
-- **CLAUDE.md:** Removed broken references to `CODEBASE_GUIDE.md` (file never existed).
-- **Various UI:** Fixed empty Segoe glyphs in DownloadsPage, dead AboutWindow handlers, no-op `if (_isEdit)` branch in wizard, dead `LastSelectedGameKey`, hidden no-op Edit buttons on GameCard, hardcoded foreground on SelectBuiltinGameWindow, dead locale keys, hardcoded version strings.
+| Version | Date | Highlights |
+|---------|------|-----------|
+| v0.1-alpha-7 | 2026-05-27 | BackupsPage, generic integrity verification, removed GTA-specific MD5/exe-check logic |
+| v0.1-alpha-6 | 2026-05-25 | UI refinements, .NET 10 `MenuItemRole` compat fix, navigation order |
+| v0.1-alpha-5 | 2026-05-25 | TGTAMM → TMM rebrand (namespace, AppData path, GitHub repo, branch) |
+| v0.1-alpha-4 | 2026-05-23 | Theme system simplified to `AccentPresets` (dark-only, 2-tone); dead windows removed; 8 small files consolidated |
+| v0.1-alpha-3 | 2026-05-23 | Test Routing dry-run panel, `GameRegistry` built-in profiles, `DeployPreviewWindow` |
+| v0.1-alpha-2 | 2026-05-23 | Theme presets curated from 75 → 25; dead code removal |
+| v0.1-alpha-1 | 2026-05-22 | First release: routing sentence builder, GTA IV setup wizard, built-in profiles |
 
 ---
 
-## [v0.1-alpha-6] — 2026-05-25 *(UI Refinements & Backend Stability)*
+## Pre-alpha (v0.01 / v0.02, April–May 2026)
 
-### Removed
-- **Archive Feature:** Removed archive/unarchive game functionality (btnArchiveChip button, archiveFlyout overlay, BtnArchiveChip_Click handler, UpdateArchiveChipStyle method, _showingArchived field).
-- **Large Grid View:** Removed duplicate large grid view option from game library (was 1.25x scaled grid). Library now supports 3 modes: Grid View, List View, Showcase View.
-
-### Changed
-- **Game Library Text:** Normalized title casing in LibraryPage showcase view:
-  - "MODS INSTALLED" → "Mods installed"
-  - "READY TO DEPLOY" → "Ready to deploy"
-  - "OTHER GAMES" → "Other games"
-- **DownloadsPage Sidebar:** Relocated "Downloaded archives" sidebar from left (Grid.Column 0) to right side (Grid.Column 1) of window for improved layout balance.
-- **Search Bar Expansion:** Increased library search bar dimensions (MinWidth: 220→320, MaxWidth: 500, height: 26→28, padding: 6,0→8,0) for better visibility and usability.
-- **Navigation Order:** Swapped "Mod Manager" and "Downloads" tabs in main navigation strip. Mod Manager now appears before Downloads to prioritize the core modding workflow.
-- **Showcase View Icon:** Fixed gallery icon in view mode switcher (&#xE7B9; → &#xE71D;) for proper visual representation.
-- **Fullscreen Padding:** Added 8px margin to main window border when app enters fullscreen/maximized state (`MainWindowBorder.Margin = max ? new Thickness(8) : new Thickness(0)`).
-
-### Fixed
-- **MenuItemRole Validation (.NET 10 compatibility):** Removed invalid MenuItem ControlTemplate Trigger with `Property="Role" Value="Separator"` from App.xaml. MenuItemRole enum in .NET 10 does not include Separator value (only TopLevelHeader, TopLevelItem, SubmenuHeader, SubmenuItem). This was causing XamlParseException on startup.
-- **Inner Exception Logging:** Enhanced App.xaml.cs ShowCrashDialog method to capture and display inner exception details for better debugging of nested exceptions.
-
----
-
-## [v0.1-alpha-5] — 2026-05-25 *(TGTAMM→TMM Rebrand & Documentation Consolidation)*
-
-### Changed
-- **Project Rebrand:** TGTAMM → TMM (Triviali's Mod Manager)
-  - Namespace: TGTAMM → TMM throughout all .cs and .xaml files
-  - Assembly output: TGTAMM.dll → TMM.dll
-  - AppDataPath: `%APPDATA%\TGTAMM\` → `%APPDATA%\TMM\` (auto-migrates old data on first run)
-  - csproj/sln files renamed
-  - GitHub repo: TheTriviali/TGTAMM → TheTriviali/TMM
-  - Default branch: main → master (main branch deleted)
-
-### Documentation
-- **CLAUDE.md:** New chat reference guide with quick lookup structure, token-saving tips, and links to detailed docs. Reduces context bloat in new sessions.
-- **Consolidated Files:**
-  - **THEMING_SIMPLIFICATION.md** → Folded into this changelog as historical record (see v0.1-alpha-4 changes)
-  - **DESIGN_BRIEF.md** → Archived; unified shell design specs remain available in git history for future reference if needed
-
----
-
-## [v0.1-alpha-4] — 2026-05-23 *(Theming System Simplification & Dead Window Removal)*
-
-### Removed (Theming Simplification)
-- **ThemeManagerWindow.xaml / .xaml.cs** — Complex theme picker UI removed
-- **AppSettings Customization Fields** (kept as deprecated stubs):
-  - BgColor, ColorMode, FontFamily, MicaEnabled, AccentBorderEnabled, TitlebarTheme, LastPresetName
-- **ThemeEngine Complexity** (200+ lines removed):
-  - 25+ theme presets (Dracula, Nord, Catppuccin, GTA themes, light themes)
-  - HSV/RGB color palette generation
-  - WCAG contrast algorithms
-  - Complementary color modes (Triadic, Analogous, SplitComp, Tetradic)
-  - Font application logic
-  - Mica/Acrylic DWM interop
-  - Title bar color customization
-
-### Added (Theming Simplification)
-- **AccentPresets.cs** — Streamlined accent color presets (2-tone system with auto-gradients)
-- Dark mode mandatory; light mode removed from runtime customization
-
-### Removed (Dead Windows & Consolidation)
-
-### Removed
-- **DebugConsoleWindow, CrashReportWindow, HelpWindow, DxvkSettingsWindow:** Four dead/low-value windows deleted. Crash reporter is now an inline `MessageBox` + clipboard copy. Help replaced with `MessageBox` + GitHub URL.
-- **GitHub API auto-downloader (`DownloadLatestGithubReleaseAsync`):** DXVK and Modloader one-click install removed. Direct-URL installers (SilentPatch, ASI Loader, Widescreen, CLEO, Project2DFX) are unaffected.
-- **TextColorMode setting:** Hardcoded to WCAG algorithm; removed from AppSettings and ThemePreset.
-- **MicaIntensity setting:** Hardcoded to 0.75; removed from AppSettings and ThemePreset.
-- **IThemeSettings interface:** Removed unused interface; `ThemeEngine.ApplyTheme` takes `AppSettings` directly.
-- **DashboardWindowBase:** Removed empty wrapper class; all three dashboard windows now extend `TmmWindow` directly.
-- **SCOPE.md, FUTURE_ADDITIONS.md, PLANS.md:** Deleted stale documentation files.
-
-### Changed
-- **Code consolidation — 8 tiny files merged into their owners:**
-  - `GameState.cs` (`ExeStatus` enum) → `Models/GameProfile.cs`
-  - `ConditionalRoute.cs` → `Models/TmmGameConfig.cs`
-  - `DeploymentProgress.cs` → `Services/BackendCore.cs`
-  - `NotificationItem.cs` → `Services/NotificationService.cs`
-  - `ShellHelper.cs` + `UiColors.cs` + `JsonHelper.cs` → `Helpers/Helpers.cs`
-- **XAML root elements:** Dashboard window XAML files updated from `<local:DashboardWindowBase>` to `<local:TmmWindow>` to match code-behind base class.
-
-### Documentation
-- **CODEBASE_GUIDE.md:** Full rewrite — removed stale window refs, added Helpers section, tightened all entries.
-- **SANITYCHECK.md, README.md:** Removed stale references matching removed features.
-
----
-
-## [v0.1-alpha-3] — 2026-05-23 *(Documentation & Core Features Pass)*
-
-### Added
-- **Test Routing Dry-Run Panel:** CustomGameConfigWindow now includes an inline collapsible "Test Routing..." panel that simulates file routing. Users can browse for a test file and see where it would be deployed (including conditional route evaluation with directory existence checks).
-- **Skyrim Anniversary Edition Built-in Profile:** Embedded `skyrim_ae.tmmgame` asset auto-loaded via GameRegistry. Sets up routing for ESP/ESM → Data, DLLs → Data\SKSE\Plugins\ (conditional on SKSE directory), scripts → Data\Scripts\. Appears in GameLauncherWindow under "Supported Games" section with read-only profile.
-- **Deploy Preview Window:** Modal window shown before deployment that summarizes which mods are being deployed, groups files by destination directory, and shows extension types. Users can review and confirm or cancel before deploy proceeds.
-- **Mod Loadouts Foundation:** ModLoadout.cs model and BackendCore persistence layer (SaveLoadoutAsync, LoadLoadoutAsync, DeleteLoadoutAsync) for saving named mod configurations (enable state + load order per game).
-- **GameRegistry Built-in Profile Support:** LoadBuiltInProfilesAsync() method uses reflection to load embedded `.tmmgame` files from assembly resources. GetBuiltInCustomGames() returns only built-in profiles; GetCustomGames() excludes them. GameLauncherWindow displays separate "Supported Games" and "Your Games" sections.
-- **Future Additions Documentation:** Created `FUTURE_ADDITIONS.md` containing comprehensive specs for deferred features: Smart DLL Wizard (§3), Built-in Profiles (Skyrim/Minecraft, §4), Mod Import (§5), Conflict Resolution Engine (§6), Loadouts UI (§7), Advanced File Detection (§10), and backlog items (§B1–§B6).
-
-### Changed
-- **PLANS.md Reorganization:** Moved all future/deferred features (Smart DLL Wizard, additional built-in games, conflict resolution, advanced loadouts UI, file detection) to `FUTURE_ADDITIONS.md`. PLANS.md now focuses exclusively on shipped features and their implementation status. Updated header to reference `FUTURE_ADDITIONS.md` and removed ~1050 lines of archived content.
-- **GameLauncherWindow Sections:** Now displays "Supported Games" header (for built-in profiles) and "Your Games" header (for user-created games) with appropriate visibility logic. Built-in game cards show "Manage" button only (no Edit/Delete).
-- **CustomGameConfigWindow Edit Buttons:** IsBuiltIn profiles conditionally hide Edit and Delete buttons, only exposing Manage functionality.
-
-### Fixed
-- **GTA4DashboardWindow Menu Type Errors:** Fixed switch statement cases comparing string profile keys against GameProfile enum objects. Changed cases from `GameProfile.IV` to string literals `"IV"`, `"TLaD"`, `"TBoGT"`.
-
-### Documentation
-- **PLANS.md:** Updated to reference FUTURE_ADDITIONS.md and removed archived sections. Now 353 lines (focused on shipped state).
-- **SCOPE.md:** Companion human-readable feature overview (unchanged, both kept in sync).
-- **FUTURE_ADDITIONS.md:** New comprehensive 340-line document covering all deferred features with full specs, JSON examples, UI mockups, and implementation notes.
-
----
-
-## [v0.1-alpha-2] — 2026-05-23
-
-### Changed
-- **Theme System Optimization:** Curated built-in presets from 75 → 25 themes, focusing on GTA-inspired, popular editor color schemes, synthwave variants, and light themes. Target demographic: 25–35 year old males (teals, cyans, blues, muted grays, warm tones).
-- **Theme Presets Detail:**
-  - Kept: 5 GTA-inspired (Vice City Neon, GTA III Era, San Andreas Grove, GTA Online, Dark Teal Default), 8 popular editor palettes (Dracula, Nord, Gruvbox, Catppuccin, One Dark, Monokai, Solarized Dark, GitHub Dark), 4 synthwave (Synthwave Sunset, Outrun, Retrowave, 80s Neon), 4 quality dark (Matrix, Deep Ocean, Obsidian, Slate), 4 light variants (Light Sky, Solarized Light, Nord Light, Light Teal)
-  - Removed: 50 low-usage presets (Windows XP/Vista/3.1/Mac9.0 nostalgia themes, "Unique Themes" section, nature-inspired duplicates, vibrant variants)
-- **Matrix Theme Added:** Neon green monochrome theme (`#00FF41` accent, `#0D0D0D` background) as successor to "Phosphor"
-- **Code Reduction:** ThemeManagerWindow.xaml.cs reduced by ~130 lines total (file: 841→710 lines). Presets section specifically: 237 lines → 60 lines (~170 line savings)
-- **Documentation Updated:** README.md (theme count 34+→25, descriptions), CHANGELOG.md (this entry)
-
-### Known Issues (Deferred)
-- Theme selector still only in ThemeManagerWindow dialog (pending: move to GameLauncherWindow toolbar for global access from all dashboards)
-- HSV color pickers and complement palette tools remain in ThemeManagerWindow (pending: strip advanced features, keep session-only color picker)
-
----
-
-## [v0.1-alpha-1] — 2026-05-22 *(First Release)*
-
-### Added
-- **Conditional Routing Sentence Builder:** "Add Custom Game" window replaces the cryptic 4-column routing DataGrid with a plain-English sentence builder — each rule reads as *"Put .asi files into plugins if plugins\ exists, otherwise ."*
-- **Routing Preset Templates:** One-click presets for ASI Loader, Source Engine, Script Extender (SKSE/FOSE), and CLEO. Applying a preset fills in the routing rules automatically.
-- **Empty-state hint:** When no routing rules are defined, a helper message explains that most games need no rules at all.
-- **App icon:** Simple dark/teal icon across all windows and taskbar.
-- **GTA IV crash handler:** Global `DispatcherUnhandledException` handler shows a friendly error message instead of silently closing.
-- **GTA IV setup wizard:** Opening GTA IV with no paths configured now shows `InitialSetupWindow` first.
-- **TBoGT alternate path detection:** Recognises both `EFLC\` and `TBoGT\` subfolder names when auto-deriving paths from the IV install directory.
-- **`CODEBASE_GUIDE.md`:** Full pseudocode table of contents and AI search index for all windows, services, models, and conventions.
-
-### Changed
-- **Custom Game Config window** enlarged to 800 × 800 (was 520 × 560).
-- **Output Directory Mapping** column header now reads *"Output Folder  (. = game root)"* for clarity.
-- **Error dialogs** show a concise one-line message instead of raw exception stack traces.
-
----
-
-## [v0.02-prealpha-2] — 2026-05-22
-
-### Changed - VFS Removal & Direct Deploy Architecture
-
-**Major Architectural Refactor:**
-- **Removed Virtual File System:** No more `TempStaging\` folder or `ModdedFolderName` concept. Mods deploy **directly to game directory** with per-extension output routing.
-- **Backup System Simplified:** Before overwriting files, create timestamped backup in `AppData\TMM\Backups\{gameKey}\{timestamp}\`. Last **3 deploys per game** retained (changed from 5-deep to 3-deep for storage efficiency).
-- **DeployManifest Tracking:** `.json` file in each backup records exactly which files changed, where they were copied from, and when.
-- **Direct Launch:** Game launch now reads from actual game directory, not virtual folder.
-
-**Code Cleanup (Dead Code Removal):**
-- Removed `DeepScanDrives()` method (~25 lines) — never called; QuickScan handles all cases
-- Removed `RecursiveSearch()` helper (~20 lines) — only used by DeepScan
-- Removed `SmartSteamLaunch()` method (~20 lines) — deferred to future Smart DLL Wizard feature
-- Removed `CopyDirectoryParallelAsync()` method (~50 lines) — sync `CopyDirectory()` sufficient for single-machine deploy
-- Removed `DebugStaging` property from AppSettings — legacy VFS debugging flag
-- Simplified `GameState.cs` from 145 lines → 9 lines:
-  - Deleted `GameStateManager` singleton class
-  - Deleted `GameDetectionState` record
-  - Kept only `ExeStatus` enum (Vanilla/Downgraded/Unknown)
-- Removed empty `ModList_SelectionChanged()` event handler in CustomGameDashboard
-- Removed `SettingsContext` enum (Full/GtaIvOnly/CustomGame) from SettingsWindow — unified to global settings only
-- Removed `SmartArchivePostProcess()` method (~55 lines) from Gta4DashboardWindow — deferred to CustomGameEditor for future implementation
-- **Total Dead Code Removed:** ~240 lines, 0 errors/0 warnings after cleanup
-
-**UI & Config Updates:**
-- **Context menu:** "Open Virtual Folder" renamed to **"Open Backup Folder"** — opens rollback backup directory
-- **`GetDriveSpaceInfo()`** updated to show total AppData size instead of VFS references
-- **`BtnLaunchModded_Click`** now launches from actual game installation directory
-- **Output mapping UI:** DataGrid (Extension / Output Folder columns) in Add Custom Game dialog
-- **Status bar in launcher:** Uses `AccentBrush` on dark background panel for readability across all themes
-
-### Added
-- **Direct Deploy:** Mods are now copied straight into the game's actual installation directory. No virtual filesystem, no staging folder, no intermediate copies.
-- **Automatic Backup & Rollback:** Before overwriting any file, the original is backed up to `AppData\TMM\Backups\{gameKey}\{timestamp}\`. Last 3 deploys per game are retained. `DeployManifest` JSON tracks every file changed.
-- **Rollback Button:** New toolbar button (undo icon) lets you restore the last deploy for the active game. Works in both GTA dashboard and Custom Game dashboard.
-- **Custom Game Support:** Add any game with a configurable name, directory, executable, and per-extension output subdirectory routing (e.g. `.asi` -> `plugins\`, `*` -> root).
-- **Multi-game Launcher:** New `GameLauncherWindow` home screen showing all configured games as cards. Built-in GTA III Series card + custom game cards with Edit/Delete actions.
-- **Back to Launcher Button:** Toolbar button in all dashboards to return to the launcher.
-- **Reset Button (Launcher):** Clears the download cache with a confirmation dialog.
-
-### Removed
-- **Virtual File System (VFS):** `CloneToVirtualAsync()`, `ModdedFolderName`, `Modded{Key}` AppData folders — all removed.
-- **TempStaging folder:** No longer created. `TempStagingPath` property removed from `BackendCore`.
-- **`WipeTempStaging()`** replaced with `WipeDownloadCache()`.
-- **mojibake characters** across all `.cs` and `.xaml` source files cleaned up (double-encoded UTF-8/Windows-1252 sequences replaced with ASCII equivalents).
-- **Per-Game Settings Context:** Unified SettingsWindow to global settings only, removed context-aware layouts.
-
-### Notes
-- **Project Renamed:** TGTAMM → TMM (Triviali's Mod Manager). AppData migrated automatically from `%APPDATA%\TGTAMM` to `%APPDATA%\TMM` on first launch.
-- **`TempStagingPath` → `DownloadCachePath`:** Staging folder concept removed. Download cache is now only used for temporary archive downloads before extraction, not for deployment.
-- **DXVK config location:** `dxvk.conf` is now written to the actual game installation directory instead of the old virtual folder.
-
----
-
-## [v0.02-prealpha-1] — 2026-05-21
-
-### Added
-- **Toast notification system** — in-window toasts in bottom-right corner (1280x672 window). Replaces desktop overlay with in-app notifications that stack and auto-dismiss.
-- **Dice-roll theme button** — 🎲 button in toolbar applies random preset theme with success toast feedback.
-- **Accent-colored window borders** — toggleable option in Settings → Themes to apply accent color to window border (compatible with all themes including Compact).
-- **34+ theme presets** — comprehensive collection including Cyberpunk, Vaporwave, Terminal Green, Vice City Pink, San Andreas Dusk, and many more. *(Note: later curated to 25 in v0.1-alpha-2)*
-- **Deploy-time override warnings** — when deploying with some games overridden, displays warning toast showing which games still need 1.0 executable.
-- **Override context menu access** — "⚡ Toggle Force Deploy Override" available in mod list right-click menus and empty-list context menus.
-- **Orange deploy button state** — when override is enabled, deploy button shows orange to signal "ready to deploy, but can't play yet."
-- **Error code documentation** — updated all references to "Application Load Error 5:0000065434" for clarity.
-
-### Changed
-- **Main window dimensions** — locked to 1280x672 (optimized for 1280x720 displays with 48px taskbar at 100% scaling).
-- **Notification architecture** — moved from separate desktop overlay window to integrated bottom-right corner panel within MainDashboardWindow.
-- **Toolbar button sizing** — standardized to 38×38px for secondary buttons, 42×42px for primary deploy/play buttons.
-- **Mica backdrop intensity** — made configurable per-theme (improved visibility on dark themes).
-- **Panel color calculations** — simplified color theory with consistent lift values for better theme consistency.
-- **Help window** — clarified distinction between deploy override (enables VFS deployment) vs. 1.0 executable requirement (needed for gameplay).
-
-### Fixed
-- **Toolbar icon visibility** — fixed color inconsistencies across themes (AccentBrush/AccentTextBrush theming).
-- **Dice button visibility** — now uses AccentLabelBrush for consistent visibility on all themes.
-- **Notification stacking** — toasts now properly stack and move within window bounds, disappearing cleanly as timers expire.
-- **Corner rounding** — improved window border-radius consistency (10px outer, 9px inner clipping).
-- **Win 7/8/9x button styling** — refined appearance and hover states to match theme intent.
-
----
-
-## [v0.01-prealpha-3] — 2026-05-02
-
-### Added
-- **Modular title bar system** — six styles: macOS Dark, macOS Light, Windows Vanilla, Windows 8/10, Windows 7 Aero, Windows 9x Classic, Compact.
-- **Multi-game GTA support** — dashboards for GTA III, Vice City, San Andreas, IV, TLaD, TBoGT with game-specific features.
-- **Exe-as-Mod downgrading** — install 1.0 executables directly as mods with auto-detection.
-- **Drag-and-drop load orders** — visual mod priority list with drop-line indicator.
-- **HSV color picker system** — two-pane 2D spectrum pickers with hex input and live preview.
-- **DWM Mica/Acrylic support** — Windows 11 native backdrop with adjustable intensity.
-- **One-Click Essentials** — auto-download DXVK, SilentPatch, and other GTA essentials.
-- **MD5 verification** — accepts all known 1.0 build variants for GTA games.
-
-### Changed
-- **Namespace:** TGTAMM throughout all `.cs` and `.xaml` files.
-- **Assembly output:** TGTAMM.dll.
-- **AppDataPath:** `%APPDATA%\TGTAMM\`.
-
-### Known Issues (Deferred)
-- Custom game toolbars missing features present in GTA dashboards
-- Theme refresh partially broken after changes in non-primary dashboards
-- "Open Mods Store" is a stub (no URL wired)
-
----
-
-## [v0.01-prealpha-1-2] — 2026-04-30 *(Pre-Alpha Foundation)*
-
-### Added
-- **Initial WPF Framework:** Window hierarchy (TmmWindow base class), XAML structure.
-- **Basic Settings System:** AppSettings model with JSON persistence to `%APPDATA%\TGTAMM\config.json`.
-- **Game Detection:** QuickScan for GTA III Series installations (Steam, disk, portable).
-- **Mod Installation:** Manual zip/rar/7z file selection and copy to mod directory.
-- **Basic UI:** MainDashboardWindow with mod list, deploy button, simple styling.
-- **Minimal Theming:** Dark theme with basic color customization.
-
-### Notes
-- This was the absolute foundation — minimal feature set, heavy refactoring in subsequent versions.
-- Project originally named TGTAMM (GTA Trivial Archive Mod Manager).
-
----
-
-## Summary by Version
-
-| Version | Date | Focus | Files Changed |
-|---------|------|-------|---------------|
-| v0.01-prealpha-1-2 | 2026-04-30 | Foundation | New project |
-| v0.01-prealpha-3 | 2026-05-02 | Modular UI, GTA multi-game, theming | 50+ files |
-| v0.02-prealpha-1 | 2026-05-21 | Toast notifications, themes, UI polish | 30+ files |
-| v0.02-prealpha-2 | 2026-05-22 | **VFS Removal, Direct Deploy, Custom Games, Launcher** | 45+ files |
-| v0.1-alpha-1 | 2026-05-22 | **First Release: Routing Sentence Builder, GTA IV Support** | 15+ files |
-| v0.1-alpha-2 | 2026-05-23 | **Theme Optimization, Dead Code Removal** | 3 files |
-| v0.1-alpha-3 | 2026-05-23 | **Core Features, Test Routing, GameRegistry built-ins** | 15+ files |
-| v0.1-alpha-4 | 2026-05-23 | **Dead Window Removal, Code Consolidation** | 20+ files |
-| v0.1-alpha-6 | 2026-05-25 | **UI Refinements & Backend Stability** | 6 files |
-| v0.1-alpha-7 | 2026-05-27 | **UI Audit, GTA Deprecated Cleanup, BackupsPage** | 20+ files |
-| v0.1-alpha-8 | 2026-05-28 | **Loadouts, .tmmpack export, Smart DLL Wizard, Conflict Resolver** | 20+ files |
-| v0.1-alpha-9 | 2026-05-29 | **Build restore, audit cleanup, profile portability, .tmmpack import** | 15+ files |
-| v0.1-alpha-10 | 2026-05-29 | **Notifications, Add/Edit Game page, import review, first-run fixes** | 30+ files |
-
----
-
-## Planned Features (Roadmap)
-
-### Short Term (v0.1-rc-1)
-- Move theme selector from ThemeManagerWindow to GameLauncherWindow toolbar
-- Strip ThemeManagerWindow: remove HSV pickers, complement tools (save ~500 lines)
-- Unify toolbar features across all three dashboards (labels, color state, rollback, backup folder)
-- Wire up Steam launch in CustomGameDashboard
-
-### Medium Term (v0.2-alpha-1)
-- Conflict resolution engine (warn on duplicate files between mods)
-- Mod profiles & loadouts (save/load preset configurations)
-- Smart DLL wizard (auto-detect proxy DLLs, suggest output directories)
-- Expanded game profiles (Skyrim, Fallout, etc.)
-
-### Long Term (v0.3+)
-- Mod store integration (one-click install from ModDB/Nexus)
-- SAMP / MTA support
-- Network mod sharing between users
-- Advanced conflict resolution with merge suggestions
+Foundation work: initial WPF framework, basic GTA mod install, VFS → direct-deploy architectural switch, multi-game GTA dashboards, toast notifications, HSV theming system, drag-drop load orders, MD5 verification. Project originally named TGTAMM (GTA Trivial Archive Mod Manager); renamed to TMM in v0.1-alpha-5.

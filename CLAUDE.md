@@ -19,6 +19,7 @@ Direct-deploy: mods → game directories (no VFS).
 ## File Locations
 
 **Settings:** `%APPDATA%\TMM\settings.json`  
+**Notifications:** `%APPDATA%\TMM\notifications.json`  
 **Mods:** `%APPDATA%\TMM\ModsRaw_{key}\{ModName}\` (frozen plan in `_tmm\deployplan.json`)  
 **Backups:** `%APPDATA%\TMM\Backups\{key}\{timestamp}\manifest.json`  
 **Baselines:** `%APPDATA%\TMM\Baselines\{key}\baseline.json` (+ `snapshots\`)  
@@ -40,8 +41,6 @@ Custom: `CUSTOM_abc123` (auto-generated UUID)
 2. **Deploy:** `ModManagerPage` → `DeployPreviewWindow` (`ConflictAnalyzer` surfaces cross-mod conflicts) → `BackendCore.DeployFilesToGameDirAsync` executes the saved plan (no re-evaluation).
 3. **Before overwrite:** first-touch baseline captured (`BaselineSnapshot`) + per-deploy backup.
 4. `DeployManifest` saved; rollback restores to the **baseline** (not the previous deploy).
-
-> `DeployModsAsync` (the old per-deploy live-planning path) was removed in v0.1-alpha-9.
 
 ---
 
@@ -90,7 +89,7 @@ Mockups live in `Mockups/Views/` as `UserControl` XAML files. The `Mockups/` fol
 
 These are frozen — don't re-open without an explicit conversation.
 
-1. **Library shows configured games only.** "Your games" lists only games with a folder set. Empty state shows a hint on fresh start. Stats: "Games with folder" + "Last deployed."
+1. **Library shows configured games only.** "Your games" lists only games with a folder set. Empty state shows a hint on fresh start. Library has two views: Home (continue card, quick stats, game list, activity feed) and List (compact rows).
 2. **Mod types + routing rules merged in wizard.** Steps 2/3 combined: each row is a mod type with extensions and target folder.
 3. **Help + Troubleshooting merged, global.** Single "Troubleshooting & Help" rail entry. No separate Help/About overflow.
 4. **Config tab = quick path-setting + "Advanced config" link.** Not a full wizard launch.
@@ -100,11 +99,10 @@ These are frozen — don't re-open without an explicit conversation.
 8. **Install Mod button inline in workspace header** alongside Deploy and Play.
 9. **Library cards show `.tmmgame` filename** in small text.
 10. **Conflicts tab is "Conflict Manager".** Mods tab shows conflict existence at a glance; the tab is for resolution.
-11. **Routing rules never regenerate frozen plans.** Rules run once at install time; plans are immutable after that. (See Architectural Principle 1.)
-12. **Plan Editor is always shown on install.** User had the chance to review — TMM is not responsible for mods that land in the wrong place.
-13. **Smart partial redeploy.** Only re-deploy mods whose plan or state changed since last deploy.
-14. **"Needs redeploy" state** surfaced on mod row badge, Deploy button, and library game card.
-15. **Direct Install Override — won't implement.** Game-root routing destination covers the use case.
+11. **Plan Editor is always shown on install.** User had the chance to review — TMM is not responsible for mods that land in the wrong place.
+12. **Smart partial redeploy.** Only re-deploy mods whose plan or state changed since last deploy.
+13. **"Needs redeploy" state** surfaced on mod row badge, Deploy button, and library game card.
+14. **Direct Install Override — won't implement.** Game-root routing destination covers the use case.
 
 ---
 
