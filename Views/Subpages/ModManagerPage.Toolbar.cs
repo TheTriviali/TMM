@@ -92,8 +92,7 @@ namespace TMM
             }
 
             // ── Plan Editor (mandatory per Decision #12) ──────────────────────────
-            // Load the frozen plan and show the editor so the user can review/adjust
-            // before the mod is added to the list.
+            // Load the frozen plan and open the two-pane editor before adding the mod.
             string planPath = Path.Combine(item.RawFolderPath, "_tmm", "deployplan.json");
             if (File.Exists(planPath))
             {
@@ -103,12 +102,15 @@ namespace TMM
                         File.ReadAllText(planPath), JsonHelper.PrettyOptions);
                     if (plan is not null)
                     {
-                        var preview = new DeployPreviewWindow(
-                            new List<(ModItem Mod, TMM.Services.DeploymentPlan Plan)> { (item, plan) },
-                            _customConfig.GameDirectory ?? "")
+                        var editor = new PlanEditorWindow(
+                            item,
+                            plan,
+                            _customConfig,
+                            _modsCustom,
+                            planPath)
                         { Owner = Window.GetWindow(this) };
 
-                        if (preview.ShowDialog() != true)
+                        if (editor.ShowDialog() != true)
                         {
                             // User cancelled — clean up the extracted mod folder
                             try { BackendCore.ForceDeleteDirectory(item.RawFolderPath); } catch { }

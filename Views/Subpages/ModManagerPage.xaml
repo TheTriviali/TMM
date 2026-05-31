@@ -182,12 +182,12 @@
                     <!-- ════════ MODS TAB ════════ -->
                     <Grid x:Name="Cust_TabBodyMods">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Sidebar -->
-                        <Border x:Name="Cust_SidebarBorder" Grid.Column="0"
+                        <!-- Sidebar (right) -->
+                        <Border x:Name="Cust_SidebarBorder" Grid.Column="1"
                                 Background="{DynamicResource PanelBrush}" Width="220">
                             <DockPanel Margin="10">
                                 <StackPanel DockPanel.Dock="Top">
@@ -249,7 +249,7 @@
                         </Border>
 
                         <!-- Single-column workspace -->
-                        <Grid Grid.Column="1" Margin="10,8,10,10">
+                        <Grid Grid.Column="0" Margin="10,8,10,10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>

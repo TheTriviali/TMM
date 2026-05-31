@@ -284,12 +284,38 @@ namespace TMM
         {
             if (sender is not Button btn || btn.Tag is not string page) return;
 
-            // While a game workspace is open, the Library rail item returns to that
-            // workspace (same game + last sub-tab). Use "← Library" in the header to
-            // actually exit to the library list.
-            if (page == "Library" && _workspaceEntry is { } ws)
+            // Mod Manager button: go to active workspace if one is loaded; if not, try to
+            // auto-open the best available ready game.  Only fall back to a toast + Library
+            // if there is genuinely nothing to open yet.
+            if (page == "ModManager")
             {
-                NavigateToWorkspace(ws, _workspaceTab);
+                if (_workspaceEntry is not null)
+                {
+                    NavigateTo("ModManager");
+                }
+                else
+                {
+                    var entries      = BuildLibraryEntries().ToList();
+                    var readyEntries = entries.Where(e => !e.IsPlaceholder && e.IsReady).ToList();
+                    var preferred    = readyEntries.FirstOrDefault(e => e.IsActive) ?? readyEntries.FirstOrDefault();
+
+                    if (preferred is not null)
+                    {
+                        // Silently open the most-relevant game workspace, just like the
+                        // "Manage Mods" card action does.
+                        NavigateToWorkspace(preferred, "Mods");
+                    }
+                    else
+                    {
+                        // No game is ready to manage — tell the user what they need to do.
+                        NavigateTo("Library");
+                        bool hasAnyGame = entries.Any(e => !e.IsPlaceholder);
+                        string msg = hasAnyGame
+                            ? "Set a game folder first — click a card in the Library to configure it."
+                            : "Add a game to the Library to get started.";
+                        NotificationService.ShowInfo(msg, "Mod Manager");
+                    }
+                }
                 return;
             }
 
@@ -431,21 +457,20 @@ namespace TMM
             // destinations; Mod Manager / Downloads / Backups / Add Game moved into the
             // per-game workspace (or the library header).
             navBtnLibrary.Style           = (Style)Resources["NavBtnStyle"];
+            navBtnModManager.Style        = (Style)Resources["NavBtnStyle"];
             navBtnNotifications.Style     = (Style)Resources["NavBtnStyle"];
             navBtnTroubleshooting.Style   = (Style)Resources["NavBtnStyle"];
             navBtnSettings.Style          = (Style)Resources["NavBtnStyle"];
 
-            // Highlight the active button. The workspace (ModManager) keeps Library lit,
-            // since it is reached from the library.
             var activeStyle = (Style)Resources["NavBtnActiveStyle"];
             switch (page)
             {
                 case "Library":          navBtnLibrary.Style         = activeStyle; break;
-                case "ModManager":       navBtnLibrary.Style         = activeStyle; break;
-                case "Notifications":    navBtnNotifications.Style    = activeStyle; break;
-                case "Troubleshooting":  navBtnTroubleshooting.Style  = activeStyle; break;
-                case "Paths":            navBtnSettings.Style         = activeStyle; break; // Paths merged into Settings
-                case "Settings":         navBtnSettings.Style         = activeStyle; break;
+                case "ModManager":       navBtnModManager.Style      = activeStyle; break;
+                case "Notifications":    navBtnNotifications.Style   = activeStyle; break;
+                case "Troubleshooting":  navBtnTroubleshooting.Style = activeStyle; break;
+                case "Paths":            navBtnSettings.Style        = activeStyle; break;
+                case "Settings":         navBtnSettings.Style        = activeStyle; break;
             }
         }
 
