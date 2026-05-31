@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace TMM
@@ -197,14 +198,16 @@ namespace TMM
             if (string.IsNullOrEmpty(config.GameName))  throw new ArgumentException("Game name cannot be empty");
             if (string.IsNullOrEmpty(config.GameDirectory)) throw new ArgumentException("Game directory cannot be empty");
 
-            int counter = 1;
-            string key;
-            while (true)
-            {
-                key = $"CUSTOM_{counter}";
-                if (!_customGames.ContainsKey(key) && !_builtInGames.ContainsKey(key)) break;
-                counter++;
-            }
+            // Build a clean name-based slug (no CUSTOM_ prefix)
+            string baseSlug = Regex.Replace(config.GameName, @"[^a-zA-Z0-9]", "_");
+            baseSlug = Regex.Replace(baseSlug, "_+", "_").Trim('_');
+            if (baseSlug.Length > 24) baseSlug = baseSlug[..24].TrimEnd('_');
+            if (string.IsNullOrEmpty(baseSlug)) baseSlug = "Game";
+
+            string key = baseSlug;
+            int counter = 2;
+            while (_customGames.ContainsKey(key) || _builtInGames.ContainsKey(key))
+                key = $"{baseSlug}_{counter++}";
 
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
             await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
@@ -214,17 +217,19 @@ namespace TMM
             return key;
         }
 
-        /// <summary>Update an existing custom game.</summary>
+        /// <summary>Update or create a game config (works for both built-in and user-added games).</summary>
         public async Task UpdateCustomGameAsync(string key, CustomGameProfile config)
         {
-            if (!_customGames.ContainsKey(key))
-                throw new ArgumentException($"Custom game '{key}' not found");
+            if (string.IsNullOrEmpty(_customGamesPath))
+                throw new InvalidOperationException("GameRegistry not initialized.");
 
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
             await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
 
             var profile = CustomGameProfileToGameProfile(key, config);
             _customGames[key] = (config, profile);
+            // If there was a static built-in entry for this key, retire it
+            _builtInGames.Remove(key);
         }
 
         /// <summary>Delete a custom game.</summary>
@@ -248,7 +253,7 @@ namespace TMM
         /// </summary>
         public void SaveCustomGameSync(string key, CustomGameProfile config)
         {
-            if (config.IsBuiltIn || string.IsNullOrEmpty(_customGamesPath)) return;
+            if (string.IsNullOrEmpty(_customGamesPath)) return;
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
             File.WriteAllText(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
         }

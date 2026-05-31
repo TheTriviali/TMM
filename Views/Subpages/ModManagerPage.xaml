@@ -283,7 +283,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <!-- Set folder banner (hidden when path is valid) -->
+                            <!-- Set folder banner -->
                             <Border x:Name="Cust_SetFolderBanner" Grid.Row="0"
                                     Background="{DynamicResource AccentBrush}" CornerRadius="5"
                                     Padding="12,8" Margin="0,0,0,8" Visibility="Collapsed">
@@ -307,69 +307,74 @@
                                 </Grid>
                             </Border>
 
-                            <!-- Search -->
-                            <Grid Grid.Row="1" Margin="0,0,0,6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="Cust_txtSearch" Grid.Column="0"
-                                         Background="{DynamicResource ControlBgBrush}"
-                                         Foreground="{DynamicResource TextBrush}"
-                                         BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="1"
-                                         Padding="8,4" FontSize="12"
-                                         TextChanged="TxtSearchCustom_TextChanged"/>
-                                <Button Grid.Column="1" Content="&#x2715;" Margin="4,0,0,0"
-                                        Background="Transparent" BorderThickness="0"
-                                        Foreground="{DynamicResource SubTextBrush}"
-                                        Cursor="Hand" Padding="6,4"
-                                        Click="BtnClearSearchCustom_Click"/>
-                            </Grid>
-
-                            <!-- Chips + bulk bar + mod list -->
-                            <Grid Grid.Row="2">
+                            <!-- Chips + search (unified filter bar) + bulk bar + mod list -->
+                            <Grid Grid.Row="1">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>  <!-- filter chips -->
+                                    <RowDefinition Height="Auto"/>  <!-- unified filter bar -->
                                     <RowDefinition Height="Auto"/>  <!-- bulk-action bar -->
                                     <RowDefinition Height="*"/>     <!-- list + empty state -->
                                 </Grid.RowDefinitions>
 
-                                <!-- ── Filter chips ─────────────────────────────────── -->
-                                <StackPanel Grid.Row="0" x:Name="Cust_FilterChips"
-                                            Orientation="Horizontal" Margin="0,0,0,6">
-                                    <!-- All -->
-                                    <Border x:Name="Cust_ChipAll" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
-                                            Background="{DynamicResource AccentBrush}" Cursor="Hand"
-                                            MouseLeftButtonUp="ChipAll_Click">
-                                        <TextBlock x:Name="Cust_ChipAllText" FontSize="12" FontWeight="SemiBold"
-                                                   Foreground="White"/>
-                                    </Border>
-                                    <!-- Enabled -->
-                                    <Border x:Name="Cust_ChipEnabled" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
-                                            Background="{DynamicResource ControlBgBrush}" Cursor="Hand"
-                                            MouseLeftButtonUp="ChipEnabled_Click">
-                                        <TextBlock x:Name="Cust_ChipEnabledText" FontSize="12"
-                                                   Foreground="{DynamicResource TextBrush}"/>
-                                    </Border>
-                                    <!-- Conflicts -->
-                                    <Border x:Name="Cust_ChipConflicts" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
-                                            Background="{DynamicResource ControlBgBrush}" Cursor="Hand"
-                                            MouseLeftButtonUp="ChipConflicts_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <Ellipse Width="7" Height="7" Fill="{DynamicResource ConflictRedBrush}"
-                                                     Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="Cust_ChipConflictsText" FontSize="12"
+                                <!-- ── Unified filter bar: chips left, search right ─────── -->
+                                <DockPanel Grid.Row="0" x:Name="Cust_FilterChips" Margin="0,0,0,6">
+                                    <!-- Search (right-docked) -->
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Background="{DynamicResource ControlBgBrush}"
+                                                CornerRadius="13" Padding="8,4">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xE71E;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                                                           Foreground="{DynamicResource SubTextBrush}"
+                                                           VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                                <TextBox x:Name="Cust_txtSearch"
+                                                         Background="Transparent" BorderThickness="0"
+                                                         Foreground="{DynamicResource TextBrush}"
+                                                         FontSize="12" Width="160" Padding="0"
+                                                         VerticalContentAlignment="Center"
+                                                         TextChanged="TxtSearchCustom_TextChanged"/>
+                                                <Button Content="&#x2715;" Margin="4,0,0,0"
+                                                        Background="Transparent" BorderThickness="0"
+                                                        Foreground="{DynamicResource SubTextBrush}"
+                                                        Cursor="Hand" Padding="2,0"
+                                                        Click="BtnClearSearchCustom_Click"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                    <!-- Filter chips -->
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- All -->
+                                        <Border x:Name="Cust_ChipAll" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
+                                                Background="{DynamicResource AccentBrush}" Cursor="Hand"
+                                                MouseLeftButtonUp="ChipAll_Click">
+                                            <TextBlock x:Name="Cust_ChipAllText" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="White"/>
+                                        </Border>
+                                        <!-- Enabled -->
+                                        <Border x:Name="Cust_ChipEnabled" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
+                                                Background="{DynamicResource ControlBgBrush}" Cursor="Hand"
+                                                MouseLeftButtonUp="ChipEnabled_Click">
+                                            <TextBlock x:Name="Cust_ChipEnabledText" FontSize="12"
                                                        Foreground="{DynamicResource TextBrush}"/>
-                                        </StackPanel>
-                                    </Border>
-                                    <!-- Favorites -->
-                                    <Border x:Name="Cust_ChipFavorites" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
-                                            Background="{DynamicResource ControlBgBrush}" Cursor="Hand"
-                                            MouseLeftButtonUp="ChipFavorites_Click">
-                                        <TextBlock x:Name="Cust_ChipFavoritesText" FontSize="12"
-                                                   Foreground="{DynamicResource TextBrush}"/>
-                                    </Border>
-                                </StackPanel>
+                                        </Border>
+                                        <!-- Conflicts -->
+                                        <Border x:Name="Cust_ChipConflicts" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
+                                                Background="{DynamicResource ControlBgBrush}" Cursor="Hand"
+                                                MouseLeftButtonUp="ChipConflicts_Click">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="7" Height="7" Fill="{DynamicResource ConflictRedBrush}"
+                                                         Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="Cust_ChipConflictsText" FontSize="12"
+                                                           Foreground="{DynamicResource TextBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <!-- Favorites -->
+                                        <Border x:Name="Cust_ChipFavorites" CornerRadius="13" Padding="12,5" Margin="0,0,6,0"
+                                                Background="{DynamicResource ControlBgBrush}" Cursor="Hand"
+                                                MouseLeftButtonUp="ChipFavorites_Click">
+                                            <TextBlock x:Name="Cust_ChipFavoritesText" FontSize="12"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </DockPanel>
 
                                 <!-- ── Bulk-action bar (hidden until multi-select) ──── -->
                                 <Border x:Name="Cust_BulkBar" Grid.Row="1"
@@ -497,13 +502,13 @@
                                                             </ItemsControl>
                                                         </StackPanel>
 
-                                                        <!-- Right side: conflict badge + hover actions -->
+                                                        <!-- Right side: conflict badge + entry controls -->
                                                         <StackPanel Grid.Column="5" Orientation="Horizontal"
-                                                                    VerticalAlignment="Center" Margin="0,0,8,0">
+                                                                    VerticalAlignment="Center" Margin="0,0,4,0">
                                                             <!-- Conflict badge (click to toggle detail) -->
                                                             <Border Visibility="{Binding ConflictSummary, Converter={StaticResource ConflictBadgeVisibilityConverter}}"
                                                                     Background="{DynamicResource ConflictSoftBrush}"
-                                                                    CornerRadius="9" Padding="8,3" Margin="0,0,8,0"
+                                                                    CornerRadius="9" Padding="8,3" Margin="0,0,6,0"
                                                                     Cursor="Hand" Tag="{Binding}"
                                                                     MouseLeftButtonUp="ConflictBadge_Click">
                                                                 <StackPanel Orientation="Horizontal">
@@ -516,7 +521,25 @@
                                                                 </StackPanel>
                                                             </Border>
 
-                                                            <!-- Hover action buttons (visible on row mouse-over) -->
+                                                            <!-- Always-visible: up/down arrows -->
+                                                            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0,0,4,0">
+                                                                <Button Width="18" Height="14"
+                                                                        Background="Transparent" BorderThickness="0"
+                                                                        Cursor="Hand" ToolTip="Move up"
+                                                                        Click="EntryMoveUp_Click" Tag="{Binding}" Padding="0">
+                                                                    <TextBlock Text="&#xE70E;" FontFamily="Segoe MDL2 Assets"
+                                                                               FontSize="9" Foreground="{DynamicResource SubTextBrush}"/>
+                                                                </Button>
+                                                                <Button Width="18" Height="14"
+                                                                        Background="Transparent" BorderThickness="0"
+                                                                        Cursor="Hand" ToolTip="Move down"
+                                                                        Click="EntryMoveDown_Click" Tag="{Binding}" Padding="0">
+                                                                    <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets"
+                                                                               FontSize="9" Foreground="{DynamicResource SubTextBrush}"/>
+                                                                </Button>
+                                                            </StackPanel>
+
+                                                            <!-- Hover actions: folder + properties -->
                                                             <StackPanel x:Name="hoverActions" Orientation="Horizontal"
                                                                         Opacity="0">
                                                                 <StackPanel.Style>
@@ -528,14 +551,14 @@
                                                                         </Style.Triggers>
                                                                     </Style>
                                                                 </StackPanel.Style>
-                                                                <Button Width="28" Height="28" Margin="0,0,2,0"
+                                                                <Button Width="26" Height="26" Margin="0,0,2,0"
                                                                         Background="Transparent" BorderThickness="0"
                                                                         Cursor="Hand" ToolTip="Open folder"
                                                                         Click="MenuOpenFolder_Click" Tag="{Binding}">
                                                                     <TextBlock Text="&#xE8DA;" FontFamily="Segoe MDL2 Assets"
                                                                                FontSize="13" Foreground="{DynamicResource SubTextBrush}"/>
                                                                 </Button>
-                                                                <Button Width="28" Height="28"
+                                                                <Button Width="26" Height="26"
                                                                         Background="Transparent" BorderThickness="0"
                                                                         Cursor="Hand" ToolTip="Properties"
                                                                         Click="MenuProperties_Click" Tag="{Binding}">

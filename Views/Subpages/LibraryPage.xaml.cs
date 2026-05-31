@@ -52,6 +52,15 @@ namespace TMM
             InitializeComponent();
         }
 
+        // ── Scroll overflow indicators ────────────────────────────────────────────
+
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (sender is not ScrollViewer sv) return;
+            scrollArrowUp.Visibility   = sv.VerticalOffset > 4            ? Visibility.Visible : Visibility.Collapsed;
+            scrollArrowDown.Visibility = sv.VerticalOffset < sv.ScrollableHeight - 4 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         // ── Public API ────────────────────────────────────────────────────────────
 
         public void Initialize(BackendCore core) => _core = core;

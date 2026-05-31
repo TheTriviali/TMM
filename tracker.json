@@ -91,7 +91,7 @@
           "title": "Consolidate filter searchbox into tab row",
           "detail": "Decision #7: Merge filter searchbox + tab row (All / Enabled / Conflicts / Favorites) into a single horizontal control in mod manager. Removes dedicated search element to reclaim vertical space.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -142,7 +142,7 @@
           "title": "Library scroll indicators: circular arrows for overflow content",
           "detail": "Show a circular down arrow when content continues below the visible area, and a circular up arrow when content continues above. Applies to the Library tab only \u00e2\u20ac\u201d not the mod list, not the notifications list. Purely decorative/UX; does not replace the scrollbar.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": "Phase 3. Prettiness specifically for the library; not a global pattern."
         },
@@ -322,7 +322,7 @@
           "title": "Per-mod entry controls: folder icon, up/down arrows, re-install",
           "detail": "Add controls to each mod row in the mod list: (1) Folder icon \u00e2\u20ac\u201d opens the mod's stored folder in Explorer. (2) Up/down arrows \u00e2\u20ac\u201d manually re-order load order; should also respond to keyboard arrow keys when a mod row is focused. (3) Re-install / Edit Plan \u00e2\u20ac\u201d two sub-paths: (a) Archive still present \u00e2\u2020\u2019 ask user if they want to re-import from the archive (warn that manual changes to the mod folder will be overwritten) or just open the Plan Editor to adjust the existing plan. (b) Archive gone \u00e2\u2020\u2019 inform user the archive is no longer present; skip re-import option; open the Plan Editor (install-preview) directly so the user can re-plan the already-extracted mod files without a full re-install. In all destructive paths, show a confirmation dialog before proceeding.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": "Phase 4. Architecturally significant. The 'pre-deployment UI' for the archive-gone branch is the expanded DeployPreviewWindow / Deployment Plan Editor (see install-preview)."
         },
@@ -442,7 +442,7 @@
           "title": "Replace CUSTOM_N key format with clean name-based slugs",
           "detail": "AddCustomGameAsync generates CUSTOM_1, CUSTOM_2, etc. (GameRegistry.cs:202). Replace with a slug derived from the game name (e.g. 'My Game' \u00e2\u2020\u2019 'MyGame', deduplicated if needed). No CUSTOM_ prefix. Must handle existing installations via migration.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -478,7 +478,7 @@
           "title": "Implement edit mode: Config tab opens wizard for any game",
           "detail": "Decision #4: The Config tab in each game workspace opens the wizard in edit mode. This must work for built-in games (III, VC, SA, etc.) and user-added games identically. Changes persist back to the game's config file.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },

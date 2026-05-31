@@ -50,8 +50,29 @@
         <!-- Content area -->
         <Grid Grid.Row="1">
 
+            <!-- Scroll overflow indicators (Library-only) -->
+            <Border x:Name="scrollArrowUp" Panel.ZIndex="10"
+                    VerticalAlignment="Top" HorizontalAlignment="Center"
+                    Margin="0,6,0,0" Visibility="Collapsed" IsHitTestVisible="False">
+                <Border Background="{DynamicResource ControlBgBrush}" CornerRadius="12"
+                        Padding="10,4" Opacity="0.85">
+                    <TextBlock Text="&#xE70E;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                               Foreground="{DynamicResource AccentBrush}"/>
+                </Border>
+            </Border>
+            <Border x:Name="scrollArrowDown" Panel.ZIndex="10"
+                    VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                    Margin="0,0,0,6" Visibility="Collapsed" IsHitTestVisible="False">
+                <Border Background="{DynamicResource ControlBgBrush}" CornerRadius="12"
+                        Padding="10,4" Opacity="0.85">
+                    <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                               Foreground="{DynamicResource AccentBrush}"/>
+                </Border>
+            </Border>
+
             <!-- ── Home view (Continue hero + stats + your games + activity) ── -->
             <ScrollViewer x:Name="homeScrollViewer"
+                          ScrollChanged="ScrollViewer_ScrollChanged"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Visibility="Visible" Padding="0,0,0,20">
@@ -230,6 +251,7 @@
             <ScrollViewer x:Name="listScrollViewer"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
+                          ScrollChanged="ScrollViewer_ScrollChanged"
                           Visibility="Collapsed" Padding="0,0,0,20">
                 <Grid HorizontalAlignment="Center">
                     <Grid.Width>800</Grid.Width>

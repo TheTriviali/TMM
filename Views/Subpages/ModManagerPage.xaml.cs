@@ -874,6 +874,18 @@ namespace TMM
             }
         }
 
+        // ── Entry control buttons ────────────────────────────────────────────────
+
+        private void EntryMoveUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement { Tag: ModItem mod }) CustMoveUp(mod);
+        }
+
+        private void EntryMoveDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement { Tag: ModItem mod }) CustMoveDown(mod);
+        }
+
         // ── M2: Background conflict analysis ─────────────────────────────────────
 
         private readonly TMM.Services.ConflictAnalyzer _conflictAnalyzer = new();
