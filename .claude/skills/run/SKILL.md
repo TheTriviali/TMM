@@ -2,11 +2,11 @@
 description: Launch and test the TMM application
 ---
 
-# /run — Launch TMM
+# /run — Launch TMM or Mockups
 
-Builds TMM in Release mode and launches the exe from the Release output folder.
+Builds and launches either TMM or the Mockups project in Release mode.
 
-## Steps
+## Steps (TMM — default)
 
 1. If `--nuke` or `--full-clear` was passed, use PowerShell to delete the entire `C:\Users\noahd\AppData\Roaming\TMM` directory before building:
    ```powershell
@@ -18,8 +18,18 @@ Builds TMM in Release mode and launches the exe from the Release output folder.
 4. Launch `bin\Release\net10.0-windows\TMM.exe` via `Start-Process` (PowerShell).
 5. Report build result and what was cleared (if anything).
 
+## Steps (Mockups — with `--mockups` flag)
+
+1. Run `dotnet build -c Release --no-logo` in the Mockups project directory (`C:\Users\noahd\source\repos\tmm\tmm\Mockups`).
+2. Launch `bin\Release\net10.0-windows\TMM.Mockups.exe` via `Start-Process` (PowerShell).
+3. Report build result.
+
 ## Flags
 
+**Project selection:**
+- `--mockups` — build and launch the Mockups project instead of TMM
+
+**Data clearing (TMM only; ignored with `--mockups`):**
 - `--nuke` or `--full-clear` — delete the entire `C:\Users\noahd\AppData\Roaming\TMM` directory before build/launch (wipes all app data: settings, mods, backups, baselines, loadouts, custom games)
 - `--fresh` or `--clean` — delete only `C:\Users\noahd\AppData\Roaming\TMM\settings.json` before launch to trigger first-run flow (keeps mods and other data)
 - (no flag) — launch with existing settings and data intact

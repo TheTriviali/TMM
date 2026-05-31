@@ -87,6 +87,19 @@ A feature is not complete until it appears in:
 
 ---
 
+## Mockups & Design Iteration
+
+When creating UI mockups for design feedback, place XAML mockups in `Mockups/Views/` (e.g., `SettingsDualPane.xaml`). The `Mockups/` folder is a standalone WPF project that reuses theme resources.
+
+**Key rule:** When you add or modify a mockup, always verify it compiles with `/run --mockups`. This ensures the mockup project stays buildable and Noah can review designs without friction.
+
+The Mockups project should:
+- Reference TMM theme resources via `DynamicResource` keys (no theme duplication)
+- Use realistic control layouts and styling to preview the actual design
+- Stay buildable and launchable — breaking the build blocks feedback iteration
+
+---
+
 ## References
 
 [PLANS.md](PLANS.md) → Active phases, design decisions, success criteria  
