@@ -157,12 +157,22 @@ install is a convenience feature).
 
 ## Priority ordering
 
+## Mockup convention
+
+When a tracker item calls for mockups, produce **WPF XAML files** (not ASCII art) and place
+them in `Mockups/Views/`. The `Mockups/` folder at the repo root is a standalone WPF project
+(`TMM.Mockups.csproj`) and its existing content is **stale — overwrite freely**. Each mockup
+is a standalone `Window` or `UserControl` that can be run independently to preview the design.
+The mockup project already references TMM theme resources; reuse `DynamicResource` keys as-is.
+
+---
+
 ### Phase 0 — Welcome Screen & Nav Rail Cleanup (new)
-- `ui-welcome-remove-library-link` — remove "Go to your Library" link
+- `ui-welcome-remove-library-link` — **done** (removed)
 - `ui-nav-rail-remove-hamburger` — remove hamburger toggle from nav rail
 - `ui-nav-rail-remove-logo` — remove T logo from nav rail
 - `ui-titlebar-app-icon` — replace "TMM —" with app icon in title bar
-- `ui-language-globe-icon` — replace globe icon, tint blue
+- `ui-language-globe-icon` — **done** on welcome screen; status bar globe still pending
 - `nav-rail-troubleshooting-reorder` — move Troubleshooting & Help above Settings
 
 

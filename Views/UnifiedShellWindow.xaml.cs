@@ -203,17 +203,6 @@ namespace TMM
             }
         }
 
-        // ── Sidebar toggle ────────────────────────────────────────────────────────
-
-        private bool _sidebarCollapsed = false;
-
-        private void BtnHamburger_Click(object sender, RoutedEventArgs e)
-        {
-            _sidebarCollapsed = !_sidebarCollapsed;
-            navColumn.Width = _sidebarCollapsed
-                ? new System.Windows.GridLength(0)
-                : new System.Windows.GridLength(50);
-        }
 
         // ── Window chrome ─────────────────────────────────────────────────────────
 

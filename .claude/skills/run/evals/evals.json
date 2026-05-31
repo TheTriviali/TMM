@@ -1,0 +1,29 @@
+{
+  "skill_name": "run",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "launch the app normally",
+      "expected_output": "App builds in Release mode and launches; existing settings and data are preserved",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "start fresh with /run --fresh",
+      "expected_output": "App builds, settings.json is deleted before launch, welcome screen appears on first run; mods and other data preserved",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "/run --nuke",
+      "expected_output": "App builds after completely wiping %APPDATA%\\TMM directory; welcome screen appears as if first launch with no prior data",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "run /run --full-clear to wipe everything before launching",
+      "expected_output": "App builds after completely wiping %APPDATA%\\TMM directory (--full-clear is alias for --nuke); welcome screen appears",
+      "files": []
+    }
+  ]
+}

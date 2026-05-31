@@ -28,27 +28,27 @@
           "title": "Remove hamburger toggle from nav rail",
           "detail": "The hamburger/collapse toggle at the top of the nav rail should be removed. The rail should always be visible at a fixed width, no collapse behavior.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": "Nav rail = the vertical strip with Library, Mod Manager, Troubleshooting & Help, Settings icons. Remove BtnHamburger_Click and the navColumn width animation."
+          "notes": "Removed button and _sidebarCollapsed field from code-behind. NavColumn width set to fixed 50."
         },
         {
           "id": "ui-nav-rail-remove-logo",
           "title": "Remove 'T' logo from nav rail",
           "detail": "The T/logo glyph at the top of the nav rail should be removed entirely.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": "Simple removal from UnifiedShellWindow nav strip"
+          "notes": "Removed T TextBlock from nav rail top StackPanel"
         },
         {
           "id": "ui-titlebar-app-icon",
           "title": "Replace 'TMM —' text in titlebar with app icon",
           "detail": "Title bar currently shows 'TMM — [Page Name]'. Replace the blue 'TMM' text and the hyphen separator with the app icon (small, ~16–20px). No hyphens.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": "Format should become: [icon] [Page Name]. Use the same icon asset as the window icon."
+          "notes": "Replaced 'TMM' text with Segoe MDL2 &#xE90F; glyph (wrench icon, 16px, AccentBrush). Format: [icon] [Page Name]"
         },
         {
           "id": "ui-window-resize",
@@ -103,9 +103,9 @@
           "title": "Move Troubleshooting above Settings in nav rail; rename to 'Troubleshooting & Help'",
           "detail": "Current rail order (bottom): Help & Troubleshooting, Settings. New order: Troubleshooting & Help (above Settings), Settings (bottom). Also rename the rail entry to 'Troubleshooting & Help'.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": "Update nav rail XAML order and localization key for the label"
+          "notes": "Moved navBtnTroubleshooting button to bottom DockPanel above Settings. Updated tooltip to 'Troubleshooting & Help'."
         },
         {
           "id": "settings-dual-pane",

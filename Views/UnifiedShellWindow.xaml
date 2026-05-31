@@ -148,8 +148,8 @@
 
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <!-- Nav strip (width toggled by hamburger) -->
-                    <ColumnDefinition x:Name="navColumn" Width="50"/>
+                    <!-- Nav strip (fixed width) -->
+                    <ColumnDefinition Width="50"/>
                     <!-- Content -->
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
@@ -159,34 +159,14 @@
                 <!-- ══════════════════════════════════════════════ -->
                 <Border Grid.Column="0" Background="{DynamicResource PanelBrush}" ClipToBounds="True">
                     <DockPanel>
-                        <!-- Hamburger toggle + app logo -->
-                        <StackPanel DockPanel.Dock="Top">
-                            <Button x:Name="btnHamburger" Width="46" Height="40" Margin="2,4,2,0"
-                                    Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                    ToolTip="Toggle sidebar"
-                                    Click="BtnHamburger_Click">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8" Margin="0,2">
-                                            <TextBlock Text="&#xE700;" FontFamily="Segoe MDL2 Assets" FontSize="18"
-                                                       Foreground="{DynamicResource SubTextBrush}"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                            <TextBlock Text="T" FontSize="18" FontWeight="Black"
-                                       Foreground="{DynamicResource AccentBrush}"
-                                       HorizontalAlignment="Center" Margin="0,2,0,6"/>
-                        </StackPanel>
-
-                        <!-- Bottom: Settings -->
+                        <!-- Bottom: Troubleshooting & Help, Settings -->
                         <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,8">
+                            <!-- Troubleshooting & Help -->
+                            <Button x:Name="navBtnTroubleshooting" Style="{StaticResource NavBtnStyle}"
+                                    ToolTip="Troubleshooting &amp; Help" Click="NavBtn_Click" Tag="Troubleshooting">
+                                <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                           Foreground="{DynamicResource SubTextBrush}"/>
+                            </Button>
                             <!-- Settings (global) -->
                             <Button x:Name="navBtnSettings" Style="{StaticResource NavBtnStyle}"
                                     ToolTip="Settings" Click="NavBtn_Click" Tag="Settings">
@@ -219,13 +199,6 @@
                                            Foreground="{DynamicResource SubTextBrush}"/>
                             </Button>
 
-                            <!-- Help & Troubleshooting -->
-                            <Button x:Name="navBtnTroubleshooting" Style="{StaticResource NavBtnStyle}"
-                                    ToolTip="Help &amp; Troubleshooting" Click="NavBtn_Click" Tag="Troubleshooting">
-                                <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                                           Foreground="{DynamicResource SubTextBrush}"/>
-                            </Button>
-
                         </StackPanel>
                     </DockPanel>
                 </Border>
@@ -253,9 +226,10 @@
                             <!-- Title -->
                             <StackPanel Grid.Column="0" Orientation="Horizontal"
                                         VerticalAlignment="Center" Margin="12,0,8,0">
-                                <TextBlock Text="TMM" Foreground="{DynamicResource AccentBrush}"
-                                           FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="titleSubtext" Text=" — Library"
+                                <TextBlock Text="&#xE90F;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="titleSubtext" Text="Library"
                                            Foreground="{DynamicResource SubTextBrush}"
                                            FontSize="13" VerticalAlignment="Center"/>
                             </StackPanel>

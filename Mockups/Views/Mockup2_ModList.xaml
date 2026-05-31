@@ -1,0 +1,196 @@
+<UserControl x:Class="TMM.Mockups.Views.Mockup2_ModList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource BgBrush}">
+    <UserControl.Resources>
+        <!-- Filter chip -->
+        <Style x:Key="Chip" TargetType="Border">
+            <Setter Property="CornerRadius" Value="13"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Background" Value="{StaticResource ControlBgBrush}"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="22,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- title -->
+            <RowDefinition Height="Auto"/>  <!-- filter chips -->
+            <RowDefinition Height="Auto"/>  <!-- column header / bulk bar -->
+            <RowDefinition Height="*"/>     <!-- list -->
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock Text="Mod list — what each row could carry" FontSize="20" FontWeight="Bold"
+                       Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="Today the list is a flat spreadsheet (Order / ✓ / ★ / Name / Group / Size / Status). Conflicts only surface in the deploy preview. This pulls the signals you act on into the row itself."
+                       FontSize="12" Foreground="{StaticResource SubTextBrush}" TextWrapping="Wrap" MaxWidth="820" HorizontalAlignment="Left" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Filter chips -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <Border Style="{StaticResource Chip}" Background="{StaticResource AccentBrush}">
+                <TextBlock Text="All  12" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
+            </Border>
+            <Border Style="{StaticResource Chip}"><TextBlock Text="Enabled  9" FontSize="12" Foreground="{StaticResource TextBrush}"/></Border>
+            <Border Style="{StaticResource Chip}">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="7" Height="7" Fill="{StaticResource ConflictRed}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Conflicts  2" FontSize="12" Foreground="{StaticResource TextBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Chip}">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="7" Height="7" Fill="{StaticResource UpdateBlue}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Updates  1" FontSize="12" Foreground="{StaticResource TextBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Chip}"><TextBlock Text="★ Favorites  3" FontSize="12" Foreground="{StaticResource TextBrush}"/></Border>
+        </StackPanel>
+
+        <!-- Bulk-action bar (appears when rows are selected) -->
+        <Border Grid.Row="2" Background="{StaticResource AccentSoftBrush}" CornerRadius="6" Padding="12,7" Margin="0,0,0,8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Style="{StaticResource IconBtn}" Padding="10,4" Margin="0,0,6,0" FontFamily="Segoe UI"
+                            Foreground="{StaticResource TextBrush}" Content="Enable" FontSize="12"/>
+                    <Button Style="{StaticResource IconBtn}" Padding="10,4" Margin="0,0,6,0" FontFamily="Segoe UI"
+                            Foreground="{StaticResource TextBrush}" Content="Disable" FontSize="12"/>
+                    <Button Style="{StaticResource IconBtn}" Padding="10,4" Margin="0,0,6,0" FontFamily="Segoe UI"
+                            Foreground="{StaticResource TextBrush}" Content="Set group…" FontSize="12"/>
+                    <Button Style="{StaticResource IconBtn}" Padding="10,4" FontFamily="Segoe UI"
+                            Foreground="{StaticResource ConflictRed}" Content="Remove" FontSize="12"/>
+                </StackPanel>
+                <TextBlock Text="2 mods selected" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+
+        <!-- List -->
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- Conflict row, expanded to show the relationship -->
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="6" Margin="0,0,0,6"
+                        BorderBrush="{StaticResource ConflictRed}" BorderThickness="1">
+                    <StackPanel>
+                        <Grid Height="50">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="36"/>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="#7AA2F7" CornerRadius="6,0,0,6"/>
+                            <TextBlock Grid.Column="1" Text="1" FontSize="12" Foreground="{StaticResource SubTextBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <CheckBox Grid.Column="2" IsChecked="True" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Text="&#xE735;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                       Foreground="{StaticResource NeedsFolderAmber}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                                <TextBlock Text="SkyGFX" FontSize="13" Foreground="{StaticResource TextBrush}"/>
+                                <TextBlock Text="Visual · v3.9 · gtagarage" FontSize="10.5" Foreground="{StaticResource SubTextBrush}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <Border Background="#22F0623E" CornerRadius="9" Padding="8,3" Margin="0,0,10,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE74A;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{StaticResource ConflictRed}" Margin="0,0,4,0"/>
+                                        <TextBlock Text="2 file conflicts" FontSize="10.5" Foreground="{StaticResource ConflictRed}"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Text="3.1 MB" FontSize="11" Foreground="{StaticResource SubTextBrush}" Width="56" TextAlignment="Right"/>
+                            </StackPanel>
+                        </Grid>
+                        <!-- inline expansion -->
+                        <Border Background="#1A000000" Padding="48,8,16,10">
+                            <StackPanel>
+                                <TextBlock FontSize="11" Foreground="{StaticResource SubTextBrush}">
+                                    <Run Text="timecyc.dat" Foreground="{StaticResource TextBrush}"/>
+                                    <Run Text="  — also provided by "/><Run Text="HD Textures Pack" Foreground="{StaticResource TextBrush}"/>
+                                    <Run Text=".  Winner (loaded last): "/><Run Text="SkyGFX" Foreground="{StaticResource ReadyGreen}"/>
+                                </TextBlock>
+                                <TextBlock FontSize="11" Foreground="{StaticResource SubTextBrush}" Margin="0,3,0,0">
+                                    <Run Text="data\handling.cfg" Foreground="{StaticResource TextBrush}"/>
+                                    <Run Text="  — also provided by "/><Run Text="SilentPatch III" Foreground="{StaticResource TextBrush}"/>
+                                    <Run Text=".  Winner: "/><Run Text="SkyGFX" Foreground="{StaticResource ReadyGreen}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- normal rows -->
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="6" Margin="0,0,0,6">
+                    <Grid Height="50">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4"/><ColumnDefinition Width="40"/><ColumnDefinition Width="36"/>
+                            <ColumnDefinition Width="40"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="#7AA2F7" CornerRadius="6,0,0,6"/>
+                        <TextBlock Grid.Column="1" Text="2" FontSize="12" Foreground="{StaticResource SubTextBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <CheckBox Grid.Column="2" IsChecked="True" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="&#xE735;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource NeedsFolderAmber}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                            <TextBlock Text="SilentPatch III" FontSize="13" Foreground="{StaticResource TextBrush}"/>
+                            <TextBlock Text="Gameplay · v1.3 · nexusmods" FontSize="10.5" Foreground="{StaticResource SubTextBrush}"/>
+                        </StackPanel>
+                        <!-- hover action cluster (shown statically here) -->
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                            <Button Style="{StaticResource IconBtn}" Width="30" Height="30" FontSize="13" Content="&#xE8DA;" ToolTip="Open folder" Margin="0,0,4,0" Background="Transparent"/>
+                            <Button Style="{StaticResource IconBtn}" Width="30" Height="30" FontSize="13" Content="&#xE946;" ToolTip="Properties"  Margin="0,0,10,0" Background="Transparent"/>
+                            <TextBlock Text="1.2 MB" FontSize="11" Foreground="{StaticResource SubTextBrush}" Width="56" TextAlignment="Right" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="6" Margin="0,0,0,6">
+                    <Grid Height="50">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4"/><ColumnDefinition Width="40"/><ColumnDefinition Width="36"/>
+                            <ColumnDefinition Width="40"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="#E5C07B" CornerRadius="6,0,0,6"/>
+                        <TextBlock Grid.Column="1" Text="3" FontSize="12" Foreground="{StaticResource SubTextBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <CheckBox Grid.Column="2" IsChecked="True" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="&#xE735;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource MutedChip}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                            <TextBlock Text="Widescreen Fix" FontSize="13" Foreground="{StaticResource TextBrush}"/>
+                            <TextBlock Text="Gameplay · v2.1" FontSize="10.5" Foreground="{StaticResource SubTextBrush}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                            <Border Background="#223B9EFF" CornerRadius="9" Padding="8,3" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="7" Height="7" Fill="{StaticResource UpdateBlue}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="v2.3 available" FontSize="10.5" Foreground="{StaticResource UpdateBlue}"/>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Text="640 KB" FontSize="11" Foreground="{StaticResource SubTextBrush}" Width="56" TextAlignment="Right"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Background="{StaticResource PanelBrush}" CornerRadius="6" Margin="0,0,0,6" Opacity="0.55">
+                    <Grid Height="50">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4"/><ColumnDefinition Width="40"/><ColumnDefinition Width="36"/>
+                            <ColumnDefinition Width="40"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="#C586C0" CornerRadius="6,0,0,6"/>
+                        <TextBlock Grid.Column="1" Text="—" FontSize="12" Foreground="{StaticResource SubTextBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <CheckBox Grid.Column="2" IsChecked="False" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                            <TextBlock Text="HD Textures Pack" FontSize="13" Foreground="{StaticResource SubTextBrush}"/>
+                            <TextBlock Text="Visual · v4.0 · disabled" FontSize="10.5" Foreground="{StaticResource SubTextBrush}"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="5" Text="2.4 GB" FontSize="11" Foreground="{StaticResource SubTextBrush}" Width="56" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    </Grid>
+                </Border>
+
+                <TextBlock Margin="2,12,0,0" FontSize="11" Foreground="{StaticResource SubTextBrush}" TextWrapping="Wrap"
+                           Text="New signals vs. today:  category colour spine · source + version line · inline conflict badge that expands to show which files clash and who wins · update-available badge · per-row hover actions (open folder / properties) instead of right-click-only · multi-select bulk bar · filter chips. The ★/order/✓ stay."/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
