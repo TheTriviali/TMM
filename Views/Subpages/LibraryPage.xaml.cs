@@ -43,6 +43,7 @@ namespace TMM
         public event Action<List<string>>? OrderChanged;
         public event Action? AddGameRequested;
         public event Action<LibraryEntry>? EditGameRequested;
+        public event Action<LibraryEntry>? SetFolderRequested;
 
         // ── Constructor ───────────────────────────────────────────────────────────
 
@@ -569,7 +570,8 @@ namespace TMM
             card.ManageRequested += e => ManageRequested?.Invoke(e);
             card.ArchiveToggled  += (e, v) => ArchiveToggled?.Invoke(e, v);
             card.ActiveToggled  += (e, v) => ActiveToggled?.Invoke(e, v);
-            card.EditRequested   += e => EditGameRequested?.Invoke(e);
+            card.EditRequested      += e => EditGameRequested?.Invoke(e);
+            card.SetFolderRequested += e => SetFolderRequested?.Invoke(e);
             return card;
         }
 

@@ -58,14 +58,15 @@ namespace TMM
             };
 
             // Wire GameCard events from library
-            pageLibrary.CardClicked     += OnCardClicked;
-            pageLibrary.PlayRequested   += OnPlayRequested;
-            pageLibrary.ManageRequested += OnManageRequested;
-            pageLibrary.ArchiveToggled  += OnArchiveToggled;
-            pageLibrary.ActiveToggled  += OnActiveToggled;
-            pageLibrary.OrderChanged    += OnOrderChanged;
+            pageLibrary.CardClicked       += OnCardClicked;
+            pageLibrary.PlayRequested     += OnPlayRequested;
+            pageLibrary.ManageRequested   += OnManageRequested;
+            pageLibrary.ArchiveToggled    += OnArchiveToggled;
+            pageLibrary.ActiveToggled     += OnActiveToggled;
+            pageLibrary.OrderChanged      += OnOrderChanged;
             pageLibrary.AddGameRequested  += OnAddGameRequested;
             pageLibrary.EditGameRequested += OnEditGameRequested;
+            pageLibrary.SetFolderRequested += OnSetFolderRequested;
         }
 
         // ── Loaded ────────────────────────────────────────────────────────────────
@@ -347,6 +348,35 @@ namespace TMM
 
             SetNavActive(page);
             cardModal.Visibility     = Visibility.Collapsed;
+            UpdateStatusBar();
+        }
+
+        private void UpdateStatusBar()
+        {
+            // Active game indicator
+            string? activeKey = _core.Settings.ActiveGameKey;
+            if (!string.IsNullOrEmpty(activeKey))
+            {
+                string? name = GameRegistry.Instance.GetGameProfile(activeKey)?.DisplayName ?? activeKey;
+                statusActiveGame.Text = $"★ {name}";
+                statusActiveGame.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                statusActiveGame.Visibility = Visibility.Collapsed;
+            }
+
+            // Disk space for the workspace game directory (if open), else hide
+            if (_workspaceEntry is not null && _currentPage == "ModManager")
+            {
+                statusDiskSpace.Text = _core.GetDriveSpaceInfo();
+                statusDiskSpace.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                statusDiskSpace.Text = "";
+                statusDiskSpace.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void SetNavActive(string page)
@@ -518,6 +548,29 @@ namespace TMM
                 "Cannot Launch", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        private void OnSetFolderRequested(LibraryEntry entry)
+        {
+            var dlg = new Microsoft.Win32.OpenFolderDialog
+            {
+                Title = $"Select {entry.DisplayName} Folder"
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            var config = GameRegistry.Instance.GetCustomGameConfig(entry.Key);
+            var builtIn = GameProfile.All.FirstOrDefault(p => p.Key == entry.Key);
+            if (builtIn != null)
+            {
+                _core.SetVanillaPath(builtIn, dlg.FolderName);
+            }
+            else if (config != null)
+            {
+                config.GameDirectory = dlg.FolderName;
+                GameRegistry.Instance.SaveCustomGameSync(entry.Key, config);
+            }
+            NotificationService.ShowSuccess($"Game folder set for {entry.DisplayName}.", "Library");
+            RefreshLibrary();
+        }
+
         private void OnManageRequested(LibraryEntry entry)
         {
             // Prompt to set default if none is set
@@ -594,6 +647,7 @@ namespace TMM
         {
             var entries = BuildLibraryEntries();
             pageLibrary.LoadEntries(entries);
+            UpdateStatusBar();
         }
 
         private IEnumerable<LibraryEntry> BuildLibraryEntries()

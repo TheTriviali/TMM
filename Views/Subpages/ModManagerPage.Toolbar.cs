@@ -35,7 +35,7 @@ namespace TMM
             var ofd = new OpenFileDialog
             {
                 Title       = "Select Mod Archive(s)",
-                Filter      = "Archive Files|*.zip;*.rar;*.7z|All Files|*.*",
+                Filter      = "Archive Files|*.zip;*.rar;*.7z;*.tar.gz;*.tar|All Files|*.*",
                 Multiselect = true
             };
             if (ofd.ShowDialog() != true) return;
@@ -47,13 +47,31 @@ namespace TMM
 
         private async Task InstallModFileCustomAsync(string archivePath)
         {
-            string modName = Path.GetFileNameWithoutExtension(archivePath);
+            // Handle double extensions like .tar.gz
+            string fileName = Path.GetFileName(archivePath);
+            string modName = fileName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase)
+                ? fileName[..^7]
+                : Path.GetFileNameWithoutExtension(archivePath);
             string destFolder = Path.Combine(_core.AppDataPath, _customProfile.RawFolderName, modName);
 
+            // Folder-level duplicate (exact case match on disk)
             if (Directory.Exists(destFolder))
             {
                 if (MessageBox.Show($"A mod named '{modName}' already exists. Overwrite?",
                         "Mod Exists", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+            }
+            else
+            {
+                // Case-insensitive duplicate check against installed mods
+                var existing = _modsCustom.FirstOrDefault(
+                    m => string.Equals(m.Name, modName, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    var answer = MessageBox.Show(
+                        $"A mod named '{existing.Name}' is already installed. '{modName}' looks like a duplicate.\n\nInstall anyway?",
+                        "Possible Duplicate", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (answer != MessageBoxResult.Yes) return;
+                }
             }
 
             var item = await _core.InstallArchiveForGameAsync(_customProfile.Key, archivePath, CancellationToken.None);

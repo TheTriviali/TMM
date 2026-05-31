@@ -651,14 +651,39 @@
                                     <TextBlock Text="{helpers:Localization Workspace_Tab_Config}"
                                                FontSize="18" FontWeight="Bold"
                                                Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
-                                    <Button Content="{helpers:Localization Workspace_Config_Edit}"
+                                    <Button Content="Advanced Config →"
                                             Click="BtnEditConfigCustom_Click"
                                             HorizontalAlignment="Right" VerticalAlignment="Center"
-                                            Background="{DynamicResource AccentBrush}"
-                                            Foreground="{DynamicResource AccentTextBrush}"
+                                            Background="{DynamicResource ControlBgBrush}"
+                                            Foreground="{DynamicResource AccentBrush}"
                                             BorderThickness="0" Padding="14,6" FontSize="12" FontWeight="SemiBold"
                                             Cursor="Hand"/>
                                 </Grid>
+
+                                <!-- Quick path-setting control -->
+                                <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="16,12" Margin="0,0,0,12">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Game Folder" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextBrush}" Margin="0,0,0,4"/>
+                                            <TextBlock x:Name="Cust_ConfigPathDisplay" Text="—"
+                                                       Foreground="{DynamicResource SubTextBrush}" FontSize="11"
+                                                       TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="Browse…"
+                                                Click="BtnBrowseGameFolder_Click"
+                                                Margin="12,0,0,0" Padding="12,6"
+                                                Background="{DynamicResource AccentBrush}"
+                                                Foreground="{DynamicResource AccentTextBrush}"
+                                                BorderThickness="0" FontSize="11" FontWeight="SemiBold"
+                                                Cursor="Hand" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
                                 <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="18,14">
                                     <StackPanel x:Name="Cust_ConfigSummary"/>
                                 </Border>

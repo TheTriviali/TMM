@@ -280,9 +280,10 @@
 
                                 <!-- URL bar -->
                                 <Border Grid.Column="1" Background="{DynamicResource ControlBgBrush}"
-                                        CornerRadius="5" Padding="8,0" Height="26">
+                                        CornerRadius="5" Padding="8,0" Height="26"
+                                        MaxWidth="520" HorizontalAlignment="Left">
                                     <TextBox x:Name="txtBrowserUrl" Background="Transparent"
-                                             BorderThickness="0"
+                                             BorderThickness="0" MinWidth="300"
                                              Foreground="{DynamicResource TextBrush}" FontSize="12"
                                              VerticalContentAlignment="Center"
                                              KeyDown="TxtBrowserUrl_KeyDown"/>
@@ -409,9 +410,19 @@
                     <Border Grid.Row="2" Background="{DynamicResource HeaderBrush}"
                             BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
                             Padding="12,0">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- Language selector -->
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                        <Grid>
+                            <!-- Left: active game + disk space -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <TextBlock x:Name="statusActiveGame" Text=""
+                                           Foreground="{DynamicResource SubTextBrush}" FontSize="10"
+                                           VerticalAlignment="Center" Margin="0,0,16,0"
+                                           Visibility="Collapsed"/>
+                                <TextBlock x:Name="statusDiskSpace" Text=""
+                                           Foreground="{DynamicResource SubTextBrush}" FontSize="10"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <!-- Right: language selector -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
                                 <TextBlock Text="&#xF49A;" FontFamily="Segoe MDL2 Assets" FontSize="13"
                                            Foreground="{DynamicResource SubTextBrush}"
                                            VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -422,7 +433,7 @@
                                           BorderThickness="1" FontSize="11"
                                           SelectionChanged="CmbLanguage_SelectionChanged"/>
                             </StackPanel>
-                        </StackPanel>
+                        </Grid>
                     </Border>
                 </Grid>
 

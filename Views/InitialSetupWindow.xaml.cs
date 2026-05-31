@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using TMM.Services;
 
 namespace TMM
@@ -32,24 +31,14 @@ namespace TMM
             var svc = LocalizationService.Instance;
             var languages = svc.GetAvailableLanguages();
 
-            // Populate dropdown with display names
             var items = new List<ComboBoxItem>();
             foreach (var code in languages)
-            {
-                items.Add(new ComboBoxItem
-                {
-                    Content = svc.GetDisplayName(code),
-                    Tag = code
-                });
-            }
+                items.Add(new ComboBoxItem { Content = svc.GetDisplayName(code), Tag = code });
             cmbLanguage.ItemsSource = items;
 
-            // Force SetLanguage again to refresh bindings after UI is loaded
             string currentLang = _core.Settings.CurrentLanguage ?? "en-US";
             LocalizationService.Instance.SetLanguage(currentLang);
 
-            // Sync UI state
-            UpdateQuickPickState(currentLang);
             foreach (ComboBoxItem item in cmbLanguage.Items)
             {
                 if (item.Tag as string == currentLang)
@@ -60,44 +49,19 @@ namespace TMM
             }
         }
 
-        private void BtnQuickLang_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.Tag is string code)
-                ApplyLanguage(code, updateDropdown: true);
-        }
-
         private void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_suppressDropdownEvent) return;
             if (cmbLanguage.SelectedItem is ComboBoxItem item && item.Tag is string code)
-                ApplyLanguage(code, updateDropdown: false);
+                ApplyLanguage(code);
         }
 
-        private void ApplyLanguage(string code, bool updateDropdown)
+        private void ApplyLanguage(string code)
         {
             LocalizationService.Instance.SetLanguage(code);
             _core.Settings.CurrentLanguage = code;
             _core.SaveSettings();
 
-            // Highlight active quick-pick button
-            UpdateQuickPickState(code);
-
-            // Sync dropdown without re-firing the event
-            if (updateDropdown)
-            {
-                _suppressDropdownEvent = true;
-                foreach (ComboBoxItem item in cmbLanguage.Items)
-                {
-                    if (item.Tag as string == code)
-                    {
-                        cmbLanguage.SelectedItem = item;
-                        break;
-                    }
-                }
-                _suppressDropdownEvent = false;
-            }
-
-            // Sync with main window's language selector if it's in the background
             if (Owner is UnifiedShellWindow mainWindow)
             {
                 foreach (ComboBoxItem item in mainWindow.CmbLanguage.Items)
@@ -111,25 +75,8 @@ namespace TMM
             }
         }
 
-        private void UpdateQuickPickState(string activeCode)
-        {
-            HighlightQuickBtn(btnLangEn, activeCode == "en-US");
-            HighlightQuickBtn(btnLangEs, activeCode == "es-MX");
-        }
-
-        private static void HighlightQuickBtn(Button btn, bool active)
-        {
-            btn.ApplyTemplate();
-            if (btn.Template.FindName("bd", btn) is Border bd)
-            {
-                bd.BorderBrush = active
-                    ? (Brush)Application.Current.FindResource("AccentBrush")
-                    : (Brush)Application.Current.FindResource("SubTextBrush");
-                bd.Background = active
-                    ? (Brush)Application.Current.FindResource("AccentSoftBrush")
-                    : (Brush)Application.Current.FindResource("PanelBrush");
-            }
-        }
+        private void BtnGoToLibrary_Click(object sender, RoutedEventArgs e)
+            => CompleteSetup();
 
         /// <summary>
         /// Marks the press on an option card as handled so it doesn't bubble up to

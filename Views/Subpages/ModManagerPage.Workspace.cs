@@ -25,12 +25,11 @@ namespace TMM
 
         private void WireHeader()
         {
-            Cust_Header.BackRequested        += () => BackRequested?.Invoke();
-            Cust_Header.DeployRequested      += () => BtnDeployCustom_Click(null!, null!);
-            Cust_Header.PlayRequested        += () => BtnLaunchCustom_Click(null!, null!);
+            Cust_Header.BackRequested         += () => BackRequested?.Invoke();
+            Cust_Header.DeployRequested       += () => BtnDeployCustom_Click(null!, null!);
+            Cust_Header.PlayRequested         += () => BtnLaunchCustom_Click(null!, null!);
             Cust_Header.ReviewDeployRequested += () => BtnDeployCustom_Click(null!, null!);
-            Cust_Header.LoadoutApplied       += ApplyLoadoutByName;
-            Cust_Header.OverflowAction       += HandleOverflow;
+            Cust_Header.OverflowAction        += HandleOverflow;
         }
 
         private void UpdateHeader()
@@ -47,8 +46,7 @@ namespace TMM
             bool canPlay = !string.IsNullOrWhiteSpace(_customConfig.SteamAppId)
                         || !string.IsNullOrEmpty(_customConfig.ExePath);
 
-            var loadouts = _core.ListLoadouts(_customProfile.Key);
-            Cust_Header.Load(_entry, meta, canPlay, loadouts, null);
+            Cust_Header.Load(_entry, meta, canPlay);
         }
 
         private void UpdateHeaderPending()
@@ -81,14 +79,13 @@ namespace TMM
         {
             switch (id)
             {
-                case "config":    ShowTab("Config");                  break;
-                case "loadouts":  BtnLoadouts_Click(null!, null!);     break;
-                case "refresh":   BtnRefreshCustom_Click(null!, null!); break;
-                case "import":    BtnImportFromGame_Click(null!, null!); break;
-                case "openmods":  MenuOpenModsFolder_Click(null, null!); break;
-                case "rollback":  BtnRollbackCustom_Click(null!, null!); break;
-                case "help":      BtnHelp_Click(null!, null!);         break;
-                case "about":     BtnAbout_Click(null!, null!);        break;
+                case "config":   ShowTab("Config");                   break;
+                case "refresh":  BtnRefreshCustom_Click(null!, null!); break;
+                case "import":   BtnImportFromGame_Click(null!, null!); break;
+                case "openmods": MenuOpenModsFolder_Click(null, null!); break;
+                case "rollback": BtnRollbackCustom_Click(null!, null!); break;
+                case "help":     BtnHelp_Click(null!, null!);          break;
+                case "about":    BtnAbout_Click(null!, null!);         break;
             }
         }
 
@@ -227,6 +224,10 @@ namespace TMM
         {
             Cust_ConfigSummary.Children.Clear();
             if (_customConfig is null) return;
+
+            Cust_ConfigPathDisplay.Text = string.IsNullOrEmpty(_customConfig.GameDirectory)
+                ? "Not set — click Browse to configure"
+                : _customConfig.GameDirectory;
 
             var loc = LocalizationService.Instance;
             AddConfigRow(loc["Workspace_Config_Folder"],

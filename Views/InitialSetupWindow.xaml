@@ -82,122 +82,71 @@
                 <Border HorizontalAlignment="Left" Width="1"
                         Background="{DynamicResource AccentBrush}" Opacity="0.3"/>
 
-                <StackPanel VerticalAlignment="Center" Margin="44,0,44,0">
-
-                    <!-- Heading — live binding updates instantly on language switch -->
-                    <TextBlock Text="{helpers:Localization Setup_Welcome}"
-                               FontSize="26" FontWeight="Bold"
-                               Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6"/>
-                    <TextBlock Text="{helpers:Localization Setup_Subtitle}"
-                               Foreground="{DynamicResource SubTextBrush}" FontSize="13"
-                               Margin="0,0,0,28"/>
-
-                    <!-- Quick-pick buttons -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-
-                        <!-- English button — always English regardless of active language -->
-                        <Button x:Name="btnLangEn" Tag="en-US" Click="BtnQuickLang_Click"
-                                Margin="0,0,10,0" Cursor="Hand">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="bd" CornerRadius="7" BorderThickness="1.5"
-                                            Padding="14,10"
-                                            BorderBrush="{DynamicResource SubTextBrush}"
-                                            Background="{DynamicResource PanelBrush}">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <!-- Explicit letter-badge instead of tiny emoji -->
-                                            <Border Width="26" Height="26" CornerRadius="4"
-                                                    Background="#22FFFFFF" Margin="0,0,10,0"
-                                                    VerticalAlignment="Center">
-                                                <TextBlock Text="EN" FontSize="11" FontWeight="Bold"
-                                                           Foreground="White"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="English" FontSize="12" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextBrush}"/>
-                                                <TextBlock Text="International" FontSize="10"
-                                                           Foreground="{DynamicResource SubTextBrush}"/>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bd" Property="BorderBrush"
-                                                    Value="{DynamicResource AccentBrush}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
-
-                        <!-- Spanish button — always Español -->
-                        <Button x:Name="btnLangEs" Tag="es-MX" Click="BtnQuickLang_Click"
-                                Cursor="Hand">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="bd" CornerRadius="7" BorderThickness="1.5"
-                                            Padding="14,10"
-                                            BorderBrush="{DynamicResource SubTextBrush}"
-                                            Background="{DynamicResource PanelBrush}">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Border Width="26" Height="26" CornerRadius="4"
-                                                    Background="#22FFFFFF" Margin="0,0,10,0"
-                                                    VerticalAlignment="Center">
-                                                <TextBlock Text="ES" FontSize="11" FontWeight="Bold"
-                                                           Foreground="White"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="Español" FontSize="12" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextBrush}"/>
-                                                <TextBlock Text="Internacional" FontSize="10"
-                                                           Foreground="{DynamicResource SubTextBrush}"/>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bd" Property="BorderBrush"
-                                                    Value="{DynamicResource AccentBrush}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
-
-                    </StackPanel>
-
-                    <!-- "or choose from full list" ruled separator -->
-                    <Grid Margin="0,4,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" Height="1" Background="{DynamicResource ControlBgBrush}"
-                                VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{helpers:Localization Setup_OrMore}"
-                                   Foreground="{DynamicResource SubTextBrush}" FontSize="10"
-                                   Opacity="0.6" Margin="10,0" VerticalAlignment="Center"/>
-                        <Border Grid.Column="2" Height="1" Background="{DynamicResource ControlBgBrush}"
-                                VerticalAlignment="Center"/>
-                    </Grid>
-
-                    <!-- Full language dropdown -->
-                    <ComboBox x:Name="cmbLanguage" Height="36" FontSize="13" Margin="0,0,0,28"
+                <!-- Language picker — corner control, not the focus -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right"
+                            Margin="0,14,14,0">
+                    <TextBlock Text="&#xF49A;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                               Foreground="{DynamicResource SubTextBrush}"
+                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <ComboBox x:Name="cmbLanguage" Width="130" Height="24" FontSize="11"
                               Background="{DynamicResource PanelBrush}"
                               Foreground="{DynamicResource TextBrush}"
                               BorderBrush="{DynamicResource SubTextBrush}"
                               BorderThickness="1"
                               SelectionChanged="CmbLanguage_SelectionChanged"/>
+                </StackPanel>
 
-                    <Border Height="1" Background="{DynamicResource ControlBgBrush}" Margin="0,0,0,24"/>
+                <StackPanel VerticalAlignment="Center" Margin="44,0,44,0">
 
-                    <!-- Game choice cards (merged from the former FirstGamePickerWindow) -->
+                    <!-- Primary heading -->
+                    <TextBlock Text="{helpers:Localization Setup_Welcome}"
+                               FontSize="28" FontWeight="Bold"
+                               Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8"/>
+                    <TextBlock Text="{helpers:Localization Setup_Subtitle}"
+                               Foreground="{DynamicResource SubTextBrush}" FontSize="13"
+                               Margin="0,0,0,32" TextWrapping="Wrap"/>
+
+                    <!-- Primary CTA -->
+                    <Button Click="BtnGoToLibrary_Click" Cursor="Hand" Margin="0,0,0,20">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" CornerRadius="9"
+                                        Background="{DynamicResource AccentBrush}"
+                                        Padding="0,14">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   Foreground="{DynamicResource AccentTextBrush}"
+                                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{helpers:Localization Setup_GoToLibrary}"
+                                                   FontSize="14" FontWeight="Bold"
+                                                   Foreground="{DynamicResource AccentTextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Opacity" Value="0.88"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <!-- Separator -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Height="1" Background="{DynamicResource ControlBgBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="or add a game first"
+                                   Foreground="{DynamicResource SubTextBrush}" FontSize="10"
+                                   Opacity="0.6" Margin="10,0" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Height="1" Background="{DynamicResource ControlBgBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Game choice cards -->
                     <Border x:Name="opt1" CornerRadius="8" Padding="16,12" Margin="0,0,0,10"
                             MouseLeftButtonDown="Card_MouseDown"
                             MouseLeftButtonUp="Option1_Click" Cursor="Hand"

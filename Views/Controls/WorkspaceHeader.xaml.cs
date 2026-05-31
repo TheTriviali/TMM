@@ -9,10 +9,9 @@ using TMM.Services;
 namespace TMM
 {
     /// <summary>
-    /// Game-workspace header (M1): cover, title, readiness badge, loadout switcher,
-    /// pending-changes pill/banner, and the three primary verbs (Deploy / Play / overflow)
-    /// plus a "← Library" affordance. Pure UI — it raises events that the hosting
-    /// <see cref="ModManagerPage"/> maps onto its existing action handlers.
+    /// Game-workspace header (M1): cover, title, readiness badge, pending-changes pill/banner,
+    /// and the three primary verbs (Deploy / Play / overflow).
+    /// Pure UI — raises events that the hosting <see cref="ModManagerPage"/> maps onto actions.
     /// </summary>
     public partial class WorkspaceHeader : UserControl
     {
@@ -24,12 +23,8 @@ namespace TMM
         public event Action? PlayRequested;
         /// <summary>"Review &amp; Deploy" in the pending banner clicked.</summary>
         public event Action? ReviewDeployRequested;
-        /// <summary>A loadout was picked from the switcher (user-initiated).</summary>
-        public event Action<string>? LoadoutApplied;
         /// <summary>An overflow-menu item was chosen; argument is its Tag id.</summary>
         public event Action<string>? OverflowAction;
-
-        private bool _suppressLoadoutEvent;
 
         public WorkspaceHeader()
         {
@@ -42,8 +37,7 @@ namespace TMM
         /// Fills the header for <paramref name="entry"/>. <paramref name="canPlay"/> hides
         /// the Play verb when the game has no launchable executable.
         /// </summary>
-        public void Load(LibraryEntry entry, string meta, bool canPlay,
-                         IEnumerable<string> loadouts, string? currentLoadout)
+        public void Load(LibraryEntry entry, string meta, bool canPlay)
         {
             txtTitle.Text = entry.DisplayName;
             txtMeta.Text  = meta;
@@ -54,8 +48,6 @@ namespace TMM
 
             actionsPanel.Visibility = Visibility.Visible;
             btnPlay.Visibility = canPlay ? Visibility.Visible : Visibility.Collapsed;
-
-            LoadLoadouts(loadouts, currentLoadout);
         }
 
         /// <summary>Placeholder ("coming soon") games: identity only, no verbs.</summary>
@@ -68,19 +60,6 @@ namespace TMM
             SetReadiness(false);
             actionsPanel.Visibility = Visibility.Collapsed;
             pendingBanner.Visibility = Visibility.Collapsed;
-        }
-
-        public void LoadLoadouts(IEnumerable<string> loadouts, string? currentLoadout)
-        {
-            _suppressLoadoutEvent = true;
-            var loc = LocalizationService.Instance;
-            var items = new List<string> { loc["Workspace_LoadoutNone"] };
-            items.AddRange(loadouts.OrderBy(n => n, StringComparer.OrdinalIgnoreCase));
-            cmbLoadout.ItemsSource = items;
-            cmbLoadout.SelectedItem = currentLoadout is not null && items.Contains(currentLoadout)
-                ? currentLoadout
-                : items[0];
-            _suppressLoadoutEvent = false;
         }
 
         /// <summary>Reflects deploy readiness on the accent Deploy button.</summary>
@@ -136,14 +115,6 @@ namespace TMM
         {
             if (sender is MenuItem { Tag: string id })
                 OverflowAction?.Invoke(id);
-        }
-
-        private void CmbLoadout_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_suppressLoadoutEvent) return;
-            if (cmbLoadout.SelectedIndex <= 0) return; // index 0 = "(none)"
-            if (cmbLoadout.SelectedItem is string name)
-                LoadoutApplied?.Invoke(name);
         }
 
         // ── Helpers (mirror LibraryPage) ────────────────────────────────────────────

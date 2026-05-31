@@ -56,6 +56,7 @@ namespace TMM
         public event Action<LibraryEntry, bool>? ArchiveToggled;
         public event Action<LibraryEntry>? DeleteRequested;
         public event Action<LibraryEntry>? EditRequested;
+        public event Action<LibraryEntry>? SetFolderRequested;
         public event Action<LibraryEntry, bool>? ActiveToggled;
 
         // ── Constructor ───────────────────────────────────────────────────────────
@@ -224,9 +225,14 @@ namespace TMM
 
         private void ApplyOverflowMenu(LibraryEntry entry, bool isCustom)
         {
-            if (menuEdit  != null) menuEdit.Visibility  = isCustom ? Visibility.Visible : Visibility.Collapsed;
-            if (menuExport != null) menuExport.Visibility = isCustom ? Visibility.Visible : Visibility.Collapsed;
-            if (menuSepCustom != null) menuSepCustom.Visibility = isCustom ? Visibility.Visible : Visibility.Collapsed;
+            bool canManage = !entry.IsPlaceholder;
+            // Edit Config: show for all manageable games (not just custom)
+            if (menuEdit      != null) menuEdit.Visibility      = canManage ? Visibility.Visible : Visibility.Collapsed;
+            // Set Game Folder: show for all manageable games
+            if (menuSetFolder != null) menuSetFolder.Visibility = canManage ? Visibility.Visible : Visibility.Collapsed;
+            // Export: custom-game only
+            if (menuExport    != null) menuExport.Visibility    = isCustom  ? Visibility.Visible : Visibility.Collapsed;
+            if (menuSepCustom != null) menuSepCustom.Visibility = canManage ? Visibility.Visible : Visibility.Collapsed;
 
             if (menuArchive != null)
             {
@@ -328,6 +334,12 @@ namespace TMM
         {
             e.Handled = true;
             if (Entry != null) EditRequested?.Invoke(Entry);
+        }
+
+        private void BtnSetFolder_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (Entry != null) SetFolderRequested?.Invoke(Entry);
         }
 
         private async void BtnExport_Click(object sender, RoutedEventArgs e)

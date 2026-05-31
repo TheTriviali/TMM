@@ -12,6 +12,9 @@
             <MenuItem x:Name="menuEdit"
                       Header="{helpers:Localization Card_Edit}"
                       Click="BtnEdit_Click" Visibility="Collapsed"/>
+            <MenuItem x:Name="menuSetFolder"
+                      Header="Set Game Folder…"
+                      Click="BtnSetFolder_Click" Visibility="Collapsed"/>
             <MenuItem x:Name="menuExport"
                       Header="{helpers:Localization Card_ExportProfile}"
                       Click="BtnExport_Click" Visibility="Collapsed"/>
