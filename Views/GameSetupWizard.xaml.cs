@@ -8,7 +8,7 @@ namespace TMM
 {
     // ── IWizardStep ────────────────────────────────────────────────────────────
 
-    /// <summary>Contract for each step page in the CustomGameSetupWizard.</summary>
+    /// <summary>Contract for each step page in the GameSetupWizard.</summary>
     public interface IWizardStep
     {
         /// <summary>True when the step has enough valid input to proceed.</summary>
@@ -18,15 +18,15 @@ namespace TMM
         event EventHandler? ValidationChanged;
 
         /// <summary>Populate the step's UI fields from the shared profile.</summary>
-        void LoadProfile(CustomGameProfile profile);
+        void LoadProfile(GameConfig profile);
 
         /// <summary>Write the step's UI fields back into the shared profile.</summary>
-        void SaveProfile(CustomGameProfile profile);
+        void SaveProfile(GameConfig profile);
     }
 
-    // ── CustomGameSetupWizard ──────────────────────────────────────────────────
+    // ── GameSetupWizard ──────────────────────────────────────────────────
 
-    public partial class CustomGameSetupWizard : TmmWindow
+    public partial class GameSetupWizard : TmmWindow
     {
         private static string[] GetStepTitles() =>
         [
@@ -45,20 +45,20 @@ namespace TMM
         ];
 
         private int _step = 0; // 0-based
-        private readonly CustomGameProfile _profile;
+        private readonly GameConfig _profile;
         private readonly bool _isEdit;
 
         // Step pages (lazy-init)
         private readonly IWizardStep[] _steps;
 
-        public CustomGameProfile? Result { get; private set; }
+        public GameConfig? Result { get; private set; }
 
-        public CustomGameSetupWizard(CustomGameProfile? existing = null)
+        public GameSetupWizard(GameConfig? existing = null)
         {
             _isEdit  = existing is not null;
             _profile = existing is not null
                 ? CloneProfile(existing)
-                : new CustomGameProfile();
+                : new GameConfig();
 
             InitializeComponent();
 
@@ -175,7 +175,7 @@ namespace TMM
             return Brushes.Gray;
         }
 
-        private static CustomGameProfile CloneProfile(CustomGameProfile src) => new()
+        private static GameConfig CloneProfile(GameConfig src) => new()
         {
             GameName      = src.GameName,
             ShortName     = src.ShortName,

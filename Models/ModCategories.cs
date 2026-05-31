@@ -9,7 +9,7 @@ namespace TMM
     /// The fixed-preset category taxonomy for mods. Each mod carries a single
     /// <see cref="ModItem.Category"/> drawn from a game's available set; that set
     /// defaults to <see cref="DefaultCategories"/> but a custom game can override it
-    /// via the wizard (<see cref="CustomGameProfile.ModCategories"/>).
+    /// via the wizard (<see cref="GameConfig.ModCategories"/>).
     ///
     /// Categories are organizational only — they drive the list colour spine and the
     /// filter chips, never routing or deployment.
@@ -50,7 +50,7 @@ namespace TMM
         /// Resolves the available category set for a game: the profile's own list if it
         /// defines one, otherwise the built-in <see cref="DefaultCategories"/>.
         /// </summary>
-        public static IReadOnlyList<string> ForGame(CustomGameProfile? profile)
+        public static IReadOnlyList<string> ForGame(GameConfig? profile)
         {
             var custom = profile?.ModCategories;
             return custom is { Count: > 0 } ? custom : DefaultCategories;

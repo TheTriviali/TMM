@@ -23,7 +23,7 @@ namespace TMM.Services
         public List<RoutingRule> FindMatchingRules(
             string filePath,
             string modFolderPath,
-            CustomGameProfile gameProfile)
+            GameConfig gameProfile)
         {
             var typeRules = gameProfile.ModTypes
                 .SelectMany(m => m.RoutingRules)

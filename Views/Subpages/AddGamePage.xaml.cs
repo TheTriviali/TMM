@@ -14,7 +14,7 @@ namespace TMM
         // ── State ─────────────────────────────────────────────────────────────────
 
         private readonly BackendCore _core;
-        private CustomGameProfile _profile = new();
+        private GameConfig _profile = new();
         private string? _editKey; // non-null when editing an existing game
 
         /// <summary>True when the page is in edit mode (pre-filled for an existing game).</summary>
@@ -40,12 +40,12 @@ namespace TMM
         public void LoadForAdd()
         {
             _editKey = null;
-            _profile = new CustomGameProfile();
+            _profile = new GameConfig();
             LoadAllSteps();
             UpdateHeader();
         }
 
-        public void LoadForEdit(string key, CustomGameProfile profile)
+        public void LoadForEdit(string key, GameConfig profile)
         {
             _editKey = key;
             _profile = CloneProfile(profile);
@@ -186,7 +186,7 @@ namespace TMM
 
         // ── Profile clone ─────────────────────────────────────────────────────────
 
-        private static CustomGameProfile CloneProfile(CustomGameProfile src) => new()
+        private static GameConfig CloneProfile(GameConfig src) => new()
         {
             GameName          = src.GameName,
             ShortName         = src.ShortName,

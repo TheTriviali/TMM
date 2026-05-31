@@ -28,8 +28,8 @@ namespace TMM.Services
     /// Generic exe integrity verification for any game profile.
     /// Supports filesize-only checks (fast), MD5 checks (slower but stricter),
     /// or both. Independent of any specific game — driven entirely by the
-    /// profile's <see cref="CustomGameProfile.ExpectedExeBytes"/> and
-    /// <see cref="CustomGameProfile.AcceptedExeMd5s"/> fields.
+    /// profile's <see cref="GameConfig.ExpectedExeBytes"/> and
+    /// <see cref="GameConfig.AcceptedExeMd5s"/> fields.
     /// </summary>
     public static class IntegrityChecker
     {
@@ -38,7 +38,7 @@ namespace TMM.Services
         /// expected fingerprint. Filesize is checked first (cheap); MD5 only runs
         /// if size matches (or no size was configured) AND hashes are configured.
         /// </summary>
-        public static async Task<IntegrityResult> CheckAsync(string exePath, CustomGameProfile profile)
+        public static async Task<IntegrityResult> CheckAsync(string exePath, GameConfig profile)
         {
             bool hasSize = profile.ExpectedExeBytes.HasValue;
             bool hasHash = profile.AcceptedExeMd5s.Count > 0;

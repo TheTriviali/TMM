@@ -24,7 +24,7 @@ public class DeploymentPlannerTests
     /// Returns a GTA-III–style profile (mirrors gta3.tmmgame rules) rooted at
     /// the supplied <paramref name="gameDir"/>.
     /// </summary>
-    private static CustomGameProfile BuildGta3Profile(string gameDir) => new()
+    private static GameConfig BuildGta3Profile(string gameDir) => new()
     {
         GameName      = "Grand Theft Auto III",
         GameDirectory = gameDir,
@@ -238,7 +238,7 @@ public class DeploymentPlannerTests
         string modFolder = tmp.CreateSubDir("ConflictMod");
         File.WriteAllText(Path.Combine(modFolder, "plugin.asi"), "fake asi");
 
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = gameDir,
@@ -276,7 +276,7 @@ public class DeploymentPlannerTests
     [Fact]
     public async Task PlanDeployment_MissingModFolder_EmitsBlockingWarning()
     {
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = @"C:\FakeGame",
@@ -325,7 +325,7 @@ public class DeploymentPlannerTests
         string modFolder = tmp.CreateSubDir("PluginMod");
         File.WriteAllText(Path.Combine(modFolder, "plugin.asi"), "fake asi");
 
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = gameDir,
@@ -360,7 +360,7 @@ public class DeploymentPlannerTests
         string modFolder = tmp.CreateSubDir("CleoMod");
         File.WriteAllText(Path.Combine(modFolder, "myscript.cs"), "cleo");
 
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = gameDir,
@@ -406,7 +406,7 @@ public class DeploymentPlannerTests
     [Fact]
     public async Task PlanDeployment_IsReady_FalseWhenAnyBlockingWarning()
     {
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = @"C:\FakeGame",

@@ -282,7 +282,7 @@ namespace TMM
         private async void BtnEditConfigCustom_Click(object sender, RoutedEventArgs e)
         {
             var previousConfig = CloneProfile(_customConfig);
-            var wizard = new CustomGameSetupWizard(_customConfig) { Owner = Window.GetWindow(this) };
+            var wizard = new GameSetupWizard(_customConfig) { Owner = Window.GetWindow(this) };
             if (wizard.ShowDialog() != true || wizard.Result is null) return;
             var updatedConfig = wizard.Result;
             bool routingChanged = RoutingRulesChanged(previousConfig, updatedConfig);

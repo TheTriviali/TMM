@@ -91,7 +91,7 @@ namespace TMM.Services
         /// <param name="ct">Cancellation token for long-running enumerations.</param>
         public Task<DeploymentPlan> PlanDeploymentAsync(
             ModItem mod,
-            CustomGameProfile gameProfile,
+            GameConfig gameProfile,
             CancellationToken ct = default)
         {
             var plan = new DeploymentPlan { ModName = mod.Name };
@@ -151,7 +151,7 @@ namespace TMM.Services
 
         private FileDeploymentEntry? TryResolveFilePlan(
             ModItem mod,
-            CustomGameProfile gameProfile,
+            GameConfig gameProfile,
             string modFolder,
             IReadOnlyList<SourceEntry> allFiles,
             SourceEntry file,
@@ -251,7 +251,7 @@ namespace TMM.Services
 
         private static bool TryResolveOverlayDestination(
             ModItem mod,
-            CustomGameProfile gameProfile,
+            GameConfig gameProfile,
             SourceEntry file,
             out string destination)
         {
@@ -269,7 +269,7 @@ namespace TMM.Services
 
         private bool TryResolveIniCompanionDestination(
             ModItem mod,
-            CustomGameProfile gameProfile,
+            GameConfig gameProfile,
             string modFolder,
             SourceEntry iniFile,
             IReadOnlyList<SourceEntry> allFiles,
@@ -307,7 +307,7 @@ namespace TMM.Services
             return true;
         }
 
-        private string ResolveChosenDestination(ModItem mod, CustomGameProfile gameProfile, SourceEntry file, RoutingRule rule)
+        private string ResolveChosenDestination(ModItem mod, GameConfig gameProfile, SourceEntry file, RoutingRule rule)
         {
             if (IsModloaderTarget(rule.TargetPath))
                 return ResolveModloaderDestination(mod, gameProfile.GameDirectory, file.RelativePath);
@@ -315,7 +315,7 @@ namespace TMM.Services
             return ResolveTargetPath(rule.TargetPath, file.AbsolutePath, gameProfile.GameDirectory);
         }
 
-        private string ResolveDefaultDestination(ModItem mod, CustomGameProfile gameProfile, SourceEntry file)
+        private string ResolveDefaultDestination(ModItem mod, GameConfig gameProfile, SourceEntry file)
         {
             if (IsModloaderRelativePath(file.RelativePath))
                 return ResolveModloaderDestination(mod, gameProfile.GameDirectory, file.RelativePath);
@@ -323,7 +323,7 @@ namespace TMM.Services
             return Path.GetFullPath(Path.Combine(gameProfile.GameDirectory, Path.GetFileName(file.AbsolutePath)));
         }
 
-        private static string ResolveDirectoryDestination(ModItem mod, CustomGameProfile gameProfile, string relativePath, string gameDir)
+        private static string ResolveDirectoryDestination(ModItem mod, GameConfig gameProfile, string relativePath, string gameDir)
         {
             if (IsModloaderRelativePath(relativePath))
                 return ResolveModloaderDestination(mod, gameDir, relativePath);
@@ -446,7 +446,7 @@ namespace TMM.Services
             }
         }
 
-        private static HashSet<string> GetCompanionFamilyFolders(CustomGameProfile profile, string? topLevelFolder)
+        private static HashSet<string> GetCompanionFamilyFolders(GameConfig profile, string? topLevelFolder)
         {
             var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (string.IsNullOrWhiteSpace(topLevelFolder))

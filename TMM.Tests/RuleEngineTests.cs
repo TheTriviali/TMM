@@ -5,7 +5,7 @@ namespace TMM.Tests;
 /// <summary>
 /// Integration tests for <see cref="RuleEngine.FindMatchingRules"/>.
 ///
-/// These tests build <see cref="CustomGameProfile"/> instances that mirror the
+/// These tests build <see cref="GameConfig"/> instances that mirror the
 /// routing rules in gta3.tmmgame and verify that:
 ///   • each condition type evaluates correctly against real (temp) file paths,
 ///   • ModType-scoped rules are returned before game-wide rules,
@@ -23,7 +23,7 @@ public class RuleEngineTests
     /// Builds a GTA III–style profile from scratch using the same rules that
     /// gta3.tmmgame defines, so tests remain self-contained and fast.
     /// </summary>
-    private static CustomGameProfile BuildGta3Profile() => new()
+    private static GameConfig BuildGta3Profile() => new()
     {
         GameName      = "Grand Theft Auto III",
         GameDirectory = @"C:\FakeGTA3",
@@ -202,7 +202,7 @@ public class RuleEngineTests
     [Fact]
     public void FindMatchingRules_ExtensionIsNot_ExcludesMatchingExtension()
     {
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = @"C:\Game",
@@ -232,7 +232,7 @@ public class RuleEngineTests
     [Fact]
     public void FindMatchingRules_PathContains_MatchesFilePathSubstring()
     {
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = @"C:\Game",
@@ -276,7 +276,7 @@ public class RuleEngineTests
     [Fact]
     public void FindMatchingRules_FilenameMatches_ExactFilenameOnly()
     {
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = @"C:\Game",
@@ -305,7 +305,7 @@ public class RuleEngineTests
     [Fact]
     public void FindMatchingRules_EmptyConditionList_AlwaysMatches()
     {
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = @"C:\Game",
@@ -343,7 +343,7 @@ public class RuleEngineTests
             Priority   = 50,
         };
 
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName      = "TestGame",
             GameDirectory = @"C:\Game",

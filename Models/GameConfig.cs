@@ -40,7 +40,7 @@ namespace TMM
     /// Serialized to/from JSON in AppData/CustomGames/ or bundled as .tmmgame profiles.
     /// All games (built-in and custom) are treated identically through this structure.
     /// </summary>
-    public class CustomGameProfile
+    public class GameConfig
     {
         public string GameName { get; set; } = "";
         /// <summary>Abbreviated display name for game cards (≤10 chars). Derived from GameName if null.</summary>

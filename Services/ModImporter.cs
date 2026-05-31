@@ -25,7 +25,7 @@ namespace TMM.Services
         /// </summary>
         public Task<List<ModImportCandidate>> ScanAsync(
             string gameDir,
-            CustomGameProfile profile,
+            GameConfig profile,
             CancellationToken ct = default)
         {
             if (!Directory.Exists(gameDir))
@@ -82,7 +82,7 @@ namespace TMM.Services
             BackendCore core,
             string gameKey,
             string gameDir,
-            CustomGameProfile config,
+            GameConfig config,
             IEnumerable<ModImportCandidate> candidates,
             CancellationToken ct = default)
         {
@@ -228,7 +228,7 @@ namespace TMM.Services
             return ImportableExtensions.Contains(ext);
         }
 
-        private static ImportFile ClassifyFile(string relativePath, string absolutePath, CustomGameProfile profile)
+        private static ImportFile ClassifyFile(string relativePath, string absolutePath, GameConfig profile)
         {
             var parts = SplitRelativePath(relativePath);
             string stem = Path.GetFileNameWithoutExtension(relativePath);
@@ -320,7 +320,7 @@ namespace TMM.Services
         private static string? GetModloaderGroupName(string[] parts) =>
             parts.Length >= 4 ? parts[1] : null;
 
-        private static string? GetFamilyKey(string[] parts, CustomGameProfile profile)
+        private static string? GetFamilyKey(string[] parts, GameConfig profile)
         {
             if (parts.Length == 0)
                 return null;

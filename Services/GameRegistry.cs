@@ -34,7 +34,7 @@ namespace TMM
 
         // Single unified dict: all games (built-in .tmmgame profiles + user-added custom games).
         // Priority (highest wins on key collision): user CustomGames/*.json > .tmmgame assets > GameProfile.All statics.
-        private readonly Dictionary<string, (CustomGameProfile config, GameProfile profile)> _games = new();
+        private readonly Dictionary<string, (GameConfig config, GameProfile profile)> _games = new();
         private string _customGamesPath = "";
 
         private GameRegistry() { }
@@ -51,11 +51,11 @@ namespace TMM
         {
             _games.Clear();
 
-            // 1. Lowest priority: static C# GameProfile.All entries as thin CustomGameProfile wrappers.
+            // 1. Lowest priority: static C# GameProfile.All entries as thin GameConfig wrappers.
             //    These act as fallbacks if no .tmmgame file covers a built-in key.
             foreach (var p in GameProfile.All)
             {
-                var fallback = new CustomGameProfile
+                var fallback = new GameConfig
                 {
                     GameName = p.DisplayName,
                     IsBuiltIn = true,
@@ -97,7 +97,7 @@ namespace TMM
                         ? export.GameKey
                         : $"BUILTIN_{export.GameName.ToUpperInvariant().Replace(" ", "_").Replace(":", "").Replace("\\", "").Replace("/", "")}";
 
-                    var profile = CustomGameProfileToGameProfile(key, config);
+                    var profile = GameConfigToGameProfile(key, config);
                     _games[key] = (config, profile);
                 }
                 catch (Exception ex)
@@ -120,10 +120,10 @@ namespace TMM
                     var json = await File.ReadAllTextAsync(file);
 
                     // Try new format first (has RoutingRules); fall back via legacy migration
-                    CustomGameProfile? config = null;
+                    GameConfig? config = null;
                     try
                     {
-                        config = JsonSerializer.Deserialize<CustomGameProfile>(json);
+                        config = JsonSerializer.Deserialize<GameConfig>(json);
                     }
                     catch { /* fall through to legacy */ }
 
@@ -152,7 +152,7 @@ namespace TMM
 
                     string key = Path.GetFileNameWithoutExtension(file);
                     config.SourceFileName = Path.GetFileName(file);
-                    var profile = CustomGameProfileToGameProfile(key, config);
+                    var profile = GameConfigToGameProfile(key, config);
                     _games[key] = (config, profile);
                 }
                 catch (Exception ex)
@@ -171,7 +171,7 @@ namespace TMM
         }
 
         /// <summary>Get the config for any game (built-in or user-added).</summary>
-        public CustomGameProfile? GetCustomGameConfig(string? key)
+        public GameConfig? GetCustomGameConfig(string? key)
         {
             if (string.IsNullOrEmpty(key)) return null;
             return _games.TryGetValue(key, out var g) ? g.config : null;
@@ -186,17 +186,17 @@ namespace TMM
             _games.Values.Where(x => x.config.IsBuiltIn).Select(x => x.profile).ToList();
 
         /// <summary>User-added custom games (not IsBuiltIn).</summary>
-        public IReadOnlyList<(string Key, CustomGameProfile Config)> GetCustomGames() =>
+        public IReadOnlyList<(string Key, GameConfig Config)> GetCustomGames() =>
             _games.Where(kvp => !kvp.Value.config.IsBuiltIn)
                   .Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
 
-        /// <summary>Built-in games that have a CustomGameProfile (loaded from .tmmgame assets).</summary>
-        public IReadOnlyList<(string Key, CustomGameProfile Config)> GetBuiltInCustomGames() =>
+        /// <summary>Built-in games that have a GameConfig (loaded from .tmmgame assets).</summary>
+        public IReadOnlyList<(string Key, GameConfig Config)> GetBuiltInCustomGames() =>
             _games.Where(kvp => kvp.Value.config.IsBuiltIn)
                   .Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
 
         /// <summary>Add a new custom game. Returns the generated key.</summary>
-        public async Task<string> AddCustomGameAsync(CustomGameProfile config)
+        public async Task<string> AddCustomGameAsync(GameConfig config)
         {
             if (string.IsNullOrEmpty(config.GameName))  throw new ArgumentException("Game name cannot be empty");
             if (string.IsNullOrEmpty(config.GameDirectory)) throw new ArgumentException("Game directory cannot be empty");
@@ -215,13 +215,13 @@ namespace TMM
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
             await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
 
-            var profile = CustomGameProfileToGameProfile(key, config);
+            var profile = GameConfigToGameProfile(key, config);
             _games[key] = (config, profile);
             return key;
         }
 
         /// <summary>Update or create a game config (works for both built-in and user-added games).</summary>
-        public async Task UpdateCustomGameAsync(string key, CustomGameProfile config)
+        public async Task UpdateCustomGameAsync(string key, GameConfig config)
         {
             if (string.IsNullOrEmpty(_customGamesPath))
                 throw new InvalidOperationException("GameRegistry not initialized.");
@@ -229,7 +229,7 @@ namespace TMM
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
             await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
 
-            var profile = CustomGameProfileToGameProfile(key, config);
+            var profile = GameConfigToGameProfile(key, config);
             _games[key] = (config, profile);
         }
 
@@ -252,15 +252,15 @@ namespace TMM
         /// config in place (e.g. filling in a detected GameDirectory). No-op for built-in
         /// profiles, which are embedded resources with no CustomGames/ file.
         /// </summary>
-        public void SaveCustomGameSync(string key, CustomGameProfile config)
+        public void SaveCustomGameSync(string key, GameConfig config)
         {
             if (string.IsNullOrEmpty(_customGamesPath)) return;
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
             File.WriteAllText(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
         }
 
-        /// <summary>Export a CustomGameProfile to a .tmmgame file (camelCase JSON, new format).</summary>
-        public static async Task ExportConfigAsync(CustomGameProfile config, string destPath)
+        /// <summary>Export a GameConfig to a .tmmgame file (camelCase JSON, new format).</summary>
+        public static async Task ExportConfigAsync(GameConfig config, string destPath)
         {
             var export = new TmmGameExport
             {
@@ -286,11 +286,11 @@ namespace TMM
         }
 
         /// <summary>
-        /// Import a .tmmgame file. Returns a CustomGameProfile ready for AddCustomGameAsync.
+        /// Import a .tmmgame file. Returns a GameConfig ready for AddCustomGameAsync.
         /// Supports both new (routingRules) and legacy (outputDirectories + conditionalRoutes) formats.
         /// Does NOT add it to the registry — caller decides whether to add or just preview.
         /// </summary>
-        public static async Task<CustomGameProfile> ImportGameConfigAsync(string sourcePath)
+        public static async Task<GameConfig> ImportGameConfigAsync(string sourcePath)
         {
             var json = await File.ReadAllTextAsync(sourcePath);
             var export = JsonSerializer.Deserialize<TmmGameExport>(json, JsonHelper.TmmGameOptions)
@@ -299,7 +299,7 @@ namespace TMM
             return ProfileMigration.FromExport(export, Path.GetFileNameWithoutExtension(sourcePath));
         }
 
-        private static GameProfile CustomGameProfileToGameProfile(string key, CustomGameProfile custom)
+        private static GameProfile GameConfigToGameProfile(string key, GameConfig custom)
         {
             string shortName = custom.ShortName
                 ?? (custom.GameName.Length > 10 ? custom.GameName[..10] : custom.GameName);

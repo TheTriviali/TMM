@@ -218,7 +218,7 @@ namespace TMM
         public async Task<DeploymentPlan> GetDeploymentPlanAsync(
             string gameKey,
             ModItem mod,
-            CustomGameProfile config,
+            GameConfig config,
             CancellationToken ct = default)
         {
             string planPath = GetDeploymentPlanPath(gameKey, mod.Name);
@@ -347,7 +347,7 @@ namespace TMM
         /// </summary>
         public async Task DeployCustomGameModsAsync(
             GameProfile profile,
-            CustomGameProfile config,
+            GameConfig config,
             IEnumerable<ModItem> mods,
             IProgress<DeploymentProgress>? progress = null,
             CancellationToken ct = default)

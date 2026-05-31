@@ -20,7 +20,7 @@ namespace TMM.Services
         /// Assigns <see cref="ModItem.FinalLoadOrder"/> to every mod in <paramref name="mods"/>.
         /// Mods that are not enabled are still assigned a position (they are skipped at deploy time).
         /// </summary>
-        public void ResolveFinalLoadOrders(List<ModItem> mods, CustomGameProfile? gameProfile = null)
+        public void ResolveFinalLoadOrders(List<ModItem> mods, GameConfig? gameProfile = null)
         {
             if (mods.Count == 0)
                 return;

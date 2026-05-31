@@ -29,7 +29,7 @@ namespace TMM
         // ── Game state ────────────────────────────────────────────────────────────
 
         private GameProfile _customProfile = null!;
-        private CustomGameProfile _customConfig = null!;
+        private GameConfig _customConfig = null!;
         private ObservableCollection<ModItem> _modsCustom = new();
         private bool _pendingCustom;
         private Point _startCustom;
@@ -82,7 +82,7 @@ namespace TMM
         private void InitCustomGame()
         {
             _customConfig = GameRegistry.Instance.GetCustomGameConfig(_entry.Key)
-                         ?? new CustomGameProfile { GameName = _entry.DisplayName };
+                         ?? new GameConfig { GameName = _entry.DisplayName };
 
             _customProfile = GameRegistry.Instance.GetGameProfile(_entry.Key)
                           ?? new GameProfile(_entry.Key, _entry.DisplayName, _entry.Key,
@@ -1142,7 +1142,7 @@ namespace TMM
             catch { /* best effort */ }
         }
 
-        private static CustomGameProfile CloneProfile(CustomGameProfile src) => new()
+        private static GameConfig CloneProfile(GameConfig src) => new()
         {
             GameName           = src.GameName,
             ShortName          = src.ShortName,
@@ -1174,10 +1174,10 @@ namespace TMM
             NexusSlug          = src.NexusSlug,
         };
 
-        private static bool RoutingRulesChanged(CustomGameProfile before, CustomGameProfile after) =>
+        private static bool RoutingRulesChanged(GameConfig before, GameConfig after) =>
             SerializePlanRelevantProfile(before) != SerializePlanRelevantProfile(after);
 
-        private static string SerializePlanRelevantProfile(CustomGameProfile profile)
+        private static string SerializePlanRelevantProfile(GameConfig profile)
         {
             var parts = new List<string>
             {

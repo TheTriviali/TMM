@@ -57,7 +57,7 @@ public class BackendCoreDeployTests
         Directory.CreateDirectory(Path.Combine(gameDir, "modloader", "Cars", "Speed"));
         File.WriteAllText(Path.Combine(gameDir, "modloader", "Cars", "Speed", "speed.asi"), "MOD");
 
-        var profile = new CustomGameProfile
+        var profile = new GameConfig
         {
             GameName = "Test Game",
             CompanionSiblings = new Dictionary<string, List<string>>

@@ -203,7 +203,7 @@ namespace TMM
         }
 
         /// <summary>
-        /// Detects built-in game profiles using their <see cref="CustomGameProfile.SearchHints"/>.
+        /// Detects built-in game profiles using their <see cref="GameConfig.SearchHints"/>.
         /// Runs before the legacy hardcoded-roots loop so that games already found are skipped there.
         /// Uses <see cref="SetVanillaPath"/> so that finding GTA IV auto-derives TLaD/TBoGT paths.
         /// </summary>
@@ -233,7 +233,7 @@ namespace TMM
         }
 
         /// <summary>
-        /// Detects custom games on this machine using each profile's <see cref="CustomGameProfile.SearchHints"/>.
+        /// Detects custom games on this machine using each profile's <see cref="GameConfig.SearchHints"/>.
         /// This is what lets a shared .tmmgame profile auto-locate the game on another person's system:
         /// the profile travels with a list of default install locations, and Quick Scan probes them
         /// (relative to every fixed drive) for the configured executable.

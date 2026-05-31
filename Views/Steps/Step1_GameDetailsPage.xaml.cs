@@ -25,7 +25,7 @@ namespace TMM
             icMd5List.ItemsSource = _md5s;
         }
 
-        public void LoadProfile(CustomGameProfile profile)
+        public void LoadProfile(GameConfig profile)
         {
             txtGameName.Text   = profile.GameName;
             txtInstallDir.Text = profile.GameDirectory;
@@ -46,7 +46,7 @@ namespace TMM
             ValidateInputs(null, null);
         }
 
-        public void SaveProfile(CustomGameProfile profile)
+        public void SaveProfile(GameConfig profile)
         {
             profile.GameName      = txtGameName.Text.Trim();
             profile.GameDirectory = txtInstallDir.Text.Trim();

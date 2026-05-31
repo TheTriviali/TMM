@@ -2,7 +2,7 @@ namespace TMM
 {
     /// <summary>
     /// View-model record for a single game card shown in the library.
-    /// Built by UnifiedShellWindow from GameProfile / CustomGameProfile data.
+    /// Built by UnifiedShellWindow from GameProfile / GameConfig data.
     /// </summary>
     public record LibraryEntry(
         /// <summary>Primary key — e.g. "GTA_III_SERIES", "GTA_IV_SERIES", or a CustomGame key.</summary>

@@ -86,12 +86,12 @@ namespace TMM
     }
 
     /// <summary>
-    /// Migrate an old-format CustomGameProfile (OutputDirectories + ConditionalRoutes)
+    /// Migrate an old-format GameConfig (OutputDirectories + ConditionalRoutes)
     /// to the new RoutingRules list. Called on first load of legacy data.
     /// </summary>
     internal static class ProfileMigration
     {
-        public static CustomGameProfile FromExport(TmmGameExport export, string fallbackName)
+        public static GameConfig FromExport(TmmGameExport export, string fallbackName)
         {
             // Parse LibraryStatus string → enum
             ReleaseStatus status = ReleaseStatus.Release;
@@ -102,7 +102,7 @@ namespace TMM
                 !string.IsNullOrEmpty(export.LauncherCard?.LibraryStatus))
                 System.Enum.TryParse(export.LauncherCard.LibraryStatus, ignoreCase: true, out status);
 
-            var config = new CustomGameProfile
+            var config = new GameConfig
             {
                 GameName      = export.GameName ?? fallbackName,
                 ShortName     = export.ShortName,
@@ -133,7 +133,7 @@ namespace TMM
         }
 
         public static void MigrateOldFields(
-            CustomGameProfile config,
+            GameConfig config,
             List<ConditionalRoute>? conditionalRoutes,
             Dictionary<string, string>? outputDirectories)
         {

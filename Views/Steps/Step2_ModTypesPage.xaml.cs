@@ -72,7 +72,7 @@ namespace TMM
             _types.CollectionChanged += (_, _) => UpdateEmptyState();
         }
 
-        public void LoadProfile(CustomGameProfile profile)
+        public void LoadProfile(GameConfig profile)
         {
             _types.Clear();
             foreach (var mt in profile.ModTypes)
@@ -80,7 +80,7 @@ namespace TMM
             UpdateEmptyState();
         }
 
-        public void SaveProfile(CustomGameProfile profile)
+        public void SaveProfile(GameConfig profile)
         {
             profile.ModTypes.Clear();
             foreach (var vm in _types)

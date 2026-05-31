@@ -15,7 +15,7 @@ namespace TMM
             InitializeComponent();
         }
 
-        public void LoadProfile(CustomGameProfile profile)
+        public void LoadProfile(GameConfig profile)
         {
             lblName.Text  = string.IsNullOrEmpty(profile.GameName) ? "(none)" : profile.GameName;
             lblDir.Text   = string.IsNullOrEmpty(profile.GameDirectory) ? "(none)" : profile.GameDirectory;
@@ -61,7 +61,7 @@ namespace TMM
             chkNative.IsChecked = profile.IsNative;
         }
 
-        public void SaveProfile(CustomGameProfile profile)
+        public void SaveProfile(GameConfig profile)
         {
             profile.Robustness = rbExperimental.IsChecked == true ? RobustnessLevel.Experimental
                                : rbMature.IsChecked == true       ? RobustnessLevel.Mature
@@ -73,7 +73,7 @@ namespace TMM
             profile.ReleaseTag = ReleaseTag.Release;
         }
 
-        private static string DescribeIntegrity(CustomGameProfile profile)
+        private static string DescribeIntegrity(GameConfig profile)
         {
             bool hasSize = profile.ExpectedExeBytes.HasValue;
             int hashCount = profile.AcceptedExeMd5s.Count;
@@ -85,12 +85,12 @@ namespace TMM
             return string.Join(" + ", parts);
         }
 
-        private static string DescribeOverlayFolders(CustomGameProfile profile) =>
+        private static string DescribeOverlayFolders(GameConfig profile) =>
             profile.OverlayFolders.Count == 0
                 ? "(not set)"
                 : string.Join(", ", profile.OverlayFolders);
 
-        private static string DescribeCompanionSiblings(CustomGameProfile profile) =>
+        private static string DescribeCompanionSiblings(GameConfig profile) =>
             profile.CompanionSiblings.Count == 0
                 ? "(not set)"
                 : string.Join("; ", profile.CompanionSiblings.Select(kvp =>

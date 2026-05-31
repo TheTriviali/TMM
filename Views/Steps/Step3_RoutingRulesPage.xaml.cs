@@ -21,7 +21,7 @@ namespace TMM
             InitializeComponent();
         }
 
-        public void LoadProfile(CustomGameProfile profile)
+        public void LoadProfile(GameConfig profile)
         {
             _groups.Clear();
 
@@ -38,7 +38,7 @@ namespace TMM
             RebuildGroupPanels();
         }
 
-        public void SaveProfile(CustomGameProfile profile)
+        public void SaveProfile(GameConfig profile)
         {
             // Sync game-wide rules
             var gameWideGroup = _groups.LastOrDefault(g => g.TypeName is null);
