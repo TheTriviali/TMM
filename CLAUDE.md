@@ -45,14 +45,6 @@ Custom: `CUSTOM_abc123` (auto-generated UUID)
 
 ---
 
-## For Implementation
-
-**Active work:** [PLANS.md](PLANS.md) — phases, design decisions, success criteria  
-
-**When asking for help:**
-- Use `FileName.cs:LineNumber` for specific changes
-- Reference PLANS.md for context on ongoing phases
-
 ## Custom Game Rule
 
 **Any feature that works for built-in games must be fully configurable by a user adding a custom game through the wizard UI.** Users never edit JSON — the `.tmmgame` format is only a shortcut for bundled profiles.
@@ -83,7 +75,6 @@ A feature is not complete until it appears in:
 - **Null handling:** Use `is null`/`is not null`, return `[]` instead of `null` for empty collections
 - **WPF:** Minimal code-behind, DataContext via XAML/constructor, stateless converters
 
-**See PLANS.md for routing rules & backend logic standards.**
 
 ---
 
@@ -91,11 +82,33 @@ A feature is not complete until it appears in:
 
 Mockups live in `Mockups/Views/` as `UserControl` XAML files. The `Mockups/` folder is a standalone WPF project; use `DynamicResource` theme keys, no duplication.
 
-**Mockups are only produced when a tracker item explicitly lists them as a step.** Never produce a mockup speculatively. After adding or modifying a mockup, verify it compiles: `/run --mockups`.
+**Never produce a mockup unless explicitly asked.** After adding or modifying a mockup, verify it compiles: `/run --mockups`.
+
+---
+
+## Design Decisions
+
+These are frozen — don't re-open without an explicit conversation.
+
+1. **Library shows configured games only.** "Your games" lists only games with a folder set. Empty state shows a hint on fresh start. Stats: "Games with folder" + "Last deployed."
+2. **Mod types + routing rules merged in wizard.** Steps 2/3 combined: each row is a mod type with extensions and target folder.
+3. **Help + Troubleshooting merged, global.** Single "Troubleshooting & Help" rail entry. No separate Help/About overflow.
+4. **Config tab = quick path-setting + "Advanced config" link.** Not a full wizard launch.
+5. **No custom-game distinction in logic.** `CUSTOM_` prefix and branching code paths are debt to remove. All games are first-class profiles; built-in vs. custom is a registry concern only.
+6. **Nav rail structure.** Left strip: Library, Mod Manager (top); Troubleshooting & Help, Settings (bottom). Always-visible fixed width. Title bar: app icon + page name.
+7. **Unified mod list filter bar.** Search + chip row (All / Enabled / Conflicts / Favorites) in one horizontal control.
+8. **Install Mod button inline in workspace header** alongside Deploy and Play.
+9. **Library cards show `.tmmgame` filename** in small text.
+10. **Conflicts tab is "Conflict Manager".** Mods tab shows conflict existence at a glance; the tab is for resolution.
+11. **Routing rules never regenerate frozen plans.** Rules run once at install time; plans are immutable after that. (See Architectural Principle 1.)
+12. **Plan Editor is always shown on install.** User had the chance to review — TMM is not responsible for mods that land in the wrong place.
+13. **Smart partial redeploy.** Only re-deploy mods whose plan or state changed since last deploy.
+14. **"Needs redeploy" state** surfaced on mod row badge, Deploy button, and library game card.
+15. **Direct Install Override — won't implement.** Game-root routing destination covers the use case.
 
 ---
 
 ## References
 
-[PLANS.md](PLANS.md) → Active phases, design decisions, success criteria  
-[SANITYCHECK.md](SANITYCHECK.md) → Pre-release verification checklist
+[SANITYCHECK.md](SANITYCHECK.md) → Pre-release verification checklist  
+[planned_features.md](planned_features.md) → Deferred / post-v1 features

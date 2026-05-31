@@ -423,8 +423,8 @@
                             </StackPanel>
                             <!-- Right: language selector -->
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                <TextBlock Text="&#xF49A;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                           Foreground="{DynamicResource SubTextBrush}"
+                                <TextBlock Text="&#xF2B7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
+                                           Foreground="{DynamicResource AccentBrush}"
                                            VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <ComboBox x:Name="cmbLanguage" Width="140" Height="22"
                                           Background="{DynamicResource ControlBgBrush}"

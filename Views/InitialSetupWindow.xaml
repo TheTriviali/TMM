@@ -197,7 +197,7 @@
                 <!-- Language picker — bottom strip -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left"
                             Margin="44,0,44,14">
-                    <TextBlock Text="&#xF2B7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
+                    <TextBlock Text="&#xF2B7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18"
                                Foreground="{DynamicResource AccentBrush}"
                                VerticalAlignment="Center" Margin="0,0,7,0"/>
                     <ComboBox x:Name="cmbLanguage" Width="140" Height="26" FontSize="11"

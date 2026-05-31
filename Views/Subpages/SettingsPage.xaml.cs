@@ -235,6 +235,25 @@ namespace TMM
             MarkDirty();
         }
 
+        private void BtnCategory_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string tag)
+                SwitchCategory(tag);
+        }
+
+        private void SwitchCategory(string name)
+        {
+            panelGeneral.Visibility    = name == "General"    ? Visibility.Visible : Visibility.Collapsed;
+            panelAppearance.Visibility = name == "Appearance" ? Visibility.Visible : Visibility.Collapsed;
+            panelFilePaths.Visibility  = name == "FilePaths"  ? Visibility.Visible : Visibility.Collapsed;
+            panelAdvanced.Visibility   = name == "Advanced"   ? Visibility.Visible : Visibility.Collapsed;
+
+            btnCatGeneral.Style    = (Style)FindResource(name == "General"    ? "CategoryBtnActiveStyle" : "CategoryBtnStyle");
+            btnCatAppearance.Style = (Style)FindResource(name == "Appearance" ? "CategoryBtnActiveStyle" : "CategoryBtnStyle");
+            btnCatFilePaths.Style  = (Style)FindResource(name == "FilePaths"  ? "CategoryBtnActiveStyle" : "CategoryBtnStyle");
+            btnCatAdvanced.Style   = (Style)FindResource(name == "Advanced"   ? "CategoryBtnActiveStyle" : "CategoryBtnStyle");
+        }
+
         private void BtnFactoryReset_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show(

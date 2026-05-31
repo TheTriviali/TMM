@@ -4,182 +4,273 @@
              xmlns:local="clr-namespace:TMM"
              xmlns:helpers="clr-namespace:TMM.Helpers"
              Background="{DynamicResource BgBrush}">
+
+    <UserControl.Resources>
+        <Style x:Key="CategoryBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,3,0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#1AFFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CategoryBtnActiveStyle" BasedOn="{StaticResource CategoryBtnStyle}" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Background" Value="#0AFFFFFF"/>
+        </Style>
+    </UserControl.Resources>
+
     <Grid>
-        <!-- Unsaved changes banner (shown when dirty) -->
-        <Border x:Name="unsavedBanner" Visibility="Collapsed" VerticalAlignment="Top"
-                Background="{DynamicResource AccentBrush}" Padding="16,8" Panel.ZIndex="10">
-            <Grid>
-                <TextBlock Text="Unsaved changes" Foreground="{DynamicResource AccentTextBrush}"
-                           FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Save" Click="BtnSaveSettings_Click"
-                            Height="28" Padding="14,0" Margin="0,0,8,0"
-                            Background="White" Foreground="{DynamicResource AccentBrush}"
-                            BorderThickness="0" FontSize="12" FontWeight="Bold" Cursor="Hand"/>
-                    <Button Content="Discard" Click="BtnDiscardSettings_Click"
-                            Height="28" Padding="14,0"
-                            Background="Transparent" Foreground="{DynamicResource AccentTextBrush}"
-                            BorderThickness="1" BorderBrush="{DynamicResource AccentTextBrush}"
-                            FontSize="12" Cursor="Hand"/>
-                </StackPanel>
-            </Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: Category list -->
+        <Border Grid.Column="0" Background="{DynamicResource PanelBrush}"
+                BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,0,1,0">
+            <StackPanel>
+                <Button x:Name="btnCatGeneral" Content="General"
+                        Style="{StaticResource CategoryBtnActiveStyle}"
+                        Tag="General" Click="BtnCategory_Click"/>
+                <Button x:Name="btnCatAppearance" Content="Appearance"
+                        Style="{StaticResource CategoryBtnStyle}"
+                        Tag="Appearance" Click="BtnCategory_Click"/>
+                <Button x:Name="btnCatFilePaths" Content="File Paths"
+                        Style="{StaticResource CategoryBtnStyle}"
+                        Tag="FilePaths" Click="BtnCategory_Click"/>
+                <Button x:Name="btnCatAdvanced" Content="Advanced"
+                        Style="{StaticResource CategoryBtnStyle}"
+                        Tag="Advanced" Click="BtnCategory_Click"/>
+            </StackPanel>
         </Border>
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,0">
-        <StackPanel Margin="28,24,28,24" MaxWidth="540">
 
-            <TextBlock Text="{helpers:Localization Settings_Title}" FontSize="22" FontWeight="Bold"
-                       Foreground="{DynamicResource TextBrush}" Margin="0,0,0,20"/>
+        <!-- Right: Content area -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <!-- Startup preference -->
-            <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
-                    Padding="0,12,0,0" Margin="0,0,0,16">
-                <StackPanel>
-                    <TextBlock Text="Startup" FontSize="13" FontWeight="SemiBold"
-                               Foreground="#FF88EE" Margin="0,0,0,8"/>
-                    <TextBlock Text="Open TMM to:" FontSize="11" Foreground="{DynamicResource SubTextBrush}"
-                               Margin="0,0,0,6"/>
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="rdStartupLibrary" Content="Library" Margin="0,0,16,0"
-                                     Foreground="{DynamicResource TextBrush}" Cursor="Hand"
-                                     Checked="RdStartup_Changed"/>
-                        <RadioButton x:Name="rdStartupModManager" Content="Mod Manager (default game)"
-                                     Foreground="{DynamicResource TextBrush}" Cursor="Hand"
-                                     Checked="RdStartup_Changed"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <!-- Appearance: 2-Tone Accent Colors -->
-            <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
-                    Padding="0,12,0,0" Margin="0,0,0,16">
-                <StackPanel>
-                    <TextBlock Text="{helpers:Localization Settings_Appearance}" FontSize="13" FontWeight="SemiBold"
-                               Foreground="#FF88EE" Margin="0,0,0,8"/>
-                    <TextBlock Text="{helpers:Localization Label_AccentPreset}" FontSize="11" Foreground="{DynamicResource SubTextBrush}"
-                               Margin="0,0,0,4"/>
-                    <ComboBox x:Name="cmbAccentPreset" Height="28" Margin="0,0,0,12"
-                              Background="{DynamicResource ControlBgBrush}"
-                              Foreground="{DynamicResource TextBrush}"
-                              BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"
-                              Padding="8,4" SelectionChanged="CmbAccentPreset_SelectionChanged"/>
-                    <Grid Margin="0,0,0,12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
-                            <TextBlock Text="{helpers:Localization Label_PrimaryColor}" FontSize="10" Foreground="{DynamicResource SubTextBrush}"
-                                       Margin="0,0,0,4"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="40"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" x:Name="primaryColorPreview" Width="40" Height="32"
-                                        CornerRadius="4" Background="{DynamicResource AccentBrush}"
-                                        BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"/>
-                                <TextBox Grid.Column="1" x:Name="txtPrimaryColor" Margin="8,0,0,0"
-                                         Background="{DynamicResource ControlBgBrush}"
-                                         Foreground="{DynamicResource TextBrush}"
-                                         BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"
-                                         Padding="6,4" VerticalContentAlignment="Center"
-                                         Text="#0883FF" TextChanged="TxtPrimaryColor_TextChanged"/>
-                            </Grid>
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
-                            <TextBlock Text="{helpers:Localization Label_SecondaryColor}" FontSize="10" Foreground="{DynamicResource SubTextBrush}"
-                                       Margin="0,0,0,4"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="40"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" x:Name="secondaryColorPreview" Width="40" Height="32"
-                                        CornerRadius="4" Background="{DynamicResource AccentBrush2}"
-                                        BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"/>
-                                <TextBox Grid.Column="1" x:Name="txtSecondaryColor" Margin="8,0,0,0"
-                                         Background="{DynamicResource ControlBgBrush}"
-                                         Foreground="{DynamicResource TextBrush}"
-                                         BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"
-                                         Padding="6,4" VerticalContentAlignment="Center"
-                                         Text="#00D9FF" TextChanged="TxtSecondaryColor_TextChanged"/>
-                            </Grid>
-                        </StackPanel>
-                    </Grid>
-                    <Button Content="{helpers:Localization Button_Apply}" Click="BtnApplyAccent_Click"
-                            Height="28" Background="{DynamicResource PanelBrush}"
-                            Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Notifications -->
-            <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
-                    Padding="0,12,0,0" Margin="0,0,0,16">
-                <StackPanel>
-                    <TextBlock Text="{helpers:Localization Settings_Notifications}" FontSize="13" FontWeight="SemiBold"
-                               Foreground="#FF88EE" Margin="0,0,0,8"/>
-                    <CheckBox x:Name="chkVerboseNotifications" Click="ChkVerboseNotifications_Click"
-                              Foreground="{DynamicResource TextBrush}" Cursor="Hand">
-                        <StackPanel>
-                            <TextBlock Text="{helpers:Localization Settings_VerboseNotifications}"
-                                       Foreground="{DynamicResource TextBrush}" FontSize="12"/>
-                            <TextBlock Text="{helpers:Localization Settings_VerboseNotifications_Desc}"
-                                       Foreground="{DynamicResource SubTextBrush}" FontSize="10" Margin="0,2,0,0"/>
-                        </StackPanel>
-                    </CheckBox>
-                </StackPanel>
-            </Border>
-
-            <!-- Diagnostics -->
-            <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
-                    Padding="0,12,0,0" Margin="0,0,0,16">
-                <StackPanel>
-                    <TextBlock Text="{helpers:Localization Settings_Diagnostics}" FontSize="13" FontWeight="SemiBold"
-                               Foreground="#FF88EE" Margin="0,0,0,8"/>
-                    <UniformGrid Columns="2">
-                        <Button Content="{helpers:Localization Settings_ErrorLog}" Click="BtnOpenLog_Click"
-                                Height="26" Margin="0,0,3,0" Background="{DynamicResource PanelBrush}"
-                                Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                        <Button Content="{helpers:Localization Settings_WipeCache}" Click="BtnWipeCache_Click"
-                                Height="26" Margin="3,0,0,0" Background="{DynamicResource PanelBrush}"
-                                Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
-                    </UniformGrid>
-                </StackPanel>
-            </Border>
-
-            <!-- File Locations -->
-            <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
-                    Padding="0,12,0,0" Margin="0,0,0,16">
-                <StackPanel>
-                    <TextBlock Text="File Locations" FontSize="13" FontWeight="SemiBold"
-                               Foreground="#FF88EE" Margin="0,0,0,4"/>
-                    <TextBlock Text="TMM's app data folders. Click Open to browse each location."
-                               FontSize="10" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,10"/>
-                    <StackPanel x:Name="settingsPathRowsPanel"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Danger Zone -->
-            <Border BorderBrush="#FF5555" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+            <!-- Unsaved changes banner (shown when dirty) -->
+            <Border x:Name="unsavedBanner" Grid.Row="0" Visibility="Collapsed"
+                    Background="{DynamicResource AccentBrush}" Padding="16,8">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{helpers:Localization Settings_DangerZone}" FontSize="12" FontWeight="SemiBold"
-                               Foreground="#FF5555" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="lblVersion" Grid.Column="1"
-                               Foreground="{DynamicResource SubTextBrush}"
-                               FontSize="10" VerticalAlignment="Center" Margin="0,0,12,0"
-                               Text="v2.0"/>
-                    <Button Grid.Column="2" Content="{helpers:Localization Settings_FactoryReset}" Click="BtnFactoryReset_Click"
-                            Height="28" Padding="16,0" Background="#442222" Foreground="#FF5555"
-                            BorderThickness="0" Cursor="Hand"/>
+                    <TextBlock Text="Unsaved changes" Foreground="{DynamicResource AccentTextBrush}"
+                               FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Save" Click="BtnSaveSettings_Click"
+                                Height="28" Padding="14,0" Margin="0,0,8,0"
+                                Background="White" Foreground="{DynamicResource AccentBrush}"
+                                BorderThickness="0" FontSize="12" FontWeight="Bold" Cursor="Hand"/>
+                        <Button Content="Discard" Click="BtnDiscardSettings_Click"
+                                Height="28" Padding="14,0"
+                                Background="Transparent" Foreground="{DynamicResource AccentTextBrush}"
+                                BorderThickness="1" BorderBrush="{DynamicResource AccentTextBrush}"
+                                FontSize="12" Cursor="Hand"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
-        </StackPanel>
-    </ScrollViewer>
+            <!-- Content scroll area -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <Grid>
+
+                    <!-- General panel -->
+                    <StackPanel x:Name="panelGeneral" Margin="32,24,32,24">
+                        <TextBlock Text="General" FontSize="18" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextBrush}" Margin="0,0,0,16"/>
+
+                        <!-- Startup preference -->
+                        <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                                Padding="0,12,0,0" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Startup" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="#FF88EE" Margin="0,0,0,8"/>
+                                <TextBlock Text="Open TMM to:" FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                                           Margin="0,0,0,6"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="rdStartupLibrary" Content="Library" Margin="0,0,16,0"
+                                                 Foreground="{DynamicResource TextBrush}" Cursor="Hand"
+                                                 Checked="RdStartup_Changed"/>
+                                    <RadioButton x:Name="rdStartupModManager" Content="Mod Manager (default game)"
+                                                 Foreground="{DynamicResource TextBrush}" Cursor="Hand"
+                                                 Checked="RdStartup_Changed"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Notifications -->
+                        <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                                Padding="0,12,0,0" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="{helpers:Localization Settings_Notifications}" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="#FF88EE" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="chkVerboseNotifications" Click="ChkVerboseNotifications_Click"
+                                          Foreground="{DynamicResource TextBrush}" Cursor="Hand">
+                                    <StackPanel>
+                                        <TextBlock Text="{helpers:Localization Settings_VerboseNotifications}"
+                                                   Foreground="{DynamicResource TextBrush}" FontSize="12"/>
+                                        <TextBlock Text="{helpers:Localization Settings_VerboseNotifications_Desc}"
+                                                   Foreground="{DynamicResource SubTextBrush}" FontSize="10" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </CheckBox>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Appearance panel -->
+                    <StackPanel x:Name="panelAppearance" Visibility="Collapsed" Margin="32,24,32,24">
+                        <TextBlock Text="Appearance" FontSize="18" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextBrush}" Margin="0,0,0,16"/>
+
+                        <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                                Padding="0,12,0,0" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="{helpers:Localization Settings_Appearance}" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="#FF88EE" Margin="0,0,0,8"/>
+                                <TextBlock Text="{helpers:Localization Label_AccentPreset}" FontSize="11"
+                                           Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="cmbAccentPreset" Height="28" Margin="0,0,0,12"
+                                          Background="{DynamicResource ControlBgBrush}"
+                                          Foreground="{DynamicResource TextBrush}"
+                                          BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"
+                                          Padding="8,4" SelectionChanged="CmbAccentPreset_SelectionChanged"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                        <TextBlock Text="{helpers:Localization Label_PrimaryColor}" FontSize="10"
+                                                   Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" x:Name="primaryColorPreview" Width="40" Height="32"
+                                                    CornerRadius="4" Background="{DynamicResource AccentBrush}"
+                                                    BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"/>
+                                            <TextBox Grid.Column="1" x:Name="txtPrimaryColor" Margin="8,0,0,0"
+                                                     Background="{DynamicResource ControlBgBrush}"
+                                                     Foreground="{DynamicResource TextBrush}"
+                                                     BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"
+                                                     Padding="6,4" VerticalContentAlignment="Center"
+                                                     Text="#0883FF" TextChanged="TxtPrimaryColor_TextChanged"/>
+                                        </Grid>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                        <TextBlock Text="{helpers:Localization Label_SecondaryColor}" FontSize="10"
+                                                   Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" x:Name="secondaryColorPreview" Width="40" Height="32"
+                                                    CornerRadius="4" Background="{DynamicResource AccentBrush2}"
+                                                    BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"/>
+                                            <TextBox Grid.Column="1" x:Name="txtSecondaryColor" Margin="8,0,0,0"
+                                                     Background="{DynamicResource ControlBgBrush}"
+                                                     Foreground="{DynamicResource TextBrush}"
+                                                     BorderThickness="1" BorderBrush="{DynamicResource SubTextBrush}"
+                                                     Padding="6,4" VerticalContentAlignment="Center"
+                                                     Text="#00D9FF" TextChanged="TxtSecondaryColor_TextChanged"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Grid>
+                                <Button Content="{helpers:Localization Button_Apply}" Click="BtnApplyAccent_Click"
+                                        Height="28" Background="{DynamicResource PanelBrush}"
+                                        Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- File Paths panel -->
+                    <StackPanel x:Name="panelFilePaths" Visibility="Collapsed" Margin="32,24,32,24">
+                        <TextBlock Text="File Paths" FontSize="18" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextBrush}" Margin="0,0,0,16"/>
+
+                        <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                                Padding="0,12,0,0" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="File Locations" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="#FF88EE" Margin="0,0,0,4"/>
+                                <TextBlock Text="TMM's app data folders. Click Open to browse each location."
+                                           FontSize="10" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,10"/>
+                                <StackPanel x:Name="settingsPathRowsPanel"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Advanced panel -->
+                    <StackPanel x:Name="panelAdvanced" Visibility="Collapsed" Margin="32,24,32,24">
+                        <TextBlock Text="Advanced" FontSize="18" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextBrush}" Margin="0,0,0,16"/>
+
+                        <!-- Diagnostics -->
+                        <Border BorderBrush="{DynamicResource SubTextBrush}" BorderThickness="0,1,0,0"
+                                Padding="0,12,0,0" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="{helpers:Localization Settings_Diagnostics}" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="#FF88EE" Margin="0,0,0,8"/>
+                                <UniformGrid Columns="2">
+                                    <Button Content="{helpers:Localization Settings_ErrorLog}" Click="BtnOpenLog_Click"
+                                            Height="26" Margin="0,0,3,0" Background="{DynamicResource PanelBrush}"
+                                            Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
+                                    <Button Content="{helpers:Localization Settings_WipeCache}" Click="BtnWipeCache_Click"
+                                            Height="26" Margin="3,0,0,0" Background="{DynamicResource PanelBrush}"
+                                            Foreground="{DynamicResource TextBrush}" BorderThickness="0" Cursor="Hand"/>
+                                </UniformGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Danger Zone -->
+                        <Border BorderBrush="#FF5555" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{helpers:Localization Settings_DangerZone}" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="#FF5555" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="lblVersion" Grid.Column="1"
+                                           Foreground="{DynamicResource SubTextBrush}"
+                                           FontSize="10" VerticalAlignment="Center" Margin="0,0,12,0"
+                                           Text="v2.0"/>
+                                <Button Grid.Column="2" Content="{helpers:Localization Settings_FactoryReset}" Click="BtnFactoryReset_Click"
+                                        Height="28" Padding="16,0" Background="#442222" Foreground="#FF5555"
+                                        BorderThickness="0" Cursor="Hand"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                </Grid>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>
