@@ -294,8 +294,8 @@ namespace TMM
         }
 
         private LibraryEntry? HeroEntry =>
-            _filteredEntries.FirstOrDefault(e => e.IsActive && !e.IsPlaceholder)
-            ?? _filteredEntries.FirstOrDefault(e => !e.IsPlaceholder);
+            _filteredEntries.FirstOrDefault(e => e.IsActive && !e.IsPlaceholder && e.IsReady)
+            ?? _filteredEntries.FirstOrDefault(e => !e.IsPlaceholder && e.IsReady);
 
         private void RenderHero()
         {
@@ -338,45 +338,55 @@ namespace TMM
 
         private void RenderStats()
         {
-            int gamesSetUp = _allEntries.Count(e => !e.IsPlaceholder && !e.IsArchived);
-            statGames.Text = gamesSetUp.ToString();
+            var loc = LocalizationService.Instance;
+
+            int gamesWithFolder = _allEntries.Count(e => !e.IsPlaceholder && !e.IsArchived && e.IsReady);
+            statGames.Text = gamesWithFolder.ToString();
 
             int totalMods = _allEntries.Where(e => !e.IsPlaceholder).Sum(e => e.ModCount);
             statMods.Text = totalMods.ToString();
 
-            var loc = LocalizationService.Instance;
             long cachedBytes = _core?.Settings.CachedModsInstalledBytes ?? 0;
             statModsSub.Text = cachedBytes > 0
                 ? $"{loc["Home_StatMods"]} · {BackendCore.FormatBytes(cachedBytes)}"
                 : loc["Home_StatMods"];
 
-            // Backups size is a disk walk — compute off the render thread, then update.
-            statBackups.Text = "…";
-            statBackupsSub.Text = loc["Home_StatBackups"];
-            if (_core is { } core)
+            // Last deployed: find the most recent deploy across all games.
+            DateTime? lastDeploy = null;
+            foreach (var entry in _allEntries.Where(e => !e.IsPlaceholder))
             {
-                long budget = core.Settings.BackupSizeWarnBytes;
-                _ = Task.Run(() => core.GetTotalBackupSize()).ContinueWith(t =>
-                {
-                    long used = t.Result;
-                    statBackups.Text = BackendCore.FormatBytes(used);
-                    statBackupsSub.Text = budget > 0
-                        ? $"{loc["Home_StatBackups"]} / {BackendCore.FormatBytes(budget)}"
-                        : loc["Home_StatBackups"];
-                }, TaskScheduler.FromCurrentSynchronizationContext());
+                var t = LastDeployTime(entry);
+                if (t is { } dt && (lastDeploy is null || dt > lastDeploy))
+                    lastDeploy = dt;
             }
+            statBackups.Text = lastDeploy is { } ld ? TimeAgo(ld) : "—";
+            statBackupsSub.Text = loc["Home_StatBackups"];
         }
 
         private void RenderHomeGames()
         {
             homeGamesPanel.Children.Clear();
-            foreach (var entry in _filteredEntries.Where(e => !e.IsPlaceholder))
+            var readyGames = _filteredEntries.Where(e => !e.IsPlaceholder && e.IsReady).ToList();
+            foreach (var entry in readyGames)
             {
                 var card = CreateCard(entry);
                 card.Width  = 224;
                 card.Height = 150;
-                card.Margin = new Thickness(8, 0, 8, 16);
+                card.Margin = new Thickness(8, 8, 8, 8);
                 homeGamesPanel.Children.Add(card);
+            }
+
+            if (readyGames.Count == 0)
+            {
+                var hint = new System.Windows.Controls.TextBlock
+                {
+                    Text = "No games configured yet — use '+ Add game' to get started.",
+                    FontSize = 12,
+                    Foreground = SubTextBrush(),
+                    Margin = new Thickness(8, 16, 8, 4),
+                    Opacity = 0.6,
+                };
+                homeGamesPanel.Children.Add(hint);
             }
         }
 

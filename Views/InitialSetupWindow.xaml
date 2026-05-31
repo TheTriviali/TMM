@@ -79,24 +79,15 @@
 
             <!-- ── RIGHT: Setup panel ───────────────────────────────────── -->
             <Grid Grid.Column="1" Background="{DynamicResource BgBrush}">
-                <Border HorizontalAlignment="Left" Width="1"
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.RowSpan="2" HorizontalAlignment="Left" Width="1"
                         Background="{DynamicResource AccentBrush}" Opacity="0.3"/>
 
-                <!-- Language picker — corner control, not the focus -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right"
-                            Margin="0,14,14,0">
-                    <TextBlock Text="&#xF49A;" FontFamily="Segoe MDL2 Assets" FontSize="12"
-                               Foreground="{DynamicResource SubTextBrush}"
-                               VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <ComboBox x:Name="cmbLanguage" Width="130" Height="24" FontSize="11"
-                              Background="{DynamicResource PanelBrush}"
-                              Foreground="{DynamicResource TextBrush}"
-                              BorderBrush="{DynamicResource SubTextBrush}"
-                              BorderThickness="1"
-                              SelectionChanged="CmbLanguage_SelectionChanged"/>
-                </StackPanel>
-
-                <StackPanel VerticalAlignment="Center" Margin="44,0,44,0">
+                <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="44,0,44,0">
 
                     <!-- Primary heading -->
                     <TextBlock Text="{helpers:Localization Setup_Welcome}"
@@ -139,9 +130,9 @@
                         </Grid>
                     </StackPanel>
 
-                    <!-- Primary CTA: start with selected game -->
+                    <!-- Primary CTA -->
                     <Button x:Name="btnStartWithGame" Click="BtnStartWithGame_Click" Cursor="Hand"
-                            IsEnabled="False" Margin="0,0,0,12">
+                            IsEnabled="False" Margin="0,0,0,20">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="bd" CornerRadius="9"
@@ -162,14 +153,6 @@
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
-                    </Button>
-
-                    <!-- Secondary: skip to library -->
-                    <Button Click="BtnGoToLibrary_Click" Cursor="Hand" Margin="0,0,0,16"
-                            Background="Transparent" BorderThickness="0" Padding="0,8">
-                        <TextBlock Text="{helpers:Localization Setup_GoToLibrary}"
-                                   FontSize="12" Foreground="{DynamicResource SubTextBrush}"
-                                   HorizontalAlignment="Center"/>
                     </Button>
 
                     <!-- Separator -->
@@ -209,6 +192,20 @@
                         </StackPanel>
                     </Border>
 
+                </StackPanel>
+
+                <!-- Language picker — bottom strip -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left"
+                            Margin="44,0,44,14">
+                    <TextBlock Text="&#xF2B7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
+                               Foreground="{DynamicResource AccentBrush}"
+                               VerticalAlignment="Center" Margin="0,0,7,0"/>
+                    <ComboBox x:Name="cmbLanguage" Width="140" Height="26" FontSize="11"
+                              Background="{DynamicResource PanelBrush}"
+                              Foreground="{DynamicResource TextBrush}"
+                              BorderBrush="{DynamicResource SubTextBrush}"
+                              BorderThickness="1"
+                              SelectionChanged="CmbLanguage_SelectionChanged"/>
                 </StackPanel>
             </Grid>
 

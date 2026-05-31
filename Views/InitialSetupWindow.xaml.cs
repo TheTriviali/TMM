@@ -141,8 +141,6 @@ namespace TMM
             }
         }
 
-        private void BtnGoToLibrary_Click(object sender, RoutedEventArgs e) => CompleteSetup();
-
         private void Card_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
             => e.Handled = true;
 
