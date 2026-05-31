@@ -1,7 +1,6 @@
 <Window x:Class="TMM.Mockups.MockupShell"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:views="clr-namespace:TMM.Mockups.Views"
         Title="TMM — Design Mockups (UI only)"
         Width="1180" Height="760" MinWidth="980" MinHeight="640"
         WindowStartupLocation="CenterScreen"
@@ -56,9 +55,7 @@
                            Text="UI-only. Nothing here is wired to a backend — buttons are for looks. Click an idea above to preview it."/>
 
                 <StackPanel x:Name="navPanel">
-                    <RadioButton Content="1 · Game Workspace"    GroupName="m" IsChecked="True" Checked="Nav_Checked" Tag="ws"   Style="{StaticResource NavItem}"/>
-                    <RadioButton Content="2 · Enriched Mod List" GroupName="m" Checked="Nav_Checked" Tag="list" Style="{StaticResource NavItem}"/>
-                    <RadioButton Content="3 · Library Home"      GroupName="m" Checked="Nav_Checked" Tag="home" Style="{StaticResource NavItem}"/>
+                    <RadioButton Content="Settings · Dual Pane" GroupName="m" IsChecked="True" Checked="Nav_Checked" Tag="settings" Style="{StaticResource NavItem}"/>
                 </StackPanel>
             </DockPanel>
         </Border>

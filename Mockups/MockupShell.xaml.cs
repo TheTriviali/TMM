@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using TMM.Mockups.Views;
 
 namespace TMM.Mockups
 {
@@ -9,7 +8,7 @@ namespace TMM.Mockups
         public MockupShell()
         {
             InitializeComponent();
-            host.Content = new Mockup1_Workspace();
+            host.Content = new SettingsDualPane();
         }
 
         private void Nav_Checked(object sender, RoutedEventArgs e)
@@ -18,9 +17,7 @@ namespace TMM.Mockups
             var tag = (sender as RadioButton)?.Tag as string;
             host.Content = tag switch
             {
-                "list" => new Mockup2_ModList(),
-                "home" => new Mockup3_Home(),
-                _ => new Mockup1_Workspace(),
+                _ => new SettingsDualPane(),
             };
         }
     }
