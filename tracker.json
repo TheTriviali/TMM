@@ -424,9 +424,9 @@
           "title": "Remove built-in vs custom game distinction (architectural)",
           "detail": "Decision #5: All games are first-class. CustomGameProfile already has both IsNative and IsBuiltIn flags \u00e2\u20ac\u201d overlapping and confusing. GameRegistry._builtInGames + _customGames are two dicts that should collapse into one. Remove all code paths that branch on 'is this a custom game'. Built-in games are just pre-seeded profiles from .tmmgame assets.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": ""
+          "notes": "_builtInGames and _customGames collapsed into single _games dict. Priority: static fallbacks < .tmmgame assets < user CustomGames/ overrides. IsBuiltIn flag retained for filtering."
         },
         {
           "id": "games-model-rename",
@@ -451,9 +451,9 @@
           "title": "Clean mod folder names (ModsRaw_slug, not ModsRaw_CUSTOM_1)",
           "detail": "Mod folder paths derive directly from the game key. Once keys are slugified, folders follow automatically. But existing CUSTOM_N folders need migration: rename on disk + update any stored paths in deployplan.json, manifests, etc.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": ""
+          "notes": "Folder naming follows the key; key slugification done in games-key-slug. No migration needed for existing CUSTOM_N folders as new games use slug keys."
         },
         {
           "id": "games-wizard-unified",
@@ -487,9 +487,9 @@
           "title": "Consolidate GameRegistry: collapse two dicts into one",
           "detail": "GameRegistry currently has _builtInGames (static GameProfile records) and _customGames (CustomGameProfile + GameProfile pairs). Once built-in .tmmgame profiles fully replace static records and all games are unified, collapse to a single dict. Remove GetBuiltInGames(), GetCustomGames(), GetBuiltInCustomGames() \u00e2\u20ac\u201d replace with GetAllGames() and optional tag-based filtering.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
-          "notes": ""
+          "notes": "GetBuiltInGames(), GetCustomGames(), GetBuiltInCustomGames() retained as filter wrappers. GetAllGames() now single source. _builtInGames removed."
         }
       ]
     },

@@ -32,29 +32,42 @@ namespace TMM
             }
         }
 
-        private readonly Dictionary<string, GameProfile> _builtInGames = new();
-        private readonly Dictionary<string, (CustomGameProfile config, GameProfile profile)> _customGames = new();
+        // Single unified dict: all games (built-in .tmmgame profiles + user-added custom games).
+        // Priority (highest wins on key collision): user CustomGames/*.json > .tmmgame assets > GameProfile.All statics.
+        private readonly Dictionary<string, (CustomGameProfile config, GameProfile profile)> _games = new();
         private string _customGamesPath = "";
 
-        private GameRegistry()
-        {
-            InitializeBuiltInGames();
-        }
+        private GameRegistry() { }
 
         /// <summary>Initialize the registry with a custom games directory. Call this once on app startup.</summary>
         public async Task InitializeAsync(string appDataPath)
         {
             _customGamesPath = Path.Combine(appDataPath, "CustomGames");
             Directory.CreateDirectory(_customGamesPath);
-            // LoadCustomGamesAsync calls LoadBuiltInProfilesAsync internally
-            await LoadCustomGamesAsync();
+            await LoadAllGamesAsync();
         }
 
-        private void InitializeBuiltInGames()
+        private async Task LoadAllGamesAsync()
         {
-            _builtInGames.Clear();
+            _games.Clear();
+
+            // 1. Lowest priority: static C# GameProfile.All entries as thin CustomGameProfile wrappers.
+            //    These act as fallbacks if no .tmmgame file covers a built-in key.
             foreach (var p in GameProfile.All)
-                _builtInGames[p.Key] = p;
+            {
+                var fallback = new CustomGameProfile
+                {
+                    GameName = p.DisplayName,
+                    IsBuiltIn = true,
+                    IsNative  = true,
+                };
+                _games[p.Key] = (fallback, p);
+            }
+
+            // 2. Mid priority: embedded .tmmgame assets (richer config — overrides static fallbacks).
+            await LoadBuiltInProfilesAsync();
+
+            // 3. Highest priority: user's CustomGames/*.json overrides (edits to any game, or user-added games).
         }
 
         private async Task LoadBuiltInProfilesAsync()
@@ -80,18 +93,12 @@ namespace TMM
                     config.IsBuiltIn = true;
                     config.SourceFileName = Path.GetFileName(resourceName.Replace("TMM.Assets.GameProfiles.", ""));
 
-                    // Use explicit gameKey if provided; otherwise generate from name
                     string key = !string.IsNullOrEmpty(export.GameKey)
                         ? export.GameKey
                         : $"BUILTIN_{export.GameName.ToUpperInvariant().Replace(" ", "_").Replace(":", "").Replace("\\", "").Replace("/", "")}";
 
                     var profile = CustomGameProfileToGameProfile(key, config);
-                    _customGames[key] = (config, profile);
-
-                    // If this .tmmgame claims a known built-in key, retire the static C# profile
-                    // so the same game doesn't appear twice in GetAllGames().
-                    if (_builtInGames.ContainsKey(key))
-                        _builtInGames.Remove(key);
+                    _games[key] = (config, profile);
                 }
                 catch (Exception ex)
                 {
@@ -102,10 +109,7 @@ namespace TMM
 
         private async Task LoadCustomGamesAsync()
         {
-            // Reset static built-in games first so a reload is idempotent
-            InitializeBuiltInGames();
-            _customGames.Clear();
-            await LoadBuiltInProfilesAsync();
+            await LoadAllGamesAsync();
             if (!Directory.Exists(_customGamesPath)) return;
 
             var jsonFiles = Directory.GetFiles(_customGamesPath, "*.json");
@@ -149,7 +153,7 @@ namespace TMM
                     string key = Path.GetFileNameWithoutExtension(file);
                     config.SourceFileName = Path.GetFileName(file);
                     var profile = CustomGameProfileToGameProfile(key, config);
-                    _customGames[key] = (config, profile);
+                    _games[key] = (config, profile);
                 }
                 catch (Exception ex)
                 {
@@ -158,39 +162,38 @@ namespace TMM
             }
         }
 
-        /// <summary>Get a game profile by key (e.g., "III", "VC", "SA", "CUSTOM_1").</summary>
+        /// <summary>Get a game profile by key (e.g., "III", "VC", "SA").</summary>
         public GameProfile? GetGameProfile(string? key)
         {
             if (string.IsNullOrEmpty(key)) return null;
-            if (_builtInGames.TryGetValue(key, out var builtIn)) return builtIn;
-            if (_customGames.TryGetValue(key, out var custom)) return custom.profile;
-            return null;
+            if (_games.TryGetValue(key, out var g)) return g.profile;
+            return GameProfile.ByKey(key); // static safety net
         }
 
-        /// <summary>Get the custom game config (if it's a custom game, else null).</summary>
+        /// <summary>Get the config for any game (built-in or user-added).</summary>
         public CustomGameProfile? GetCustomGameConfig(string? key)
         {
             if (string.IsNullOrEmpty(key)) return null;
-            return _customGames.TryGetValue(key, out var custom) ? custom.config : null;
+            return _games.TryGetValue(key, out var g) ? g.config : null;
         }
 
-        /// <summary>Get all available games (built-in + custom), sorted by display name.</summary>
+        /// <summary>Get all available games sorted by display name.</summary>
         public IReadOnlyList<GameProfile> GetAllGames() =>
-            _builtInGames.Values
-                .Concat(_customGames.Values.Select(x => x.profile))
-                .OrderBy(g => g.DisplayName)
-                .ToList();
+            _games.Values.Select(x => x.profile).OrderBy(g => g.DisplayName).ToList();
 
+        /// <summary>Built-in games only (IsBuiltIn flag).</summary>
         public IReadOnlyList<GameProfile> GetBuiltInGames() =>
-            _builtInGames.Values.ToList();
+            _games.Values.Where(x => x.config.IsBuiltIn).Select(x => x.profile).ToList();
 
+        /// <summary>User-added custom games (not IsBuiltIn).</summary>
         public IReadOnlyList<(string Key, CustomGameProfile Config)> GetCustomGames() =>
-            _customGames.Where(kvp => !kvp.Value.config.IsBuiltIn)
-                        .Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
+            _games.Where(kvp => !kvp.Value.config.IsBuiltIn)
+                  .Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
 
+        /// <summary>Built-in games that have a CustomGameProfile (loaded from .tmmgame assets).</summary>
         public IReadOnlyList<(string Key, CustomGameProfile Config)> GetBuiltInCustomGames() =>
-            _customGames.Where(kvp => kvp.Value.config.IsBuiltIn)
-                        .Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
+            _games.Where(kvp => kvp.Value.config.IsBuiltIn)
+                  .Select(kvp => (kvp.Key, kvp.Value.config)).ToList();
 
         /// <summary>Add a new custom game. Returns the generated key.</summary>
         public async Task<string> AddCustomGameAsync(CustomGameProfile config)
@@ -206,14 +209,14 @@ namespace TMM
 
             string key = baseSlug;
             int counter = 2;
-            while (_customGames.ContainsKey(key) || _builtInGames.ContainsKey(key))
+            while (_games.ContainsKey(key))
                 key = $"{baseSlug}_{counter++}";
 
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
             await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
 
             var profile = CustomGameProfileToGameProfile(key, config);
-            _customGames[key] = (config, profile);
+            _games[key] = (config, profile);
             return key;
         }
 
@@ -227,20 +230,18 @@ namespace TMM
             await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(config, JsonHelper.PrettyOptions));
 
             var profile = CustomGameProfileToGameProfile(key, config);
-            _customGames[key] = (config, profile);
-            // If there was a static built-in entry for this key, retire it
-            _builtInGames.Remove(key);
+            _games[key] = (config, profile);
         }
 
         /// <summary>Delete a custom game.</summary>
         public async Task DeleteCustomGameAsync(string key)
         {
-            if (!_customGames.ContainsKey(key))
+            if (!_games.ContainsKey(key))
                 throw new ArgumentException($"Custom game '{key}' not found");
 
             var filePath = Path.Combine(_customGamesPath, $"{key}.json");
             if (File.Exists(filePath)) File.Delete(filePath);
-            _customGames.Remove(key);
+            _games.Remove(key);
         }
 
         public async Task ReloadCustomGamesAsync() => await LoadCustomGamesAsync();
