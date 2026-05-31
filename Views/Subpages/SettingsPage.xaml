@@ -4,7 +4,27 @@
              xmlns:local="clr-namespace:TMM"
              xmlns:helpers="clr-namespace:TMM.Helpers"
              Background="{DynamicResource BgBrush}">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <Grid>
+        <!-- Unsaved changes banner (shown when dirty) -->
+        <Border x:Name="unsavedBanner" Visibility="Collapsed" VerticalAlignment="Top"
+                Background="{DynamicResource AccentBrush}" Padding="16,8" Panel.ZIndex="10">
+            <Grid>
+                <TextBlock Text="Unsaved changes" Foreground="{DynamicResource AccentTextBrush}"
+                           FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Save" Click="BtnSaveSettings_Click"
+                            Height="28" Padding="14,0" Margin="0,0,8,0"
+                            Background="White" Foreground="{DynamicResource AccentBrush}"
+                            BorderThickness="0" FontSize="12" FontWeight="Bold" Cursor="Hand"/>
+                    <Button Content="Discard" Click="BtnDiscardSettings_Click"
+                            Height="28" Padding="14,0"
+                            Background="Transparent" Foreground="{DynamicResource AccentTextBrush}"
+                            BorderThickness="1" BorderBrush="{DynamicResource AccentTextBrush}"
+                            FontSize="12" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,0">
         <StackPanel Margin="28,24,28,24" MaxWidth="540">
 
             <TextBlock Text="{helpers:Localization Settings_Title}" FontSize="22" FontWeight="Bold"
@@ -161,4 +181,5 @@
 
         </StackPanel>
     </ScrollViewer>
+    </Grid>
 </UserControl>

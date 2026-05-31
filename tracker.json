@@ -109,7 +109,7 @@
           "title": "Custom dark mode scrollbar for all scrollable areas",
           "detail": "Default Windows light-mode scrollbars cause two problems: (1) they are visually inconsistent with the dark theme, and (2) they shift centered UI elements slightly left when visible. Apply a custom dark scrollbar style to all scrollable tabs/panels. Priority areas: Library tab and Notifications window. Not needed for the mod list (separate concern).",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": "Phase 4. Cosmetic but noticeable \u00e2\u20ac\u201d centered elements drifting left is especially annoying."
         },
@@ -211,7 +211,7 @@
           "title": "Settings: explicit Save / Apply / Cancel flow",
           "detail": "SettingsPage currently auto-saves on every change. No Save/Apply/Cancel flow. This causes notification/log spam from accidental adjustments. Needs unsaved-changes prompt on navigate away.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": "It is nice not to force the user into the option right away, but maybe the color options should auto-apply before hitting Apply, might be annoying if you're testing out some color combos iteratively."
         },
@@ -295,7 +295,7 @@
           "title": "Ghost checkbox artifact on hover \u00e2\u20ac\u201d verify resolved",
           "detail": "M2 replaced the GridView column layout with a full custom ItemTemplate DataTemplate. The ghost checkbox was a hover-state artifact of the old template. Needs visual verification in the running app to confirm it's gone.",
           "status": "partial",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -304,7 +304,7 @@
           "title": "Double-click Order field for inline editing",
           "detail": "The M2 DataTemplate shows a numeric order index. No double-click inline-edit handler exists. Requested: type a value directly, all other entries shift to accommodate.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -331,7 +331,7 @@
           "title": "Empty mod list state",
           "detail": "When a game has no mods, the Mods workspace tab is blank. Needs a gentle empty-state: illustration or 'drag a mod here / browse Downloads' prompt to reduce friction for new users.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -340,7 +340,7 @@
           "title": "Wire up Favorites support: toggle and filter",
           "detail": "Favorites tab (subset of enabled mods) exists in the filter chips but backend support and visual toggles are incomplete. Add star/heart icon to each mod row to mark as favorite. Favorites chip filters to this subset. Persist favorite status in mod metadata.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -349,7 +349,7 @@
           "title": "Conflict Manager tab: ConflictAnalyzer integration and readability",
           "detail": "Ensure ConflictAnalyzer surfaces all cross-mod file overlaps and display is readable (grouped by conflict set, showing affected files and involved mods). This is the Conflict Manager tab (previously 'Conflicts' \u00e2\u20ac\u201d see modlist-tab-rename-conflicts). Additionally: when any conflict exists (detected during install, re-plan, or deploy), show a persistent notification bubble/badge on the Conflict Manager tab to draw user attention. Bubble persists until \u00e2\u20ac\u201d see tracker.md Q15 for open question on when it clears.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": ""
         },
@@ -373,7 +373,7 @@
           "title": "[WON'T IMPLEMENT] Direct Install Override",
           "detail": "DECIDED: Not implementing. The routing rules system already supports a 'game root' destination \u00e2\u20ac\u201d users who want a direct copy (e.g. dxvk) just need a mod type rule that targets the game directory root. A cleanly routed mod can be uninstalled, tracked, and conflict-checked. A special CTRL override mode with no DeploymentPlan, no clean uninstall, and a separate code path adds more complexity than value. Ensure 'game root / game directory' is a clearly visible and obvious routing destination option so this use case is naturally covered.",
           "status": "open",
-          "claudeDone": false,
+          "claudeDone": true,
           "noahVerified": false,
           "notes": "Won't implement. Routing rules + 'game root' destination is the right answer."
         },

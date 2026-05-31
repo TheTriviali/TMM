@@ -13,6 +13,33 @@ namespace TMM
     {
         private readonly BackendCore _core;
         private bool _isUpdating = false;
+        private bool _isDirty = false;
+
+        private void MarkDirty()
+        {
+            _isDirty = true;
+            unsavedBanner.Visibility = Visibility.Visible;
+        }
+
+        private void BtnSaveSettings_Click(object sender, RoutedEventArgs e)
+        {
+            _core.Settings.VerboseNotifications = chkVerboseNotifications.IsChecked == true;
+            _core.Settings.StartupPage = rdStartupModManager.IsChecked == true ? "ModManager" : "Library";
+            _core.SaveSettings();
+            _isDirty = false;
+            unsavedBanner.Visibility = Visibility.Collapsed;
+        }
+
+        private void BtnDiscardSettings_Click(object sender, RoutedEventArgs e)
+        {
+            _isUpdating = true;
+            chkVerboseNotifications.IsChecked = _core.Settings.VerboseNotifications;
+            rdStartupLibrary.IsChecked    = _core.Settings.StartupPage != "ModManager";
+            rdStartupModManager.IsChecked = _core.Settings.StartupPage == "ModManager";
+            _isUpdating = false;
+            _isDirty = false;
+            unsavedBanner.Visibility = Visibility.Collapsed;
+        }
 
         public SettingsPage(BackendCore core)
         {
@@ -130,8 +157,7 @@ namespace TMM
 
         private void ChkVerboseNotifications_Click(object sender, RoutedEventArgs e)
         {
-            _core.Settings.VerboseNotifications = chkVerboseNotifications.IsChecked == true;
-            _core.SaveSettings();
+            if (!_isUpdating) MarkDirty();
         }
 
         private void BtnOpenLog_Click(object sender, RoutedEventArgs e)
@@ -213,8 +239,7 @@ namespace TMM
         private void RdStartup_Changed(object sender, RoutedEventArgs e)
         {
             if (_isUpdating) return;
-            _core.Settings.StartupPage = rdStartupModManager.IsChecked == true ? "ModManager" : "Library";
-            _core.SaveSettings();
+            MarkDirty();
         }
 
         private void BtnFactoryReset_Click(object sender, RoutedEventArgs e)

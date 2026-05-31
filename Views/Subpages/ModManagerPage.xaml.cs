@@ -655,6 +655,66 @@ namespace TMM
 
         private ModItem? GetSelectedMod() => Cust_ModList.SelectedItem as ModItem;
 
+        // ── M2: Order inline edit ────────────────────────────────────────────────
+
+        private void OrderDisplay_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ClickCount < 2) return;
+            e.Handled = true;
+            if (sender is not TextBlock display) return;
+            var parent = VisualTreeHelper.GetParent(display) as System.Windows.Controls.Grid;
+            var edit = parent?.Children.OfType<TextBox>().FirstOrDefault();
+            if (edit is null) return;
+            edit.Text = display.Text;
+            display.Visibility = Visibility.Collapsed;
+            edit.Visibility = Visibility.Visible;
+            edit.SelectAll();
+            edit.Focus();
+        }
+
+        private void OrderEdit_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is not TextBox edit) return;
+            CommitOrderEdit(edit);
+        }
+
+        private void OrderEdit_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (sender is not TextBox edit) return;
+            if (e.Key == System.Windows.Input.Key.Enter) { CommitOrderEdit(edit); e.Handled = true; }
+            if (e.Key == System.Windows.Input.Key.Escape) { CancelOrderEdit(edit); e.Handled = true; }
+        }
+
+        private void CommitOrderEdit(TextBox edit)
+        {
+            var parent = VisualTreeHelper.GetParent(edit) as System.Windows.Controls.Grid;
+            var display = parent?.Children.OfType<TextBlock>().FirstOrDefault();
+            if (display is null) return;
+
+            if (edit.DataContext is ModItem mod && int.TryParse(edit.Text, out int newOrder))
+            {
+                newOrder = Math.Clamp(newOrder, 0, _modsCustom.Count - 1);
+                _modsCustom.Remove(mod);
+                _modsCustom.Insert(newOrder, mod);
+                for (int i = 0; i < _modsCustom.Count; i++) _modsCustom[i].LoadOrder = i;
+                foreach (var m in _modsCustom) SyncModInfoToFolder(m);
+                _pendingCustom = true;
+                UpdateDeployButtonCustom();
+                SaveModsCustom();
+            }
+            edit.Visibility = Visibility.Collapsed;
+            display.Visibility = Visibility.Visible;
+        }
+
+        private static void CancelOrderEdit(TextBox edit)
+        {
+            var parent = VisualTreeHelper.GetParent(edit) as System.Windows.Controls.Grid;
+            var display = parent?.Children.OfType<TextBlock>().FirstOrDefault();
+            if (display is null) return;
+            edit.Visibility = Visibility.Collapsed;
+            display.Visibility = Visibility.Visible;
+        }
+
         // ── M2: Filter chips ──────────────────────────────────────────────────────
 
         private enum ModFilter { All, Enabled, Conflicts, Favorites }

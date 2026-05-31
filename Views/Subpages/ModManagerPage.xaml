@@ -435,10 +435,24 @@
                                                         <Border Grid.Column="0" CornerRadius="6,0,0,6"
                                                                 Background="{Binding Category, Converter={StaticResource CategorySpineBrushConverter}}"/>
 
-                                                        <!-- Load order -->
-                                                        <TextBlock Grid.Column="1" Text="{Binding LoadOrder}"
-                                                                   FontSize="11" Foreground="{DynamicResource SubTextBrush}"
-                                                                   VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                        <!-- Load order (double-click to edit) -->
+                                                        <Grid Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                            <TextBlock x:Name="orderDisplay"
+                                                                       Text="{Binding LoadOrder}"
+                                                                       FontSize="11" Foreground="{DynamicResource SubTextBrush}"
+                                                                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                                       MouseLeftButtonDown="OrderDisplay_MouseDown"
+                                                                       Cursor="IBeam"/>
+                                                            <TextBox x:Name="orderEdit"
+                                                                     Text="{Binding LoadOrder, Mode=OneWay}"
+                                                                     FontSize="11" Foreground="{DynamicResource TextBrush}"
+                                                                     Background="{DynamicResource ControlBgBrush}"
+                                                                     BorderThickness="1" BorderBrush="{DynamicResource AccentBrush}"
+                                                                     Padding="2,1" Width="32"
+                                                                     Visibility="Collapsed"
+                                                                     LostFocus="OrderEdit_LostFocus"
+                                                                     KeyDown="OrderEdit_KeyDown"/>
+                                                        </Grid>
 
                                                         <!-- Enable toggle -->
                                                         <CheckBox Grid.Column="2"
